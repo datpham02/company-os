@@ -47,6 +47,25 @@ Cursor CLI (third provider) mapping: [cursor-integration.md §5](../integrations
 
 All flags are `VERIFIED` present in the installed CLIs (Claude Code 2.1.273, Codex 0.166.0-alpha.5.1). How well each mode actually confines a headless run is `UNVERIFIED` (OQ-011).
 
+**Stage 1 profile tested through Paperclip (`PROPOSED`, OQ-011, 2026-11-03).** Under the default ACP engine, `claude_local` approves every tool request, and the only alternative mode, `approve-reads`, also blocks the agent's reports to Paperclip. Use the Claude CLI engine instead:
+
+```json
+{
+  "engine": "cli",
+  "dangerouslySkipPermissions": false,
+  "extraArgs": [
+    "--permission-mode", "acceptEdits",
+    "--allowedTools",
+    "Bash(curl *)", "Bash(cat *)",
+    "Bash(*paperclip-issue-update.sh*)", "Bash(*paperclip-upload-artifact.sh*)", "mcp__Paperclip_projects",
+    "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)", "Bash(git add*)", "Bash(git commit*)",
+    "--disallowedTools", "Bash(git push*)"
+  ]
+}
+```
+
+This is the `workspace-write` profile. Add each project's build and test commands to `--allowedTools`. For `read-only` roles, drop `--permission-mode acceptEdits` and the `git add` / `git commit` entries (untested). Paperclip's `filesystemScope` / `networkScope` confinement needs Bubblewrap and is not available on Windows.
+
 **Important conflict with Paperclip defaults:** Paperclip's `claude_local` adapter defaults `dangerouslySkipPermissions` to `true` ("required for headless runs where interactive approval is impossible", `VERIFIED`). Using the `bypass` profile by default contradicts this document. Until OQ-011 is resolved, the `bypass` profile MAY be used only for Agent Instances whose GitHub token cannot push to protected branches and whose working directory is a Task Workspace, and the Board Operator MUST approve its use per Agent Instance. Recorded as C-002.
 
 ## 5. Filesystem permissions
