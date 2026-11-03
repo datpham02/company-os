@@ -4,7 +4,7 @@
 
 ## 1. Scope
 
-The Runtime executes one Run (one Task, one Provider process) on the studio's Ubuntu machine (ADR-003, ADR-004). It owns: run request validation, project resolution, Task Workspace preparation, Provider launch and supervision, Git safety, result collection, reporting to Paperclip, and recovery.
+The Runtime executes one Run (one Task, one Provider process) on the studio's Windows machine (ADR-013, ADR-004). It owns: run request validation, project resolution, Task Workspace preparation, Provider launch and supervision, Git safety, result collection, reporting to Paperclip, and recovery.
 
 It does **not** own: task creation, assignment, scheduling, approvals, budgets, or the org chart. Paperclip owns those.
 
@@ -141,7 +141,7 @@ Pre-push checks (`PLANNED`): no files larger than the configured limit, no paths
 | Output | stdout/stderr streamed to `runs/<run-id>/stdout.log` / `stderr.log` and parsed line by line by the Provider Adapter. |
 | Timeout | Per-agent `timeoutSec` (default 3600, `PROPOSED`). On timeout: SIGTERM to the process group, wait `graceSec` (default 30), then SIGKILL. |
 | Cancellation | SIGTERM/SIGINT received by the Runtime is forwarded to the Provider process group with the same grace logic. |
-| Resource limits | `PROPOSED`: optional `systemd-run --user --scope` with memory/CPU limits. `UNVERIFIED` that it is needed (OQ-015). |
+| Resource limits | `PROPOSED`: optional Windows Job Object limits (memory/CPU) on the Provider process tree; mechanism not chosen. `UNVERIFIED` that it is needed (OQ-015). |
 | Exit | Runtime exit code: 0 = success or "no work"; non-zero = failure. This is what Paperclip's `process` adapter records. |
 
 ## 10. Error handling

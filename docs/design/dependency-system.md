@@ -74,7 +74,7 @@
 
 ## 7. Compatibility
 
-Record OS (Ubuntu 24.04), Node.js version requirements, and which Providers a skill pack or MCP server supports. Known cross-dependency constraints: Paperclip requires Node.js 24.11+ (`VERIFIED`, Paperclip architecture docs); OpenSpec npm install requires Node.js 22.12.0+ (`VERIFIED`, OpenSpec README).
+Record OS (Windows 11, ADR-013), Node.js version requirements, and which Providers a skill pack or MCP server supports. Known cross-dependency constraints: Paperclip requires Node.js 24.11+ (`VERIFIED`, Paperclip architecture docs); OpenSpec npm install requires Node.js 22.12.0+ (`VERIFIED`, OpenSpec README).
 
 ## 8. License tracking
 

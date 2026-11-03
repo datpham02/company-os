@@ -2,7 +2,7 @@
 
 **Status: `PLANNED`. No code exists in this directory.** Do not run, document, or reference any Runtime command as working.
 
-The Agent Runtime executes Tasks locally on the studio's Ubuntu machine ([ADR-003](../docs/decisions/ADR-003-native-ubuntu-agent-runtime.md)). Its scope depends on the proposed [ADR-011](../docs/decisions/ADR-011-execution-path-selection.md). Stage 1 uses Paperclip's built-in adapters and needs no Runtime code. In Stage 2 the Runtime is built only for verified gaps, and Paperclip's `process` adapter invokes it.
+The Agent Runtime executes Tasks locally on the studio's Windows machine ([ADR-013](../docs/decisions/ADR-013-native-windows-studio-host.md)). Its scope depends on the proposed [ADR-011](../docs/decisions/ADR-011-execution-path-selection.md). Stage 1 uses Paperclip's built-in adapters and needs no Runtime code. In Stage 2 the Runtime is built only for verified gaps, and Paperclip's `process` adapter invokes it.
 
 - Design: [../docs/architecture/runtime-architecture.md](../docs/architecture/runtime-architecture.md)
 - Component contracts: [../docs/architecture/system-components.md](../docs/architecture/system-components.md) §8–13

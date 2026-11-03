@@ -28,37 +28,23 @@ No command below exists. They describe the intended interface for implementers.
 | `game-studio-runtime runs list` / `runs show <run-id>` | Inspect Runtime run records |
 | `game-studio-runtime workspaces gc` | Clean up worktrees of finished Tasks (never dirty ones) |
 
-## 3. Running Paperclip as a user service (`PROPOSED`)
+## 3. Starting Paperclip automatically (`PROPOSED`)
 
-Keeping Paperclip running across logouts can use a systemd user unit. This is a standard systemd mechanism, not a Paperclip-documented procedure. Test it before relying on it:
+To start Paperclip when you sign in to Windows, you can use a Task Scheduler task with a logon trigger. This is a standard Windows mechanism, not a Paperclip-documented procedure. Paperclip's own `--install-service` does not work here: its doctor reports "Service management is not supported on win32" (2026-11-03). Test it before relying on it (PowerShell):
 
-```ini
-# ~/.config/systemd/user/paperclip.service
-[Unit]
-Description=Paperclip (Game Studio control plane)
-
-[Service]
-# nvm puts node in a versioned path; use an absolute path to npx from `which npx`
-ExecStart=/home/<user>/.nvm/versions/node/<v24.x>/bin/npx paperclipai@<pinned-version> run
-Restart=on-failure
-
-[Install]
-WantedBy=default.target
+```powershell
+# Use the full path from: (Get-Command npx).Source
+$action  = New-ScheduledTaskAction -Execute "<path-to-npx.cmd>" -Argument "paperclipai@<pinned-version> run"
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+Register-ScheduledTask -TaskName "Paperclip" -Action $action -Trigger $trigger
 ```
 
-```bash
-systemctl --user daemon-reload
-systemctl --user enable --now paperclip
-journalctl --user -u paperclip -f
-loginctl enable-linger "$USER"     # keep user services running without a login session
-```
-
-Provider CLIs launched from the service inherit its environment. Make sure `PATH` includes `claude` and `codex` (add `Environment=PATH=…` if needed).
+Provider CLIs launched by Paperclip inherit the task's environment. Make sure `PATH` includes `claude` and `codex`. nvm-windows switches Node by changing a symlink, so after `nvm use` the task picks up the new version.
 
 ## 4. Capacity
 
 - Keep concurrent Runs ≤ 2 until measured (OQ-015).
-- Watch memory with `free -h` and `top` during engine builds.
+- Watch memory with Task Manager (or `Get-Process` in PowerShell) during engine builds.
 
 ## Related documents
 [logging-and-debugging.md](logging-and-debugging.md) · [troubleshooting.md](troubleshooting.md) · [../architecture/runtime-architecture.md](../architecture/runtime-architecture.md)

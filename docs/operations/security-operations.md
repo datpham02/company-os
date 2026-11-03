@@ -24,7 +24,7 @@ Operational procedures implementing [../architecture/security-architecture.md](.
 
 ## 3. Provider credentials
 
-- Keep `~/.claude` and `~/.codex` at mode `700` (`chmod 700 ~/.claude ~/.codex`).
+- Keep `~/.claude` and `~/.codex` readable only by your Windows user (the default for folders in your user profile). Do not move them to a shared location.
 - Never pass API keys on command lines.
 - If using API keys, set provider-side spending limits in the vendor console, in addition to Paperclip budgets.
 

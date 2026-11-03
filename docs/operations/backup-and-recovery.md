@@ -27,7 +27,7 @@
 | Lost Task Workspace | Recreate from the pushed Task Branch |
 | Lost Paperclip data | Re-import the company package (structure only); tasks and history are lost unless the database was backed up |
 | Corrupted Primary Checkout | Delete it after confirming no worktree has unpushed commits (`git worktree list`, `git log --branches --not --remotes`); re-clone |
-| Lost machine | New machine: [ubuntu-setup.md](ubuntu-setup.md), [installation.md](installation.md), restore Paperclip data, re-login providers |
+| Lost machine | New machine: [windows-setup.md](windows-setup.md), [installation.md](installation.md), restore Paperclip data, re-login providers |
 
 ## Related documents
 [runtime-management.md](runtime-management.md) · [../architecture/repository-architecture.md](../architecture/repository-architecture.md)

@@ -16,11 +16,11 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-004 | Task key format and branch naming in Paperclip worktree mode | Open | Branch conventions |
 | OQ-005 | How is merge approval made enforceable and checkable? | Partially verified | ADR-009 operation |
 | OQ-006 | Can `game-director` be the Paperclip root (CEO) agent? | Partially verified | Studio setup |
-| OQ-007 | Can `company/` + `agents/` be imported with `paperclipai company import`? | Open | ADR-012 |
+| OQ-007 | Can `company/` + `agents/` be imported with `paperclipai company import`? | Resolved | — |
 | OQ-008 | Which Paperclip version to pin, and how stable is its API? | Open | Installation |
-| OQ-009 | How should Codex CLI be installed (not on PATH)? | Open | Codex provider |
+| OQ-009 | How should Codex CLI be installed (not on PATH)? | Resolved | — |
 | OQ-010 | How does Codex authenticate in headless runs on this machine? | Partially verified | Codex provider |
-| OQ-011 | How well do headless permission modes confine agents? | Open | Security profiles |
+| OQ-011 | How well do headless permission modes confine agents? | Partially verified | Security profiles |
 | OQ-012 | Are subscription logins acceptable for automated runs (terms, quotas)? | Open | Provider auth |
 | OQ-013 | Runtime implementation language | Open (TypeScript proposed) | Runtime Stage 2 |
 | OQ-014 | Runtime state store | Open | Runtime Stage 2 |
@@ -37,14 +37,17 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-025 | Backup procedure for Paperclip data | Open | Operations |
 | OQ-026 | Is Hoppscotch MCP needed? | Open | Dependency evaluation |
 | OQ-027 | Stronger filesystem isolation without Docker | Open | Security |
-| OQ-028 | Framework Repository not yet under Git; GitHub account mapping | Open | Everything that needs Git |
+| OQ-028 | Framework Repository not yet under Git; GitHub account mapping | Resolved | — |
 | OQ-029 | Overlap with "Paperclip Runner" | Open | ADR-011 |
 | OQ-030 | Can one Paperclip agent run concurrent heartbeats for different Tasks? | Open | Parallel tasks |
+| OQ-031 | Does Paperclip run on native Windows? | Partially verified (server, import, agent test pass; wizard sign-in fails) | Stage 1, ADR-013 |
+| OQ-032 | How do Codex sandboxing and the `process` adapter's shell behave on native Windows? | Open | Codex provider, Runtime Stage 2 |
+| OQ-033 | How well do Cursor CLI headless runs confine agents, with and without Paperclip's automatic `--yolo`? | Partially verified | Cursor provider |
 
 ## Entries
 
 ### OQ-001 — Runtime ↔ Paperclip communication mechanism
-- **Why it matters:** Defines the Runtime's entry point, auth, and reporting path (ADR-003).
+- **Why it matters:** Defines the Runtime's entry point, auth, and reporting path (ADR-013).
 - **Current assumption:** Paperclip's `process` adapter invokes the Runtime per heartbeat; the Runtime reports via REST API (ADR-011 `PROPOSED`).
 - **Verified so far:** Paperclip documents adapters `process` (runs a command with `PAPERCLIP_*` env; exit code = success), `http` (webhook), external adapter plugins, and a REST API with run JWTs. No Paperclip feature *requires* an external runtime.
 - **Verification method:** Install Paperclip; create a `process` agent running `env | grep PAPERCLIP_ | sed 's/=.*/=<set>/'`; assign a Task; inspect the run log.
@@ -93,7 +96,14 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Open:** This repository keeps `COMPANY.md` in `company/`, not at root. Import may need a generated package (`PLANNED` script) or a dry-run may accept it.
 - **Verification method:** Run the documented import preview (no writes) against this repository and a generated package.
 - **Impact if incorrect:** Agents created manually in the UI.
-- **Status:** Open.
+- **Result (2026-11-03, Paperclip 2026.1023.0, Windows):** `npx paperclipai@2026.1023.0 company import . --target new --dry-run` accepts this repository as-is. No generated package is needed. The preview found the company at `company/COMPANY.md` and created reporting lines from each agent's `reportsTo` frontmatter (`game-director` has none, so it is the root). It reported no warnings or errors. Findings:
+  - The repository-root `AGENTS.md` (instructions for coding agents working on this repository) is also picked up as an agent with slug `agent`. Imports MUST pass `--agents` with the seven role slugs to exclude it.
+  - Agents without an explicit adapter are created with `claude_local`. Codex roles must be switched after import.
+  - Imported agents have budget `0` and empty adapter config. `cwd`, permissions (`dangerouslySkipPermissions`, C-002), and budgets must be set after import.
+  - The package bundles all 76 repository files, not only company and agent files.
+- **Result (2026-11-03, real import):** `company import . --target existing -C <company-id> --agents game-director,producer,project-manager,game-designer,gameplay-programmer,ui-designer,qa --yes` created the 7 agents in the existing company and left the company unchanged. This also bypasses the onboarding wizard's sign-in step, which fails on Windows (OQ-031). Reporting lines match [company/ORGANIZATION.md](../../company/ORGANIZATION.md); `game-director` has no manager. Each agent got `adapterType: claude_local`, an `instructionsFilePath` pointing at a copy of its `AGENTS.md` inside Paperclip's data directory, heartbeat disabled, `maxConcurrentRuns: 20`, budget `0`, and permissions `canCreateAgents: true` and `canCreateSkills: true`.
+  - Instructions are copied, not linked. Edits to `agents/*/AGENTS.md` in Git need a re-import (`--collision replace`) to reach Paperclip.
+- **Status:** Resolved (import works; keeping instructions in sync is tracked in OQ-023).
 
 ### OQ-008 — Paperclip version and API stability
 - **Why it matters:** Integration depends on documented endpoints and adapters.
@@ -104,23 +114,38 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 
 ### OQ-009 — Codex installation
 - **Why it matters:** Codex is a v1 Provider.
-- **Found:** No `codex` on PATH. A Codex binary bundled with the ChatGPT desktop app exists at `/usr/lib/chatgpt/resources/codex` (0.166.0-alpha.5.1), and one inside a Cursor extension. The npm package `@openai/codex` (0.166.0) exists.
+- **Found:** On the retired Ubuntu machine, no `codex` was on PATH; only app-bundled binaries existed. On the Windows studio machine (2026-11-03), `codex` is not installed at all. The npm package `@openai/codex` (0.166.0) exists.
 - **Current assumption:** Install the standalone CLI from the official source and do not rely on app-bundled binaries.
 - **Verification method:** Follow the official Codex install instructions; confirm `codex --version` and `codex exec --help`.
 - **Impact if incorrect:** Runs break when the desktop app updates.
-- **Status:** Open.
+- **Result (2026-11-03):** `npm install -g @openai/codex` on the Windows studio machine installed `codex-cli 0.166.0` on PATH (npm global folder). Login is still pending (OQ-010).
+- **Status:** Resolved.
 
 ### OQ-010 — Codex headless authentication
 - **Verified so far:** Paperclip docs state Codex reads credentials from `$CODEX_HOME/auth.json`; `~/.codex/` exists on this machine. `codex login` exists.
 - **Verification method:** `codex login status` (check availability in `codex login --help`), then a test `codex exec` in a scratch repository.
+- **Result (2026-11-03, Windows):** `codex login --with-api-key` (key read from stdin) stores the key; `codex login status` reports "API key configured" and notes that authentication is checked only on the first request. A test `codex exec --sandbox read-only` in a scratch repository reached the OpenAI API and failed with "Quota exceeded. Check your plan and billing details." The API account has no usable credit yet. ChatGPT sign-in (`codex login`) asked for phone verification and was rate-limited.
 - **Status:** Partially verified.
 
 ### OQ-011 — Headless permission confinement
 - **Why it matters:** Security profiles in [security-architecture.md §4](security-architecture.md#4-agent-permissions-provider-level).
 - **Verified so far:** Flags exist: Claude Code `--permission-mode` (`acceptEdits`, `auto`, `bypassPermissions`, `manual`, `dontAsk`, `plan`), `--allowedTools`, `--disallowedTools`, `--restricted`, `--dangerously-skip-permissions`; Codex `--sandbox` (`read-only`, `workspace-write`, `danger-full-access`), `--dangerously-bypass-approvals-and-sandbox`. Paperclip's `claude_local` defaults `dangerouslySkipPermissions: true`.
-- **Open:** Whether a non-bypass Claude Code headless run blocks on permission prompts or fails; what Codex's `workspace-write` sandbox permits on Linux (network, paths).
+- **Open:** Whether a non-bypass Claude Code headless run blocks on permission prompts or fails; what Codex's `workspace-write` sandbox permits on Windows (network, paths; see OQ-032).
 - **Verification method:** Scripted experiments in a scratch repository per profile, recording what is blocked.
-- **Status:** Open. See C-002.
+- **Result, Claude Code CLI (Phase 0 experiment 0.7, 2026-11-03, Claude Code 2.1.316, Windows 11):** `claude -p` in a scratch Git repository. The task was to read a file, edit it, then run a shell command (once `git status --short`, once `git commit`). Each case had a 150 s timeout.
+  | Flags | Read | Edit | Read-only shell (`git status`) | Writing shell (`git commit`) |
+  |---|---|---|---|---|
+  | none (default) | allowed | denied | allowed | — |
+  | `--permission-mode plan` | allowed | denied | allowed | — |
+  | `--permission-mode acceptEdits` | allowed | allowed | allowed | denied |
+  | `--permission-mode acceptEdits --allowedTools "Bash(git -c *)"` | allowed | allowed | allowed | allowed |
+  | `--permission-mode dontAsk --allowedTools Read Edit` | allowed | allowed | — | denied |
+  - **No run hung.** A denied action is skipped, the agent says so in its answer, and the process exits `0`. The exit code therefore does not show that something was denied.
+  - Read-only shell commands such as `git status` run even without an allowlist entry.
+  - Plan mode writes a plan file under `~/.claude/plans/`, outside the repository.
+  - On Windows, Claude Code's PowerShell tool failed every time with "The command line is too long". The agent then ran the same command through Bash (Git Bash). Allowlists must use `Bash(...)` patterns.
+- **Result, Paperclip `claude_local` (read from installed Paperclip 2026.1023.0 code, not yet exercised in a run):** The default execution engine is ACP. Under ACP, tool permissions come from `adapterConfig.permissionMode` (default `approve-all`) and `adapterConfig.nonInteractivePermissions` (default `deny`). Supported modes in the bundled runner are `approve-all`, `approve-reads` (reads approved; other requests follow `nonInteractivePermissions`), and `deny-all`. The "Skip permissions" switch (`dangerouslySkipPermissions`) only affects the Claude CLI engine (`--dangerously-skip-permissions`) and the login probe. **So with the default ACP engine, turning "Skip permissions" off does not restrict the agent: every permission request is approved.** Restricting an agent needs either `permissionMode: approve-reads` / `deny-all` under ACP, or the Claude CLI engine plus `extraArgs` such as `--permission-mode acceptEdits --allowedTools ...`. Both still need a test run through Paperclip.
+- **Status:** Partially verified. See C-002.
 
 ### OQ-012 — Subscription use in automation
 - **Why it matters:** Cost model and compliance.
@@ -174,7 +199,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 
 ### OQ-023 — Delivering role instructions under Paperclip adapters
 - **Verified so far:** `claude_local` supports `promptTemplate` with `{{agent.name}}`-style variables and injects Paperclip skills via `--add-dir`; `codex_local` supports `instructionsFilePath` (prepended to the prompt). Agent Companies import sets agent instructions from the `AGENTS.md` body.
-- **Open:** Whether `claude_local` has an equivalent of `instructionsFilePath`; best way to keep instructions in sync with Git.
+- **Found (2026-11-03):** Imported `claude_local` agents get `instructionsFilePath`, so the equivalent exists. It points at a copy inside Paperclip's data directory (OQ-007).
+- **Open:** Best way to keep instructions in sync with Git.
 - **Status:** Partially verified.
 
 ### OQ-024 — Paperclip deployment on this machine
@@ -192,13 +218,12 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Status:** Open. Registry status `candidate`.
 
 ### OQ-027 — Filesystem isolation without Docker
-- **Options:** dedicated Unix user; Codex sandbox; Claude Code `--restricted`; `systemd-run --user` with `ProtectHome=` style properties (feasibility for user units `UNVERIFIED`).
+- **Options (Windows, ADR-013):** a dedicated local Windows user for agents with NTFS access only to the Workspace Root; Codex sandbox; Claude Code `--restricted`. Feasibility with Paperclip, which launches agents as its own user, is `UNVERIFIED`.
 - **Status:** Open.
 
 ### OQ-028 — Framework Repository Git state
-- **Found:** `/home/datpt/game-studio` is not a Git repository and has no remote. The intended remote is `datpham02/game-studio`; the local Unix user is `datpt`. Whether the GitHub repository already exists was not checked (no network calls to GitHub were made).
-- **Action:** The Board Operator initializes Git and connects the remote. This documentation work did not do so (constraint: no new repositories, no commits).
-- **Status:** Open.
+- **Found (2026-11-03):** The repository is under Git with remote `git@github.com:datpham02/game-studio.git`; documentation v1.0 is pushed as commit `9d8ebb6`.
+- **Status:** Resolved.
 
 ### OQ-029 — "Paperclip Runner"
 - **Found:** Paperclip docs mention a "Paperclip Runner" offering native Codex (app server), Claude via ACPX, and OpenCode, selectable per agent instead of the "Legacy runner".
@@ -213,17 +238,54 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Impact if incorrect:** Fewer instances needed; org chart simplified.
 - **Status:** Open.
 
+### OQ-031 — Paperclip on native Windows
+- **Why it matters:** ADR-013 runs the studio natively on Windows 11.
+- **Found:** Paperclip's installation and five-minute-path docs require Node.js 24.11+ and name no operating system. The managed install uses `~/.paperclip` and `~/.local/bin`.
+- **Verification method:** Phase 0 C2: `npx paperclipai onboard --yes`, `npx paperclipai run`, open the UI, then run one `claude_local` heartbeat.
+- **Impact if incorrect:** Reconsider WSL2 through a new ADR (see ADR-013, "Reconsider when").
+- **Result (2026-11-03):** `npx paperclipai@2026.1023.0 onboard --yes --bind loopback --no-install-service` on Windows 11 passed its doctor checks (11 passed, 1 warning: no LLM provider configured, which is optional). It created `~/.paperclip/instances/default`, started embedded PostgreSQL on port 54329, applied migrations, and served the UI on `127.0.0.1:3100` in `local_trusted` mode. The doctor reports "Service management is not supported on win32. Use paperclipai run instead." An agent heartbeat on Windows is not yet tested.
+- **Result (2026-11-03, onboarding wizard):** The "Connect a model" step (Claude subscription, browser sign-in) fails on Windows with "Browser sign-in requires Python 3 and a working local terminal." Cause, read from Paperclip's installed code (`@paperclipai/server` `local-ai-browser-login.js`): it spawns `python3` and uses Python's `pty` module to drive the provider CLI login. There is no `python3` command on this machine, and `pty.fork` is not available on Windows anyway, so this sign-in path cannot work on native Windows. The host's Claude Code is already logged in (`claude auth status`: `claude.ai`). Agents created by `company import` skip the wizard (OQ-007).
+- **Result (2026-11-03, Test Environment, `game-director`):** "Connection successful". The agent page reports "Existing authentication — not managed by Connections", so the agent uses the host's Claude login. Test details: execution engine ACP (`claude-agent-acp` from the npx cache; `engine=cli` selects the Claude Code CLI lane), Node 24.22.1 accepted, `ANTHROPIC_API_KEY` not set, "Claude login probe succeeded". The working directory defaulted to the directory Paperclip was started from, which here was this framework repository. Agents MUST get a game repository or project workspace as `cwd` before they receive Tasks.
+- **Result (2026-11-03, all 7 agents):** "Skip permissions" is off for all seven. "Can create new agents" and "Can assign tasks" are off for the leaf roles (`game-designer`, `gameplay-programmer`, `ui-designer`, `qa`). They stay on for `game-director`, `producer` and `project-manager`, which must assign Tasks; hiring is gated by "Require board approval for new hires". Test Environment passed for all seven. The changes were made through the same API the UI uses: `PATCH /api/agents/{id}` merges `adapterConfig` unless `replaceAdapterConfig` is set, and permissions go through `PATCH /api/agents/{id}/permissions`.
+- **Other settings seen in the UI:** a per-agent "Skip permissions" switch (on by default after import; turned off for `game-director`), "Extra args", "Max turns per run" (default 1000), "Heartbeat on interval" (off). In company settings: "Require board approval for new hires" (turned on 2026-11-03) and automatic hourly database backups with configurable retention (relevant to OQ-025). In agent permissions: "Can create new agents", which also grants task assignment authority; "Can assign tasks" is enabled automatically while it is on.
+- **Status:** Partially verified.
+
+### OQ-032 — Codex sandbox and `process` shell on Windows
+- **Why it matters:** Security profiles (OQ-011) and the Stage 2 entry point (ADR-011) assume Linux behavior.
+- **Open:** What Codex `--sandbox workspace-write` enforces on Windows; which shell Paperclip's `process` adapter uses on Windows, and whether `sh -c` (Git Bash) works there.
+- **Verification method:** Phase 0 experiments 0.5 and 0.7 on the Windows studio machine.
+- **Status:** Open.
+
+### OQ-033 — Cursor CLI permission confinement
+- **Why it matters:** Cursor CLI was added as a third provider on 2026-11-03 ([cursor-integration.md](../integrations/cursor-integration.md)). Paperclip's `cursor` adapter adds `--yolo` unless `extraArgs` contains `--trust`, `--yolo` or `-f`.
+- **Open:** In `agent -p` runs on Windows, what is allowed and denied with `--trust` alone, `--mode plan`, `--sandbox enabled` and `--auto-review`; whether a run hangs on an approval; and whether `--trust` in `extraArgs` reaches the CLI through Paperclip.
+- **Verification method:** Repeat experiment 0.7 with the Cursor CLI in a scratch repository, then one Test Environment and one run through Paperclip.
+- **Result (2026-11-03, Cursor CLI 2026.10.22-27dcf5f, Windows, model `gpt-5.3-codex-low`):** `agent -p` in a scratch repository with the same task as experiment 0.7 (read, edit, `git commit`), 180 s timeout:
+  | Flags | Read | Edit | `git commit` | Notes |
+  |---|---|---|---|---|
+  | `--trust` | allowed | allowed | refused | 78 s; the agent retried the command before giving up |
+  | `--trust --mode plan` | allowed | refused | refused | |
+  | `--trust --sandbox enabled` | — | — | — | Exit 1: "Sandbox mode is enabled but not available on this system. Sandbox requires macOS or Linux." |
+  | `--trust --auto-review` | allowed | allowed | allowed | Cursor's server-side classifier decided |
+  | `--yolo` | allowed | allowed | allowed | Paperclip's default |
+  | `--trust` + `.cursor/cli.json` `{"permissions":{"allow":["Shell(git)"]}}` | allowed | allowed | refused | The project allowlist had no effect in this form |
+  - No run hung. Refusals are reported in the answer and the process exits `0`.
+  - Paperclip: switching `qa` to adapter type `cursor` with `extraArgs: ["--trust", "--auto-review"]` passed Test Environment ("Cursor is authenticated via `agent login`"). The hello probe was skipped because `command` is a full path rather than `agent`. Not yet run on a Task.
+- **Open:** A working shell allowlist format for Cursor CLI; whether `--auto-review` is acceptable as the `workspace-write` control.
+- **Status:** Partially verified.
+
 ## Conflicts
 
 ### C-001 — Runtime scope vs. Paperclip built-in execution
 - **Documents:** The v1 brief (§2.3: Runtime launches CLIs, manages branches/worktrees; §2.6) vs. ADR-002 ("do not duplicate functionality Paperclip provides") and verified Paperclip features (`claude_local`, `codex_local`, `git_worktree` execution workspaces).
-- **Interim rule:** ADR-003 and ADR-006 remain Accepted. ADR-011 (`Proposed`) stages the work so that nothing is duplicated before a gap is shown.
+- **Interim rule:** ADR-013 (which superseded ADR-003) and ADR-006 remain Accepted. ADR-011 (`Proposed`) stages the work so that nothing is duplicated before a gap is shown.
 - **Needs:** Board Operator decision on ADR-011.
 - **Status:** Open.
 
 ### C-002 — Paperclip's default permission bypass vs. security architecture
 - **Documents:** Paperclip `claude_local` default `dangerouslySkipPermissions: true` vs. [security-architecture.md §4](security-architecture.md#4-agent-permissions-provider-level).
 - **Interim rule:** Bypass only with per-instance Board approval and protected branches.
+- **Update (2026-11-03):** Under Paperclip's default ACP engine the effective default is `permissionMode: approve-all`, which is equivalent to bypass even with "Skip permissions" off (OQ-011). All seven agents are currently in this state, so none may receive Tasks on a real Game Repository until their permission mode is set.
 - **Needs:** OQ-011 results.
 - **Status:** Open.
 

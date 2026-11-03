@@ -107,7 +107,7 @@ Interface details: [../integrations/paperclip-integration.md](../integrations/pa
 
 | | |
 |---|---|
-| **Purpose** | Execute Tasks locally on Ubuntu, where Paperclip's built-in execution is insufficient (ADR-003, ADR-011). |
+| **Purpose** | Execute Tasks locally on the studio's Windows machine, where Paperclip's built-in execution is insufficient (ADR-013, ADR-011). |
 | **Responsibilities** | Receive a Run request; resolve project; prepare Task Workspace; launch Provider; supervise; collect logs/results; report to Paperclip; persist state; recover after restart. |
 | **Inputs** | Run request (from Paperclip `process` adapter environment in the proposed design); project registry; local Runtime config; agent definition. |
 | **Outputs** | Commits on Task Branch; Run record in Runtime Data; status/comments in Paperclip; exit code to the invoking adapter. |
