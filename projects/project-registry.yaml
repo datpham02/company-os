@@ -32,4 +32,17 @@
 #   frameworkVersion: 0.1.0
 
 registryVersion: 1
-projects: []
+projects:
+  - id: lamplight-vigil
+    name: Lamplight Vigil
+    status: initializing          # concept approved 2026-11-03 (Paperclip issue GAM-1); seeding not done yet
+    repository:
+      url: https://github.com/datpham02/lamplight-vigil.git
+      defaultBranch: main
+    engine:
+      name: phaser
+      version: "3"
+    paperclip:
+      projectId: "260f303b-5861-4b0e-809d-da68e38c26be"
+    agents: [game-director, producer, project-manager, game-designer, gameplay-programmer, ui-designer, qa]
+    frameworkVersion: 0.1.0
