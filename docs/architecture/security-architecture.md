@@ -71,6 +71,16 @@ The **reporting rule** is required. Without it, an agent sometimes wraps Papercl
 
 > Paperclip reporting rule for this environment: to post comments or change issue status, call the Paperclip skill's paperclip-issue-update.sh as one standalone Bash command, for example: `bash "<absolute path to paperclip-issue-update.sh>" --issue-id <literal issue id> --status done <<'MD' ... MD`. Never wrap it in a script of your own, never use shell variables such as `$PAPERCLIP_TASK_ID` or `$PAPERCLIP_API_KEY` in a command, and never chain it with other commands using `&&` or `;`. Use the literal issue id from your task. The permission layer refuses anything else.
 
+**Task-branch push (added for the first Game Repository, 2026-11-03).** `workflows/development-cycle.md` needs agents to push their Task Branch and open a PR. The `workspace-write` profile therefore:
+- replaces the blanket `Bash(git push*)` deny with allow rules for the task-branch pattern: `Bash(git push -u origin GAM-*)`, `Bash(git push origin GAM-*)`. Paperclip names task branches `<ISSUE-KEY>-<slug>`, and the studio company's issue prefix is `GAM`. It also allows `Bash(gh pr create*)`, `Bash(gh pr view*)` and `Bash(gh pr list*)`;
+- keeps these denied: `Bash(git push origin main*)`, `Bash(git push -u origin main*)`, `Bash(git push --force*)`, `Bash(git push -f*)`, `Bash(git push *--force*)` and `Bash(gh pr merge*)`. Merging stays with the Board (ADR-009);
+- adds npm build/test commands: `Bash(npm ci*)`, `Bash(npm install*)`, `Bash(npm run *)`, `Bash(npm test*)`, `Bash(npx tsc*)`;
+- appends a git rule to the reporting rule: push only the task branch by its literal name, as one standalone command, and open the PR with one standalone `gh pr create --base main --head <branch>` command.
+
+The `read-only` profile still denies every push. The hard guard is GitHub branch protection on `main`: PR required, 1 approval, no force-push, no deletion.
+
+Each Game Repository's local clone uses `credential.helper = !gh auth git-credential`, so a `GH_TOKEN` in the agent's environment is the credential for both `git push` and `gh`. **Until the fine-grained `GH_TOKEN` is bound, a push would use the host's own `gh` login, which can reach every repository of the account** ([security-operations.md](../operations/security-operations.md) §2).
+
 Applied on 2026-11-03 to the six `claude_local` agents of the studio company (`read-only`: `game-director`, `producer`, `project-manager`; `workspace-write`: `game-designer`, `gameplay-programmer`, `ui-designer`).
 
 Paperclip's `filesystemScope` / `networkScope` confinement needs Bubblewrap and is not available on Windows.

@@ -43,6 +43,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-031 | Does Paperclip run on native Windows? | Partially verified (server, import, agent test pass; wizard sign-in fails) | Stage 1, ADR-013 |
 | OQ-032 | How do Codex sandboxing and the `process` adapter's shell behave on native Windows? | Partially verified | Codex provider, Runtime Stage 2 |
 | OQ-033 | How well do Cursor CLI headless runs confine agents, with and without Paperclip's automatic `--yolo`? | Partially verified | Cursor provider |
+| OQ-034 | Paperclip started with `npx` leaks `npm_*` environment variables into agent runs | Open | Stage 1 operation |
 
 ## Entries
 
@@ -210,7 +211,9 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 ### OQ-017 — GitHub credentials for agents
 - **Current assumption:** Fine-grained personal access token per studio (or per project), scoped to Game Repositories with Contents and Pull requests read/write; delivered as `GH_TOKEN` via a Paperclip secret binding.
 - **Verification method:** Create the token; verify an agent can push a Task Branch and open a PR, and cannot push to a protected Default Branch.
-- **Status:** Open.
+- **Result (2026-11-03):** A fine-grained token limited to `datpham02/lamplight-vigil` (Contents and Pull requests read/write, 90-day expiry) is stored as the Paperclip company secret `GH_TOKEN` (provider `local_encrypted`). It is bound as `env.GH_TOKEN` (`secret_ref`, version `latest`) to `game-designer`, `gameplay-programmer` and `ui-designer`. `qa` is not bound yet; that needs a Board decision. The game repository's local clone uses `credential.helper = !gh auth git-credential`, so `git push` and `gh` both use `GH_TOKEN` when it is set.
+- **Result (GAM-2, 2026-11-04):** `gameplay-programmer` pushed its task branch with the bound token. `gh pr create` first failed with "Resource not accessible by personal access token": the token had been created without Pull requests permission. After the Board added **Pull requests: Read and write** (editing a fine-grained token keeps its value, so the Paperclip secret did not change), the agent opened PR datpham02/lamplight-vigil#1. Branch protection then requires one approval, and the PR author is the account itself, so merging needs the owner's admin bypass in the GitHub UI.
+- **Status:** Resolved for the first Game Repository.
 
 ### OQ-018 — Creating Game Repositories
 - **Current assumption:** The Board Operator creates the repository (GitHub UI or `gh repo create`) after the approval step in [project-initialization.md](../../workflows/project-initialization.md).
@@ -310,8 +313,18 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
   | `--trust` + `.cursor/cli.json` `{"permissions":{"allow":["Shell(git)"]}}` | allowed | allowed | refused | The project allowlist had no effect in this form |
   - No run hung. Refusals are reported in the answer and the process exits `0`.
   - Paperclip: switching `qa` to adapter type `cursor` with `extraArgs: ["--trust", "--auto-review"]` passed Test Environment ("Cursor is authenticated via `agent login`"). The hello probe was skipped because `command` is a full path rather than `agent`. Not yet run on a Task.
-- **Open:** A working shell allowlist format for Cursor CLI; whether `--auto-review` is acceptable as the `workspace-write` control.
+- **Result, first real task (GAM-2 review, 2026-11-04):** `qa` on adapter `cursor` (`gpt-5.3-codex`, `--trust --auto-review`) reviewed the seeding task three times.
+  - **It was never woken automatically** when the review stage assigned the issue to it. Every QA run had to be started with `POST /api/agents/{id}/wakeup`. Claude agents in the same flow were woken normally.
+  - Once, QA posted its findings as a comment without recording a stage decision. Paperclip then retried the reviewer and moved the issue to `blocked` ("no completed decision or live reviewer run"); the Board had to hand it back. The two other runs recorded decisions correctly: `changes_requested`, then `approved`.
+  - Without `GH_TOKEN`, `gh` is unauthenticated, so QA could not see the PR by itself.
+  - It found that inherited `npm_*` variables from the Paperclip process (started with `npx`) pointed npm at another directory, and worked around it by sanitizing the environment (see OQ-034).
+- **Open:** A working shell allowlist format for Cursor CLI; whether `--auto-review` is acceptable as the `workspace-write` control; why `cursor` agents are not woken on stage assignment.
 - **Status:** Partially verified.
+
+### OQ-034 — `npm_*` variables leak into agent runs
+- **Found (GAM-2, 2026-11-04):** Paperclip was started with `npx paperclipai@… run`. npm sets `npm_config_*` / `npm_*` variables for that process, and agents inherit them. In the game repository, `npm run typecheck` then failed (`typescript/bin/tsc` missing) until the agent cleared those variables.
+- **Proposed fix:** install the pinned version globally (`npm i -g paperclipai@<version>`) and start it with `paperclipai run`, so no npm wrapper sits around the server. Alternatively, start it from a shell that clears `npm_*` variables first.
+- **Status:** Open.
 
 ## Conflicts
 
