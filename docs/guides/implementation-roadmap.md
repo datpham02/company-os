@@ -15,7 +15,7 @@
 | 0.7 | Experiment: Claude Code and Codex headless runs per permission profile, on Windows | OQ-011, OQ-032, C-002 |
 | 0.8 | Experiment: execution policy with `qa` review + Board approval stage | OQ-005 |
 | 0.9 | Experiment: `company import` preview against this repo / a generated package | OQ-007, ADR-012 |
-| 0.10 | Decide ADR-011 and ADR-012 (Board) | C-001 |
+| 0.10 | Decide ADR-011 and ADR-012 (Board). Done 2026-11-03: both accepted | C-001 |
 
 Exit criteria: results written into [../architecture/open-questions.md](../architecture/open-questions.md); ADR-011/012 accepted or revised.
 

@@ -1,8 +1,8 @@
 # ADR-011: Staged Execution Path — Paperclip-native First, Runtime via `process` Adapter
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-11-03, after Phase 0)
 - **Date:** 2026-11-03
-- **Deciders:** Board Operator (pending)
+- **Deciders:** Board Operator
 - **Related:** ADR-002, ADR-003, ADR-006, ADR-008, ADR-013, C-001, C-002, OQ-001, OQ-002, OQ-003, [paperclip-integration.md](../integrations/paperclip-integration.md)
 
 ## Context
@@ -24,7 +24,7 @@ Paperclip also offers integration points for custom execution: the `process` ada
 
 Building a full Runtime now would duplicate most of the above.
 
-## Decision (proposed)
+## Decision
 1. **Stage 1 (Paperclip-native).** Run Agent Instances on Paperclip's `claude_local` / `codex_local` adapters with Paperclip execution workspaces in `git_worktree` mode. Game Studio supplies role instructions, rules, skills, and project workspace configuration. No Runtime code is written in Stage 1.
 2. **Gap analysis.** While operating Stage 1, record every requirement from ADR-013/ADR-006/ADR-009 that Paperclip does not satisfy (for example: Task Branch naming, project-registry resolution, dependency checks, Game Studio rule enforcement, merge gating).
 3. **Stage 2 (Runtime for gaps only).** Build the Runtime only for verified gaps. Its preferred entry point is Paperclip's documented `process` adapter: a Paperclip agent with `adapterType: "process"` runs the Runtime command, which receives the Paperclip environment variables, executes, and reports through the REST API. An external adapter plugin is the fallback if richer transcript rendering is needed.
@@ -42,8 +42,13 @@ Building a full Runtime now would duplicate most of the above.
 
 ## Consequences
 - If accepted, the Runtime's first deliverable becomes a gap analysis, not code. The Runtime design in [runtime-architecture.md](../architecture/runtime-architecture.md) remains the target for Stage 2 but every sub-component is subject to the gap analysis.
-- Stage 1 still satisfies ADR-013, which superseded ADR-003 (native Windows, no Docker): Paperclip runs natively and launches the CLIs on the same machine. Whether Paperclip runs on native Windows is `UNVERIFIED` (OQ-031).
+- Stage 1 still satisfies ADR-013, which superseded ADR-003 (native Windows, no Docker): Paperclip runs natively and launches the CLIs on the same machine. Paperclip runs on native Windows; its onboarding wizard's sign-in step does not (OQ-031).
 - Paperclip's adapter defaults include `dangerouslySkipPermissions: true` for Claude Code. Stage 1 MUST override this according to [security-architecture.md](../architecture/security-architecture.md) (OQ-011).
+- **Phase 0 results (2026-11-03) that shape Stage 1 and Stage 2:**
+  - Stage 1 works end to end on Windows: `claude_local` agents run in per-Task worktrees, report to Paperclip, and pass review and Board approval stages (OQ-002, OQ-005).
+  - Isolated `git_worktree` workspaces need Paperclip's **experimental** instance flag `enableIsolatedWorkspaces`. Stage 1 depends on it; re-check it after every Paperclip upgrade (OQ-008).
+  - Under the default ACP engine, `claude_local` approves every tool request, so "Skip permissions" off is not enough. Stage 1 uses the Claude CLI engine profile with the reporting rule (security-architecture.md §4, OQ-011).
+  - The `process` adapter receives no Task ID, no workspace path and no workspace cwd; it runs in the Paperclip server's cwd and is retried if it does not update its Task (OQ-003). A Stage 2 Runtime behind `process` MUST resolve its Task (for example `GET /api/heartbeat-runs/{runId}/issues`) and its execution workspace through the API, and MUST update the Task itself. This keeps option B viable but adds work; option C (an adapter plugin) stays the fallback.
 
 ## Reconsider when
 - Stage 1 shows Paperclip cannot meet a MUST requirement of ADR-006 or ADR-009, or
