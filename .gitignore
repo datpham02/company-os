@@ -1,0 +1,16 @@
+# Local tool state (never commit)
+.claude-flow/
+.swarm/
+.ruflo/
+
+# Runtime data must live outside this repository (ADR-010); guard against accidents
+.runtime/
+*.log
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+.idea/
+*.swp

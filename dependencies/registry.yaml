@@ -1,0 +1,172 @@
+# Game Studio — External Dependency Registry
+# Contract: docs/design/dependency-system.md · Decision: ADR-007
+# A listing is a RECORD, not an approval. integrationStatus tracks adoption.
+# Facts below were checked on 2026-11-03 against official repositories/npm (see verifiedOn).
+# Nothing here is vendored into this repository.
+
+registryVersion: 1
+verifiedOn: "2026-11-03"
+
+dependencies:
+
+  - id: paperclip
+    name: Paperclip
+    category: orchestration
+    source:
+      repository: https://github.com/paperclipai/paperclip
+      docs: https://docs.paperclip.ing
+      package: npm:paperclipai
+    license: MIT
+    required: true
+    versionConstraint: "pin at install (latest npm 2026.1023.0 on 2026-11-03)"
+    verifiedVersion: null          # not installed on the studio machine
+    install:
+      strategy: external-service
+      reference: https://github.com/paperclipai/paperclip#quickstart
+    integrationStatus: approved    # ADR-002 approves Paperclip as the orchestrator; not yet installed
+    usedBy: [studio]
+    compatibility: "Node.js 24.11+ per Paperclip architecture docs; embedded PostgreSQL by default; pnpm 9 only for source checkouts."
+    notes: "Docs reviewed at repo commit 7b8aa60. See docs/integrations/paperclip-integration.md."
+
+  - id: claude-code
+    name: Claude Code CLI
+    category: execution-provider
+    source:
+      docs: https://code.claude.com/docs
+      package: npm:@anthropic-ai/claude-code
+    license: proprietary (Anthropic terms)
+    required: true
+    versionConstraint: ">=2.1.273"
+    verifiedVersion: "2.1.273 (installed at ~/.local/bin/claude, 2026-11-03)"
+    install:
+      strategy: global-cli
+      reference: https://code.claude.com/docs
+    integrationStatus: approved     # ADR-008; Paperclip adapter claude_local
+    usedBy: [game-director, producer, project-manager, game-designer, gameplay-programmer, ui-designer]
+    compatibility: "Paperclip adapter type claude_local."
+    notes: "See docs/integrations/claude-code-integration.md."
+
+  - id: codex
+    name: Codex CLI
+    category: execution-provider
+    source:
+      repository: https://github.com/openai/codex
+      package: npm:@openai/codex
+    license: Apache-2.0
+    required: true
+    versionConstraint: ">=0.166.0"
+    verifiedVersion: "0.166.0-alpha.5.1 (bundled binary /usr/lib/chatgpt/resources/codex; not on PATH)"
+    install:
+      strategy: global-cli
+      reference: https://github.com/openai/codex
+    integrationStatus: approved     # ADR-008; standalone install pending (OQ-009)
+    usedBy: [gameplay-programmer, qa]
+    compatibility: "Paperclip adapter type codex_local."
+    notes: "Do not rely on app-bundled binaries. See docs/integrations/codex-integration.md."
+
+  - id: openspec
+    name: OpenSpec
+    category: specification
+    source:
+      repository: https://github.com/Fission-AI/OpenSpec
+      docs: https://openspec.dev/docs
+      package: npm:@fission-ai/openspec
+    license: MIT
+    required: false
+    versionConstraint: ">=1.11.0"
+    verifiedVersion: "1.11.0 (installed globally via nvm Node 24.20.0); latest 1.16.0"
+    install:
+      strategy: project-local      # CLI is global-cli; `openspec init` runs per Game Repository
+      reference: https://github.com/Fission-AI/OpenSpec#quick-start
+    integrationStatus: candidate
+    usedBy: [game-designer, project-manager, gameplay-programmer]
+    compatibility: "npm install requires Node.js 22.12.0+. Supports Claude Code and Codex slash-command styles."
+    notes: "See docs/integrations/openspec-integration.md. Placement: OQ-020."
+
+  - id: claude-code-game-studios
+    name: Claude Code Game Studios
+    category: game-development
+    source:
+      repository: https://github.com/Donchitos/Claude-Code-Game-Studios
+    license: MIT
+    required: false
+    versionConstraint: "pin to a release tag when adopted"
+    verifiedVersion: null
+    install:
+      strategy: reference-only
+      reference: https://github.com/Donchitos/Claude-Code-Game-Studios#getting-started
+    integrationStatus: candidate
+    usedBy: []
+    compatibility: "Claude Code project template (.claude/ agents, skills, hooks, rules). README at commit 05ad7c8 states 49 agents and 74 skills."
+    notes: "Designed to be cloned as a project root; overlaps with Game Studio's own role system. Usage mode open (OQ-021)."
+
+  - id: awesome-gamedev-agent-skills
+    name: Awesome Gamedev Agent Skills
+    category: game-development
+    source:
+      repository: https://github.com/gamedev-skills/awesome-gamedev-agent-skills
+    license: Apache-2.0
+    required: false
+    versionConstraint: "pin to a release tag when adopted (v1.1.0 seen)"
+    verifiedVersion: null
+    install:
+      strategy: skill-pack
+      reference: https://github.com/gamedev-skills/awesome-gamedev-agent-skills#quick-start
+    integrationStatus: candidate
+    usedBy: [gameplay-programmer, ui-designer, game-designer]
+    compatibility: "Agent Skills (SKILL.md) with a router that detects the engine. Documented installs: `npx skills add gamedev-skills/awesome-gamedev-agent-skills` or as a Claude Code plugin marketplace. Lists Claude Code and Codex as compatible."
+    notes: "Per-engine skills (Godot, Unity, Unreal, web engines, others). Repo has a NOTICE file (Apache-2.0)."
+
+  - id: playwright-mcp
+    name: Playwright MCP
+    category: development-tools
+    source:
+      repository: https://github.com/microsoft/playwright-mcp
+      package: npm:@playwright/mcp
+    license: Apache-2.0
+    required: false
+    versionConstraint: "pin when adopted (latest 0.0.84)"
+    verifiedVersion: "configured in Claude Code as `npx -y @playwright/mcp@latest --headless --isolated` (2026-11-03)"
+    install:
+      strategy: mcp-server
+      reference: https://github.com/microsoft/playwright-mcp#getting-started
+    integrationStatus: candidate
+    usedBy: [qa, ui-designer]
+    compatibility: "Documented: `claude mcp add playwright npx @playwright/mcp@latest`, `codex mcp add playwright npx \"@playwright/mcp@latest\"`. Useful for web-based games."
+    notes: "Existing local config uses @latest; pin before integration."
+
+  - id: hoppscotch-mcp
+    name: Hoppscotch MCP Server
+    category: development-tools
+    source:
+      repository: https://github.com/hoppscotch/hoppscotch-mcp-server
+      docs: https://docs.hoppscotch.io/documentation/clients/mcp-server/overview
+      package: npm:@hoppscotch/mcp-server
+    license: unknown
+    required: false
+    versionConstraint: "pin when adopted (latest 1.0.2)"
+    verifiedVersion: "configured in Claude Code as `npx -y @hoppscotch/mcp-server` (2026-11-03)"
+    install:
+      strategy: mcp-server
+      reference: https://docs.hoppscotch.io/documentation/clients/mcp-server/overview
+    integrationStatus: candidate
+    usedBy: []
+    compatibility: "Needs a Hoppscotch account/instance (HOPPSCOTCH_SERVER_URL for self-hosted, per official docs). Only relevant for games with HTTP backends."
+    notes: "License not checked (repository not cloned). Need: OQ-026."
+
+  - id: github-cli
+    name: GitHub CLI
+    category: development-tools
+    source:
+      repository: https://github.com/cli/cli
+    license: MIT
+    required: true
+    versionConstraint: ">=2.62.0"
+    verifiedVersion: "2.62.0 (~/.local/bin/gh, 2026-11-03)"
+    install:
+      strategy: global-cli
+      reference: https://github.com/cli/cli#installation
+    integrationStatus: integrated
+    usedBy: [producer, project-manager, game-designer, gameplay-programmer, ui-designer, qa]
+    compatibility: "Uses GH_TOKEN/GITHUB_TOKEN env for auth in automation."
+    notes: "Used for PR creation and status checks."

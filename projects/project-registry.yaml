@@ -1,0 +1,35 @@
+# Game Studio — Project Registry
+# Contract: docs/design/project-system.md
+# Schema:   projects/project-config.schema.yaml (status: PROPOSED)
+#
+# One entry per Game Project. Portable data only:
+#   - NO local absolute paths, NO credentials (those live in ~/.config/game-studio/, ADR-010).
+# Entries are added through the workflows:
+#   workflows/project-initialization.md, workflows/register-existing-repository.md
+#
+# Example entry (commented out; no games are registered yet):
+#
+# - id: node-arena
+#   name: Node Arena
+#   status: active                # proposed | initializing | active | maintenance | archived
+#   repository:
+#     url: https://github.com/datpham02/node-arena.git
+#     defaultBranch: main
+#   engine:
+#     name: godot
+#     version: "4.4"
+#   paperclip:
+#     projectId: "<paperclip-project-uuid>"
+#   agents: [game-designer, gameplay-programmer, ui-designer, qa, project-manager]
+#   dependencies: [openspec, playwright-mcp]
+#   specs:
+#     tool: openspec
+#   workflows:
+#     parallel-tasks:
+#       maxConcurrent: 2
+#     code-review-and-merge:
+#       requireQaReview: true
+#   frameworkVersion: 0.1.0
+
+registryVersion: 1
+projects: []

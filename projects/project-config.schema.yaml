@@ -1,0 +1,79 @@
+# JSON Schema (draft 2020-12), written in YAML, for projects/project-registry.yaml.
+# Status: PROPOSED. Not yet enforced by any script (validation script is PLANNED).
+# Contract: docs/design/project-system.md
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://github.com/datpham02/game-studio/projects/project-config.schema.yaml"
+title: Game Studio project registry
+type: object
+additionalProperties: false
+required: [registryVersion, projects]
+properties:
+  registryVersion:
+    const: 1
+  projects:
+    type: array
+    items: { $ref: "#/$defs/project" }
+$defs:
+  kebabId:
+    type: string
+    pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+    maxLength: 64
+  project:
+    type: object
+    additionalProperties: false
+    required: [id, name, status, repository, frameworkVersion]
+    properties:
+      id: { $ref: "#/$defs/kebabId" }
+      name: { type: string, minLength: 1 }
+      status:
+        enum: [proposed, initializing, active, maintenance, archived]
+      repository:
+        type: object
+        additionalProperties: false
+        required: [url, defaultBranch]
+        properties:
+          url:
+            type: string
+            pattern: "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(\\.git)?$"
+          defaultBranch: { type: string, minLength: 1 }
+      engine:
+        type: object
+        additionalProperties: false
+        required: [name]
+        properties:
+          name: { type: string }
+          version: { type: string }
+      paperclip:
+        type: object
+        additionalProperties: false
+        required: [projectId]
+        properties:
+          projectId: { type: string, minLength: 1 }
+      agents:
+        description: Agent IDs enabled for this project. Omit for all roles.
+        type: array
+        items: { $ref: "#/$defs/kebabId" }
+        uniqueItems: true
+      dependencies:
+        description: Dependency IDs from dependencies/registry.yaml.
+        type: array
+        items: { $ref: "#/$defs/kebabId" }
+        uniqueItems: true
+      specs:
+        type: object
+        additionalProperties: false
+        properties:
+          tool: { enum: [openspec, none] }
+      workflows:
+        description: Per-workflow parameter overrides keyed by workflow ID. Must not remove ADR-required approval gates.
+        type: object
+        propertyNames: { $ref: "#/$defs/kebabId" }
+        additionalProperties: { type: object }
+      frameworkVersion:
+        type: string
+        pattern: "^\\d+\\.\\d+\\.\\d+$"
+    allOf:
+      - if:
+          properties: { status: { enum: [active, maintenance] } }
+        then:
+          required: [paperclip]
