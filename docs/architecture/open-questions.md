@@ -11,10 +11,10 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | ID | Question | Status | Blocks |
 |---|---|---|---|
 | OQ-001 | How should the Runtime communicate with Paperclip? | Partially verified | Runtime Stage 2 |
-| OQ-002 | Who owns Task Workspace (worktree) creation, and where do Paperclip's live? | Open | Stage 1 setup, ADR-006 |
-| OQ-003 | Does a `process`-adapter agent receive the Task ID and resolved workspace? | Open | Runtime Stage 2 |
-| OQ-004 | Task key format and branch naming in Paperclip worktree mode | Open | Branch conventions |
-| OQ-005 | How is merge approval made enforceable and checkable? | Partially verified | ADR-009 operation |
+| OQ-002 | Who owns Task Workspace (worktree) creation, and where do Paperclip's live? | Partially verified | Stage 1 setup, ADR-006 |
+| OQ-003 | Does a `process`-adapter agent receive the Task ID and resolved workspace? | Resolved (no) | Runtime Stage 2 |
+| OQ-004 | Task key format and branch naming in Paperclip worktree mode | Partially verified | Branch conventions |
+| OQ-005 | How is merge approval made enforceable and checkable? | Partially verified (Paperclip side works; GitHub link missing) | ADR-009 operation |
 | OQ-006 | Can `game-director` be the Paperclip root (CEO) agent? | Partially verified | Studio setup |
 | OQ-007 | Can `company/` + `agents/` be imported with `paperclipai company import`? | Resolved | — |
 | OQ-008 | Which Paperclip version to pin, and how stable is its API? | Open | Installation |
@@ -39,9 +39,9 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-027 | Stronger filesystem isolation without Docker | Open | Security |
 | OQ-028 | Framework Repository not yet under Git; GitHub account mapping | Resolved | — |
 | OQ-029 | Overlap with "Paperclip Runner" | Open | ADR-011 |
-| OQ-030 | Can one Paperclip agent run concurrent heartbeats for different Tasks? | Open | Parallel tasks |
+| OQ-030 | Can one Paperclip agent run concurrent heartbeats for different Tasks? | Resolved (yes) | Parallel tasks |
 | OQ-031 | Does Paperclip run on native Windows? | Partially verified (server, import, agent test pass; wizard sign-in fails) | Stage 1, ADR-013 |
-| OQ-032 | How do Codex sandboxing and the `process` adapter's shell behave on native Windows? | Open | Codex provider, Runtime Stage 2 |
+| OQ-032 | How do Codex sandboxing and the `process` adapter's shell behave on native Windows? | Partially verified | Codex provider, Runtime Stage 2 |
 | OQ-033 | How well do Cursor CLI headless runs confine agents, with and without Paperclip's automatic `--yolo`? | Partially verified | Cursor provider |
 
 ## Entries
@@ -59,21 +59,33 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Current assumption:** Stage 1: Paperclip owns worktrees. Stage 2: decided per gap analysis.
 - **Verification method:** In a test company, set a project's execution workspace mode to isolated `git_worktree`; run two Tasks; record paths, branch names, cleanup behaviour; read `server/src/services/workspace-runtime.ts`.
 - **Impact if incorrect:** Duplicate worktrees, branch collisions, disk waste.
-- **Status:** Open. See C-001.
+- **Result (experiment 0.6; Paperclip 2026.1023.0 on Windows 11, scratch company "Scratch Lab (Phase 0)", project `scratch-game` with a local Git repository as its primary workspace, 2026-11-03):**
+  - Isolated workspaces are an **experimental instance setting**, `enableIsolatedWorkspaces`, off by default (Instance settings → Experimental; API `PATCH /api/instance/settings/experimental`). While it is off, a project's `executionWorkspacePolicy` is ignored and every Task runs in the project's primary checkout (`shared_workspace` / `project_primary`). It was turned on for this instance on 2026-11-03; `enableIsolatedWorkspacesByDefault` stays off.
+  - With it on and the project policy `{enabled: true, defaultMode: isolated_workspace, workspaceStrategy: {type: git_worktree, baseRef: main}}`, Paperclip creates one worktree per Task at `<primary-checkout>/.paperclip/worktrees/<ISSUE-KEY>-<title-slug>` on a new branch with the same name, from `main`. Two Tasks started in the same second got two worktrees.
+  - Worktrees live **inside** the primary checkout, so `git status` there shows `?? .paperclip/`. Game Repositories MUST ignore `.paperclip/` in `.gitignore`.
+  - Cancelling a Task did not remove its worktree or branch. Cleanup behavior is still unknown.
+  - `claude_local` runs in the Task's worktree; Paperclip posts a "Workspace Ready" comment with strategy, branch and cwd. `process` agents do not (OQ-003).
+- **Status:** Partially verified. Stage 1 owner: Paperclip. See C-001.
 
 ### OQ-003 — Context passed to `process` adapters
 - **Why it matters:** Without the Task ID and resolved workspace, the Runtime must re-discover them.
 - **Current assumption:** Env vars listed in Paperclip's `how-agents-work.md` (`PAPERCLIP_AGENT_ID`, `PAPERCLIP_COMPANY_ID`, `PAPERCLIP_RUN_ID`, `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, `PAPERCLIP_API_URL`, `PAPERCLIP_API_KEY`, …) are injected for all adapters. Whether `cwd` is the resolved execution workspace for `process` agents is unknown.
 - **Verification method:** Same as OQ-001, plus print `pwd` and `git rev-parse --abbrev-ref HEAD`.
 - **Impact if incorrect:** Extra API calls; Runtime must own workspaces.
-- **Status:** Open.
+- **Result (experiment 0.5; Paperclip 2026.1023.0 on Windows 11, scratch company "Scratch Lab (Phase 0)", project `scratch-game` with a local Git repository as its primary workspace, 2026-11-03):** A `process` agent ran Git Bash with a script that printed `PAPERCLIP_*` variable names (values hidden), `pwd` and the branch.
+  - Injected: `PAPERCLIP_AGENT_ID`, `PAPERCLIP_COMPANY_ID`, `PAPERCLIP_RUN_ID`, `PAPERCLIP_API_URL`, `PAPERCLIP_API_KEY`, agent key-pair variables, `PAPERCLIP_RUNTIME_*` tool variables, and scratch/temp directories (`PAPERCLIP_RUN_SCRATCH_DIR`, `PAPERCLIP_TASK_SCRATCH_DIR`, `PAPERCLIP_TMPDIR`). Secret values are redacted in the run log.
+  - **Not injected:** `PAPERCLIP_TASK_ID`, `PAPERCLIP_WAKE_REASON`, or any workspace path. The Task must be looked up through the API, for example `GET /api/heartbeat-runs/{runId}/issues`.
+  - **cwd is the directory the Paperclip server was started from, even when Paperclip had created an isolated worktree for the Task.** The adapter only uses `adapterConfig.cwd`.
+  - A `process` run that does not update its Task is retried automatically (liveness "needs_followup", retry reason `issue_disposition_repair`), so a Runtime behind `process` MUST update the Task through the API.
+- **Status:** Resolved. A Stage 2 Runtime behind `process` would have to resolve the Task and its workspace itself (ADR-011).
 
 ### OQ-004 — Task key and branch naming
 - **Why it matters:** Branch names must be unique, traceable, and human-readable.
 - **Current assumption:** Paperclip issues have a human-readable identifier usable as Task Key; the Runtime naming rule is `agent/<agent-id>/<task-key>`.
 - **Verification method:** Inspect an issue via `GET /api/issues/{id}`; inspect branch names created by Paperclip worktree mode and whether they are configurable.
 - **Impact if incorrect:** Naming convention changes; documentation update only.
-- **Status:** Open.
+- **Result (experiment 0.6, 2026-11-03):** Issues get identifiers `<company prefix>-<n>` (for example `SCR-4`). Paperclip names worktree branches `<ISSUE-KEY>-<title-slug>` (for example `SCR-4-0-6-worktree-probe-c`), not `agent/<agent-id>/<task-key>`. The project policy schema has `workspaceStrategy.branchTemplate`; whether it can produce the ADR-006 convention is untested.
+- **Status:** Partially verified.
 
 ### OQ-005 — Enforceable merge approval
 - **Why it matters:** ADR-009 requires approval in Paperclip **and** on GitHub.
@@ -81,7 +93,14 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Open:** Whether Paperclip can block `done` until the PR is merged; whether a GitHub merge can be linked automatically to the Paperclip approval.
 - **Verification method:** Configure an issue with an approval stage whose participant is the board user; walk through it; check `executionState`.
 - **Impact if incorrect:** Approval stays a manual two-step process (acceptable for v1).
-- **Status:** Partially verified.
+- **Result (experiment 0.8, 2026-11-03, scratch company):** An issue was created with `executionPolicy: {stages: [{type: review, participants: [{type: agent, agentId: <reviewer>}]}, {type: approval, participants: [{type: user, userId: "local-board"}]}]}` (`local-board` is the Board user in `local_trusted` mode).
+  - The implementer committed on its worktree branch and set the issue to `done`. Paperclip then moved it to `in_review`, assigned the reviewer agent and recorded `returnAssignee` = implementer.
+  - The reviewer approved with a comment. Paperclip completed the review stage and moved to the approval stage, assigning the issue to the Board user; the UI showed "Approval pending with You". The whole sequence took about one minute.
+  - `executionState` tracks `currentStageType`, `completedStageIds`, `lastDecisionId` and `returnAssignee`.
+  - Nothing in Paperclip links this approval to a GitHub PR or merge. ADR-009's GitHub side stays manual.
+  - First attempt: the implementer ran with the confined Claude CLI profile and could not set the issue to `done` (OQ-011), so the review stage never started. The second attempt used unrestricted ACP agents, in the scratch company only.
+  - **Board decision:** A Board comment alone ("Approved") does **not** record a decision; the issue stayed `in_review`. Per Paperclip's `issue-execution-policy` service, the current participant approves by setting the status to `done` **with a comment**; any other status with a comment records `changes_requested` and returns the issue to `returnAssignee`. Setting `done` with a comment completed the approval stage: `status: done`, `executionState.status: completed`, 2 completed stages, `lastDecisionOutcome: approved`. The worktree branch was left unmerged and unpushed; merging stays a separate step (ADR-009).
+- **Status:** Resolved for the Paperclip side (review and Board approval work end to end). Still open: no link to GitHub PR review or merge.
 
 ### OQ-006 — `game-director` as Paperclip root agent
 - **Why it matters:** Paperclip agents form "a strict tree hierarchy … every agent reports to exactly one manager (except the CEO)" (`VERIFIED`). The CEO also produces strategy needing board approval.
@@ -145,6 +164,21 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
   - Plan mode writes a plan file under `~/.claude/plans/`, outside the repository.
   - On Windows, Claude Code's PowerShell tool failed every time with "The command line is too long". The agent then ran the same command through Bash (Git Bash). Allowlists must use `Bash(...)` patterns.
 - **Result, Paperclip `claude_local` (read from installed Paperclip 2026.1023.0 code, not yet exercised in a run):** The default execution engine is ACP. Under ACP, tool permissions come from `adapterConfig.permissionMode` (default `approve-all`) and `adapterConfig.nonInteractivePermissions` (default `deny`). Supported modes in the bundled runner are `approve-all`, `approve-reads` (reads approved; other requests follow `nonInteractivePermissions`), and `deny-all`. The "Skip permissions" switch (`dangerouslySkipPermissions`) only affects the Claude CLI engine (`--dangerously-skip-permissions`) and the login probe. **So with the default ACP engine, turning "Skip permissions" off does not restrict the agent: every permission request is approved.** Restricting an agent needs either `permissionMode: approve-reads` / `deny-all` under ACP, or the Claude CLI engine plus `extraArgs` such as `--permission-mode acceptEdits --allowedTools ...`. Both still need a test run through Paperclip.
+- **Result, Paperclip run with `permissionMode: approve-reads` (experiment 0.7b, 2026-11-03):** A `claude_local` agent (ACP engine, `nonInteractivePermissions: deny`) got a Task to read `game.py`, edit it, commit, then comment and close the Task.
+  - Read: allowed. `git status`: allowed. **Edit: refused** ("User refused permission to run tool"); the file was unchanged.
+  - **Every write to the Paperclip API was refused too** (comment, interaction, status update), because they go through the shell. The agent could not report or close its Task. Paperclip still posted the agent's final message as a comment, then scheduled retries (`issue_disposition_repair`) that had to be cancelled by hand.
+  - The run created an untracked `.claude/` directory in the worktree.
+  - Conclusion: `approve-reads` confines file edits, but it is unusable for any agent that must report through Paperclip, including the planning roles. A usable profile must allow the agent's Paperclip API calls while still limiting edits and other commands. Candidate: Claude CLI engine with `--permission-mode acceptEdits` and an `--allowedTools` list, still to be tested through Paperclip.
+- **Result, Paperclip run on the Claude CLI engine (experiments 0.7c and 0.7d, 2026-11-03):** `adapterConfig: {engine: "cli", dangerouslySkipPermissions: false, extraArgs: [...]}`, same Task plus a `git push` step that should be refused.
+  - **0.7c**, `--permission-mode acceptEdits --allowedTools "Bash(curl *)" "Bash(cat *)" "Bash(git status*)" "Bash(git diff*)" "Bash(git log*)" "Bash(git add*)" "Bash(git commit*)" --disallowedTools "Bash(git push*)"`:
+    - Edit, `git status` and commit: allowed. `git push`: denied by the rule.
+    - Reporting to Paperclip still failed. Claude Code rejects any command that contains a shell variable ("A variable in this command can't be checked before it runs"), so `curl` with `$PAPERCLIP_API_URL` / `$PAPERCLIP_API_KEY` cannot run even though `curl` is allowed. The Paperclip skill's helper `scripts/paperclip-issue-update.sh` "requires approval". The Paperclip MCP tools were "not granted". Paperclip then scheduled retries.
+  - **0.7d**, the same flags plus `"Bash(*paperclip-issue-update.sh*)" "Bash(*paperclip-upload-artifact.sh*)" "mcp__Paperclip_projects"` in `--allowedTools`: **everything worked as intended.**
+    - Edit, `git status` and commit: allowed. `git push`: denied.
+    - The agent posted its results through `paperclip-issue-update.sh` and set the Task to `done`, so no retry was scheduled. Its first helper call, with `$PAPERCLIP_TASK_ID`, hit the variable check; it then passed the literal issue ID.
+    - The Paperclip skill also requires a `Co-Authored-By: Paperclip <noreply@paperclip.ing>` trailer, so the agent amended its commit.
+  - **Repeat (experiment 0.8, first attempt):** With the same profile, the agent edited and committed, but did not call the helper script directly. It wrote its own wrapper script (`bash .pc-finish.sh`), which "requires approval", and its `curl` calls hit the variable check. It never reported, and the issue ended `blocked`. **So the profile works only when the agent happens to call the helper directly: 1 of 2 runs.** It is not reliable yet. Options still to test: tell the agent in its instructions to call `paperclip-issue-update.sh` directly with literal IDs; or find a Paperclip MCP tool for issue updates that can be allowlisted.
+  - This is the first working confined profile (`PROPOSED` for `workspace-write`; see security-architecture.md §4). For `read-only` roles, the candidate is the same allowlist without `--permission-mode acceptEdits` and without the `git add` / `git commit` entries. That variant is untested.
 - **Status:** Partially verified. See C-002.
 
 ### OQ-012 — Subscription use in automation
@@ -236,7 +270,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Current assumption:** One Run per Agent Instance at a time; register extra instances (e.g. `gameplay-programmer-2`) for parallelism.
 - **Verification method:** Assign two Tasks to one agent and invoke heartbeats; observe whether runs overlap (Phase 0.6).
 - **Impact if incorrect:** Fewer instances needed; org chart simplified.
-- **Status:** Open.
+- **Result (experiment 0.6, 2026-11-03):** Yes. One `process` agent ran two Tasks in parallel (runs started in the same second). Agents default to `runtimeConfig.heartbeat.maxConcurrentRuns: 20`. Extra Agent Instances are not needed for parallelism; a lower limit may be needed for cost or machine load (OQ-015).
+- **Status:** Resolved.
 
 ### OQ-031 — Paperclip on native Windows
 - **Why it matters:** ADR-013 runs the studio natively on Windows 11.
@@ -254,7 +289,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Why it matters:** Security profiles (OQ-011) and the Stage 2 entry point (ADR-011) assume Linux behavior.
 - **Open:** What Codex `--sandbox workspace-write` enforces on Windows; which shell Paperclip's `process` adapter uses on Windows, and whether `sh -c` (Git Bash) works there.
 - **Verification method:** Phase 0 experiments 0.5 and 0.7 on the Windows studio machine.
-- **Status:** Open.
+- **Result (experiment 0.5, 2026-11-03):** The `process` adapter starts `command` directly with `args`, not through a shell. On this machine `bash` resolves to `C:\WINDOWS\system32\bash.exe` (the WSL launcher), not Git Bash. A `process` agent must therefore use the full Git Bash path (`C:\Program Files\Git\bin\bash.exe`) as `command`, with `["-c", "..."]` as `args`. That worked (bash 5.2.37). Codex sandbox behavior is still untested.
+- **Status:** Partially verified.
 
 ### OQ-033 — Cursor CLI permission confinement
 - **Why it matters:** Cursor CLI was added as a third provider on 2026-11-03 ([cursor-integration.md](../integrations/cursor-integration.md)). Paperclip's `cursor` adapter adds `--yolo` unless `extraArgs` contains `--trust`, `--yolo` or `-f`.
@@ -286,6 +322,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Documents:** Paperclip `claude_local` default `dangerouslySkipPermissions: true` vs. [security-architecture.md §4](security-architecture.md#4-agent-permissions-provider-level).
 - **Interim rule:** Bypass only with per-instance Board approval and protected branches.
 - **Update (2026-11-03):** Under Paperclip's default ACP engine the effective default is `permissionMode: approve-all`, which is equivalent to bypass even with "Skip permissions" off (OQ-011). All seven agents are currently in this state, so none may receive Tasks on a real Game Repository until their permission mode is set.
+- **Update (2026-11-03, later):** The six `claude_local` agents of the studio company now use the Claude CLI engine with the tested profile from security-architecture.md §4. `game-director`, `producer` and `project-manager` got the `read-only` variant; `game-designer`, `gameplay-programmer` and `ui-designer` got `workspace-write`. Instructions settings were kept, and Test Environment passed for all six. `qa` stays on Cursor with `--trust --auto-review` (OQ-033). Untested so far: the `read-only` variant in a real run, and project build/test commands, which still need adding per game.
 - **Needs:** OQ-011 results.
 - **Status:** Open.
 
