@@ -23,8 +23,8 @@ ADRs are the highest authority in the documentation hierarchy ([../conventions.m
 | [ADR-008](ADR-008-provider-abstraction.md) | Provider abstraction for Claude Code and Codex | Accepted |
 | [ADR-009](ADR-009-approval-before-merge.md) | Approval before Git merge | Accepted |
 | [ADR-010](ADR-010-runtime-data-outside-repository.md) | Runtime data outside the main repository | Accepted |
-| [ADR-011](ADR-011-execution-path-selection.md) | Staged execution path: Paperclip-native first, Runtime via `process` adapter | **Proposed** |
-| [ADR-012](ADR-012-agent-definition-format.md) | Agent definitions aligned with the Agent Companies package format | **Proposed** |
+| [ADR-011](ADR-011-execution-path-selection.md) | Staged execution path: Paperclip-native first, Runtime via `process` adapter | Accepted |
+| [ADR-012](ADR-012-agent-definition-format.md) | Agent definitions aligned with the Agent Companies package format | Accepted |
 | [ADR-013](ADR-013-native-windows-studio-host.md) | Native Windows studio host (supersedes ADR-003) | Accepted |
 
-ADR-001 to ADR-010 record decisions the Board Operator approved before this documentation was written (the "approved architecture decisions" of the v1 brief). ADR-011 and ADR-012 come from the 2026-11-03 research findings and await a decision.
+ADR-001 to ADR-010 record decisions the Board Operator approved before this documentation was written (the "approved architecture decisions" of the v1 brief). ADR-011 and ADR-012 come from the 2026-11-03 research findings and were accepted the same day after the Phase 0 experiments.

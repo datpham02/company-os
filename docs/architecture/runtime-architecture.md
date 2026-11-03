@@ -1,6 +1,6 @@
 # Runtime Architecture
 
-**Status:** `PLANNED`. No Runtime code exists. Under the proposed [ADR-011](../decisions/ADR-011-execution-path-selection.md), Stage 1 uses Paperclip's built-in adapters and execution workspaces, and the Runtime described here is built in Stage 2 **only for gaps found in Stage 1**. This document is the target design for that Runtime. Every sub-component below must be re-checked against the gap analysis before implementation.
+**Status:** `PLANNED`. No Runtime code exists. Under [ADR-011](../decisions/ADR-011-execution-path-selection.md), Stage 1 uses Paperclip's built-in adapters and execution workspaces, and the Runtime described here is built in Stage 2 **only for gaps found in Stage 1**. This document is the target design for that Runtime. Every sub-component below must be re-checked against the gap analysis before implementation.
 
 ## 1. Scope
 

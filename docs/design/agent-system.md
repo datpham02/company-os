@@ -39,7 +39,7 @@ Every `AGENTS.md` MUST contain these sections, in this order:
 
 ## 3. Agent definition file format
 
-Status: `PROPOSED` (ADR-012). YAML frontmatter compatible with the Agent Companies format, followed by the Markdown body above.
+Status: `APPROVED` (ADR-012, accepted 2026-11-03). YAML frontmatter compatible with the Agent Companies format, followed by the Markdown body above.
 
 ```yaml
 ---

@@ -58,13 +58,22 @@ All flags are `VERIFIED` present in the installed CLIs (Claude Code 2.1.273, Cod
     "--allowedTools",
     "Bash(curl *)", "Bash(cat *)",
     "Bash(*paperclip-issue-update.sh*)", "Bash(*paperclip-upload-artifact.sh*)", "mcp__Paperclip_projects",
-    "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)", "Bash(git add*)", "Bash(git commit*)",
-    "--disallowedTools", "Bash(git push*)"
+    "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)", "Bash(git show*)", "Bash(git add*)", "Bash(git commit*)",
+    "--disallowedTools", "Bash(git push*)",
+    "--append-system-prompt", "<reporting rule, below>"
   ]
 }
 ```
 
-This is the `workspace-write` profile. Add each project's build and test commands to `--allowedTools`. For `read-only` roles, drop `--permission-mode acceptEdits` and the `git add` / `git commit` entries (untested). Paperclip's `filesystemScope` / `networkScope` confinement needs Bubblewrap and is not available on Windows.
+This is the `workspace-write` profile. Add each project's build and test commands to `--allowedTools`. For `read-only` roles, drop `--permission-mode acceptEdits` and the `git add` / `git commit` entries.
+
+The **reporting rule** is required. Without it, an agent sometimes wraps Paperclip's helper in its own script or uses shell variables, both of which the permission layer refuses. It then cannot report, and the Task ends `blocked` (OQ-011). The rule passed through `--append-system-prompt`:
+
+> Paperclip reporting rule for this environment: to post comments or change issue status, call the Paperclip skill's paperclip-issue-update.sh as one standalone Bash command, for example: `bash "<absolute path to paperclip-issue-update.sh>" --issue-id <literal issue id> --status done <<'MD' ... MD`. Never wrap it in a script of your own, never use shell variables such as `$PAPERCLIP_TASK_ID` or `$PAPERCLIP_API_KEY` in a command, and never chain it with other commands using `&&` or `;`. Use the literal issue id from your task. The permission layer refuses anything else.
+
+Applied on 2026-11-03 to the six `claude_local` agents of the studio company (`read-only`: `game-director`, `producer`, `project-manager`; `workspace-write`: `game-designer`, `gameplay-programmer`, `ui-designer`).
+
+Paperclip's `filesystemScope` / `networkScope` confinement needs Bubblewrap and is not available on Windows.
 
 **Important conflict with Paperclip defaults:** Paperclip's `claude_local` adapter defaults `dangerouslySkipPermissions` to `true` ("required for headless runs where interactive approval is impossible", `VERIFIED`). Using the `bypass` profile by default contradicts this document. Until OQ-011 is resolved, the `bypass` profile MAY be used only for Agent Instances whose GitHub token cannot push to protected branches and whose working directory is a Task Workspace, and the Board Operator MUST approve its use per Agent Instance. Recorded as C-002.
 

@@ -30,7 +30,7 @@ Game Studio MUST NOT use undocumented endpoints or read Paperclip's database dir
 
 ## 3. Execution paths
 
-See [ADR-011](../decisions/ADR-011-execution-path-selection.md) (`PROPOSED`).
+See [ADR-011](../decisions/ADR-011-execution-path-selection.md) (accepted 2026-11-03).
 
 | Stage | Adapter | Who launches the CLI | Who creates worktrees |
 |---|---|---|---|

@@ -22,7 +22,7 @@ flowchart LR
   BO -- review & merge --> GH
 ```
 
-The "Execution" box is deliberately abstract. Who fills it is decided by [ADR-011](../decisions/ADR-011-execution-path-selection.md) (`PROPOSED`): Paperclip's own adapters first, then the Game Studio Runtime for gaps.
+The "Execution" box is deliberately abstract. Who fills it is decided by [ADR-011](../decisions/ADR-011-execution-path-selection.md) (accepted): Paperclip's own adapters first, then the Game Studio Runtime for gaps.
 
 ## 3. Major components
 

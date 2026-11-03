@@ -20,7 +20,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-008 | Which Paperclip version to pin, and how stable is its API? | Open | Installation |
 | OQ-009 | How should Codex CLI be installed (not on PATH)? | Resolved | — |
 | OQ-010 | How does Codex authenticate in headless runs on this machine? | Partially verified | Codex provider |
-| OQ-011 | How well do headless permission modes confine agents? | Partially verified | Security profiles |
+| OQ-011 | How well do headless permission modes confine agents? | Resolved (Claude); Cursor in OQ-033 | Security profiles |
 | OQ-012 | Are subscription logins acceptable for automated runs (terms, quotas)? | Open | Provider auth |
 | OQ-013 | Runtime implementation language | Open (TypeScript proposed) | Runtime Stage 2 |
 | OQ-014 | Runtime state store | Open | Runtime Stage 2 |
@@ -48,7 +48,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 
 ### OQ-001 — Runtime ↔ Paperclip communication mechanism
 - **Why it matters:** Defines the Runtime's entry point, auth, and reporting path (ADR-013).
-- **Current assumption:** Paperclip's `process` adapter invokes the Runtime per heartbeat; the Runtime reports via REST API (ADR-011 `PROPOSED`).
+- **Current assumption:** Paperclip's `process` adapter invokes the Runtime per heartbeat; the Runtime reports via REST API (ADR-011, accepted). Phase 0: the `process` adapter passes no Task ID or workspace, so the Runtime must look both up through the API (OQ-003).
 - **Verified so far:** Paperclip documents adapters `process` (runs a command with `PAPERCLIP_*` env; exit code = success), `http` (webhook), external adapter plugins, and a REST API with run JWTs. No Paperclip feature *requires* an external runtime.
 - **Verification method:** Install Paperclip; create a `process` agent running `env | grep PAPERCLIP_ | sed 's/=.*/=<set>/'`; assign a Task; inspect the run log.
 - **Impact if incorrect:** Runtime entry point redesigned (plugin or HTTP).
@@ -178,8 +178,11 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
     - The agent posted its results through `paperclip-issue-update.sh` and set the Task to `done`, so no retry was scheduled. Its first helper call, with `$PAPERCLIP_TASK_ID`, hit the variable check; it then passed the literal issue ID.
     - The Paperclip skill also requires a `Co-Authored-By: Paperclip <noreply@paperclip.ing>` trailer, so the agent amended its commit.
   - **Repeat (experiment 0.8, first attempt):** With the same profile, the agent edited and committed, but did not call the helper script directly. It wrote its own wrapper script (`bash .pc-finish.sh`), which "requires approval", and its `curl` calls hit the variable check. It never reported, and the issue ended `blocked`. **So the profile works only when the agent happens to call the helper directly: 1 of 2 runs.** It is not reliable yet. Options still to test: tell the agent in its instructions to call `paperclip-issue-update.sh` directly with literal IDs; or find a Paperclip MCP tool for issue updates that can be allowlisted.
-  - This is the first working confined profile (`PROPOSED` for `workspace-write`; see security-architecture.md §4). For `read-only` roles, the candidate is the same allowlist without `--permission-mode acceptEdits` and without the `git add` / `git commit` entries. That variant is untested.
-- **Status:** Partially verified. See C-002.
+  - **Fix (2026-11-03): reporting rule.** The profile now adds `--append-system-prompt` with a rule: call `paperclip-issue-update.sh` directly as one standalone command, with literal IDs, no shell variables, no wrapper scripts and no chaining. Retested in the scratch company:
+    - `workspace-write`: 3 Tasks in parallel (each edits `README.md` and commits). **3/3 closed themselves `done` in a single run each.**
+    - `read-only`: 2 Tasks (each reads a file and tries an edit). **2/2: edit refused, file unchanged, results reported, issue `done` in a single run.**
+  - The profile (security-architecture.md §4, `PROPOSED`) is applied to the six `claude_local` agents of the studio company. For `read-only` roles, the candidate is the same allowlist without `--permission-mode acceptEdits` and without the `git add` / `git commit` entries. That variant is untested.
+- **Status:** Resolved for `claude_local` on Windows: reporting rule + CLI profile, 5/5 runs after the fix. Cursor: OQ-033. See C-002.
 
 ### OQ-012 — Subscription use in automation
 - **Why it matters:** Cost model and compliance.
@@ -314,15 +317,15 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 
 ### C-001 — Runtime scope vs. Paperclip built-in execution
 - **Documents:** The v1 brief (§2.3: Runtime launches CLIs, manages branches/worktrees; §2.6) vs. ADR-002 ("do not duplicate functionality Paperclip provides") and verified Paperclip features (`claude_local`, `codex_local`, `git_worktree` execution workspaces).
-- **Interim rule:** ADR-013 (which superseded ADR-003) and ADR-006 remain Accepted. ADR-011 (`Proposed`) stages the work so that nothing is duplicated before a gap is shown.
-- **Needs:** Board Operator decision on ADR-011.
-- **Status:** Open.
+- **Interim rule:** ADR-013 (which superseded ADR-003) and ADR-006 remain Accepted. ADR-011 stages the work so that nothing is duplicated before a gap is shown.
+- **Resolution:** ADR-011 accepted on 2026-11-03 after Phase 0. Stage 1: Paperclip owns execution and worktrees; a Runtime is built only for gaps found while operating Stage 1.
+- **Status:** Resolved.
 
 ### C-002 — Paperclip's default permission bypass vs. security architecture
 - **Documents:** Paperclip `claude_local` default `dangerouslySkipPermissions: true` vs. [security-architecture.md §4](security-architecture.md#4-agent-permissions-provider-level).
 - **Interim rule:** Bypass only with per-instance Board approval and protected branches.
 - **Update (2026-11-03):** Under Paperclip's default ACP engine the effective default is `permissionMode: approve-all`, which is equivalent to bypass even with "Skip permissions" off (OQ-011). All seven agents are currently in this state, so none may receive Tasks on a real Game Repository until their permission mode is set.
-- **Update (2026-11-03, later):** The six `claude_local` agents of the studio company now use the Claude CLI engine with the tested profile from security-architecture.md §4. `game-director`, `producer` and `project-manager` got the `read-only` variant; `game-designer`, `gameplay-programmer` and `ui-designer` got `workspace-write`. Instructions settings were kept, and Test Environment passed for all six. `qa` stays on Cursor with `--trust --auto-review` (OQ-033). Untested so far: the `read-only` variant in a real run, and project build/test commands, which still need adding per game.
+- **Update (2026-11-03, later):** The six `claude_local` agents of the studio company now use the Claude CLI engine with the tested profile from security-architecture.md §4. `game-director`, `producer` and `project-manager` got the `read-only` variant; `game-designer`, `gameplay-programmer` and `ui-designer` got `workspace-write`. Instructions settings were kept, and Test Environment passed for all six. `qa` stays on Cursor with `--trust --auto-review` (OQ-033). Later the same day, a reporting rule was added (OQ-011) and both variants passed real runs (5/5). Still to add: each game's build/test commands to the allowlist.
 - **Needs:** OQ-011 results.
 - **Status:** Open.
 

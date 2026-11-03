@@ -44,7 +44,7 @@ Interface details: [../integrations/paperclip-integration.md](../integrations/pa
 | **Outputs** | `agents/<agent-id>/AGENTS.md`, used as (a) the instruction body given to the Provider at Run time, (b) the source for registering Agent Instances in Paperclip. |
 | **Dependencies** | Skills and Tools named in each definition must be registered in [dependencies/registry.yaml](../../dependencies/registry.yaml) before use. |
 | **Must not** | Name a specific Provider as mandatory; contain adapter config, secrets, or absolute paths (ADR-012). |
-| **Status** | 7 roles defined. Format `PROPOSED` (ADR-012). |
+| **Status** | 7 roles defined. Format accepted (ADR-012); imported into Paperclip on 2026-11-03. |
 
 ---
 
