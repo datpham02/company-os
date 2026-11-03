@@ -35,7 +35,7 @@ registryVersion: 1
 projects:
   - id: lamplight-vigil
     name: Lamplight Vigil
-    status: initializing          # concept approved 2026-11-03 (Paperclip issue GAM-1); seeding not done yet
+    status: active                # initialization finished 2026-11-04: concept GAM-1, seed GAM-2, vision GAM-5, milestone plan GAM-7
     repository:
       url: https://github.com/datpham02/lamplight-vigil.git
       defaultBranch: main
