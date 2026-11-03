@@ -1,6 +1,6 @@
 # Codex Integration
 
-**Provider ID:** `codex_local` · **Verified against:** `codex exec --help` of the Codex binary **0.166.0-alpha.5.1** found at `/usr/lib/chatgpt/resources/codex` (bundled with the ChatGPT desktop app), 2026-11-03. **No `codex` is on PATH**; the standalone CLI must be installed (OQ-009). Latest npm release: `@openai/codex` 0.166.0. Flags may differ slightly between the alpha binary and the stable release; re-verify after installation.
+**Provider ID:** `codex_local` · **Verified against:** `codex exec --help` of the Codex binary **0.166.0-alpha.5.1** found on the retired Ubuntu machine (bundled with the ChatGPT desktop app), 2026-11-03. **Codex is not installed on the Windows studio machine**; install the standalone CLI (OQ-009). Latest npm release: `@openai/codex` 0.166.0. Flags may differ slightly between the alpha binary and the stable release; re-verify after installation.
 
 ## 1. Role in the studio
 Second v1 AI Execution Provider (ADR-008). Stage 1: Paperclip's `codex_local` adapter. Stage 2: Runtime Codex Provider Adapter.
@@ -37,7 +37,7 @@ codex exec \
   - < prompt.txt
 ```
 
-What the Linux `workspace-write` sandbox permits (network, paths outside the workspace, `.git` writes in a worktree whose Git directory lives in the Primary Checkout) is `UNVERIFIED` (OQ-011). Worktree Git metadata lives outside the worktree directory. Commits may therefore need `--add-dir <primary-checkout>/.git`; verify this before relying on it.
+What the `workspace-write` sandbox permits on Windows (OQ-032) (network, paths outside the workspace, `.git` writes in a worktree whose Git directory lives in the Primary Checkout) is `UNVERIFIED` (OQ-011). Worktree Git metadata lives outside the worktree directory. Commits may therefore need `--add-dir <primary-checkout>/.git`; verify this before relying on it.
 
 ## 3. Authentication assumptions
 - Codex reads credentials from `$CODEX_HOME/auth.json` (default `~/.codex/`), not directly from `OPENAI_API_KEY` in the environment (`VERIFIED` via Paperclip `codex_local` docs).

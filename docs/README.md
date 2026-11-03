@@ -12,8 +12,8 @@ Game Studio is a reusable framework for running an AI-powered, multi-project gam
 - the **rules and workflows** agents follow;
 - the **project registry**: which games exist and where their independent repositories are;
 - the **dependency registry**: which external tools the studio uses;
-- the **integration contracts** with Paperclip, Claude Code, Codex, and OpenSpec;
-- a **local Agent Runtime** (`PLANNED`) that executes tasks on the studio's Ubuntu machine.
+- the **integration contracts** with Paperclip, Claude Code, Codex, Cursor CLI, and OpenSpec;
+- a **local Agent Runtime** (`PLANNED`) that executes tasks on the studio's Windows machine.
 
 **Paperclip**, an independent application, is the control plane. It runs the company day to day: agents, projects, tasks, assignment, approvals, and execution coordination. Game Studio defines *what the studio is and how it works*. Paperclip *operates* it. Game code lives in separate repositories, one per game.
 
@@ -75,13 +75,14 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 - [paperclip-integration.md](integrations/paperclip-integration.md)
 - [claude-code-integration.md](integrations/claude-code-integration.md)
 - [codex-integration.md](integrations/codex-integration.md)
+- [cursor-integration.md](integrations/cursor-integration.md)
 - [openspec-integration.md](integrations/openspec-integration.md)
 
 ### Decisions (`decisions/`)
 - [decisions/README.md](decisions/README.md): ADR index and process.
 
 ### Operations (`operations/`)
-- [ubuntu-setup.md](operations/ubuntu-setup.md), [installation.md](operations/installation.md), [configuration.md](operations/configuration.md), [runtime-management.md](operations/runtime-management.md), [logging-and-debugging.md](operations/logging-and-debugging.md), [backup-and-recovery.md](operations/backup-and-recovery.md), [troubleshooting.md](operations/troubleshooting.md), [security-operations.md](operations/security-operations.md)
+- [windows-setup.md](operations/windows-setup.md), [installation.md](operations/installation.md), [configuration.md](operations/configuration.md), [runtime-management.md](operations/runtime-management.md), [logging-and-debugging.md](operations/logging-and-debugging.md), [backup-and-recovery.md](operations/backup-and-recovery.md), [troubleshooting.md](operations/troubleshooting.md), [security-operations.md](operations/security-operations.md)
 
 ### Guides (`guides/`)
 - [ai-agent-onboarding.md](guides/ai-agent-onboarding.md): answers the ten orientation questions every new agent needs.

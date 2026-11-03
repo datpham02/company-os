@@ -1,6 +1,6 @@
 # ADR-003: Native Ubuntu Agent Runtime
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR-013](ADR-013-native-windows-studio-host.md) (2026-11-03: the studio machine is now Windows 11)
 - **Date:** 2026-11-03
 - **Deciders:** Board Operator
 - **Related:** ADR-004, ADR-010, [runtime-architecture.md](../architecture/runtime-architecture.md), OQ-013, OQ-027
@@ -24,7 +24,7 @@ Agents need to run AI coding CLIs against game repositories on the studio's mach
 ## Consequences
 - Isolation relies on Git worktrees, Unix file permissions, and each Provider's own permission/sandbox controls, not on containers ([security-architecture.md](../architecture/security-architecture.md)).
 - Agent processes can, in principle, read anything the user account can read. This is an accepted v1 risk with mitigations (OQ-027).
-- The machine must have Node.js, Git, the Provider CLIs, and Paperclip installed natively ([ubuntu-setup.md](../operations/ubuntu-setup.md)).
+- The machine must have Node.js, Git, the Provider CLIs, and Paperclip installed natively (`ubuntu-setup.md`, since replaced by [windows-setup.md](../operations/windows-setup.md) under ADR-013).
 
 ## Reconsider when
 - Agents need stronger isolation (untrusted code, third-party contributors), or

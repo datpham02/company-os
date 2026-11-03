@@ -4,7 +4,7 @@ Order matters. Each step lists its verification. Commands are labelled `VERIFIED
 
 ## 1. Claude Code CLI
 
-Already installed (2.1.273 at `~/.local/bin/claude`). For new machines follow the official instructions at https://code.claude.com/docs.
+Already installed (2.1.316 at `~/.local/bin/claude` on the Windows studio machine). For new machines follow the official instructions at https://code.claude.com/docs.
 
 Verify (`VERIFIED`):
 ```bash
@@ -77,4 +77,4 @@ npx paperclipai company import --help   # read the flags first; documented previ
 - [ ] `gh auth status` OK
 
 ## Related documents
-[ubuntu-setup.md](ubuntu-setup.md) · [configuration.md](configuration.md) · [troubleshooting.md](troubleshooting.md)
+[windows-setup.md](windows-setup.md) · [configuration.md](configuration.md) · [troubleshooting.md](troubleshooting.md)

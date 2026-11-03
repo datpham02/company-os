@@ -10,7 +10,7 @@ Game Studio is a reusable, AI-powered framework for operating a **multi-project 
 |---|---|---|
 | **Paperclip** | Company, agents, projects, tasks (issues), assignment, approvals, heartbeats, budgets, audit log | Independent application ([paperclipai/paperclip](https://github.com/paperclipai/paperclip)) |
 | **Game Studio** | Studio organization, agent role definitions, rules, workflows, project registry, dependency registry, integration contracts | This repository (`datpham02/game-studio`) |
-| **Agent Runtime** | Local task execution on Ubuntu: project resolution, workspaces, Git branches/worktrees, CLI launch, result reporting | `runtime/` in this repository (`PLANNED`) |
+| **Agent Runtime** | Local task execution on the studio's Windows machine: project resolution, workspaces, Git branches/worktrees, CLI launch, result reporting | `runtime/` in this repository (`PLANNED`) |
 | **AI Execution Providers** | Doing the actual coding work | Claude Code CLI, Codex CLI |
 | **External Tools** | Specialized capabilities (specs, browser testing, API testing, game-dev skills) | Their own projects, registered in [dependencies/](dependencies/) |
 | **GitHub** | Hosting the framework repository and each game repository | e.g. `datpham02/node-arena` |

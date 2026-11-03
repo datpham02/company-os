@@ -46,7 +46,7 @@ Terms in *italics* after a definition are the equivalent Paperclip term, when on
 
 | Term | Definition |
 |---|---|
-| **Agent Runtime** (or **Runtime**) | The planned Game Studio component that executes Tasks locally on Ubuntu. Lives in `runtime/`. `PLANNED`. |
+| **Agent Runtime** (or **Runtime**) | The planned Game Studio component that executes Tasks locally on the studio's Windows machine (ADR-013). Lives in `runtime/`. `PLANNED`. |
 | **Dispatcher** | Runtime sub-component that receives a Task execution request and decides whether and where to run it. |
 | **Agent Launcher** | Runtime sub-component that starts and supervises the AI CLI process. |
 | **Workspace Manager** | Runtime sub-component that creates, reuses, and cleans up Task Workspaces. |

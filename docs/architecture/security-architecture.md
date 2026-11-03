@@ -1,6 +1,6 @@
 # Security Architecture
 
-**Threat model (v1):** a single trusted Board Operator on a single Ubuntu machine. AI agents are *semi-trusted*: they act in good faith but can misunderstand instructions, be prompt-injected through repository content, issues, web pages, or tool output, and run arbitrary commands through their Provider. There is no container isolation in v1 (ADR-003). Security therefore relies on **least-privilege credentials, Provider permission controls, Git branch protection, and approval gates**.
+**Threat model (v1):** a single trusted Board Operator on a single Windows machine. AI agents are *semi-trusted*: they act in good faith but can misunderstand instructions, be prompt-injected through repository content, issues, web pages, or tool output, and run arbitrary commands through their Provider. There is no container isolation in v1 (ADR-013). Security therefore relies on **least-privilege credentials, Provider permission controls, Git branch protection, and approval gates**.
 
 ## 1. Assets
 
@@ -43,15 +43,17 @@ Permission profiles (`PROPOSED`) are assigned per Agent Instance:
 | `workspace-write` | `game-designer` (docs), `gameplay-programmer`, `ui-designer`, `qa` | `--permission-mode acceptEdits` plus `--allowedTools` allowlist for build/test/git commands and `--disallowedTools` for dangerous ones | `--sandbox workspace-write` |
 | `bypass` | None by default | `--dangerously-skip-permissions` | `--dangerously-bypass-approvals-and-sandbox` |
 
+Cursor CLI (third provider) mapping: [cursor-integration.md §5](../integrations/cursor-integration.md#5-permission-mapping-proposed-oq-033). Paperclip's `cursor` adapter adds `--yolo` unless `--trust` is in `extraArgs`.
+
 All flags are `VERIFIED` present in the installed CLIs (Claude Code 2.1.273, Codex 0.166.0-alpha.5.1). How well each mode actually confines a headless run is `UNVERIFIED` (OQ-011).
 
 **Important conflict with Paperclip defaults:** Paperclip's `claude_local` adapter defaults `dangerouslySkipPermissions` to `true` ("required for headless runs where interactive approval is impossible", `VERIFIED`). Using the `bypass` profile by default contradicts this document. Until OQ-011 is resolved, the `bypass` profile MAY be used only for Agent Instances whose GitHub token cannot push to protected branches and whose working directory is a Task Workspace, and the Board Operator MUST approve its use per Agent Instance. Recorded as C-002.
 
 ## 5. Filesystem permissions
 
-- Agents run as the Board Operator's Unix user (ADR-003). They can technically read anything that user can read.
+- Agents run as the Board Operator's Windows user account (ADR-013). They can technically read anything that user can read.
 - Mitigations: run in a Task Workspace cwd; use Provider directory restrictions (Claude Code confines file tools to working directories plus `--add-dir`; Codex `workspace-write` sandbox limits writes to the workspace); never `--add-dir` the home directory.
-- `PROPOSED` (OQ-027): a dedicated Unix user `studio-agent` with access only to the Workspace Root, if stronger isolation is needed before containers.
+- `PROPOSED` (OQ-027): a dedicated local Windows user `studio-agent` with NTFS access only to the Workspace Root, if stronger isolation is needed before containers.
 
 ## 6. Command execution restrictions
 

@@ -19,13 +19,13 @@ dependencies:
     license: MIT
     required: true
     versionConstraint: "pin at install (latest npm 2026.1023.0 on 2026-11-03)"
-    verifiedVersion: null          # not installed on the studio machine
+    verifiedVersion: "2026.1023.0 (npx paperclipai@2026.1023.0, local_trusted on 127.0.0.1:3100, Windows studio machine, 2026-11-03)"
     install:
       strategy: external-service
       reference: https://github.com/paperclipai/paperclip#quickstart
     integrationStatus: approved    # ADR-002 approves Paperclip as the orchestrator; not yet installed
     usedBy: [studio]
-    compatibility: "Node.js 24.11+ per Paperclip architecture docs; embedded PostgreSQL by default; pnpm 9 only for source checkouts."
+    compatibility: "Node.js 24.11+ per Paperclip architecture docs; starts on native Windows 11 (OQ-031, partially verified); embedded PostgreSQL by default; pnpm 9 only for source checkouts."
     notes: "Docs reviewed at repo commit 7b8aa60. See docs/integrations/paperclip-integration.md."
 
   - id: claude-code
@@ -37,7 +37,7 @@ dependencies:
     license: proprietary (Anthropic terms)
     required: true
     versionConstraint: ">=2.1.273"
-    verifiedVersion: "2.1.273 (installed at ~/.local/bin/claude, 2026-11-03)"
+    verifiedVersion: "2.1.316 (~/.local/bin/claude on the Windows studio machine, 2026-11-03)"
     install:
       strategy: global-cli
       reference: https://code.claude.com/docs
@@ -55,7 +55,7 @@ dependencies:
     license: Apache-2.0
     required: true
     versionConstraint: ">=0.166.0"
-    verifiedVersion: "0.166.0-alpha.5.1 (bundled binary /usr/lib/chatgpt/resources/codex; not on PATH)"
+    verifiedVersion: "0.166.0 (npm install -g @openai/codex, Windows studio machine, 2026-11-03)"
     install:
       strategy: global-cli
       reference: https://github.com/openai/codex
@@ -63,6 +63,23 @@ dependencies:
     usedBy: [gameplay-programmer, qa]
     compatibility: "Paperclip adapter type codex_local."
     notes: "Do not rely on app-bundled binaries. See docs/integrations/codex-integration.md."
+
+  - id: cursor-cli
+    name: Cursor CLI
+    category: execution-provider
+    source:
+      docs: https://cursor.com/docs/cli/installation
+    license: proprietary (Cursor terms)
+    required: false
+    versionConstraint: ">=2026.10.22"
+    verifiedVersion: "2026.10.22-27dcf5f (official installer, %LOCALAPPDATA%\\cursor-agent, Windows studio machine, 2026-11-03)"
+    install:
+      strategy: global-cli
+      reference: https://cursor.com/docs/cli/installation
+    integrationStatus: approved     # Board approved 2026-11-03; adapter test pending (OQ-033)
+    usedBy: [qa]
+    compatibility: "Paperclip adapter type cursor, package @paperclipai/adapter-cursor-local (commands agent / cursor-agent). The CLI updates itself by default."
+    notes: "Third provider, mainly to give qa a non-Claude model. See docs/integrations/cursor-integration.md."
 
   - id: openspec
     name: OpenSpec
@@ -74,7 +91,7 @@ dependencies:
     license: MIT
     required: false
     versionConstraint: ">=1.11.0"
-    verifiedVersion: "1.11.0 (installed globally via nvm Node 24.20.0); latest 1.16.0"
+    verifiedVersion: null          # not installed on the Windows studio machine; latest 1.16.0 on 2026-11-03
     install:
       strategy: project-local      # CLI is global-cli; `openspec init` runs per Game Repository
       reference: https://github.com/Fission-AI/OpenSpec#quick-start
@@ -162,7 +179,7 @@ dependencies:
     license: MIT
     required: true
     versionConstraint: ">=2.62.0"
-    verifiedVersion: "2.62.0 (~/.local/bin/gh, 2026-11-03)"
+    verifiedVersion: "2.97.0 (Windows installer, 2026-11-03)"
     install:
       strategy: global-cli
       reference: https://github.com/cli/cli#installation

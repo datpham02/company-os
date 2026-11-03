@@ -25,7 +25,7 @@ Board Operator (human)
 | `game-designer` | Game Designer | `game-director` | [AGENTS.md](../agents/game-designer/AGENTS.md) | `claude_local` | workspace-write |
 | `gameplay-programmer` | Gameplay Programmer | `project-manager` | [AGENTS.md](../agents/gameplay-programmer/AGENTS.md) | `claude_local` or `codex_local` | workspace-write |
 | `ui-designer` | UI Designer | `project-manager` | [AGENTS.md](../agents/ui-designer/AGENTS.md) | `claude_local` | workspace-write |
-| `qa` | QA Engineer | `project-manager` | [AGENTS.md](../agents/qa/AGENTS.md) | `codex_local` | workspace-write |
+| `qa` | QA Engineer | `project-manager` | [AGENTS.md](../agents/qa/AGENTS.md) | `cursor` (non-Claude model; `codex_local` once Codex works) | workspace-write |
 
 "Default Provider" is a starting suggestion for Agent Instance registration, not a property of the role (ADR-008). Mixing providers lets the studio compare them and gives `qa` an independent provider from most implementers.
 

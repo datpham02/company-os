@@ -9,7 +9,7 @@ metadata:
     id: qa
     status: active
     permissionProfile: workspace-write
-    preferredProviders: [codex_local]
+    preferredProviders: [cursor, codex_local]
     tools: [git, github-cli, playwright-mcp]
     canWriteCode: tests-only
 ---
