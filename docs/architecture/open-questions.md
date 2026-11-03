@@ -43,7 +43,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-031 | Does Paperclip run on native Windows? | Partially verified (server, import, agent test pass; wizard sign-in fails) | Stage 1, ADR-013 |
 | OQ-032 | How do Codex sandboxing and the `process` adapter's shell behave on native Windows? | Partially verified | Codex provider, Runtime Stage 2 |
 | OQ-033 | How well do Cursor CLI headless runs confine agents, with and without Paperclip's automatic `--yolo`? | Partially verified | Cursor provider |
-| OQ-034 | Paperclip started with `npx` leaks `npm_*` environment variables into agent runs | Open | Stage 1 operation |
+| OQ-034 | Paperclip started with `npx` leaks `npm_*` environment variables into agent runs | Resolved | — |
+| OQ-035 | Reviewer not woken after an in-run hand-off to an execution stage | Worked around | Stage 1 review flow |
 
 ## Entries
 
@@ -318,13 +319,20 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
   - Once, QA posted its findings as a comment without recording a stage decision. Paperclip then retried the reviewer and moved the issue to `blocked` ("no completed decision or live reviewer run"); the Board had to hand it back. The two other runs recorded decisions correctly: `changes_requested`, then `approved`.
   - Without `GH_TOKEN`, `gh` is unauthenticated, so QA could not see the PR by itself.
   - It found that inherited `npm_*` variables from the Paperclip process (started with `npx`) pointed npm at another directory, and worked around it by sanitizing the environment (see OQ-034).
-- **Open:** A working shell allowlist format for Cursor CLI; whether `--auto-review` is acceptable as the `workspace-write` control; why `cursor` agents are not woken on stage assignment.
+- **Update (2026-11-04):** The missing wake is not specific to `cursor`; it is OQ-035. With the watchdog, `qa` reviewed GAM-3 and recorded its decision.
+- **Open:** A working shell allowlist format for Cursor CLI; whether `--auto-review` is acceptable as the `workspace-write` control.
 - **Status:** Partially verified.
 
 ### OQ-034 — `npm_*` variables leak into agent runs
 - **Found (GAM-2, 2026-11-04):** Paperclip was started with `npx paperclipai@… run`. npm sets `npm_config_*` / `npm_*` variables for that process, and agents inherit them. In the game repository, `npm run typecheck` then failed (`typescript/bin/tsc` missing) until the agent cleared those variables.
-- **Proposed fix:** install the pinned version globally (`npm i -g paperclipai@<version>`) and start it with `paperclipai run`, so no npm wrapper sits around the server. Alternatively, start it from a shell that clears `npm_*` variables first.
-- **Status:** Open.
+- **Fix (2026-11-04):** `npm install -g paperclipai@2026.1023.0`, then `paperclipai run` from `~/game-studio-workspace`. The server process is now `node.exe …/paperclipai/dist/index.js run`, started directly by the package shim with no npm wrapper, from a shell with no `npm_*` variables. Data in `~/.paperclip` carried over unchanged. Starting from `~/game-studio-workspace` also stops agents and `process` runs from defaulting to the framework repository as cwd.
+- **Status:** Resolved. The next agent `npm` run in a Game Repository is the final confirmation.
+
+### OQ-035 — Reviewer not woken after an in-run hand-off
+- **Found (2026-11-04):** In the studio company, when an agent sets its issue to `done` from inside its own run and the policy moves the issue to a review stage, the reviewer agent gets **no run**. This happens whatever the reviewer's adapter: reproduced with `qa` on `cursor` (GAM-3) and `producer` on `claude_local` (GAM-4), with no run after more than 3 minutes. The hand-off cancels the implementer's own run with `issue_reassigned`, and the server log shows no wake failure. Paperclip's stalled-review recovery did not fire within 8 minutes either. In code, the stage wakeup carries `interruptedRunId` into the heartbeat queue's hand-off path (`services/heartbeat/queue.js`); the exact cause is not confirmed. Experiment 0.8 (scratch company) did wake its reviewer, so the trigger is not fully understood.
+- **Workaround (`IMPLEMENTED`):** [`runtime/tools/review-wake-watchdog.ts`](../../runtime/tools/review-wake-watchdog.ts) wakes the pending agent participant through the public API after 90 s. Verified: it woke the reviewers of GAM-3 and GAM-4, both completed their reviews, and a second sweep made no duplicate wakes.
+- **Next:** report upstream to Paperclip with the reproduction; remove the watchdog once fixed.
+- **Status:** Worked around.
 
 ## Conflicts
 

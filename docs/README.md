@@ -58,6 +58,7 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 - [runtime-architecture.md](architecture/runtime-architecture.md): Runtime lifecycle, sub-components, recovery, concurrency (`PLANNED`).
 - [data-flow.md](architecture/data-flow.md): what flows between Paperclip, Game Studio, Runtime, providers, Git, tools.
 - [security-architecture.md](architecture/security-architecture.md): credentials, permissions, approval boundaries.
+- [stage1-gap-analysis.md](architecture/stage1-gap-analysis.md): requirements Paperclip did not meet in Stage 1, and the response to each.
 - [open-questions.md](architecture/open-questions.md): unverified assumptions (`OQ-NNN`) and conflicts (`C-NNN`).
 
 ### Design (`design/`)

@@ -13,7 +13,7 @@ Start here: [docs/README.md](docs/README.md). The fastest orientation for an AI 
 ## 2. Current implementation status
 
 - Status of the framework: **documentation-only** (version in [VERSION](VERSION)).
-- The Agent Runtime is **PLANNED**. No Runtime code exists. Do not describe any Runtime command as working.
+- The Agent Runtime is **PLANNED**. The only Runtime code is the Stage 2 gap filler `runtime/tools/review-wake-watchdog.ts`. Do not describe any other Runtime command as working.
 - Paperclip is **not installed** in this environment as of the last audit (see [docs/architecture/open-questions.md](docs/architecture/open-questions.md)).
 
 ## 3. Rules you MUST follow

@@ -6,7 +6,7 @@
 |---|---|---|
 | Paperclip run transcripts | Paperclip UI (run viewer); stored by Paperclip | Adapters stream stdout to the run log (`VERIFIED`) |
 | Paperclip activity log | Paperclip UI | Every mutation is logged (`VERIFIED`) |
-| Paperclip server output | Terminal running `npx paperclipai run`, or `journalctl --user -u paperclip` | §3 of runtime-management |
+| Paperclip server output | Terminal running `paperclipai run` | [runtime-management.md](runtime-management.md) |
 | Claude Code debug | `claude --debug-file <path>` (`VERIFIED` flag) | Only when debugging; may contain sensitive data |
 | Codex logs | `~/.codex/` (contains `logs_2.sqlite` on this machine) or the Paperclip-managed `CODEX_HOME` per agent | Format internal to Codex |
 | Runtime run records (`PLANNED`) | `~/.local/state/game-studio/runs/<run-id>/` (`run.json`, `stdout.log`, `stderr.log`, `prompt.txt`) | Secrets redacted |

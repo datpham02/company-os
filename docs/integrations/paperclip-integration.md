@@ -107,7 +107,7 @@ Recommended deployment for v1: `local_trusted`, loopback bind (OQ-024).
 
 Full steps: [../operations/installation.md](../operations/installation.md).
 
-1. Install and onboard Paperclip (`npx paperclipai onboard --yes`).
+1. Install and onboard Paperclip (`npx paperclipai onboard --yes` once). Then run the globally installed, pinned version with `paperclipai run` (OQ-034).
 2. Create the company from [company/COMPANY.md](../../company/COMPANY.md).
 3. Create agents per [company/ORGANIZATION.md](../../company/ORGANIZATION.md) and [agent-onboarding.md](../../workflows/agent-onboarding.md), `game-director` as root.
 4. For each Game Project, create a Paperclip project with a workspace (`repoUrl`, `repoRef`) and record its ID in the registry.
