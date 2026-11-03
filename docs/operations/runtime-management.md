@@ -6,7 +6,8 @@ How to operate execution day to day. In **Stage 1** "the runtime" is Paperclip p
 
 | Task | How |
 |---|---|
-| Start Paperclip | `npx paperclipai run` |
+| Start Paperclip | `paperclipai run` from `~/game-studio-workspace` (global install pinned to the registry version; not `npx`, OQ-034) |
+| Start the review-wake watchdog | `node runtime/tools/review-wake-watchdog.ts` from the framework repository, while Paperclip runs (OQ-035) |
 | Stop Paperclip | Stop the process (Ctrl+C in its terminal, or stop the service if you created one; see §3) |
 | See running/finished runs | Paperclip UI: agent run history and live transcript |
 | Wake an agent now | UI "Invoke", or `POST /api/agents/{agentId}/heartbeat/invoke` |
@@ -15,6 +16,13 @@ How to operate execution day to day. In **Stage 1** "the runtime" is Paperclip p
 | Inspect execution workspaces | Project / execution-workspace pages in the UI; archive or close when done |
 
 Execution workspaces persist "until a human closes them" (`VERIFIED`). Close a workspace only after its Task is `done`/`cancelled` and its branch is merged or abandoned.
+
+### 1.1 Review-wake watchdog (`IMPLEMENTED`, 2026-11-04)
+
+Paperclip 2026.1023.0 does not wake the next review participant when an agent hands an issue to review from inside its own run (OQ-035). [`runtime/tools/review-wake-watchdog.ts`](../../runtime/tools/review-wake-watchdog.ts) fills that gap:
+- Every 60 s it lists `in_review` issues. If the current execution stage waits on an agent that has had no run since the stage started (90 s grace), it wakes that agent with `POST /api/agents/{id}/wakeup`.
+- One wake per stage entry, through an idempotency key. It never changes issue state.
+- Run it with `node runtime/tools/review-wake-watchdog.ts`; `--once` does a single sweep. It needs Node 24+ for native TypeScript, and Paperclip in `local_trusted` mode on loopback.
 
 ## 2. Stage 2: Game Studio Runtime (`PLANNED`)
 
@@ -33,8 +41,8 @@ No command below exists. They describe the intended interface for implementers.
 To start Paperclip when you sign in to Windows, you can use a Task Scheduler task with a logon trigger. This is a standard Windows mechanism, not a Paperclip-documented procedure. Paperclip's own `--install-service` does not work here: its doctor reports "Service management is not supported on win32" (2026-11-03). Test it before relying on it (PowerShell):
 
 ```powershell
-# Use the full path from: (Get-Command npx).Source
-$action  = New-ScheduledTaskAction -Execute "<path-to-npx.cmd>" -Argument "paperclipai@<pinned-version> run"
+# Use the full path from: (Get-Command paperclipai).Source
+$action  = New-ScheduledTaskAction -Execute "<path-to-paperclipai.cmd>" -Argument "run" -WorkingDirectory "$env:USERPROFILE\game-studio-workspace"
 $trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
 Register-ScheduledTask -TaskName "Paperclip" -Action $action -Trigger $trigger
 ```

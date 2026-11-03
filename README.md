@@ -2,7 +2,7 @@
 
 Game Studio is a reusable, AI-powered framework for operating a **multi-project game development studio**. It defines the studio's organization, agent roles, rules, workflows, project registry, and external dependencies. It also plans a local Agent Runtime that integrates with **Paperclip**, the independent orchestration platform.
 
-> **Status:** documentation-only, framework version `0.1.0` ([VERSION](VERSION)). Architecture documentation v1.0. No Runtime code exists yet; everything about the Runtime is `PLANNED`.
+> **Status:** documentation-only, framework version `0.1.0` ([VERSION](VERSION)). Architecture documentation v1.0. The Runtime is `PLANNED`, apart from one gap filler (`runtime/tools/review-wake-watchdog.ts`).
 
 ## Responsibility split
 

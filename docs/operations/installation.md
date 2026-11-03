@@ -29,14 +29,18 @@ codex login status
 
 `VERIFIED` from Paperclip's quickstart:
 
+First-time setup used `npx paperclipai onboard --yes` (`local_trusted`, loopback; OQ-024). **Day to day, run the globally installed, pinned version, not `npx`.** `npx` wraps the server in npm, and its `npm_*` variables leak into every agent run (OQ-034):
+
 ```bash
-npx paperclipai onboard --yes       # first-time setup; choose local_trusted when asked (OQ-024)
-npx paperclipai run                 # start later
+npm install -g paperclipai@2026.1023.0   # once, and again only after an approved upgrade (OQ-008)
+cd ~/game-studio-workspace              # never start it inside a repository
+paperclipai run
 ```
 
 - UI and API default to `http://localhost:3100` (API at `/api`).
-- Use `npx paperclipai configure` to change settings later.
-- Pin the version for reproducibility: `npx paperclipai@<version> …` and record it in [../../dependencies/registry.yaml](../../dependencies/registry.yaml) (OQ-008).
+- Use `paperclipai configure` to change settings later.
+- On Windows npm blocks some install scripts of the global package (`@embedded-postgres/windows-x64` and others). Paperclip 2026.1023.0 still starts and uses its embedded PostgreSQL without them (verified 2026-11-04).
+- Pin the version and record it in [../../dependencies/registry.yaml](../../dependencies/registry.yaml) (OQ-008).
 - Do **not** clone Paperclip into this repository (ADR-002).
 
 ## 4. OpenSpec (optional; candidate dependency)

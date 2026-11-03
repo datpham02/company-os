@@ -21,7 +21,9 @@ Each entry gives symptom → likely cause → fix. Paperclip error semantics are
 | `422` on status update | Invalid transition (e.g. backlog → done) | Follow the lifecycle `backlog → todo → in_progress → in_review → done` |
 | `403` | Cross-company access or missing permission | Check the agent's company and key |
 | `401` | Missing/expired token | Agents must use `PAPERCLIP_API_KEY` from the current heartbeat |
-| UI not reachable | Server not running, or wrong bind | `npx paperclipai run`; default `http://localhost:3100` |
+| UI not reachable | Server not running, or wrong bind | `paperclipai run` from `~/game-studio-workspace`; default `http://localhost:3100` |
+| Agent's `npm` commands fail oddly (missing `tsc`, wrong prefix) | Paperclip started through `npx`, so `npm_*` variables leaked into the agent (OQ-034) | Restart with the global `paperclipai run` |
+| Issue sits in `in_review` and the reviewer agent never runs | Reviewer not woken after an in-run hand-off (OQ-035) | Keep `runtime/tools/review-wake-watchdog.ts` running |
 | Node version error at start | Node < 24.11 | `nvm use 24` |
 
 ## Git and workspaces
