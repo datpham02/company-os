@@ -47,5 +47,5 @@ Normative terms (MUST, MUST NOT, SHOULD, MAY) and status labels (`APPROVED`, `PR
 
 ## 6. Provider-specific notes
 
-- **Claude Code** loads [CLAUDE.md](CLAUDE.md), which redirects here.
+- **Claude Code** loads [CLAUDE.md](CLAUDE.md), which redirects here. It also loads the project skill [`.claude/skills/paperclip`](.claude/skills/paperclip/SKILL.md), which lets the Board Operator run Paperclip from chat (status, release, approve, create and assign tasks) through the REST API.
 - **Codex** loads `AGENTS.md` files from the repository root down to its working directory. Agent definition files under `agents/<agent-id>/AGENTS.md` are role definitions, not instructions for working on this repository; Codex will only load one if started inside that directory.

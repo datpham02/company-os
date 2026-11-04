@@ -1,6 +1,6 @@
 # Agent Runtime
 
-**Status: `PLANNED`, except one gap filler.** The only implemented code is [`tools/review-wake-watchdog.ts`](tools/review-wake-watchdog.ts) (OQ-035, see [../docs/architecture/stage1-gap-analysis.md](../docs/architecture/stage1-gap-analysis.md)). Do not describe any other Runtime command as working.
+**Status: `PLANNED`, except one gap filler and a start script.** The only implemented code is [`tools/review-wake-watchdog.ts`](tools/review-wake-watchdog.ts) (OQ-035, see [../docs/architecture/stage1-gap-analysis.md](../docs/architecture/stage1-gap-analysis.md)) and [`tools/start-studio.cmd`](tools/start-studio.cmd), which starts Paperclip, the watchdog and the UI. Do not describe any other Runtime command as working.
 
 The Agent Runtime executes Tasks locally on the studio's Windows machine ([ADR-013](../docs/decisions/ADR-013-native-windows-studio-host.md)). Its scope is set by [ADR-011](../docs/decisions/ADR-011-execution-path-selection.md). Stage 1 uses Paperclip's built-in adapters and needs no Runtime code. In Stage 2 the Runtime is built only for verified gaps, and Paperclip's `process` adapter invokes it.
 

@@ -14,3 +14,6 @@
 .DS_Store
 .idea/
 *.swp
+
+# Claude Code personal settings (the project skill in .claude/skills/ is committed)
+.claude/settings.local.json
