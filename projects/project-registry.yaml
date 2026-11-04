@@ -48,10 +48,15 @@ projects:
     agents: [game-director, producer, project-manager, game-designer, gameplay-programmer, ui-designer, qa]
     frameworkVersion: 0.1.0
 
-  - id: soucean-game              # Board named it 2026-11-04; also the repository name datpham02/soucean-game
+  - id: soucean-game
     name: Soucean Game
     type: platform                # ADR-014 (Accepted 2026-11-04)
-    status: planned               # Board decision 2026-11-04. No repository, Paperclip project or external account yet.
-                                  # Plan (approved 2026-11-04): docs/plans/soucean-game-plan.md. Contract: docs/design/game-platform-contract.md (GAM-16).
+    status: initializing          # repo + Paperclip project created 2026-11-04; seeding next
+                                  # Plan files in docs/plans/ move into the website repository at seeding. Contract: docs/design/game-platform-contract.md (GAM-16).
+    repository:
+      url: https://github.com/datpham02/soucean-game.git
+      defaultBranch: main
+    paperclip:
+      projectId: "307715ee-cfb2-496d-a0b0-1f7e1277b606"
     agents: [game-director, producer, project-manager, web-engineer, ui-designer, qa]
     frameworkVersion: 0.1.0
