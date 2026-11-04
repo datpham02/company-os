@@ -89,11 +89,12 @@ M1 (Design) uses design skills from the registry. They are `candidate`s with **n
 
 When you say yes, a studio session creates the Paperclip issue "Seed soucean-game repository", assigned to `web-engineer`. The seed contains:
 - `AGENTS.md`, `CLAUDE.md` and `docs/requirements.md` / `docs/architecture.md` from the plan;
+- **the two plan files moved from the framework:** `docs/plans/soucean-game-plan.md` and this checklist, `docs/plans/soucean-game-m0-setup.md`, copied into the website repository's `docs/plans/` (Board decision 2026-11-04);
 - `docs/game-platform-contract.md` as a pointer;
 - `.gitignore`, a CI skeleton, lint and tests;
 - `.github/CODEOWNERS` for the security-sensitive paths.
 
-`qa` reviews the issue, and you merge. M1 (Design) starts after the seed and Step 4.
+`qa` reviews the issue, and you merge. Right after that merge, a framework PR deletes both plan files from `game-studio`. It replaces their links in `docs/README.md` and `projects/project-registry.yaml` with a pointer to the website repository. M1 (Design) starts after the seed and Step 4.
 
 ## Later steps (not M0)
 
