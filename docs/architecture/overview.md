@@ -30,7 +30,7 @@ The "Execution" box is deliberately abstract. Who fills it is decided by [ADR-01
 |---|---|---|---|
 | Paperclip | Operate the company: agents, projects, tasks, approvals, heartbeats | Paperclip project | External; not installed (OQ-024) |
 | Game Studio Core | Define the studio: company, roles, rules, workflows | This repo | Documented (files exist); nothing automated |
-| Agent Definitions | One role definition per agent | This repo, `agents/` | Documented (8 roles; `web-engineer` draft) |
+| Agent Definitions | One role definition per agent | This repo, `agents/` | Documented (8 roles) |
 | Workflow definitions | Documented processes with gates | This repo, `workflows/` | Documented (12 workflows) |
 | Project Registry | Which games exist and where their repos are | This repo, `projects/` | Empty registry; schema `PROPOSED` |
 | Dependency Registry | Which external tools the studio uses | This repo, `dependencies/` | Candidate entries |

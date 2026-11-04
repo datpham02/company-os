@@ -95,7 +95,7 @@ Every Agent Instance MUST, on every Run:
 | [`gameplay-programmer`](../../agents/gameplay-programmer/AGENTS.md) | `project-manager` | workspace-write | Yes |
 | [`ui-designer`](../../agents/ui-designer/AGENTS.md) | `project-manager` | workspace-write | Yes (UI) |
 | [`qa`](../../agents/qa/AGENTS.md) | `project-manager` | workspace-write (tests only) | Tests only |
-| [`web-engineer`](../../agents/web-engineer/AGENTS.md) | `project-manager` | workspace-write (dev/test environments only) | Yes (platform projects; draft, ADR-014) |
+| [`web-engineer`](../../agents/web-engineer/AGENTS.md) | `project-manager` | workspace-write (dev/test environments only) | Yes (platform projects, ADR-014) |
 
 ## Related documents
 - [company-design.md](company-design.md) · [../decisions/ADR-012-agent-definition-format.md](../decisions/ADR-012-agent-definition-format.md) · [../../workflows/agent-onboarding.md](../../workflows/agent-onboarding.md) · [../architecture/security-architecture.md](../architecture/security-architecture.md)

@@ -2,7 +2,7 @@
 
 **Contract owner for:** registration, configuration, lifecycle, isolation, and repository resolution of Game Projects and Platform Projects.
 
-**Project types** (`PROPOSED`, [ADR-014](../decisions/ADR-014-platform-project-type.md)): `game` (default) or `platform`. A platform project, for example the studio website, hosts games and owns shared services. Both types follow this contract. Platform projects also follow [security-architecture.md §10](../architecture/security-architecture.md#10-production-environments-platform-projects) and implement the [game platform contract](game-platform-contract.md).
+**Project types** (`APPROVED`, [ADR-014](../decisions/ADR-014-platform-project-type.md)): `game` (default) or `platform`. A platform project, for example the studio website, hosts games and owns shared services. Both types follow this contract. Platform projects also follow [security-architecture.md §10](../architecture/security-architecture.md#10-production-environments-platform-projects) and implement the [game platform contract](game-platform-contract.md).
 
 ## 1. Registration
 

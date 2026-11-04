@@ -81,7 +81,7 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 - [openspec-integration.md](integrations/openspec-integration.md)
 
 ### Plans (`plans/`)
-- [game-website-plan.md](plans/game-website-plan.md): plan for the multi-game website (`PROPOSED`, ADR-014).
+- [game-website-plan.md](plans/game-website-plan.md): plan for the multi-game website (`APPROVED`, ADR-014).
 
 ### Decisions (`decisions/`)
 - [decisions/README.md](decisions/README.md): ADR index and process.
@@ -95,7 +95,7 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 
 ### Studio content (outside `docs/`)
 - [../company/](../company/): COMPANY, ORGANIZATION, RULES, OPERATING_MODEL.
-- [../agents/](../agents/): eight agent role definitions (`web-engineer` is a draft, ADR-014).
+- [../agents/](../agents/): eight agent role definitions (`web-engineer` added by ADR-014).
 - [../projects/](../projects/): project registry and configuration schema.
 - [../dependencies/](../dependencies/): external dependency registry.
 - [../runtime/README.md](../runtime/README.md): Runtime placeholder (`PLANNED`).

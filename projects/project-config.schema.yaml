@@ -26,7 +26,7 @@ $defs:
       id: { $ref: "#/$defs/kebabId" }
       name: { type: string, minLength: 1 }
       type:
-        description: Project type (ADR-014, PROPOSED). Omitted means game.
+        description: Project type (ADR-014). Omitted means game.
         enum: [game, platform]
         default: game
       status:

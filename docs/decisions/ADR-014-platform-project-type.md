@@ -1,6 +1,6 @@
 # ADR-014: Platform Project Type, Web Engineer Role and Production Security Rules
 
-- **Status:** Proposed
+- **Status:** Accepted (Board Operator, 2026-11-04)
 - **Date:** 2026-11-04
 - **Deciders:** Board Operator
 - **Related:** ADR-005, ADR-009, ADR-010, ADR-012, [project-system.md](../design/project-system.md), [security-architecture.md §10](../architecture/security-architecture.md#10-production-environments-platform-projects), [game-platform-contract.md](../design/game-platform-contract.md), Paperclip issue GAM-16, OQ-036 to OQ-039

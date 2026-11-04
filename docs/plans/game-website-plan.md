@@ -1,6 +1,6 @@
 # Game Website — Plan
 
-- **Status:** `PROPOSED`. It waits for Board approval.
+- **Status:** `APPROVED` (Board Operator, 2026-11-04). GAM-16 stays sequential: it starts after GAM-15 closes the Playable Vigil milestone. M2 waits for it.
 - **Date:** 2026-11-04
 - **Project:** `game-website`. The id is a placeholder; the Board picks the name. Type `platform`, status `planned` ([ADR-014](../decisions/ADR-014-platform-project-type.md)).
 - **First game:** Lamplight Vigil.
@@ -87,7 +87,7 @@ Rules:
 
 ## 5. Milestones by role
 
-The roles are `web-engineer` (new, draft), `ui-designer`, `qa`, `project-manager`, `producer`, `game-director` and the Board. Each milestone ends with Board approval.
+The roles are `web-engineer` (new), `ui-designer`, `qa`, `project-manager`, `producer`, `game-director` and the Board. Each milestone ends with Board approval.
 
 | Milestone | Content | Roles | Exit criteria |
 |---|---|---|---|

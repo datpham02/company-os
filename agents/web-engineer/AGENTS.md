@@ -7,7 +7,7 @@ skills: []
 metadata:
   gameStudio:
     id: web-engineer
-    status: draft
+    status: active
     permissionProfile: workspace-write
     preferredProviders: [claude_local, codex_local]
     tools: [git, github-cli, playwright-mcp]

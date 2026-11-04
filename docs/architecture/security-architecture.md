@@ -135,7 +135,7 @@ Agents MUST NOT run (enforced by Provider deny lists where possible, and by rule
 
 ## 10. Production environments (platform projects)
 
-Status: `PROPOSED` ([ADR-014](../decisions/ADR-014-platform-project-type.md)). It applies to every project with `type: platform`. Game repositories have no production backend, so it does not apply to them.
+Status: `APPROVED` ([ADR-014](../decisions/ADR-014-platform-project-type.md)). It applies to every project with `type: platform`. Game repositories have no production backend, so it does not apply to them.
 
 ### 10.1 Environments
 
@@ -177,7 +177,7 @@ Status: `PROPOSED` ([ADR-014](../decisions/ADR-014-platform-project-type.md)). I
 
 ## 11. Supply-chain safety
 
-Status: `PROPOSED` (Board request, 2026-11-04). External code is the easiest way to get malicious behaviour into the studio. A skill, plugin, hook or MCP server runs **with the agent's permissions**, and its text is read as instructions. An npm package's install script runs on the studio machine. Every external item is therefore treated as untrusted code until it is reviewed.
+Status: Board rule (Board Operator request, 2026-11-04; merged with ADR-014's PR). External code is the easiest way to get malicious behaviour into the studio. A skill, plugin, hook or MCP server runs **with the agent's permissions**, and its text is read as instructions. An npm package's install script runs on the studio machine. Every external item is therefore treated as untrusted code until it is reviewed.
 
 ### 11.1 Studio dependencies (registry entries)
 Before an entry moves to `approved`, the evaluation Task MUST record a security review against the reviewed commit or version. It covers:
