@@ -26,5 +26,6 @@ ADRs are the highest authority in the documentation hierarchy ([../conventions.m
 | [ADR-011](ADR-011-execution-path-selection.md) | Staged execution path: Paperclip-native first, Runtime via `process` adapter | Accepted |
 | [ADR-012](ADR-012-agent-definition-format.md) | Agent definitions aligned with the Agent Companies package format | Accepted |
 | [ADR-013](ADR-013-native-windows-studio-host.md) | Native Windows studio host (supersedes ADR-003) | Accepted |
+| [ADR-014](ADR-014-platform-project-type.md) | Platform project type, Web Engineer role, production security rules | Accepted |
 
 ADR-001 to ADR-010 record decisions the Board Operator approved before this documentation was written (the "approved architecture decisions" of the v1 brief). ADR-011 and ADR-012 come from the 2026-11-03 research findings and were accepted the same day after the Phase 0 experiments.

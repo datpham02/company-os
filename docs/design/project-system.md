@@ -1,10 +1,12 @@
 # Project System
 
-**Contract owner for:** registration, configuration, lifecycle, isolation, and repository resolution of Game Projects.
+**Contract owner for:** registration, configuration, lifecycle, isolation, and repository resolution of Game Projects and Platform Projects.
+
+**Project types** (`APPROVED`, [ADR-014](../decisions/ADR-014-platform-project-type.md)): `game` (default) or `platform`. A platform project, for example the studio website, hosts games and owns shared services. Both types follow this contract. Platform projects also follow [security-architecture.md §10](../architecture/security-architecture.md#10-production-environments-platform-projects) and implement the [game platform contract](game-platform-contract.md).
 
 ## 1. Registration
 
-A Game Project exists when **all three** are true:
+A Game Project or Platform Project exists when **all three** are true (a `planned` project has none of them yet):
 1. A Game Repository exists on GitHub (`datpham02/<project-id>`).
 2. An entry exists in [projects/project-registry.yaml](../../projects/project-registry.yaml) that validates against [projects/project-config.schema.yaml](../../projects/project-config.schema.yaml).
 3. A Paperclip project exists and its ID is recorded in the entry.
@@ -19,8 +21,9 @@ Fields (schema status `PROPOSED`):
 |---|---|---|
 | `id` | Yes | Project ID, kebab-case, equals repository name |
 | `name` | Yes | Display name |
+| `type` | No | `game` (default) or `platform` (ADR-014) |
 | `status` | Yes | Lifecycle state (§3) |
-| `repository.url` | Yes | HTTPS clone URL |
+| `repository.url` | Yes, except while `planned` | HTTPS clone URL |
 | `repository.defaultBranch` | Yes | Usually `main` |
 | `engine.name` / `engine.version` | No | e.g. `godot` / `4.4`; drives skill selection |
 | `paperclip.projectId` | Yes once active | Paperclip project ID |
@@ -36,6 +39,8 @@ Fields (schema status `PROPOSED`):
 
 ```mermaid
 stateDiagram-v2
+  [*] --> planned: Board decides (ADR-014)
+  planned --> initializing: Board creates repo + Paperclip project
   [*] --> proposed: game-director proposes
   proposed --> initializing: Board approves
   proposed --> [*]: rejected
@@ -49,6 +54,7 @@ stateDiagram-v2
 
 | State | Agents may | Agents may not |
 |---|---|---|
+| `planned` | Write plan documents in the framework repository | Create repositories, Paperclip projects or external accounts |
 | `proposed` | Discuss, write concept docs in Paperclip | Touch any repository |
 | `initializing` | Seed repository files on a Task Branch | Implement features |
 | `active` | All work per role | — |

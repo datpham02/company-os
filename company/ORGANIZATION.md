@@ -12,6 +12,7 @@ Board Operator (human)
         └── project-manager
             ├── gameplay-programmer
             ├── ui-designer
+            ├── web-engineer
             └── qa
 ```
 
@@ -25,12 +26,13 @@ Board Operator (human)
 | `game-designer` | Game Designer | `game-director` | [AGENTS.md](../agents/game-designer/AGENTS.md) | `claude_local` | workspace-write |
 | `gameplay-programmer` | Gameplay Programmer | `project-manager` | [AGENTS.md](../agents/gameplay-programmer/AGENTS.md) | `claude_local` or `codex_local` | workspace-write |
 | `ui-designer` | UI Designer | `project-manager` | [AGENTS.md](../agents/ui-designer/AGENTS.md) | `claude_local` | workspace-write |
+| `web-engineer` | Web Engineer | `project-manager` | [AGENTS.md](../agents/web-engineer/AGENTS.md) | `claude_local` | workspace-write (dev/test environments only, ADR-014) |
 | `qa` | QA Engineer | `project-manager` | [AGENTS.md](../agents/qa/AGENTS.md) | `cursor` (non-Claude model; `codex_local` once Codex works) | workspace-write |
 
 "Default Provider" is a starting suggestion for Agent Instance registration, not a property of the role (ADR-008). Mixing providers lets the studio compare them and gives `qa` an independent provider from most implementers.
 
 ## Planned roles (not defined yet)
-Candidates when workload requires them, each via [agent-onboarding.md](../workflows/agent-onboarding.md): `technical-director`, `engine-programmer`, `artist` / `art-director`, `audio-designer`, `narrative-designer`, `release-manager`.
+Candidates when workload requires them, each via [agent-onboarding.md](../workflows/agent-onboarding.md): `technical-director`, `engine-programmer`, `artist` / `art-director`, `audio-designer`, `narrative-designer`, `release-manager`, `devops-engineer` (when the studio runs more than one platform or self-hosted infrastructure, ADR-014).
 
 ## Change control
 Adding, removing, or changing a role's reporting line requires Board approval and an update to this file and [../docs/design/agent-system.md §6](../docs/design/agent-system.md#6-defined-roles-v1).

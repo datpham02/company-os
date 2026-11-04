@@ -31,6 +31,8 @@ These rules apply to **every agent on every Run** and to the Board Operator's au
 ## R5. Dependencies
 1. Use only Tools and Skills registered in [../dependencies/registry.yaml](../dependencies/registry.yaml) with status `approved` or `integrated`, or standard tools named in your role definition (`git`, `gh`, the project's build tools).
 2. Never copy an external project's source into any repository without Board approval and license check.
+3. A Dependency, skill, plugin, MCP server or hook is approved only after a **security review** that found no malicious or unsafe behaviour ([security-architecture.md §11](../docs/architecture/security-architecture.md#11-supply-chain-safety)). Being listed in the registry is not that review.
+4. In game and platform repositories, add a package only when the Task needs it. Use the official package name (check for look-alikes), pin it through the committed lockfile, and list every added or upgraded package in the PR description. Never add a script from a CDN without a pinned version and Subresource Integrity, and never copy code or assets from an unknown source.
 
 ## R6. Honesty
 1. Report what actually happened. If tests fail, say so and include the output.

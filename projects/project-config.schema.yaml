@@ -21,12 +21,16 @@ $defs:
   project:
     type: object
     additionalProperties: false
-    required: [id, name, status, repository, frameworkVersion]
+    required: [id, name, status, frameworkVersion]
     properties:
       id: { $ref: "#/$defs/kebabId" }
       name: { type: string, minLength: 1 }
+      type:
+        description: Project type (ADR-014). Omitted means game.
+        enum: [game, platform]
+        default: game
       status:
-        enum: [proposed, initializing, active, maintenance, archived]
+        enum: [planned, proposed, initializing, active, maintenance, archived]
       repository:
         type: object
         additionalProperties: false
@@ -73,6 +77,10 @@ $defs:
         type: string
         pattern: "^\\d+\\.\\d+\\.\\d+$"
     allOf:
+      - if:
+          properties: { status: { const: planned } }
+        else:
+          required: [repository]
       - if:
           properties: { status: { enum: [active, maintenance] } }
         then:

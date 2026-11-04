@@ -17,7 +17,7 @@ Not already in [../dependencies/registry.yaml](../dependencies/registry.yaml) (i
 ## Steps
 1. **Requester** opens a PR to the framework repository adding a registry entry with `integrationStatus: candidate` and all required fields ([dependency-system.md §2](../docs/design/dependency-system.md#2-entry-fields)). Board merges (low risk: data only).
 2. **`producer`** creates an evaluation Task (`integrationStatus: evaluating`).
-3. **Evaluator** (agent with suitable role) verifies from official sources: license, maintenance activity, install method, required permissions/credentials, supported providers, security concerns (network access, data sent to third parties). It tests in a scratch directory outside all repositories if installation is local and harmless. Otherwise it describes the planned test.
+3. **Evaluator** (agent with suitable role) verifies from official sources: license, maintenance activity, install method, required permissions/credentials, supported providers, security concerns (network access, data sent to third parties). It runs the **security review** of [security-architecture.md §11.1](../docs/architecture/security-architecture.md#111-studio-dependencies-registry-entries) against a recorded commit or version: origin and typosquats, install scripts, the full text of skills, hooks and prompts, runtime behaviour, and advisories. It tests in a scratch directory outside all repositories, with no secrets in the environment, if installation is local and harmless. Otherwise it describes the planned test.
 4. **Evaluator** writes findings into the Task and updates the entry (`verifiedVersion`, `compatibility`, `notes`) via PR.
 5. **`producer`** requests Board approval with the evaluation.
 6. **Board Operator** approves or rejects. Rejected → entry `rejected` with reason.
@@ -34,6 +34,7 @@ Step 6. Upgrades of `required` dependencies follow the same gate.
 | Failure | Response |
 |---|---|
 | License unknown or incompatible | Reject or Board-level exception recorded in `notes` |
+| Security review finds malicious, deceptive or unsafe behaviour | Reject with the reason; if only an optional mode is unsafe, approve only with that mode disabled and record how |
 | Requires vendoring source | Not allowed (ADR-007); find alternative or fork as separate repository |
 | Breaks an existing integration | Roll back; entry `evaluating`; record compatibility note |
 

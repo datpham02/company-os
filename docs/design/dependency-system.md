@@ -38,6 +38,7 @@
 | `specification` | Spec-driven development tools | OpenSpec |
 | `game-development` | Game-dev agents, skills, templates | Awesome Gamedev Agent Skills, Claude Code Game Studios |
 | `development-tools` | MCP servers and CLIs used during work | Playwright MCP, Hoppscotch MCP, GitHub CLI |
+| `web-design` | Design skills, design-system formats and UI component sources for platform (website) and game UI work | Google DESIGN.md, Impeccable, React Bits |
 
 `execution-provider` is an addition to the four directories in the target structure. Providers are neither game-development nor generic development tools, and ADR-008 treats them specially.
 
@@ -82,7 +83,11 @@ Record OS (Windows 11, ADR-013), Node.js version requirements, and which Provide
 - Copyleft licenses (GPL, AGPL) for anything copied into a Game Repository require Board approval.
 - Apache-2.0 dependencies with a `NOTICE` file require keeping the notice if any file is redistributed.
 
-## 9. External source references
+## 9. Security review
+
+No entry moves to `approved` without the security review of [security-architecture.md §11.1](../architecture/security-architecture.md#111-studio-dependencies-registry-entries). Record the result in `notes` as `security review: <date>, <commit or version>, <result>`. Facts gathered when an entry is listed (license, install command) are not a security review.
+
+## 10. External source references
 
 - Use official repositories and documentation only. Aggregator sites are not sources.
 - Where a dependency's own docs differ from third-party descriptions (counts of agents/skills, star counts), trust the dependency's repository at a recorded commit.
