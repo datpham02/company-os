@@ -47,18 +47,19 @@ Committed sources MUST NOT contain secrets, absolute paths, agent or company UUI
    paperclipai company import . --target new --new-company-name <Name> --include company,agents,projects --yes
    ```
 
-5. **Post-import:** `python -I scripts/setup/post-import.py --company <Name>`. It points project workspaces at `~/game-studio-workspace/repos/<project>`, binds declared secrets to company secrets of the same name (the Board creates `GH_TOKEN` in Company > Secrets first; secrets do not move between companies), checks the prefix, and prints a table. `--resume` resumes paused agents (the import leaves `cursor` agents paused).
+5. **Post-import:** `python -I scripts/setup/post-import.py --company <Name>`. It points project workspaces at `~/game-studio-workspace/repos/<project>`, binds declared secrets to company secrets of the same name (the Board creates `GH_TOKEN` in Company > Secrets first; secrets do not move between companies), checks the prefix, and prints a table. `--resume` resumes paused agents (the import leaves `cursor` agents paused). Resuming runs Paperclip's environment test; for Cursor it passes only when the command is `agent` or `cursor-agent` on PATH, not a full path (verified 2026-11-05).
 6. Paperclip **Test Environment** for every agent.
 7. Smoke Task in a disposable project, then start the studio with `runtime/tools/start-studio.cmd`.
 
 ## 4. Existing instance (a role or allocation changed in Git)
 
-Re-import cannot update existing agents (safe route, §1). Until a sync script exists:
+Re-import cannot update existing agents (safe route, §1). Instead:
 
 1. The Board merges the change in Git.
 2. New roles: import with `--target existing -C <company-id> --collision skip --include agents` from a clean package; existing agents are skipped, new ones created. Dry run first. Leave `projects` out: the safe route rejects project `executionWorkspacePolicy` (verified 2026-11-05).
-3. Changed instructions, adapter config or limits of existing agents: the Board applies them in the Paperclip UI (agent → Configuration / Instructions), copying from Git, then runs Test Environment. Record the date in the agent's change note.
-4. Planned: `sync-agents` script that diffs Git against `GET /api/agents/{id}` and applies changes through the agent API after the Board confirms the diff (`UNVERIFIED` which routes are supported; OQ-040).
+3. Changed role texts: `python -I scripts/setup/sync-instructions.py --company <Name> --dry-run`, then without `--dry-run`. It replaces each agent's managed `AGENTS.md` with the role body from Git (verified 2026-11-05 on all 8 Soucean agents).
+4. Renamed role: rename the live agent first (`paperclipai agent update <id> --payload-json '{"name":"<Name>","title":"<Title>"}'`); its URL key follows the name and its reports keep their manager ID.
+5. Changed adapter config, allowlists or limits: still applied by the Board (UI, or `paperclipai agent update` with the new `adapterConfig`), then Test Environment. A sync for those is `PLANNED`.
 
 Never edit an agent's instructions only in Paperclip: Git is the source of truth (ADR-012).
 

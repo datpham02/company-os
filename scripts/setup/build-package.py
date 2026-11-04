@@ -78,11 +78,13 @@ def main():
     p.add_argument("--prefix", required=True, help="issue prefix the new company will get (first 3 letters of its name)")
     p.add_argument("--out", default=os.path.join(HOME, "game-studio-workspace", "package"))
     p.add_argument("--workspace", default=os.path.join(HOME, "game-studio-workspace"), help="agents' cwd and parent of repos/")
-    p.add_argument("--cursor-command", default=os.path.join(os.environ.get("LOCALAPPDATA", ""), "cursor-agent", "agent.cmd"))
+    # Paperclip only runs its Cursor hello probe (and so only lets the agent resume) when the command is
+    # the default entrypoint `agent` or `cursor-agent`, resolved from PATH (verified 2026-11-05).
+    p.add_argument("--cursor-command", default="agent")
     a = p.parse_args()
 
     conf = json.load(open(os.path.join(REPO, "config", "paperclip", "agents.json"), encoding="utf-8"))
-    cursor_cmd = a.cursor_command if os.path.exists(a.cursor_command) else None
+    cursor_cmd = a.cursor_command if (shutil.which(a.cursor_command) or os.path.exists(a.cursor_command)) else None
     if os.path.exists(a.out):
         shutil.rmtree(a.out)
     os.makedirs(a.out)
