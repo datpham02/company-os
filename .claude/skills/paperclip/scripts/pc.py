@@ -121,7 +121,10 @@ def cmd_overview(a):
     open_issues = [i for i in call("GET", f"/companies/{c['id']}/issues") if i["status"] not in ("done", "cancelled")]
     order = {"in_review": 0, "in_progress": 1, "blocked": 2, "todo": 3, "backlog": 4}
     for i in sorted(open_issues, key=lambda x: (order.get(x["status"], 9), x.get("issueNumber") or 0)):
-        print(f"  {i['identifier']:7} {i['status']:11} {who(i, n):20} {i['title'][:70]}")
+        # The list endpoint omits blockers, so read them per issue.
+        blockers = [b.get("identifier") for b in (issue(i["id"]).get("blockedBy") or []) if isinstance(b, dict)]
+        after = f"  [after {', '.join(blockers)}]" if blockers else ""
+        print(f"  {i['identifier']:7} {i['status']:11} {who(i, n):20} {i['title'][:70]}{after}")
     if not open_issues:
         print("  (none)")
 
@@ -189,6 +192,17 @@ def cmd_approve(a):
 
 def cmd_request_changes(a):
     board_decision(a, "in_progress", "changes requested")
+
+
+def cmd_cancel(a):
+    i = issue(a.key)
+    if i["status"] in ("done", "cancelled"):
+        raise ApiError(f"{a.key} is already {i['status']}")
+    for r in runs(i["id"]):
+        if r["status"] in ACTIVE_RUN | {"scheduled_retry"}:
+            call("POST", f"/heartbeat-runs/{r['runId']}/cancel", {})
+    res = call("PATCH", f"/issues/{i['id']}", {"status": "cancelled", "comment": a.comment})
+    print(f"{a.key}: cancelled (was {i['status']}) -> {res['status']}")
 
 
 def cmd_comment(a):
@@ -263,6 +277,10 @@ def main():
         s.add_argument("key")
         s.add_argument("comment")
         s.set_defaults(fn=fn)
+    s = sub.add_parser("cancel", help="cancel an issue with a reason; stops its pending runs")
+    s.add_argument("key")
+    s.add_argument("comment")
+    s.set_defaults(fn=cmd_cancel)
     s = sub.add_parser("comment", help="post a Board comment")
     s.add_argument("key")
     s.add_argument("text")

@@ -27,6 +27,7 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 | `approve GAM-8 "comment"` | Board approval: sets `done` with the comment. Only works while the issue waits on the Board |
 | `request-changes GAM-8 "comment"` | Board sends the work back to the implementer with the comment |
 | `comment GAM-8 "text"` | Board comment without a decision |
+| `cancel GAM-8 "reason"` | Cancel an issue that is no longer needed (duplicate, obsolete); also stops its pending runs |
 | `assign GAM-8 game-designer [--status backlog]` | Reassign; agents match by name, url key or id |
 | `create --title … --assignee … [--project …] [--desc … / --desc-file …] [--review qa] [--no-approval] [--status todo]` | New issue. Defaults: `backlog`, then a Board approval stage. Each `--review` adds an agent review stage before it |
 | `wake qa-engineer [--issue GAM-8]` | Start an agent run now |
@@ -34,7 +35,7 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 
 ## Rules
 
-- **Board decisions need the user's words.** Run `approve`, `request-changes`, `release` and `create --status todo` only when the user has clearly asked for that action on that issue in chat. Quote their decision in the comment, for example "Approved by the Board Operator: …".
+- **Board decisions need the user's words.** Run `approve`, `request-changes`, `release`, `cancel` and `create --status todo` only when the user has clearly asked for that action on that issue in chat. Quote their decision in the comment, for example "Approved by the Board Operator: …".
 - **Releasing spends money and quota.** Before releasing several tasks, say which agents will start. `show` lists an issue's blockers ("blocked by"). Release an issue only after its blockers are `done`; whether Paperclip itself holds back a released issue with open blockers is unverified.
 - **Approving in Paperclip does not merge on GitHub.** ADR-009 requires both. Game repository PRs are authored by the same account, so merging needs the owner's admin bypass. Claude must not run it. Give the user the command instead: `gh pr merge <n> --repo datpham02/<game> --merge --admin`. After the user merges, update the game repo's local `main` (`git -C ~/game-studio-workspace/repos/<game> pull --ff-only origin main`). New task worktrees branch from it.
 - **A comment is not a decision.** In Paperclip, the Board approves by setting `done` with a comment (`approve`). Comments alone leave the issue waiting.
