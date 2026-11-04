@@ -108,8 +108,8 @@ Recommended deployment for v1: `local_trusted`, loopback bind (OQ-024).
 Full steps: [../operations/installation.md](../operations/installation.md).
 
 1. Install and onboard Paperclip (`npx paperclipai onboard --yes` once). Then run the globally installed, pinned version with `paperclipai run` (OQ-034).
-2. Create the company from [company/COMPANY.md](../../company/COMPANY.md).
-3. Create agents per [company/ORGANIZATION.md](../../company/ORGANIZATION.md) and [agent-onboarding.md](../../workflows/agent-onboarding.md), `game-director` as root.
+2. Import the company and agents from a clean package ([studio-bootstrap.md](../operations/studio-bootstrap.md)); `game-director` becomes the root.
+3. Configure what the package does not carry yet (adapter config, secrets) per [agent-onboarding.md](../../workflows/agent-onboarding.md). Re-import cannot update existing agents (OQ-040).
 4. For each Game Project, create a Paperclip project with a workspace (`repoUrl`, `repoRef`) and record its ID in the registry.
 5. Configure GitHub token as a company secret and bind it to code-writing agents.
 6. Enable isolated `git_worktree` execution workspaces for projects (Stage 1).

@@ -1,0 +1,17 @@
+# Example provider list for docs/design/provider-allocation.md.
+# Copy to %USERPROFILE%\.config\game-studio\providers.yaml and edit. Never commit the copy.
+# No secrets here: logins and API keys stay with each CLI or in Paperclip secrets.
+providers:
+  - id: claude-code
+    adapter: claude_local
+    capacity: 1
+    confinement: allowlist
+    supportsClaudeSkills: true
+    fit: { planning: 3, implementation: 3, review: 3, ui-design: 3, docs: 3, long-context: 2 }
+  - id: cursor
+    adapter: cursor
+    model: gpt-5.3-codex
+    capacity: 1
+    confinement: classifier     # --trust --auto-review; --sandbox is unavailable on Windows
+    supportsClaudeSkills: false # UNVERIFIED
+    fit: { planning: 2, implementation: 3, review: 1, ui-design: 1, docs: 2, long-context: 2 }

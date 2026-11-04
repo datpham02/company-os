@@ -69,9 +69,11 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 - [dependency-system.md](design/dependency-system.md): dependency registry, categories, versions, licenses.
 - [integration-system.md](design/integration-system.md): integration boundaries and adapter responsibilities.
 - [game-platform-contract.md](design/game-platform-contract.md): how games and platform projects work together (`PLANNED`, filled by GAM-16).
+- [task-contract.md](design/task-contract.md): task fields, splitting, conflict prevention, WIP, blocker protocol, liveness (`PROPOSED`).
+- [provider-allocation.md](design/provider-allocation.md): how agents are spread over however many AI providers the Board has (`PROPOSED`).
 
 ### Workflows (`../workflows/`)
-- [../workflows/README.md](../workflows/README.md): index of the 12 studio workflows.
+- [../workflows/README.md](../workflows/README.md): index of the 13 studio workflows.
 
 ### Integrations (`integrations/`)
 - [paperclip-integration.md](integrations/paperclip-integration.md)
@@ -84,7 +86,7 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 - [decisions/README.md](decisions/README.md): ADR index and process.
 
 ### Operations (`operations/`)
-- [windows-setup.md](operations/windows-setup.md), [installation.md](operations/installation.md), [configuration.md](operations/configuration.md), [runtime-management.md](operations/runtime-management.md), [logging-and-debugging.md](operations/logging-and-debugging.md), [backup-and-recovery.md](operations/backup-and-recovery.md), [troubleshooting.md](operations/troubleshooting.md), [security-operations.md](operations/security-operations.md)
+- [windows-setup.md](operations/windows-setup.md), [installation.md](operations/installation.md), [studio-bootstrap.md](operations/studio-bootstrap.md), [configuration.md](operations/configuration.md), [runtime-management.md](operations/runtime-management.md), [logging-and-debugging.md](operations/logging-and-debugging.md), [backup-and-recovery.md](operations/backup-and-recovery.md), [troubleshooting.md](operations/troubleshooting.md), [security-operations.md](operations/security-operations.md)
 
 ### Guides (`guides/`)
 - [ai-agent-onboarding.md](guides/ai-agent-onboarding.md): answers the ten orientation questions every new agent needs.

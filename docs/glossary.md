@@ -34,7 +34,7 @@ Terms in *italics* after a definition are the equivalent Paperclip term, when on
 | **Game Project** (or **Project**) | One game managed by the studio. Registered in `projects/project-registry.yaml` and mirrored as a Paperclip project. |
 | **Project ID** | kebab-case identifier of a Game Project; equals its GitHub repository name, e.g. `node-arena`. |
 | **Game Repository** | The independent Git repository holding one game's source code, e.g. `datpham02/node-arena`. |
-| **Framework Repository** | This repository, `datpham02/game-studio`. Contains no game source code. |
+| **Framework Repository** | This repository, `datpham02/company-os` (named `game-studio` until 2026-11-05, ADR-018). Contains no game source code. |
 | **Primary Checkout** | The long-lived local clone of a Game Repository on the studio machine. Agents MUST NOT work in it directly. |
 | **Task Workspace** | An isolated working directory for one Task, normally a Git worktree on a dedicated Task Branch. *Paperclip: execution workspace (isolated, `git_worktree` mode).* |
 | **Task Branch** | The dedicated Git branch for one Task's changes. Never the default branch. |

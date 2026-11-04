@@ -2,7 +2,7 @@
 # Status: PROPOSED. Not yet enforced by any script (validation script is PLANNED).
 # Contract: docs/design/project-system.md
 $schema: "https://json-schema.org/draft/2020-12/schema"
-$id: "https://github.com/datpham02/game-studio/projects/project-config.schema.yaml"
+$id: "https://github.com/datpham02/company-os/projects/project-config.schema.yaml"
 title: Game Studio project registry
 type: object
 additionalProperties: false

@@ -7,7 +7,9 @@ Environment: PAPERCLIP_URL (default http://127.0.0.1:3100/api), PAPERCLIP_COMPAN
 default: the only active company).
 """
 import argparse
+import datetime
 import json
+import re
 import os
 import sys
 import urllib.error
@@ -48,6 +50,16 @@ def company(ref=None):
             if ref in (c["id"], c.get("issuePrefix")) or c["name"].lower() == ref.lower():
                 return c
         raise ApiError(f"no active company matches {ref!r}")
+    if len(active) > 1:
+        # Several companies: prefer the one named in config/paperclip/agents.json (the live company).
+        try:
+            here = os.path.dirname(os.path.abspath(__file__))
+            conf = json.load(open(os.path.join(here, "..", "..", "..", "..", "config", "paperclip", "agents.json"), encoding="utf-8"))
+            live = [c for c in active if c["name"].lower() == conf["company"]["name"].lower()]
+            if len(live) == 1:
+                return live[0]
+        except (OSError, KeyError, ValueError):
+            pass
     if len(active) != 1:
         raise ApiError("several active companies; pass --company or set PAPERCLIP_COMPANY: "
                        + ", ".join(f"{c['name']} ({c.get('issuePrefix')})" for c in active))
@@ -169,7 +181,28 @@ def cmd_log(a):
     print(text[-a.tail:] if a.tail else text)
 
 
+WRITE_SET_HEADING = re.compile(r"^#+\s*(write set|files? owned|file ownership|affected (areas|files))", re.I | re.M)
+UNBLOCK_OWNER = re.compile(r"^\W*unblock owner\W*:", re.I | re.M)
+
+
+def release_problems(i, busy_agents):
+    """Task-contract checks (docs/design/task-contract.md §2, §5) before an issue may start."""
+    problems = []
+    if not WRITE_SET_HEADING.search(i.get("description") or ""):
+        problems.append("no '## Write set' in the description")
+    if not ((i.get("executionPolicy") or {}).get("stages")):
+        problems.append("no review or approval stage (agent-created tasks get none, G-10)")
+    if i.get("assigneeAgentId") in busy_agents:
+        problems.append(f"assignee already has {busy_agents[i['assigneeAgentId']]} in progress (WIP 1)")
+    open_blockers = [b.get("identifier") for b in (i.get("blockedBy") or [])
+                     if isinstance(b, dict) and b.get("status") != "done"]
+    if open_blockers:
+        problems.append("blockers not done: " + ", ".join(open_blockers))
+    return problems
+
+
 def cmd_release(a):
+    busy = {}
     for key in a.keys:
         i = issue(key)
         if i["status"] != "backlog":
@@ -178,13 +211,81 @@ def cmd_release(a):
         if not i.get("assigneeAgentId"):
             print(f"{key}: has no agent assignee; assign it first")
             continue
+        if not busy:
+            for o in call("GET", f"/companies/{i['companyId']}/issues?status=in_progress") or []:
+                if o.get("assigneeAgentId"):
+                    busy[o["assigneeAgentId"]] = o["identifier"]
+        problems = release_problems(i, busy)
+        if problems and not a.force:
+            print(f"{key}: not released: " + "; ".join(problems) + ". Fix it, or pass --force if the Board accepts it.")
+            continue
         ws = i.get("currentExecutionWorkspace") or {}
         if ws.get("sourceIssueId") and ws["sourceIssueId"] != i["id"]:
             # Issues created inside another issue's run inherit that run's worktree (gap G-10).
             call("PATCH", f"/issues/{i['id']}", {"executionWorkspaceId": None, "executionWorkspacePreference": "isolated_workspace"})
             print(f"{key}: detached from inherited workspace {ws.get('name')}; it gets its own worktree")
         res = call("PATCH", f"/issues/{i['id']}", {"status": "todo"})
-        print(f"{key}: released -> {res['status']} (the assignee is woken now)")
+        busy[i["assigneeAgentId"]] = key
+        print(f"{key}: released -> {res['status']} (the assignee is woken now)"
+              + (f"; accepted with: {'; '.join(problems)}" if problems else ""))
+
+
+def hours_since(ts):
+    if not ts:
+        return 0.0
+    t = datetime.datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    return (datetime.datetime.now(datetime.timezone.utc) - t).total_seconds() / 3600
+
+
+def cmd_triage(a):
+    """Read-only sweep for workflows/daily-triage.md. Changes nothing."""
+    c = company(a.company)
+    n = names(c["id"])
+    summaries = [i for i in call("GET", f"/companies/{c['id']}/issues") if i["status"] not in ("done", "cancelled")]
+    full = [issue(s["id"]) for s in summaries]  # the list endpoint omits blockers and execution state
+    sections = {k: [] for k in ("Needs the Board", "Blocked", "Review stalled", "Quiet", "Ready to release", "WIP")}
+    in_progress = {}
+    for i in full:
+        key, status, age = i["identifier"], i["status"], hours_since(i.get("updatedAt"))
+        title = i["title"][:60]
+        part = ((i.get("executionState") or {}).get("currentParticipant") or {})
+        blockers = [b for b in (i.get("blockedBy") or []) if isinstance(b, dict)]
+        cancelled = [b.get("identifier") for b in blockers if b.get("status") == "cancelled"]
+        open_blockers = [b.get("identifier") for b in blockers if b.get("status") != "done"]
+        if cancelled:
+            sections["Blocked"].append((age, f"{key} {status}: blocker(s) {', '.join(cancelled)} cancelled; they never resolve. Re-point or remove the relation | {title}"))
+        if i.get("assigneeUserId") or part.get("type") == "user":
+            why = "pending Board approval" if part.get("type") == "user" else "assigned to the Board"
+            sections["Needs the Board"].append((age, f"{key} {status}, {why}, {age:.0f}h | {title}"))
+        elif status == "blocked":
+            since = hours_since(i.get("blockedTransitionAt") or i.get("updatedAt"))
+            comments = call("GET", f"/issues/{i['id']}/comments") or []
+            owner = next((ln.split(":", 1)[1].strip() for ln in (comments[0].get("body") or "").splitlines()
+                          if UNBLOCK_OWNER.match(ln)), None) if comments else None
+            note = f"owner {owner}" if owner else "NO unblock owner in the last comment"
+            if blockers and not open_blockers:
+                note += "; all blockers are done, so it should move"
+            sections["Blocked"].append((since, f"{key} on {who(i, n)}, {since:.0f}h, {note} | {title}"))
+        elif status == "in_review" and part.get("type") == "agent":
+            started = i.get("updatedAt") or ""
+            if not any(r.get("agentId") == part.get("agentId") and (r.get("createdAt") or "") >= started for r in runs(i["id"])) and age > 0.05:
+                sections["Review stalled"].append((age, f"{key} waiting on {n.get(part.get('agentId'), '?')} with no run, {age:.1f}h | {title}"))
+        elif status == "in_progress":
+            in_progress.setdefault(i.get("assigneeAgentId"), []).append(key)
+            if age >= a.quiet_hours:
+                sections["Quiet"].append((age, f"{key} on {who(i, n)}, no update for {age:.0f}h | {title}"))
+        elif status == "backlog" and not open_blockers:
+            sections["Ready to release"].append((age, f"{key} on {who(i, n)}, waiting {age:.0f}h | {title}"))
+    for agent_id, keys in in_progress.items():
+        if agent_id and len(keys) > 1:
+            sections["WIP"].append((0, f"{n.get(agent_id, agent_id[:8])} has {len(keys)} in progress: {', '.join(keys)}"))
+    print(f"Triage for {c['name']} ({len(full)} open issues)")
+    for title, rows in sections.items():
+        print(f"\n{title}:")
+        for _, line in sorted(rows, key=lambda r: -r[0]):
+            print("  " + line)
+        if not rows:
+            print("  (none)")
 
 
 def board_decision(a, status, label):
@@ -282,9 +383,13 @@ def main():
     s.add_argument("run_id")
     s.add_argument("--tail", type=int, default=4000, help="last N characters (0 = all)")
     s.set_defaults(fn=cmd_log)
-    s = sub.add_parser("release", help="backlog -> todo; wakes the assignee")
+    s = sub.add_parser("release", help="backlog -> todo; wakes the assignee (task-contract checks first)")
     s.add_argument("keys", nargs="+")
+    s.add_argument("--force", action="store_true", help="release despite failed task-contract checks (Board decision)")
     s.set_defaults(fn=cmd_release)
+    s = sub.add_parser("triage", help="read-only sweep: Board queue, blocked, stalled, quiet, ready, WIP")
+    s.add_argument("--quiet-hours", type=float, default=24, help="in_progress with no update for this long is 'quiet'")
+    s.set_defaults(fn=cmd_triage)
     for name, fn, helptext in (("approve", cmd_approve, "Board approves: status done + comment"),
                                ("request-changes", cmd_request_changes, "Board requests changes: back to the implementer")):
         s = sub.add_parser(name, help=helptext)

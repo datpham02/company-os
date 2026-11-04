@@ -49,6 +49,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-037 | Hosting choice: preview deploys per branch, production only on Board action, free tier | Open | Website M6 (ADR-014) |
 | OQ-038 | Ad-network approval, placement policy for game pages, and consent requirements | Open | Website ads milestone |
 | OQ-039 | Vietnamese legal requirements for a free game website with ads (Decree 147/2024, Decree 13/2023) | Open | Website public launch |
+| OQ-040 | How are existing Paperclip agents updated from Git, given that import into an existing company refuses `--collision replace`? | Open | Studio bootstrap, ADR-016 |
+| OQ-041 | Does `maxConcurrentRuns: 1` enforce WIP 1 without delaying an agent's review wakes? | Open | Task contract, ADR-017 |
 
 ## Entries
 
@@ -356,6 +358,18 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 ### OQ-039 — Legal requirements for the website in Vietnam
 - **Question:** Does a free browser-game website with ads and no payments need registration or a licence under Decree 147/2024/ND-CP (online games) or other rules? What does Decree 13/2023/ND-CP on personal data require for anonymous ids and optional email linking? Payments would add a licence, a payment provider, refunds and tax.
 - **Owner:** the Board Operator, with a lawyer. Agents MUST NOT treat any answer as settled without the Board's confirmation.
+- **Status:** Open.
+
+### OQ-040 — Updating existing agents from Git
+- **Found (2026-11-04, Paperclip 2026.1023.0):** `company import --target existing` goes through the "safe" route `/api/companies/{id}/imports/{preview,apply}`, which returns `403 Safe import route does not allow replace collision strategy`. Only `rename` and `skip` work. The re-import with `--collision replace` described in ADR-012, OQ-007 and OQ-023 therefore cannot update existing agents.
+- **Also found:** importing from the working repository picks up gitignored copies under `.claude/worktrees/`. A package built in a clean folder with only `company/` and `agents/` matches all 8 live agents (after `agents/qa` declared `slug: qa-engineer`).
+- **Options:** the Board edits agents in the UI from Git (current); a sync script using the agent API (`PATCH /api/agents/{id}` and the instructions-bundle routes seen in the installed code, not in the public docs); a fresh company import (loses issue history).
+- **Status:** Open.
+
+### OQ-041 — WIP limit through `maxConcurrentRuns`
+- **Question:** If an implementer agent has `runtimeConfig.heartbeat.maxConcurrentRuns: 1`, are review or comment wakes for its other Tasks queued, dropped, or delayed until its current run ends?
+- **Why it matters:** Two Tasks ran on one agent at once (GAM-25 and GAM-45). The limit would stop that, but must not stall reviews.
+- **Verification method:** scratch company; one agent with limit 1; start a long Task, then send a review hand-off to the same agent; record what happens.
 - **Status:** Open.
 
 ## Conflicts

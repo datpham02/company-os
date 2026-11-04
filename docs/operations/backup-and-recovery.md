@@ -4,7 +4,7 @@
 
 | Data | Location | Backup method | Criticality |
 |---|---|---|---|
-| Framework Repository | GitHub `datpham02/game-studio` (once pushed, OQ-028) | Git remote is the backup | High |
+| Framework Repository | GitHub `datpham02/company-os` (renamed from `game-studio`, ADR-018) | Git remote is the backup | High |
 | Game Repositories | GitHub | Git remote; unpushed Task Branch work is at risk | High |
 | Paperclip data (companies, agents, tasks, approvals, run history, secrets) | Paperclip instance directory / embedded PostgreSQL | Procedure `UNVERIFIED` (OQ-025). Read Paperclip's `docs/deploy/database.md` and `storage.md` before relying on any method | High |
 | Paperclip company definition | Exportable package | `npx paperclipai company export <company-id> --out <dir>` (`VERIFIED` command) | Medium (configuration only, not task history) |

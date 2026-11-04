@@ -29,7 +29,7 @@ Board Operator (human)
 | `web-engineer` | Web Engineer | `project-manager` | [AGENTS.md](../agents/web-engineer/AGENTS.md) | `claude_local` | workspace-write (dev/test environments only, ADR-014) |
 | `qa` | QA Engineer | `project-manager` | [AGENTS.md](../agents/qa/AGENTS.md) | `cursor` (non-Claude model; `codex_local` once Codex works) | workspace-write |
 
-"Default Provider" is a starting suggestion for Agent Instance registration, not a property of the role (ADR-008). Mixing providers lets the studio compare them and gives `qa` an independent provider from most implementers.
+"Default Provider" is a starting suggestion for Agent Instance registration, not a property of the role (ADR-008). The column shows today's live setup. The proposed allocation for the Board's two providers (`qa` on Claude Code; `gameplay-programmer`, `web-engineer`, `game-director` on Cursor) is in [provider-allocation.md](../docs/design/provider-allocation.md) and waits for ADR-015. Mixing providers lets the studio compare them and gives `qa` an independent provider from most implementers.
 
 ## Planned roles (not defined yet)
 Candidates when workload requires them, each via [agent-onboarding.md](../workflows/agent-onboarding.md): `technical-director`, `engine-programmer`, `artist` / `art-director`, `audio-designer`, `narrative-designer`, `release-manager`, `devops-engineer` (when the studio runs more than one platform or self-hosted infrastructure, ADR-014).

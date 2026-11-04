@@ -1,6 +1,6 @@
 ---
 name: paperclip
-description: Operate the Game Studio's Paperclip instance for the Board Operator from chat. Use it to see what agents and issues are doing, read issue comments and run logs, release backlog tasks, approve or send back work awaiting the Board, create and assign tasks, wake agents and cancel runs. Use it whenever the user mentions Paperclip, an issue key such as GAM-12, an agent role (game-director, qa, …), a milestone, approving, releasing, or "what is the studio doing".
+description: Operate the company's Paperclip instance for the Board Operator from chat. Use it to see what agents and issues are doing, read issue comments and run logs, release backlog tasks, approve or send back work awaiting the Board, create and assign tasks, wake agents and cancel runs. Use it whenever the user mentions Paperclip, an issue key such as SOU-12, an agent role (game-director, qa, …), a milestone, approving, releasing, or "what is the studio doing".
 ---
 
 # Paperclip control (Board Operator)
@@ -21,25 +21,28 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 |---|---|
 | `health` | Paperclip version and mode |
 | `overview` | Company, projects, agents and every open issue (review first, then in progress, blocked, todo, backlog) |
-| `show GAM-8 [--comments N] [--description]` | One issue: status, assignee, current stage, blockers, branch, latest comments, runs |
+| `show SOU-8 [--comments N] [--description]` | One issue: status, assignee, current stage, blockers, branch, latest comments, runs |
 | `log <run-id> [--tail N]` | Output of one run; take run ids from `show` |
-| `release GAM-8 [GAM-9 …]` | `backlog` → `todo`. **The assignee starts working immediately and spends usage.** |
-| `approve GAM-8 "comment"` | Board approval: sets `done` with the comment. Only works while the issue waits on the Board |
-| `request-changes GAM-8 "comment"` | Board sends the work back to the implementer with the comment |
-| `comment GAM-8 "text"` | Board comment without a decision |
-| `cancel GAM-8 "reason"` | Cancel an issue that is no longer needed (duplicate, obsolete); also stops its pending runs |
-| `assign GAM-8 game-designer [--status backlog]` | Reassign; agents match by name, url key or id |
+| `triage` | Read-only daily sweep (workflows/daily-triage.md): what needs the Board, blocked issues and whether they name an unblock owner, stalled reviews, quiet tasks, ready backlog, agents over WIP 1 |
+| `release SOU-8 [SOU-9 …] [--force]` | `backlog` → `todo`. **The assignee starts working immediately and spends usage.** Refuses an issue with no write set, no review/approval stage, open blockers, or a busy assignee; `--force` only on the user's explicit word |
+| `approve SOU-8 "comment"` | Board approval: sets `done` with the comment. Only works while the issue waits on the Board |
+| `request-changes SOU-8 "comment"` | Board sends the work back to the implementer with the comment |
+| `comment SOU-8 "text"` | Board comment without a decision |
+| `cancel SOU-8 "reason"` | Cancel an issue that is no longer needed (duplicate, obsolete); also stops its pending runs |
+| `assign SOU-8 game-designer [--status backlog]` | Reassign; agents match by name, url key or id |
 | `create --title … --assignee … [--project …] [--desc … / --desc-file …] [--review qa] [--no-approval] [--status todo]` | New issue. Defaults: `backlog`, then a Board approval stage. Each `--review` adds an agent review stage before it |
-| `wake qa-engineer [--issue GAM-8]` | Start an agent run now |
+| `wake qa-engineer [--issue SOU-8]` | Start an agent run now |
 | `cancel-run <run-id>` | Stop a queued or running run |
 
 ## Rules
 
 - **Board decisions need the user's words.** Run `approve`, `request-changes`, `release`, `cancel` and `create --status todo` only when the user has clearly asked for that action on that issue in chat. Quote their decision in the comment, for example "Approved by the Board Operator: …".
 - **Releasing spends money and quota.** Before releasing several tasks, say which agents will start. `show` lists an issue's blockers ("blocked by"). Release an issue only after its blockers are `done`; whether Paperclip itself holds back a released issue with open blockers is unverified.
-- **Approving in Paperclip does not merge on GitHub.** ADR-009 requires both. Game repository PRs are authored by the same account, so merging needs the owner's admin bypass. Claude must not run it. Give the user the command instead: `gh pr merge <n> --repo datpham02/<game> --merge --admin`. After the user merges, update the game repo's local `main` (`git -C ~/game-studio-workspace/repos/<game> pull --ff-only origin main`). New task worktrees branch from it.
+- **Approving in Paperclip does not merge on GitHub.** ADR-009 requires both. Game repository PRs are authored by the same account, so merging needs the owner's admin bypass: `gh pr merge <n> --repo datpham02/<game> --merge --admin`. Since 2026-11-04 the Board Operator allows Claude to run it for `datpham02/lamplight-vigil` (allow rule in the gitignored `.claude/settings.local.json`). Run it only when all of these hold: the issue is approved in Paperclip; the user asked in chat to merge that PR; and `gh pr view` shows it mergeable. Merge one PR per command, then confirm with `gh pr view <n> --json state`. For any other repository, give the user the command instead. After the user merges, update the game repo's local `main` (`git -C ~/game-studio-workspace/repos/<game> pull --ff-only origin main`). New task worktrees branch from it.
 - **A comment is not a decision.** In Paperclip, the Board approves by setting `done` with a comment (`approve`). Comments alone leave the issue waiting.
 - Never change agent permissions, adapters, secrets or company settings through this skill. Those are configuration changes. Discuss them first and record them in the docs (security-architecture.md §4).
+
+- **Daily triage.** When the user asks what is stuck or what needs them, run `triage` first and lead with "Needs the Board". Suggest it once per working day.
 
 ## Known behaviour (see docs/architecture/stage1-gap-analysis.md)
 
@@ -52,4 +55,4 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 - **Cursor QA often posts a verdict without recording the decision**, and Paperclip then moves the issue to `blocked` at the review stage. `approve` refuses there. When the user accepts QA's written verdict, record it as a manual resolution: PATCH the issue to `done` with a comment that quotes the user and names the QA verdict. When QA requested changes, reassign the issue to its implementer with status `todo` and a Board comment; the review stages stay in place.
 - A reviewer must not edit, rebase or push the implementer's branch. If one does, discard that local work and send the task back to the implementer.
 - A run that ends with `scheduled_retry` and keeps retrying usually means the agent could not report. Read `log`, then `cancel-run` the retry if it is looping.
-- Issue keys use the company prefix (`GAM`). Task branches are `<KEY>-<slug>`, in worktrees under `<game repo>/.paperclip/worktrees/`.
+- The live company is **Soucean**, issue prefix `SOU` (since 2026-11-05, ADR-018). The former company "Game Studio Soucean" (`GAM`) is paused and kept as an archive; its issue keys still resolve. `pc.py` picks Soucean by default; pass `--company GAM` for the archive. Task branches are `<KEY>-<slug>`, in worktrees under `<project repo>/.paperclip/worktrees/`.

@@ -15,7 +15,11 @@ These rules apply to **every agent on every Run** and to the Board Operator's au
 2. One Task, one Task Branch. Do not mix unrelated changes.
 3. Before your Run ends, post a comment: what you did, what is left, links (branch, commits, PR), and any risks.
 4. Move code changes to `in_review`, never directly to `done`.
-5. If blocked or outside your authority, set the Task to `blocked`, explain why, and @-mention your manager.
+5. If blocked or outside your authority, set the Task to `blocked` and post the blocker lines from [task-contract.md §6](../docs/design/task-contract.md#6-blocker-protocol): `Blocked`, `Type`, `Unblock owner`, `Ask`, `Check again`. @-mention the unblock owner or your manager. A blocked Task without a named owner is not allowed.
+6. Change only the files in your Task's write set. If you need more, stop and ask first.
+7. One Task `in_progress` per Agent Instance.
+8. Tasks you create start in `backlog`, unassigned, with assignee, write set, acceptance criteria and reviewer written in the description ([task-contract.md §2](../docs/design/task-contract.md#2-task-contract)).
+9. Reviewers record a decision in Paperclip, not only a verdict comment.
 
 ## R3. Approvals
 1. Merges, releases, new Game Projects, new or upgraded Dependencies, new Agent Instances, permission-profile changes, and budget overrides need Board approval. ([security-architecture.md §8](../docs/architecture/security-architecture.md#8-approval-boundaries))

@@ -16,5 +16,6 @@ Canonical studio workflows. Structure contract: [../docs/design/workflow-system.
 | 10 | Add a new external dependency | [add-external-dependency.md](add-external-dependency.md) | Requesting agent | Yes |
 | 11 | Add a new AI execution provider | [add-execution-provider.md](add-execution-provider.md) | Board Operator | Yes |
 | 12 | Onboard a new agent | [agent-onboarding.md](agent-onboarding.md) | `game-director` / Board | Yes |
+| 13 | Daily triage (`PROPOSED`) | [daily-triage.md](daily-triage.md) | `project-manager` + Board | No |
 
 Status of all workflows: `APPROVED` as process definitions where they implement accepted ADRs; individual steps that depend on unverified Paperclip behaviour are marked `UNVERIFIED` inline.

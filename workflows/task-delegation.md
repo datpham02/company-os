@@ -16,10 +16,10 @@ Project; goal or parent Task; acceptance criteria.
 - The assignee's role is enabled for the project.
 
 ## Steps
-1. **`project-manager`** writes the Task in Paperclip: title; description; acceptance criteria; affected areas/files; dependencies on other Tasks; parent issue; project.
+1. **`project-manager`** writes the Task per the [task contract](../docs/design/task-contract.md#2-task-contract): goal, acceptance criteria, write set, read set (with any source text pasted, G-8), blocker relations, parent issue, project, size within one PR. Agent-created Tasks start in `backlog`, unassigned (G-9).
 2. Sets the **execution policy** for code Tasks: `review` stage → `qa` (or another non-author agent); `approval` stage → Board Operator user.
-3. Chooses the assignee: role matches the work; Agent Instance has no Task `in_progress` (WIP limit 1); for review Tasks, not the author.
-4. Checks parallel safety ([parallel-tasks.md](parallel-tasks.md)) against Tasks currently `in_progress` in the same project.
+3. Chooses the assignee: role matches the work; Agent Instance has no Task `in_progress` (WIP limit 1); the reviewer is not the author and, where possible, runs on a different provider ([provider-allocation.md](../docs/design/provider-allocation.md)).
+4. Checks parallel safety ([parallel-tasks.md](parallel-tasks.md)) against every unmerged Task in the same project.
 5. Assigns the Task and sets status `todo`. Paperclip wakes the assignee (assignment heartbeat, `VERIFIED`).
 6. The assignee checks out the Task on its next heartbeat; execution continues in [development-cycle.md](development-cycle.md).
 

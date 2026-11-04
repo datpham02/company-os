@@ -1,0 +1,184 @@
+{
+  "_comment": "Portable Paperclip agent configuration. No secrets, no machine paths. {PREFIX} is the company issue prefix. Built into a package by scripts/setup/build-package.py (docs/operations/studio-bootstrap.md).",
+  "company": {
+    "name": "Soucean"
+  },
+  "rules": {
+    "reporting": "Paperclip reporting rule for this environment: to post comments or change issue status, call the Paperclip skill's paperclip-issue-update.sh as one standalone Bash command, for example: bash \"<absolute path to paperclip-issue-update.sh>\" --issue-id <literal issue id> --status done <<'MD' ... MD. Never wrap it in a script of your own, never use shell variables such as $PAPERCLIP_TASK_ID or $PAPERCLIP_API_KEY in a command, and never chain it with other commands using && or ;. Use the literal issue id from your task. The permission layer refuses anything else.",
+    "git": "Git rule: you work on the task branch Paperclip created for you. Push only that branch, by its literal name, as one standalone command: git push -u origin <task-branch-name>. Never push main, never force-push. Open the pull request with one standalone command: gh pr create --base main --head <task-branch-name> --title \"...\" --body \"...\". To bring the task branch up to date with main, run git fetch origin, then git merge origin/main as separate standalone commands (never rebase), resolve any conflicts, commit the merge, and push normally."
+  },
+  "runtime": {
+    "heartbeat": {
+      "enabled": false,
+      "maxConcurrentRuns": 20
+    }
+  },
+  "profiles": {
+    "claude-read-only": {
+      "adapter": "claude_local",
+      "config": {
+        "engine": "cli",
+        "dangerouslySkipPermissions": false
+      },
+      "allowedTools": [
+        "Bash(curl *)",
+        "Bash(cat *)",
+        "Bash(*paperclip-issue-update.sh*)",
+        "Bash(*paperclip-upload-artifact.sh*)",
+        "mcp__Paperclip_projects",
+        "Bash(git status*)",
+        "Bash(git diff*)",
+        "Bash(git log*)",
+        "Bash(git show*)"
+      ],
+      "disallowedTools": [
+        "Bash(git push*)"
+      ],
+      "rules": [
+        "reporting"
+      ]
+    },
+    "claude-workspace-write": {
+      "adapter": "claude_local",
+      "config": {
+        "engine": "cli",
+        "dangerouslySkipPermissions": false
+      },
+      "permissionMode": "acceptEdits",
+      "allowedTools": [
+        "Bash(curl *)",
+        "Bash(cat *)",
+        "Bash(*paperclip-issue-update.sh*)",
+        "Bash(*paperclip-upload-artifact.sh*)",
+        "mcp__Paperclip_projects",
+        "Bash(git status*)",
+        "Bash(git diff*)",
+        "Bash(git log*)",
+        "Bash(git show*)",
+        "Bash(git add*)",
+        "Bash(git commit*)",
+        "Bash(git fetch origin*)",
+        "Bash(git merge origin/main*)",
+        "Bash(git merge --no-edit origin/main*)",
+        "Bash(git merge --continue*)",
+        "Bash(git merge --abort*)",
+        "Bash(git push -u origin {PREFIX}-*)",
+        "Bash(git push origin {PREFIX}-*)",
+        "Bash(gh pr create*)",
+        "Bash(gh pr view*)",
+        "Bash(gh pr list*)",
+        "Bash(npm ci*)",
+        "Bash(npm install*)",
+        "Bash(npm run *)",
+        "Bash(npm test*)",
+        "Bash(npx tsc*)"
+      ],
+      "disallowedTools": [
+        "Bash(git push origin main*)",
+        "Bash(git push -u origin main*)",
+        "Bash(git push --force*)",
+        "Bash(git push -f*)",
+        "Bash(git push *--force*)",
+        "Bash(gh pr merge*)"
+      ],
+      "rules": [
+        "reporting",
+        "git"
+      ]
+    },
+    "cursor-workspace-write": {
+      "adapter": "cursor",
+      "config": {
+        "model": "gpt-5.3-codex",
+        "extraArgs": [
+          "--trust",
+          "--auto-review"
+        ]
+      }
+    }
+  },
+  "agents": {
+    "game-director": {
+      "profile": "claude-read-only",
+      "permissions": {
+        "canCreateAgents": true,
+        "canCreateSkills": true
+      }
+    },
+    "producer": {
+      "profile": "claude-read-only",
+      "permissions": {
+        "canCreateAgents": true,
+        "canCreateSkills": true
+      }
+    },
+    "project-manager": {
+      "profile": "claude-read-only",
+      "permissions": {
+        "canCreateAgents": true,
+        "canCreateSkills": true
+      }
+    },
+    "game-designer": {
+      "profile": "claude-workspace-write",
+      "permissions": {
+        "canCreateSkills": true
+      },
+      "secrets": [
+        "GH_TOKEN"
+      ]
+    },
+    "ui-designer": {
+      "profile": "claude-workspace-write",
+      "permissions": {
+        "canCreateSkills": true
+      },
+      "secrets": [
+        "GH_TOKEN"
+      ],
+      "extraAllowedTools": [
+        "Bash(python \"$HOME/.claude/skills/ui-ux-pro-max/scripts/search.py\"*)",
+        "Bash(design.md *)"
+      ]
+    },
+    "qa-engineer": {
+      "profile": "claude-workspace-write",
+      "permissions": {
+        "canCreateSkills": true
+      },
+      "secrets": [
+        "GH_TOKEN"
+      ]
+    },
+    "gameplay-programmer": {
+      "profile": "cursor-workspace-write",
+      "permissions": {
+        "canCreateSkills": true
+      },
+      "secrets": [
+        "GH_TOKEN"
+      ]
+    },
+    "web-engineer": {
+      "profile": "cursor-workspace-write",
+      "permissions": {},
+      "secrets": [
+        "GH_TOKEN"
+      ]
+    }
+  },
+  "projects": {
+    "lamplight-vigil": {
+      "name": "Lamplight Vigil",
+      "repo": "datpham02/lamplight-vigil",
+      "lead": "producer",
+      "description": "2D arcade survival game about aiming light. Phaser 3 + TypeScript. Repository datpham02/lamplight-vigil (public)."
+    },
+    "soucean-game": {
+      "name": "Soucean Game",
+      "repo": "datpham02/soucean-game",
+      "lead": "producer",
+      "description": "Multi-game website (platform project, ADR-014). Lists and hosts the studio games; ads only on the website page, never inside a game. Repository datpham02/soucean-game (public); its plans live in that repository."
+    }
+  }
+}
