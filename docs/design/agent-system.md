@@ -43,6 +43,7 @@ Status: `APPROVED` (ADR-012, accepted 2026-11-03). YAML frontmatter compatible w
 
 ```yaml
 ---
+slug: gameplay-programmer          # optional; Paperclip URL key, only when it differs from the directory name (agents/qa uses qa-engineer)
 name: Gameplay Programmer          # Agent Companies field
 title: Gameplay Programmer         # Agent Companies field (Paperclip title)
 reportsTo: project-manager         # Agent ID of the manager; null for the root
@@ -53,9 +54,15 @@ metadata:
     id: gameplay-programmer        # MUST equal the directory name
     status: active                 # active | draft | deprecated
     permissionProfile: workspace-write   # read-only | workspace-write (see security-architecture.md §4)
-    preferredProviders: [claude_local, codex_local]
+    preferredProviders: [claude_local, codex_local]   # superseded by `allocation` (provider-allocation.md); kept until ADR-015 is decided
     tools: [git, github-cli, openspec] # dependency IDs from dependencies/registry.yaml; `git` is assumed present
     canWriteCode: true
+    allocation:                    # inputs to docs/design/provider-allocation.md
+      workType: [implementation]   # planning | implementation | review | ui-design | docs | long-context; main one first
+      workload: 3                  # relative token use: implementer 3, designer/reviewer 2, others 1
+      writesCode: true
+      requires: []                 # e.g. [claudeSkills]
+      reviews: []                  # roles whose work this role reviews
 ---
 ```
 
@@ -83,6 +90,7 @@ Every Agent Instance MUST, on every Run:
 5. Post a comment summarizing what it did, what remains, and links (branch, PR) before the Run ends. Paperclip enforces "comment required" (`VERIFIED`).
 6. Never mark its own code change `done`; move it to `in_review`.
 7. Follow [../../company/RULES.md](../../company/RULES.md).
+8. Follow the task hygiene in [task-contract.md](task-contract.md): stay in the write set, one Task in progress, the blocker lines, record review decisions. Agents cannot read this repository at run time, so each role file repeats these rules in its own `## Task hygiene` section.
 
 ## 6. Defined roles (v1)
 

@@ -4,7 +4,7 @@
 
 | Repository | Contents | Owner | Status |
 |---|---|---|---|
-| `datpham02/game-studio` | Framework: studio definition, registries, docs, Runtime source | Board Operator | Local directory exists at `/home/datpt/game-studio`; **not yet a Git repository**, no remote configured (audit 2026-11-03) |
+| `datpham02/company-os` (renamed from `game-studio` on 2026-11-05, ADR-018) | Framework: studio definition, registries, docs, Runtime source | Board Operator | Local directory exists at `/home/datpt/game-studio`; **not yet a Git repository**, no remote configured (audit 2026-11-03) |
 | `datpham02/<project-id>` (one per game) | Game source, assets, game docs, game-local agent instructions, game-local OpenSpec specs | Board Operator | None registered yet |
 | `paperclipai/paperclip` | Paperclip | Paperclip maintainers | External; installed via npm (`paperclipai`), never cloned into this repo |
 | Other dependencies | See [dependencies/registry.yaml](../../dependencies/registry.yaml) | Their maintainers | External |
