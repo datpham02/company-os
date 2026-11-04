@@ -61,7 +61,7 @@ stateDiagram-v2
 | `maintenance` | Bug fixes, patches | New features without Board approval |
 | `archived` | Nothing | Any write |
 
-**Project documents live in the project repository** (Board decision, 2026-11-04). ADR-014 §2 allows plan documents in the framework while a project is `planned`, but the studio does not use that allowance. The Board creates the project repository first, and plans, requirements and setup checklists are written there from the start. Until the repository exists, drafts stay in a Paperclip issue. The one exception is Soucean Game: its plan files were committed to `docs/plans/` before this decision, and its seeding Task moves them out.
+**Project documents live in the project repository** (Board decision, 2026-11-04). ADR-014 §2 allows plan documents in the framework while a project is `planned`, but the studio does not use that allowance. The Board creates the project repository first, and plans, requirements and setup checklists are written there from the start. Until the repository exists, drafts stay in a Paperclip issue. The one exception is Soucean Game: its plan files were committed to `docs/plans/` before this decision. The seeding Task (GAM-20) moved them into its repository, and they were then deleted here.
 
 ## 4. Project-specific context
 

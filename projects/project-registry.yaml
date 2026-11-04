@@ -52,7 +52,7 @@ projects:
     name: Soucean Game
     type: platform                # ADR-014 (Accepted 2026-11-04)
     status: initializing          # repo + Paperclip project created 2026-11-04; seeding next
-                                  # Plan files in docs/plans/ move into the website repository at seeding. Contract: docs/design/game-platform-contract.md (GAM-16).
+                                  # Plan and M0 checklist: docs/plans/ in the soucean-game repository (moved at seeding, GAM-20). Contract: docs/design/game-platform-contract.md (GAM-16).
     repository:
       url: https://github.com/datpham02/soucean-game.git
       defaultBranch: main
