@@ -12,7 +12,7 @@ The studio relies on external tools: Paperclip, AI CLIs, OpenSpec, skill packs, 
 - External tools MUST be registered in [dependencies/registry.yaml](../../dependencies/registry.yaml).
 - Game Studio MUST NOT vendor, copy, or submodule the source code of external projects into this repository.
 - Each entry MUST record: identifier, name, source (repository or official docs), category, version constraint, installation reference, required/optional status, integration status, compatibility notes, and license when known.
-- Listing a dependency in the registry does not approve its installation. Installation requires the approval gate in [add-external-dependency.md](../../workflows/add-external-dependency.md).
+- Listing a dependency in the registry does not approve its installation. Installation requires the approval gate in [add-external-dependency.md](../../knowledge/company/workflows/add-external-dependency.md).
 
 ## Alternatives considered
 | Alternative | Why not chosen |

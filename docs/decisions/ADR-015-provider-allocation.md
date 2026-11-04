@@ -3,14 +3,14 @@
 - **Status:** Proposed
 - **Date:** 2026-11-04
 - **Deciders:** Board Operator
-- **Related:** ADR-008, C-002, OQ-033, [provider-allocation.md](../design/provider-allocation.md)
+- **Related:** ADR-008, C-002, OQ-033, [provider-allocation.md](../../knowledge/company/policies/provider-allocation.md)
 
 ## Context
 ADR-008 makes the provider a property of the Agent Instance, not of the role, but says nothing about how to choose it. On 2026-11-04, 7 of 8 agents ran on Claude Code and only `qa` on Cursor, so one quota carried almost all the work. Cursor reviews often ended without a recorded decision, which Paperclip turns into `blocked` (GAM-45). The Board's set of AI subscriptions will change over time (Gemini CLI was tried and dropped the same day).
 
 ## Decision
 - The Board declares its providers in a local provider list (capacity, confinement, Claude-skill support, fit per kind of work). Roles declare `allocation` metadata (work types, workload, writes code, requirements, whom they review).
-- Agents are placed by the rule in [provider-allocation.md §3](../design/provider-allocation.md#3-rule): hard constraints (requirements, minimum fit 2, confinement for code writers) → reviewer on a different provider from its author → balance load against capacity → overload cap → ties by fit.
+- Agents are placed by the rule in [provider-allocation.md §3](../../knowledge/company/policies/provider-allocation.md#3-rule): hard constraints (requirements, minimum fit 2, confinement for code writers) → reviewer on a different provider from its author → balance load against capacity → overload cap → ties by fit.
 - Fit numbers start as Board estimates and change only from recorded evidence (triage records), with Board approval.
 - A code-writing role MAY run on a provider weaker than an allowlist only with branch protection on the target repository and a repository-scoped `GH_TOKEN`. A provider with no confinement runs under the `bypass` profile (C-002).
 - Allocation changes are Board-approved configuration changes, rolled out one role at a time with a cross-provider trial Task.

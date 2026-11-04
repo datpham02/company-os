@@ -1,6 +1,6 @@
 # Workflow System
 
-**Contract owner for:** the structure every workflow follows and how workflows execute through Paperclip. Individual workflows live in [../../workflows/](../../workflows/).
+**Contract owner for:** the structure every workflow follows and how workflows execute through Paperclip. Individual workflows live in [../../knowledge/company/workflows/](../../knowledge/company/workflows/).
 
 ## 1. Execution model
 
@@ -15,7 +15,7 @@ The agent that owns a workflow instance (usually `project-manager` or `producer`
 
 ## 2. Workflow document structure
 
-Every file in `workflows/` MUST contain:
+Every file in `knowledge/company/workflows/` MUST contain:
 
 | Section | Content |
 |---|---|
@@ -68,11 +68,11 @@ A gate is passed only when the decision is recorded. Silence is never approval.
 | Rejected at a gate | Requester revises (Paperclip `request-revision` / `resubmit` for approvals, `changes_requested` for execution stages) |
 | Conflict (`409` on checkout) | Do not retry; pick other work (Paperclip guidance, `VERIFIED`) |
 
-Detailed procedure: [../../workflows/task-failure-handling.md](../../workflows/task-failure-handling.md).
+Detailed procedure: [../../knowledge/company/workflows/task-failure-handling.md](../../knowledge/company/workflows/task-failure-handling.md).
 
 ## 7. Configurability
 
 Projects MAY override workflow parameters in their registry entry (`workflows.<workflow-id>.<parameter>`), e.g. whether a `qa` review stage is required. Overrides MUST NOT remove a Board approval gate required by an ADR.
 
 ## Related documents
-- [../../workflows/README.md](../../workflows/README.md) · [company-design.md](company-design.md) · [../integrations/paperclip-integration.md](../integrations/paperclip-integration.md)
+- [../../knowledge/company/workflows/README.md](../../knowledge/company/workflows/README.md) · [company-design.md](company-design.md) · [../integrations/paperclip-integration.md](../integrations/paperclip-integration.md)

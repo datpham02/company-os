@@ -186,7 +186,7 @@ UNBLOCK_OWNER = re.compile(r"^\W*unblock owner\W*:", re.I | re.M)
 
 
 def release_problems(i, busy_agents):
-    """Task-contract checks (docs/design/task-contract.md §2, §5) before an issue may start."""
+    """Task-contract checks (knowledge/company/standards/task-contract.md §2, §5) before an issue may start."""
     problems = []
     if not WRITE_SET_HEADING.search(i.get("description") or ""):
         problems.append("no '## Write set' in the description")
@@ -238,7 +238,7 @@ def hours_since(ts):
 
 
 def cmd_triage(a):
-    """Read-only sweep for workflows/daily-triage.md. Changes nothing."""
+    """Read-only sweep for knowledge/company/workflows/daily-triage.md. Changes nothing."""
     c = company(a.company)
     n = names(c["id"])
     summaries = [i for i in call("GET", f"/companies/{c['id']}/issues") if i["status"] not in ("done", "cancelled")]

@@ -1,4 +1,4 @@
-"""Post-import step for a company built with scripts/setup/build-package.py (docs/operations/studio-bootstrap.md).
+"""Post-import step for a company built with scripts/setup/build-package.py (docs/operations/company-bootstrap.md).
 
 Stdlib only. Uses documented Paperclip API routes (agents.md, goals-and-projects.md, secrets.md).
 Idempotent: safe to run again. Never reads or prints secret values.

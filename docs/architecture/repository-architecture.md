@@ -16,37 +16,35 @@ Rules (ADR-001, ADR-005, ADR-007): the Framework Repository holds no game code a
 Legend: ✅ exists · ◻ planned, created when first needed (not created empty).
 
 ```text
-game-studio/
-├── README.md, VERSION, CHANGELOG.md, CONTRIBUTING.md   ✅
-├── AGENTS.md, CLAUDE.md                                 ✅ instructions for AI agents working on this repo
-├── .gitignore                                           ✅
-├── company/        COMPANY, ORGANIZATION, RULES, OPERATING_MODEL   ✅
-├── agents/<agent-id>/AGENTS.md                          ✅ 7 roles
-├── workflows/      README + 12 workflows                ✅
-├── projects/       project-registry.yaml, project-config.schema.yaml  ✅
-├── dependencies/   README.md, registry.yaml             ✅
-│   └── <category>/ ◻ per-dependency notes, only when a registry entry needs more than its notes field
-├── integrations/   ◻ adapter code/config per system (paperclip/, claude-code/, codex/, openspec/)
-├── runtime/        README.md ✅
-│   ├── src/{dispatcher,launcher,workspace,git,reporter}/  ◻
-│   ├── config/     ◻ example config only (real config is local, ADR-010)
+company-os/
+├── README.md, VERSION, CHANGELOG.md, CONTRIBUTING.md    ✅
+├── AGENTS.md, CLAUDE.md                                  ✅ instructions for AI agents working on this repo
+├── .gitignore                                            ✅
+├── knowledge/                                            ✅ operating knowledge (ADR-019)
+│   ├── company/    COMPANY, ORGANIZATION, OPERATING_MODEL, policies/, standards/, agents/ (5 shared roles), workflows/ (13 + README), shared/
+│   ├── departments/ game/ (charter, 2 roles, workflows/, domain/), web/ (charter, 1 role, domain/)
+│   └── projects/   registry.yaml, project-config.schema.yaml, one entrypoint per project
+├── dependencies/   README.md, registry.yaml              ✅
+├── config/         paperclip/agents.json, providers.example.yaml   ✅
+├── scripts/        setup/ (build-package, post-import), maintenance/ (move-files)   ✅
+├── integrations/   ◻ adapter code/config per system
+├── runtime/        README.md, tools/ (review-wake watchdog, start script)   ✅
+│   ├── src/        ◻ Runtime (PLANNED)
 │   └── tests/      ◻
-├── templates/game-project/  ◻ files seeded into a new Game Repository
-├── schemas/        ◻ additional JSON Schemas (see §2.1)
-├── scripts/        ◻ setup/validation scripts
-└── docs/           ✅ architecture, design, decisions, guides, integrations, operations
+├── templates/      ◻ files seeded into a new project repository
+└── docs/           ✅ vision, architecture, design, decisions, integrations, operations, guides, roadmap
 ```
 
 ### 2.1 Deviations from the target structure (documented)
 
 | Target item | Decision | Reason |
 |---|---|---|
-| Empty directories (`integrations/`, `templates/`, `schemas/`, `scripts/`, `runtime/src`) | Not created | Brief: "Do not create unnecessary empty directories." |
+| Empty directories (`integrations/`, `templates/`, `schemas/`, `runtime/src`) | Not created | Brief: "Do not create unnecessary empty directories." |
 | `dependencies/<category>/` subdirectories | Not created; category is a field in `registry.yaml` | Avoids duplicating data between the registry and per-category files. Subdirectories are created only for long-form notes. |
-| `workflows/` has 4 files in the target | 12 files + README | Brief §4.4 requires 12 workflows; the 4 target names are kept for the corresponding workflows. |
-| `docs/design/workflows/` | Not created | Brief allows using `workflows/` instead. |
-| Schema location: `projects/project-config.schema.yaml` vs `schemas/` | Kept in `projects/` as specified; future schemas go in `schemas/` | Logged as C-003 for a final decision. |
-| Added `AGENTS.md`, `CLAUDE.md`, `.gitignore`, `docs/conventions.md`, `docs/glossary.md` | Added | Required for Codex/Claude Code usability and consistent terminology. |
+| `knowledge/company/workflows/` has 4 files in the target | 12 files + README | Brief §4.4 requires 12 workflows; the 4 target names are kept for the corresponding workflows. |
+| `docs/design/workflows/` | Not created | Brief allows using `knowledge/company/workflows/` instead. |
+| Schema location: `knowledge/projects/project-config.schema.yaml` vs `schemas/` | Kept in `knowledge/projects/` as specified; future schemas go in `schemas/` | Logged as C-003 for a final decision. |
+| Added `AGENTS.md`, `CLAUDE.md`, `.gitignore`, `docs/conventions.md`, `docs/vision/terminology.md` | Added | Required for Codex/Claude Code usability and consistent terminology. |
 
 ## 3. Game Repository layout (`PROPOSED`)
 
@@ -61,7 +59,7 @@ The framework does not dictate engine structure. It requires only:
 └── <engine-specific source and assets>
 ```
 
-Seeding these files is part of [project-initialization.md](../../workflows/project-initialization.md). A template directory (`templates/game-project/`) is `PLANNED`.
+Seeding these files is part of [project-initialization.md](../../knowledge/company/workflows/project-initialization.md). A template directory (`templates/game-project/`) is `PLANNED`.
 
 ## 4. Local directory organization on the studio machine
 

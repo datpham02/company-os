@@ -11,7 +11,7 @@ The studio will build several unrelated games, e.g. `node-arena` and `card-battl
 ## Decision
 - Each game MUST have its own Git repository, e.g. `datpham02/node-arena`.
 - Game source code and assets MUST live only in that game's repository.
-- The Framework Repository references games only through [projects/project-registry.yaml](../../projects/project-registry.yaml).
+- The Framework Repository references games only through [projects/project-registry.yaml](../../knowledge/projects/registry.yaml).
 - An agent working on one Game Project MUST NOT read from or write to another Game Project's repository unless the Task explicitly requires it and the Board Operator approves.
 
 ## Alternatives considered

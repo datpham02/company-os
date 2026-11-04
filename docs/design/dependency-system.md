@@ -93,4 +93,4 @@ No entry moves to `approved` without the security review of [security-architectu
 - Where a dependency's own docs differ from third-party descriptions (counts of agents/skills, star counts), trust the dependency's repository at a recorded commit.
 
 ## Related documents
-- [../../dependencies/registry.yaml](../../dependencies/registry.yaml) · [../../workflows/add-external-dependency.md](../../workflows/add-external-dependency.md) · [../decisions/ADR-007-external-dependency-registry.md](../decisions/ADR-007-external-dependency-registry.md)
+- [../../dependencies/registry.yaml](../../dependencies/registry.yaml) · [../../knowledge/company/workflows/add-external-dependency.md](../../knowledge/company/workflows/add-external-dependency.md) · [../decisions/ADR-007-external-dependency-registry.md](../decisions/ADR-007-external-dependency-registry.md)

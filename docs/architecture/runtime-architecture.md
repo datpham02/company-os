@@ -64,7 +64,7 @@ Steps:
 1. Validate the environment. Missing `PAPERCLIP_API_KEY` or API URL → `rejected`, exit non-zero.
 2. Identify the Agent Role. Map the Paperclip agent ID → Agent ID via local config (`agents.<paperclip-agent-id>.role`).
 3. Identify the Task. Use `PAPERCLIP_TASK_ID` if present. Otherwise query the Paperclip API for assigned work. No Task → exit 0 with "no work" (a normal heartbeat outcome).
-4. Resolve the Game Project. Task → Paperclip project → `paperclip.projectId` in [projects/project-registry.yaml](../../projects/project-registry.yaml) → Project ID. No match → `rejected`, with a comment on the Task explaining why.
+4. Resolve the Game Project. Task → Paperclip project → `paperclip.projectId` in [projects/project-registry.yaml](../../knowledge/projects/registry.yaml) → Project ID. No match → `rejected`, with a comment on the Task explaining why.
 5. Check limits: global max concurrent Runs, per-project max, and the workspace lock (§12).
 6. Persist the run record, then hand off to the Workspace Manager.
 
@@ -91,7 +91,7 @@ type ExitClass = "success" | "task_failure" | "auth_error" | "quota_or_rate_limi
                | "timeout" | "cancelled" | "provider_crash" | "invalid_invocation";
 ```
 
-`RunRequest` carries: run ID, Task (ID, key, title, description), Agent Role instructions (body of `agents/<agent-id>/AGENTS.md`), studio rules, project context (game repo `AGENTS.md` is read by the Provider itself from cwd), permission profile, timeout, model override.
+`RunRequest` carries: run ID, Task (ID, key, title, description), Agent Role instructions (body of `knowledge/company/agents/<agent-id>/AGENTS.md`), studio rules, project context (game repo `AGENTS.md` is read by the Provider itself from cwd), permission profile, timeout, model override.
 
 ### 5.2 Provider-specific invocation
 
@@ -156,7 +156,7 @@ Pre-push checks (`PLANNED`): no files larger than the configured limit, no paths
 | `task_failure` | Agent reported it could not complete | Preserve workspace | Agent's own comment; escalation per role |
 | Git error | Push rejected, conflict | Never force; report | Comment; human or agent resolves |
 
-Full procedure: [task-failure-handling.md](../../workflows/task-failure-handling.md).
+Full procedure: [task-failure-handling.md](../../knowledge/company/workflows/task-failure-handling.md).
 
 ## 11. Restart and recovery
 
@@ -179,7 +179,7 @@ Paperclip-side recovery of heartbeat runs is Paperclip's responsibility.
 | Runs per Task Workspace | 1 (hard) | Workspace |
 | Runs per Task | 1 (enforced by Paperclip atomic checkout, `VERIFIED`) | Task |
 
-Conflict avoidance between parallel Tasks is a planning concern of `project-manager` ([parallel-tasks.md](../../workflows/parallel-tasks.md)). The Runtime guarantees only isolation, not semantic non-conflict.
+Conflict avoidance between parallel Tasks is a planning concern of `project-manager` ([parallel-tasks.md](../../knowledge/company/workflows/parallel-tasks.md)). The Runtime guarantees only isolation, not semantic non-conflict.
 
 ## 13. Implementation notes (`PROPOSED`)
 

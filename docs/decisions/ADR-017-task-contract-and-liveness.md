@@ -3,10 +3,10 @@
 - **Status:** Proposed
 - **Date:** 2026-11-04
 - **Deciders:** Board Operator
-- **Related:** ADR-004, ADR-006, G-8, G-9, G-10, OQ-041, [task-contract.md](../design/task-contract.md), [daily-triage.md](../../workflows/daily-triage.md)
+- **Related:** ADR-004, ADR-006, G-8, G-9, G-10, OQ-041, [task-contract.md](../../knowledge/company/standards/task-contract.md), [daily-triage.md](../../knowledge/company/workflows/daily-triage.md)
 
 ## Context
-In the first two days of Stage 1, parallel Tasks conflicted on the same file because the overlap check ignored Tasks in review (GAM-44/45). One agent ran two Tasks at once (GAM-25/45). Planned Tasks landed on the read-only planner (GAM-21). Blocked Tasks waited with no named owner (GAM-6). Nothing revisits blocked work, because heartbeats are disabled and wakes are event-driven only. Paperclip never resolves a cancelled blocker. Evidence is in [task-contract.md §1](../design/task-contract.md#1-why).
+In the first two days of Stage 1, parallel Tasks conflicted on the same file because the overlap check ignored Tasks in review (GAM-44/45). One agent ran two Tasks at once (GAM-25/45). Planned Tasks landed on the read-only planner (GAM-21). Blocked Tasks waited with no named owner (GAM-6). Nothing revisits blocked work, because heartbeats are disabled and wakes are event-driven only. Paperclip never resolves a cancelled blocker. Evidence is in [task-contract.md §1](../../knowledge/company/standards/task-contract.md#1-why).
 
 ## Decision
 - Every Task carries the task contract: goal, acceptance criteria, **write set**, read set, blocker relations, assignee, reviewer, Board approval for code, and a size within one PR. Tasks missing a write set or stages are not released.

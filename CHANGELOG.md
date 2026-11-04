@@ -4,7 +4,19 @@ All notable changes to the Game Studio framework are recorded here. The format f
 
 ## [Unreleased]
 
+### Changed
+- **Restructure into `knowledge/` and departments (ADR-019, migration map step M1).** Moved with `scripts/maintenance/move-files.py` (mapping in `scripts/maintenance/m1-moves.json`, links rewritten):
+  - `company/` → `knowledge/company/` (`RULES.md` → `policies/rules.md`); `workflows/` → `knowledge/company/workflows/`;
+  - shared roles → `knowledge/company/agents/`; game roles → `knowledge/departments/game/agents/`; `web-engineer` → `knowledge/departments/web/agents/`;
+  - `projects/` → `knowledge/projects/` (`project-registry.yaml` → `registry.yaml`);
+  - `task-contract.md` → `knowledge/company/standards/`, `provider-allocation.md` → `knowledge/company/policies/`, `game-platform-contract.md` → `knowledge/company/shared/`;
+  - `docs/glossary.md` → `docs/vision/terminology.md`; `open-questions.md` and `implementation-roadmap.md` → `docs/roadmap/`; `studio-bootstrap.md` → `company-bootstrap.md`.
+- `game-director` is renamed **`director`**, the company-wide director and Paperclip root for every department.
+- Split: `COMPANY.md` (company mission; game values to the Game charter), `ORGANIZATION.md` (scopes, live providers), rules R1.4–R1.6 and R7.1, `project-initialization.md` (company workflow plus the game concept workflow), `company-design.md`, `security-architecture.md` §10 (principle stays; platform rules to the Web department).
+- Project registry entries have `department` and `contributingDepartments`; `config/paperclip/agents.json` has `department` per agent; the package builder reads the new tree and rejects duplicate slugs.
+
 ### Added
+- Department charters (`knowledge/departments/game/`, `knowledge/departments/web/`), `game-rules.md`, `new-game-concept.md`, `production-environments.md`, knowledge indexes and project entrypoints; ADR-019.
 - Task contract, WIP limit, blocker protocol and liveness rules (`docs/design/task-contract.md`, ADR-017 proposed), the daily triage workflow (`workflows/daily-triage.md`), and a `## Task hygiene` section in every role file.
 - Provider allocation rule for any number of AI providers (`docs/design/provider-allocation.md`, `config/providers.example.yaml`, ADR-015 proposed) and `allocation` metadata in role files.
 - Studio bootstrap procedure for importing pre-configured agents (`docs/operations/studio-bootstrap.md`, ADR-016 proposed); open questions OQ-040, OQ-041; gaps G-11, G-12.

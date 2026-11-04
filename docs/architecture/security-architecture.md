@@ -41,7 +41,7 @@ Permission profiles (`PROPOSED`) are assigned per Agent Instance:
 
 | Profile | Intended roles | Claude Code | Codex |
 |---|---|---|---|
-| `read-only` | `game-director`, `producer`, `project-manager` (planning) | `--permission-mode plan` or `--restricted`, no edit tools | `--sandbox read-only` |
+| `read-only` | `director`, `producer`, `project-manager` (planning) | `--permission-mode plan` or `--restricted`, no edit tools | `--sandbox read-only` |
 | `workspace-write` | `game-designer` (docs), `gameplay-programmer`, `ui-designer`, `qa` | `--permission-mode acceptEdits` plus `--allowedTools` allowlist for build/test/git commands and `--disallowedTools` for dangerous ones | `--sandbox workspace-write` |
 | `bypass` | None by default | `--dangerously-skip-permissions` | `--dangerously-bypass-approvals-and-sandbox` |
 
@@ -73,7 +73,7 @@ The **reporting rule** is required. Without it, an agent sometimes wraps Papercl
 
 > Paperclip reporting rule for this environment: to post comments or change issue status, call the Paperclip skill's paperclip-issue-update.sh as one standalone Bash command, for example: `bash "<absolute path to paperclip-issue-update.sh>" --issue-id <literal issue id> --status done <<'MD' ... MD`. Never wrap it in a script of your own, never use shell variables such as `$PAPERCLIP_TASK_ID` or `$PAPERCLIP_API_KEY` in a command, and never chain it with other commands using `&&` or `;`. Use the literal issue id from your task. The permission layer refuses anything else.
 
-**Task-branch push (added for the first Game Repository, 2026-11-03).** `workflows/development-cycle.md` needs agents to push their Task Branch and open a PR. The `workspace-write` profile therefore:
+**Task-branch push (added for the first Game Repository, 2026-11-03).** `knowledge/company/workflows/development-cycle.md` needs agents to push their Task Branch and open a PR. The `workspace-write` profile therefore:
 - replaces the blanket `Bash(git push*)` deny with allow rules for the task-branch pattern: `Bash(git push -u origin GAM-*)`, `Bash(git push origin GAM-*)`. Paperclip names task branches `<ISSUE-KEY>-<slug>`, and the studio company's issue prefix is `GAM`. It also allows `Bash(gh pr create*)`, `Bash(gh pr view*)` and `Bash(gh pr list*)`;
 - keeps these denied: `Bash(git push origin main*)`, `Bash(git push -u origin main*)`, `Bash(git push --force*)`, `Bash(git push -f*)`, `Bash(git push *--force*)` and `Bash(gh pr merge*)`. Merging stays with the Board (ADR-009);
 - adds npm build/test commands: `Bash(npm ci*)`, `Bash(npm install*)`, `Bash(npm run *)`, `Bash(npm test*)`, `Bash(npx tsc*)`;
@@ -85,7 +85,7 @@ The `read-only` profile still denies every push. The hard guard is GitHub branch
 
 Each Game Repository's local clone uses `credential.helper = !gh auth git-credential`, so a `GH_TOKEN` in the agent's environment is the credential for both `git push` and `gh`. **Until the fine-grained `GH_TOKEN` is bound, a push would use the host's own `gh` login, which can reach every repository of the account** ([security-operations.md](../operations/security-operations.md) §2).
 
-Applied on 2026-11-03 to the six `claude_local` agents of the studio company (`read-only`: `game-director`, `producer`, `project-manager`; `workspace-write`: `game-designer`, `gameplay-programmer`, `ui-designer`).
+Applied on 2026-11-03 to the six `claude_local` agents of the studio company (`read-only`: `director`, `producer`, `project-manager`; `workspace-write`: `game-designer`, `gameplay-programmer`, `ui-designer`).
 
 Paperclip's `filesystemScope` / `networkScope` confinement needs Bubblewrap and is not available on Windows.
 
@@ -99,7 +99,7 @@ Paperclip's `filesystemScope` / `networkScope` confinement needs Bubblewrap and 
 
 ## 6. Command execution restrictions
 
-Agents MUST NOT run (enforced by Provider deny lists where possible, and by rules in [company/RULES.md](../../company/RULES.md)):
+Agents MUST NOT run (enforced by Provider deny lists where possible, and by rules in [../../knowledge/company/policies/rules.md](../../knowledge/company/policies/rules.md)):
 - `git push --force`, `git push origin main` (or Default Branch), `git reset --hard origin/*` on shared branches, `git branch -D` on non-task branches;
 - `rm -rf` outside the Task Workspace; any command on `~/.ssh`, `~/.claude`, `~/.codex`, `~/.config/game-studio`;
 - `sudo`, package installation system-wide, `curl | sh` style installers;
@@ -135,45 +135,13 @@ Agents MUST NOT run (enforced by Provider deny lists where possible, and by rule
 
 ## 10. Production environments (platform projects)
 
-Status: `APPROVED` ([ADR-014](../decisions/ADR-014-platform-project-type.md)). It applies to every project with `type: platform`. Game repositories have no production backend, so it does not apply to them.
+Status: `APPROVED` ([ADR-014](../decisions/ADR-014-platform-project-type.md)). The company-wide principle is below. The full rules for platform projects (environments, keys, deploys, security-sensitive code, player data) are department knowledge: [production-environments.md](../../knowledge/departments/web/domain/production-environments.md).
 
-### 10.1 Environments
-
-| Environment | Who uses it | Backend project | Credentials held by |
-|---|---|---|---|
-| Local / dev | Agents, Board | A separate **dev** backend project (for example a Supabase free-tier project named `<platform>-dev`) with fake data only | Paperclip company secrets bound **only** to the agents of that platform project |
-| Preview | Agents (read results), Board | The dev project. Preview deploys of Task Branches go to non-production URLs | Hosting's own build integration; no hosting token for agents |
-| Production | Board only | A separate **prod** backend project with real player data | The Board Operator, in a password manager and in the hosting provider's secret store. **Never** in Paperclip, a repository or an agent environment |
-
-### 10.2 Production keys are never bound to agents
-- Agents MUST NOT receive any production credential. This covers backend service-role or admin keys, database passwords, backend management access tokens, hosting API tokens with production rights, DNS or registrar logins, ad-network accounts and payment-provider keys.
-- These MUST NOT be stored as Paperclip company secrets, because a binding mistake would reach an agent. The Board keeps them outside Paperclip.
-- A public client key that ships in the production web build by design (for example Supabase's anon or publishable key) MAY appear in production build configuration that the Board manages. It is protected by RLS, not by secrecy. Agents still use the dev project's key during development.
-- Dev-project credentials MUST be different from production credentials, and MUST NOT give access to production data.
-- An agent that finds a production credential MUST stop and report it. The Board then rotates the credential.
-
-### 10.3 Production deploys are done by the Board
-- Code reaches production only through a Board action. Either the Board merges to the Default Branch and the hosting provider auto-deploys it, or the Board promotes a build by hand.
-- Database migrations reach production only when the Board applies them after the PR is merged. Agents MUST NOT run migration commands against production.
-- Production secrets, environment variables, DNS, ad-network settings and domain changes are Board actions.
-- Agents MAY prepare release notes and a deploy checklist for each release.
-
-### 10.4 Human review for security-sensitive code
-- A PR that touches any of the following is **security-sensitive**:
-  - authentication and account linking;
-  - RLS policies, migrations that create or change tables or policies, and database functions with elevated rights (`SECURITY DEFINER`);
-  - server functions that accept scores or grant rewards or entitlements;
-  - payment code;
-  - secret or environment configuration;
-  - Content-Security-Policy and other security headers.
-- A security-sensitive PR needs **two approvals:** a `qa` review **and** a review by the Board Operator, a human. A `qa` approval alone MUST NOT lead to a merge.
-- The platform repository SHOULD list these paths in `.github/CODEOWNERS` and its `AGENTS.md`. The authoring agent MUST mark the PR (`Security-sensitive: yes`).
-- Payment code MUST NOT be written before a separate payments ADR and legal review exist. That review covers the Vietnamese online-game licence (Decree 147/2024/ND-CP), a payment provider, refunds and tax.
-
-### 10.5 Player data
-- Store the minimal data set defined by the platform's `docs/requirements.md`. Every table with player data MUST have RLS enabled.
-- Agents MUST NOT read, export or copy production player data, including for debugging. Production incidents are handled by the Board.
-- Ads and any non-essential cookies load only after consent. Consent and the privacy policy are platform features.
+Principle for every project that has a production environment:
+1. Agents never receive production credentials. They work against dev or test environments only, with credentials that cannot reach production data.
+2. Code, migrations, secrets and settings reach production only through a Board action.
+3. Security-sensitive changes (authentication, data-access rules, server-side grants of rewards or entitlements, payments, secrets configuration, security headers) need a human Board review in addition to the agent review.
+4. Agents never read, export or copy production user data.
 
 ## 11. Supply-chain safety
 
@@ -202,4 +170,4 @@ Rules:
 - A game build MUST NOT include any third-party script that the game's design does not list. In particular: no analytics, no ad SDK, and no remote code loading.
 
 ## Related documents
-- [../operations/security-operations.md](../operations/security-operations.md) · [../../company/RULES.md](../../company/RULES.md) · [../decisions/ADR-009-approval-before-merge.md](../decisions/ADR-009-approval-before-merge.md)
+- [../operations/security-operations.md](../operations/security-operations.md) · [../../knowledge/company/policies/rules.md](../../knowledge/company/policies/rules.md) · [../decisions/ADR-009-approval-before-merge.md](../decisions/ADR-009-approval-before-merge.md)

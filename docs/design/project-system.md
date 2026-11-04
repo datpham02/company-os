@@ -2,16 +2,16 @@
 
 **Contract owner for:** registration, configuration, lifecycle, isolation, and repository resolution of Game Projects and Platform Projects.
 
-**Project types** (`APPROVED`, [ADR-014](../decisions/ADR-014-platform-project-type.md)): `game` (default) or `platform`. A platform project, for example the studio website, hosts games and owns shared services. Both types follow this contract. Platform projects also follow [security-architecture.md §10](../architecture/security-architecture.md#10-production-environments-platform-projects) and implement the [game platform contract](game-platform-contract.md).
+**Project types** (`APPROVED`, [ADR-014](../decisions/ADR-014-platform-project-type.md)): `game` (default) or `platform`. A platform project, for example the studio website, hosts games and owns shared services. Both types follow this contract. Platform projects also follow [security-architecture.md §10](../architecture/security-architecture.md#10-production-environments-platform-projects) and implement the [game platform contract](../../knowledge/company/shared/game-platform-contract.md).
 
 ## 1. Registration
 
 A Game Project or Platform Project exists when **all three** are true (a `planned` project has none of them yet):
 1. A Game Repository exists on GitHub (`datpham02/<project-id>`).
-2. An entry exists in [projects/project-registry.yaml](../../projects/project-registry.yaml) that validates against [projects/project-config.schema.yaml](../../projects/project-config.schema.yaml).
+2. An entry exists in [projects/project-registry.yaml](../../knowledge/projects/registry.yaml) that validates against [projects/project-config.schema.yaml](../../knowledge/projects/project-config.schema.yaml).
 3. A Paperclip project exists and its ID is recorded in the entry.
 
-Workflows: [project-initialization.md](../../workflows/project-initialization.md) (new game) and [register-existing-repository.md](../../workflows/register-existing-repository.md) (existing repository).
+Workflows: [project-initialization.md](../../knowledge/company/workflows/project-initialization.md) (new game) and [register-existing-repository.md](../../knowledge/company/workflows/register-existing-repository.md) (existing repository).
 
 ## 2. Project configuration
 
@@ -41,7 +41,7 @@ Fields (schema status `PROPOSED`):
 stateDiagram-v2
   [*] --> planned: Board decides (ADR-014)
   planned --> initializing: Board creates repo + Paperclip project
-  [*] --> proposed: game-director proposes
+  [*] --> proposed: director proposes
   proposed --> initializing: Board approves
   proposed --> [*]: rejected
   initializing --> active: repo + registry + Paperclip project ready
@@ -100,4 +100,4 @@ A Task whose project is not in the registry MUST NOT be executed.
 - GitHub tokens SHOULD be scoped to the repositories an Agent Instance serves.
 
 ## Related documents
-- [../../projects/project-registry.yaml](../../projects/project-registry.yaml) · [../../projects/project-config.schema.yaml](../../projects/project-config.schema.yaml) · [../architecture/repository-architecture.md](../architecture/repository-architecture.md)
+- [../../projects/project-registry.yaml](../../knowledge/projects/registry.yaml) · [../../projects/project-config.schema.yaml](../../knowledge/projects/project-config.schema.yaml) · [../architecture/repository-architecture.md](../architecture/repository-architecture.md)

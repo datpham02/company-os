@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-11-03
 - **Deciders:** Board Operator
-- **Related:** ADR-006, [code-review-and-merge.md](../../workflows/code-review-and-merge.md), [security-architecture.md](../architecture/security-architecture.md), OQ-005, OQ-016
+- **Related:** ADR-006, [code-review-and-merge.md](../../knowledge/company/workflows/code-review-and-merge.md), [security-architecture.md](../architecture/security-architecture.md), OQ-005, OQ-016
 
 ## Context
 AI agents produce code changes autonomously. Unreviewed merges into a game's Default Branch could introduce defects, security problems, or destructive changes.

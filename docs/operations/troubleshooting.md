@@ -45,4 +45,4 @@ Each entry gives symptom → likely cause → fix. Paperclip error semantics are
 | Review pile-up | Board approval bottleneck | Expected (ADR-009); `project-manager` limits `in_review` WIP |
 
 ## Related documents
-[logging-and-debugging.md](logging-and-debugging.md) · [../architecture/open-questions.md](../architecture/open-questions.md)
+[logging-and-debugging.md](logging-and-debugging.md) · [../roadmap/open-questions.md](../roadmap/open-questions.md)

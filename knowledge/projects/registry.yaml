@@ -1,0 +1,68 @@
+# Company OS — Project Registry
+# Contract: docs/design/project-system.md
+# Schema:   knowledge/projects/project-config.schema.yaml (status: PROPOSED)
+# Entrypoints: knowledge/projects/<id>/README.md
+#
+# One entry per project, of any department. Portable data only:
+#   - NO local absolute paths, NO credentials (those live in ~/.config/game-studio/, ADR-010).
+# Entries are added through the workflows:
+#   knowledge/company/workflows/project-initialization.md, knowledge/company/workflows/register-existing-repository.md
+#
+# Example entry (commented out; no games are registered yet):
+#
+# - id: node-arena
+#   name: Node Arena
+#   department: game              # game | web (ADR-019)
+#   type: game                    # game (default) | platform (ADR-014)
+#   status: active                # planned | proposed | initializing | active | maintenance | archived
+#   repository:
+#     url: https://github.com/datpham02/node-arena.git
+#     defaultBranch: main
+#   engine:
+#     name: godot
+#     version: "4.4"
+#   paperclip:
+#     projectId: "<paperclip-project-uuid>"
+#   agents: [game-designer, gameplay-programmer, ui-designer, qa, project-manager]
+#   dependencies: [openspec, playwright-mcp]
+#   specs:
+#     tool: openspec
+#   workflows:
+#     parallel-tasks:
+#       maxConcurrent: 2
+#     code-review-and-merge:
+#       requireQaReview: true
+#   frameworkVersion: 0.1.0
+
+registryVersion: 1
+projects:
+  - id: lamplight-vigil
+    name: Lamplight Vigil
+    department: game
+    contributingDepartments: [web]   # hosted on Soucean Game through the game-platform contract
+    status: active                # initialization finished 2026-11-04: concept GAM-1, seed GAM-2, vision GAM-5, milestone plan GAM-7
+    repository:
+      url: https://github.com/datpham02/lamplight-vigil.git
+      defaultBranch: main
+    engine:
+      name: phaser
+      version: "3"
+    paperclip:
+      projectId: "5540180e-63fe-48e9-90d2-bc6b21f0a6de"   # company Soucean (SOU)
+    agents: [director, producer, project-manager, game-designer, gameplay-programmer, ui-designer, qa]
+    frameworkVersion: 0.1.0
+
+  - id: soucean-game
+    name: Soucean Game
+    department: web
+    contributingDepartments: [game]
+    type: platform                # ADR-014 (Accepted 2026-11-04)
+    status: initializing          # repo + Paperclip project created 2026-11-04; seeding next
+                                  # Plan and M0 checklist: docs/plans/ in the soucean-game repository (moved at seeding, GAM-20). Contract: knowledge/company/shared/game-platform-contract.md (GAM-16).
+    repository:
+      url: https://github.com/datpham02/soucean-game.git
+      defaultBranch: main
+    paperclip:
+      projectId: "447a1ff4-83dc-4aa6-b7a1-a0334eee88f5"   # company Soucean (SOU)
+    agents: [director, producer, project-manager, web-engineer, ui-designer, qa]
+    frameworkVersion: 0.1.0

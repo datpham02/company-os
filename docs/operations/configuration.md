@@ -4,8 +4,8 @@
 
 | Layer | Location | In Git? | Holds |
 |---|---|---|---|
-| Studio definition | `company/`, `agents/`, `workflows/` | Yes | Roles, rules, processes |
-| Registries | `projects/project-registry.yaml`, `dependencies/registry.yaml` | Yes | Portable project and dependency data |
+| Studio definition | `knowledge/company/`, `knowledge/company/agents/`, `knowledge/company/workflows/` | Yes | Roles, rules, processes |
+| Registries | `knowledge/projects/registry.yaml`, `dependencies/registry.yaml` | Yes | Portable project and dependency data |
 | Paperclip | Paperclip instance (UI/API) | No | Company, agents, adapter configs, secrets, projects |
 | Provider config | `~/.claude/`, `~/.codex/` | No | Auth, MCP servers, provider settings |
 | Runtime config (`PLANNED`) | `~/.config/game-studio/runtime.yaml` | No | Paths, limits, agent mapping |
@@ -17,7 +17,7 @@ Per Agent Instance (fields `VERIFIED` in Paperclip adapter docs):
 
 | Setting | Value guidance |
 |---|---|
-| Adapter type | `claude_local` or `codex_local` per [../../company/ORGANIZATION.md](../../company/ORGANIZATION.md) |
+| Adapter type | `claude_local` or `codex_local` per [../../knowledge/company/ORGANIZATION.md](../../knowledge/company/ORGANIZATION.md) |
 | `cwd` | Required by the adapter. For project work, Paperclip's execution workspace supplies the effective directory. Point the base `cwd` at a neutral directory such as `~/game-studio-workspace` (exact interplay `UNVERIFIED`, OQ-002) |
 | `model` | Leave unset for the adapter default unless the Board chooses otherwise |
 | `timeoutSec` / `graceSec` | 3600 / 30 (`PROPOSED`) |

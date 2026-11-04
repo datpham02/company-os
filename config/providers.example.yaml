@@ -1,4 +1,4 @@
-# Example provider list for docs/design/provider-allocation.md.
+# Example provider list for knowledge/company/policies/provider-allocation.md.
 # Copy to %USERPROFILE%\.config\game-studio\providers.yaml and edit. Never commit the copy.
 # No secrets here: logins and API keys stay with each CLI or in Paperclip secrets.
 providers:

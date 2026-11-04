@@ -21,7 +21,7 @@ v1 supports two AI coding CLIs: Claude Code and Codex. They differ in flags, out
 | Use only Paperclip's adapters with no abstraction of our own | Viable for execution path A in ADR-011. The abstraction is still needed if the Runtime launches CLIs itself. |
 
 ## Consequences
-- Adding a Provider is a defined workflow ([add-execution-provider.md](../../workflows/add-execution-provider.md)).
+- Adding a Provider is a defined workflow ([add-execution-provider.md](../../knowledge/company/workflows/add-execution-provider.md)).
 - Lowest-common-denominator risk: features only one Provider has must be optional capabilities.
 - If ADR-011 path A is used, Paperclip's adapters *are* the provider abstraction and the Runtime adapter interface is deferred.
 
