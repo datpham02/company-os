@@ -7,6 +7,8 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ### Added
 - `runtime/tools/review-wake-watchdog.ts`: first Stage 2 gap filler. It wakes reviewer agents that Paperclip leaves idle after an in-run hand-off (OQ-035).
 - `docs/architecture/stage1-gap-analysis.md`.
+- `.claude/skills/paperclip`: Claude Code skill and stdlib Python CLI (`pc.py`) for running Paperclip from chat as the Board Operator.
+- `runtime/tools/start-studio.cmd`: one-click start of Paperclip, the review watchdog and the UI; skips anything already running.
 
 ### Changed
 - Paperclip now runs as a global, pinned install (`paperclipai run` from `~/game-studio-workspace`) instead of `npx`, so `npm_*` variables no longer leak into agents (OQ-034).
