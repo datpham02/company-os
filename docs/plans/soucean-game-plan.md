@@ -1,8 +1,9 @@
-# Game Website — Plan
+# Soucean Game — Website Plan
 
-- **Status:** `APPROVED` (Board Operator, 2026-11-04). GAM-16 stays sequential: it starts after GAM-15 closes the Playable Vigil milestone. M2 waits for it.
+- **Status:** `APPROVED` (Board Operator, 2026-11-04). GAM-16 stays sequential: it starts after GAM-15 closes the Playable Vigil milestone. M3 waits for it.
+- **Revised 2026-11-04 (Board):** design and build the website first; hosting, the production backend and the domain come last (M6).
 - **Date:** 2026-11-04
-- **Project:** `game-website`. The id is a placeholder; the Board picks the name. Type `platform`, status `planned` ([ADR-014](../decisions/ADR-014-platform-project-type.md)).
+- **Project:** `soucean-game` (name **Soucean Game**, chosen by the Board 2026-11-04). Type `platform`, status `planned` ([ADR-014](../decisions/ADR-014-platform-project-type.md)).
 - **First game:** Lamplight Vigil.
 - **Dependency:** the [game platform contract](../design/game-platform-contract.md), designed in **GAM-16**. Everything marked **[GAM-16]** below waits for it.
 
@@ -42,7 +43,7 @@ This plan lives in the framework repository only while the project is `planned`.
 | Identity | **Supabase Auth**: anonymous sign-in on first visit, with optional linking of **Google** or **email (magic link)** | Matches the Board decision: no sign-up to play, and scores survive across devices once linked (`UNVERIFIED`, OQ-036) | Firebase Auth |
 | Data | **Supabase Postgres** with **row-level security on every table** | Players can write only their own rows. Reads of the boards are public. Score submission goes only through a server function | Firebase Firestore |
 | Server logic | **Supabase Edge Functions** (or Postgres functions) for `submit_score` | Moderate anti-cheat: a maximum score for the time survived, rate limits, and a check of seed, week, duration and game version. No replay verification | — |
-| Hosting | **Cloudflare Pages** (static), with preview deploys per branch | Free tier, CDN, custom headers for CSP, and preview URLs for review (`UNVERIFIED`, OQ-037) | GitHub Pages (no previews), Netlify, Vercel |
+| Hosting (chosen at M6) | **Cloudflare Pages** (static), with preview deploys per branch | Free tier, CDN, custom headers for CSP, and preview URLs for review (`UNVERIFIED`, OQ-037) | GitHub Pages (no previews), Netlify, Vercel |
 | Ads | Google AdSense first, evaluated against alternatives | Common and simple. Needs an own domain, content, traffic and policy compliance (`UNVERIFIED`, OQ-038) | Ezoic, Media.net, game-portal ad networks |
 | Tests | Vitest (unit), pgTAP or SQL tests for RLS, and Playwright end-to-end | RLS is the main security boundary and needs its own tests | — |
 
@@ -53,7 +54,7 @@ This plan lives in the framework repository only while the project is `planned`.
 - Nothing else: no email copy (Auth keeps it only if the player links), no IP logging in tables, and no analytics.
 
 **Environments.** These follow [security-architecture.md §10](../architecture/security-architecture.md#10-production-environments-platform-projects).
-- `game-website-dev`: a Supabase project with fake data. Its keys are bound only to `web-engineer` and `qa`.
+- `soucean-game-dev`: a Supabase project with fake data. Its keys are bound only to `web-engineer` and `qa`.
 - Preview deploys: these use the dev project.
 - Production: a separate Supabase project. The Board alone holds its keys, applies its migrations and controls its deploys.
 
@@ -91,12 +92,13 @@ The roles are `web-engineer` (new), `ui-designer`, `qa`, `project-manager`, `pro
 
 | Milestone | Content | Roles | Exit criteria |
 |---|---|---|---|
-| **M0: Setup** (Board-heavy) | Board: approve ADR-014 and this plan, pick the name, create the GitHub repository, the Paperclip project and the agents, and the dev Supabase and hosting accounts (§7). `producer`: answer OQ-036 to OQ-038 from official docs. `web-engineer`: seed the repository (`AGENTS.md`, `docs/`, CI, lint, test skeleton, CODEOWNERS for security-sensitive paths) | Board, producer, web-engineer | The repository builds in CI, preview deploys work, and nothing in the repo points at production. |
-| **M1: Static site** | Home with a hard-coded Lamplight Vigil card, the play page embedding the built game, about/terms/privacy drafts, the responsive layout with ad-slot placeholders and margins | ui-designer (layout, design system), web-engineer, qa (e2e, accessibility, layout margins at all breakpoints) | Lamplight Vigil plays on a preview URL, the frame letterboxes, and the margins are verified by tests. |
-| **M2: Contract integration** (after GAM-16) | Game list from manifests, mount/destroy or iframe per the contract, the platform adapter on the website side, pause on blur | web-engineer, game-director (contract questions), qa | Two dummy games or one real game mount and unmount with no leaks, per the contract tests. |
-| **M3: Identity and leaderboards** (security-sensitive) | Anonymous sign-in, account linking, the display name with moderation, the `scores` schema with RLS, the `submit_score` function with plausibility and rate limits, weekly boards, personal best, and "delete my data" | web-engineer, qa (RLS tests, e2e), **Board human review** | RLS tests prove players cannot write others' rows or forge the week. The Board reviews auth and RLS PRs. The Board applies the prod migration. |
-| **M4: Privacy and consent** | The consent banner and settings, the final privacy policy (legal input), and consent-gated script loading | web-engineer, ui-designer, qa, Board (legal) | No third-party request before consent, verified with Playwright. The Board approves the policy text. |
-| **M5: Public launch and ads** | Domain, production deploy, ads.txt, the ad-network application, ads switched on behind consent | **Board** (domain, accounts, prod deploy), web-engineer (integration on a branch), qa | The site is live, the ad network is approved, and the ad margins hold in production. |
+| **M0: Setup** (Board) | Board: create the GitHub repository, the Paperclip project and the `web-engineer` agent. **No backend, hosting or domain account yet.** `producer`: run the security review (security-architecture §11.1) of the design tools to be used in M1, at minimum `google-design-md` and one design-taste skill; Board approves and installs. `web-engineer`: seed the repository (`AGENTS.md`, `docs/`, CI, lint, test skeleton, CODEOWNERS for security-sensitive paths) | Board, producer, web-engineer | The repository builds in CI and runs locally with `npm run dev`. Nothing in the repo points at any backend. |
+| **M1: Design** | `ui-designer`: the design system as `DESIGN.md` (colours, type, spacing, components, light and dark), wireframes then high-fidelity mockups of every page in §2 at desktop and mobile widths, the ad-slot layout of §4, the consent banner, and empty, loading and error states. Delivered as `docs/design/` plus static HTML prototypes in the repository | ui-designer, web-engineer (feasibility), qa (accessibility review), **Board approves the design** | The Board approves the mockups. Contrast and keyboard checks pass. Every page of §2 has a design. |
+| **M2: Static site (local)** | The site built from the approved design: home with a hard-coded Lamplight Vigil card, the play page embedding the built game, about/terms/privacy drafts, the responsive layout with ad-slot placeholders and margins | web-engineer, ui-designer (design review), qa (e2e against localhost, accessibility, margins at all breakpoints) | Lamplight Vigil plays on the local site, the frame letterboxes, and the margins are verified by tests. |
+| **M3: Contract integration** (after GAM-16) | Game list from manifests, mount/destroy or iframe per the contract, the platform adapter on the website side, pause on blur | web-engineer, game-director (contract questions), qa | Two dummy games or one real game mount and unmount with no leaks, per the contract tests. |
+| **M4: Identity and leaderboards** (security-sensitive) | Board first creates the **dev** Supabase project only. Then: anonymous sign-in, account linking, the display name with moderation, the `scores` schema with RLS, the `submit_score` function with plausibility and rate limits, weekly boards, personal best, and "delete my data" | web-engineer, qa (RLS tests, e2e), **Board human review** | RLS tests prove players cannot write others' rows or forge the week. The Board reviews auth and RLS PRs. |
+| **M5: Privacy and consent** | The consent banner and settings, the final privacy policy (legal input), and consent-gated script loading | web-engineer, ui-designer, qa, Board (legal) | No third-party request before consent, verified with Playwright. The Board approves the policy text. |
+| **M6: Hosting, launch and ads** | Board: hosting account (Cloudflare Pages or the choice from OQ-037), the **prod** Supabase project and its migrations, the domain, production deploy, ads.txt and the ad-network application. Ads switched on behind consent | **Board** (accounts, prod deploy), web-engineer (deploy config and integration on a branch), qa | The site is live, the ad network is approved, and the ad margins hold in production. |
 | Later | More games, rewarded ads or purchases (separate ADR and legal), optional website analytics | — | Board decision |
 
 ## 6. Security and review summary
@@ -107,23 +109,24 @@ The roles are `web-engineer` (new), `ui-designer`, `qa`, `project-manager`, `pro
 
 ## 7. External accounts and Board decisions
 
-Nothing below is created by an agent. The Board does each step, or says yes in its own words first.
+Nothing below is created by an agent. The Board does each step, or says yes in its own words first. Step-by-step instructions for M0: [soucean-game-m0-setup.md](soucean-game-m0-setup.md).
 
 | # | Item | Decision or action | When |
 |---|---|---|---|
-| 1 | ADR-014 | Accept, change or reject | Now |
-| 2 | This plan | Approve or change pages, stack and milestones | Now |
-| 3 | GAM-16 timing | Keep it after GAM-15, or pull it forward. M2 waits for it | Now |
-| 4 | Website name and id | Becomes the repository name and the domain idea | Before M0 |
-| 5 | GitHub repository `datpham02/<id>` | Create it with branch protection (PR, 1 approval, no force-push) | M0 |
-| 6 | Paperclip project and the `web-engineer` agent | Create them and bind only dev secrets | M0 |
-| 7 | Supabase | Create an account (studio-owned email) and **two** projects: dev (shared with agents) and prod (Board only). Enable anonymous sign-in, and Google OAuth later | M0 / M3 |
-| 8 | Google OAuth client | Create it in Google Cloud for account linking | M3 |
-| 9 | Hosting | Cloudflare account and a Pages project connected to the repository. Production branch `main`, previews for task branches | M0 |
-| 10 | Domain | Buy it and point DNS at the hosting (needed for ads) | Before M5 |
-| 11 | Ad network | Apply to AdSense or an alternative after launch, with real content and traffic | M5 |
-| 12 | Legal | A lawyer checks Decree 147/2024 for a free game site with ads, Decree 13/2023 for personal data, the privacy policy and the terms (OQ-039) | Before M5 |
-| 13 | Payments (deferred) | Any top-up or purchase first needs the Vietnamese online-game licence (Decree 147/2024/ND-CP), a payment provider (VNPay, MoMo, ZaloPay, Stripe), refunds and tax, a lawyer and a payments ADR | Not in v1 |
+| 1 | ADR-014 | **Done:** accepted 2026-11-04 | — |
+| 2 | This plan | **Done:** approved 2026-11-04 | — |
+| 3 | GAM-16 timing | **Done:** sequential, after GAM-15 (2026-11-04). M3 waits for it | — |
+| 4 | Website name and id | **Done:** Soucean Game, id `soucean-game` (2026-11-04) | — |
+| 5 | Repository visibility | Public, or private with GitHub Pro. A private repository on the free plan cannot have branch protection, which ADR-009 and §10 rely on | Before M0 |
+| 6 | GitHub repository `datpham02/soucean-game` | Create it with branch protection (PR, 1 approval, no force-push) | M0 |
+| 7 | Paperclip project and the `web-engineer` agent | Create them. Only the GitHub token is bound at M0 | M0 |
+| 8 | Supabase | Create an account (studio-owned email) and **two** projects: dev (shared with agents) and prod (Board only). Enable anonymous sign-in, and Google OAuth later | dev: start of M4 · prod: M6 |
+| 9 | Google OAuth client | Create it in Google Cloud for account linking | M4 |
+| 10 | Hosting | Cloudflare account and a Pages project connected to the repository. Production branch `main`, previews for task branches | M6 |
+| 11 | Domain | Buy it and point DNS at the hosting (needed for ads) | M6 |
+| 12 | Ad network | Apply to AdSense or an alternative after launch, with real content and traffic | M6 |
+| 13 | Legal | A lawyer checks Decree 147/2024 for a free game site with ads, Decree 13/2023 for personal data, the privacy policy and the terms (OQ-039) | Before M6 |
+| 14 | Payments (deferred) | Any top-up or purchase first needs the Vietnamese online-game licence (Decree 147/2024/ND-CP), a payment provider (VNPay, MoMo, ZaloPay, Stripe), refunds and tax, a lawyer and a payments ADR | Not in v1 |
 
 ## 8. Open questions
 OQ-036 (Supabase identity and free tier), OQ-037 (hosting), OQ-038 (ads and consent), OQ-039 (legal), all in [open-questions.md](../architecture/open-questions.md). Contract questions belong to GAM-16.

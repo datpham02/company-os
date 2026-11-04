@@ -45,8 +45,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-033 | How well do Cursor CLI headless runs confine agents, with and without Paperclip's automatic `--yolo`? | Partially verified | Cursor provider |
 | OQ-034 | Paperclip started with `npx` leaks `npm_*` environment variables into agent runs | Resolved | — |
 | OQ-035 | Reviewer not woken after an in-run hand-off to an execution stage | Worked around | Stage 1 review flow |
-| OQ-036 | Supabase anonymous sign-in, account linking and free-tier limits for the website | Open | Website M1 (ADR-014) |
-| OQ-037 | Hosting choice: preview deploys per branch, production only on Board action, free tier | Open | Website M0 (ADR-014) |
+| OQ-036 | Supabase anonymous sign-in, account linking and free-tier limits for the website | Open | Website M4 (ADR-014) |
+| OQ-037 | Hosting choice: preview deploys per branch, production only on Board action, free tier | Open | Website M6 (ADR-014) |
 | OQ-038 | Ad-network approval, placement policy for game pages, and consent requirements | Open | Website ads milestone |
 | OQ-039 | Vietnamese legal requirements for a free game website with ads (Decree 147/2024, Decree 13/2023) | Open | Website public launch |
 

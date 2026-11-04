@@ -81,7 +81,8 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 - [openspec-integration.md](integrations/openspec-integration.md)
 
 ### Plans (`plans/`)
-- [game-website-plan.md](plans/game-website-plan.md): plan for the multi-game website (`APPROVED`, ADR-014).
+- [soucean-game-plan.md](plans/soucean-game-plan.md): plan for the Soucean Game website (`APPROVED`, ADR-014).
+- [soucean-game-m0-setup.md](plans/soucean-game-m0-setup.md): Board steps for milestone M0 (accounts and repository).
 
 ### Decisions (`decisions/`)
 - [decisions/README.md](decisions/README.md): ADR index and process.
