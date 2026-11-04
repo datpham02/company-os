@@ -7,7 +7,7 @@
 - **First game:** Lamplight Vigil.
 - **Dependency:** the [game platform contract](../design/game-platform-contract.md), designed in **GAM-16**. Everything marked **[GAM-16]** below waits for it.
 
-This plan lives in the framework repository only while the project is `planned`. When the Board creates the website repository, it becomes the seed of that repository's `docs/requirements.md` and `docs/architecture.md`.
+This plan lives in the framework repository only while the project is `planned` ([project-system.md §3](../design/project-system.md#3-lifecycle)). The seeding Task moves it, with the M0 checklist, into the website repository. There it becomes the seed of `docs/requirements.md` and `docs/architecture.md`. A framework PR then deletes both files from `game-studio` (Board decision, 2026-11-04).
 
 ## 1. Goals and non-goals
 
