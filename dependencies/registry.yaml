@@ -196,14 +196,14 @@ dependencies:
     license: MIT
     required: false
     versionConstraint: "pin to a release tag when adopted (v2.15.0 seen)"
-    verifiedVersion: null
+    verifiedVersion: "2.15.0 core skill only (sha512-D0J/C40x...3urw==), copied to ~/.claude/skills/ui-ux-pro-max by the Board, 2026-11-04"
     install:
       strategy: skill-pack
       reference: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill#readme
-    integrationStatus: candidate
+    integrationStatus: integrated
     usedBy: [ui-designer, web-engineer]
     compatibility: "Claude Code plugin (`/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill`) or npm CLI `ui-ux-pro-max-cli` (`uipro init --ai claude` or `--ai codex`). Its search script needs Python 3."
-    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Design-knowledge skill (styles, palettes, font pairings). Overlaps with taste-skill, impeccable and hallmark: adopt at most one or two of the four."
+    notes: "Security review: 2026-11-04, npm 2.15.0, approved with conditions (GAM-35). Install ONLY the core skill: the 6 bundled skills read ~/.claude/.env and call third-party APIs or run npx shadcn add. Do not use the plugin route (tracks main), uipro update/uninstall, or the stack/ scaffold (Read(//home/**)). SKILL.md script paths changed to python \"$HOME/.claude/skills/...\". Allowlist for ui-designer: Bash(python \"$HOME/.claude/skills/ui-ux-pro-max/scripts/search.py\"*). Chosen over taste-skill by the Board rule: prefer the most-starred overlapping tool."
 
   - id: awesome-design-md
     name: Awesome DESIGN.md
@@ -254,7 +254,7 @@ dependencies:
     integrationStatus: candidate
     usedBy: [ui-designer, web-engineer]
     compatibility: "`npx skills add https://github.com/Leonxlnx/taste-skill --skill design-taste-frontend`, or the Claude Code or Codex plugin marketplace. Needs Node 22+ and a Chromium browser."
-    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Design-taste skill with reference images and a browser check. Fetches reference photos from the network (no API key). Overlaps with impeccable, hallmark and ui-ux-pro-max-skill."
+    notes: "Security review: 2026-11-04, v2.1.5 / repo 12af471, approve with conditions (GAM-19): no hooks, no keys, drives Chrome over CDP. Not used: overlaps ui-ux-pro-max-skill, which has more stars (Board rule)."
 
   - id: impeccable
     name: Impeccable
@@ -269,10 +269,10 @@ dependencies:
     install:
       strategy: skill-pack
       reference: https://github.com/pbakaus/impeccable#readme
-    integrationStatus: candidate
+    integrationStatus: rejected
     usedBy: [ui-designer, web-engineer]
     compatibility: "`npx impeccable install`, then `/impeccable init` (Claude Code) or `$impeccable init` (Codex). The installer also adds agent hooks."
-    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Design critique and refinement skill plus a rule-based CLI. RISK: its live-mode Apply step can launch claude or codex with permissions bypassed. If approved, set IMPECCABLE_LIVE_COPY_AGENT to chat or off, and review the hooks."
+    notes: "Security review: 2026-11-04, npm 4.8.0 / repo f864521 (GAM-19): telemetry on by default, installs 3 always-on hooks and a binary; live-mode Apply runs claude/codex with permissions bypassed unless IMPECCABLE_LIVE_COPY_AGENT=chat|off is set in the live server environment. Not used for M1."
 
   - id: react-bits
     name: React Bits
@@ -336,14 +336,14 @@ dependencies:
     license: Apache-2.0
     required: false
     versionConstraint: "pin when adopted (0.4.0 seen; alpha)"
-    verifiedVersion: null
+    verifiedVersion: "0.4.0 (npm install -g @google/design.md@0.4.0 --ignore-scripts, Board, 2026-11-04)"
     install:
       strategy: project-local
       reference: https://github.com/google-labs-code/design.md#readme
-    integrationStatus: candidate
+    integrationStatus: integrated
     usedBy: [ui-designer, web-engineer]
     compatibility: "File format plus CLI: `npx @google/design.md lint DESIGN.md`. Exports to Tailwind or DTCG tokens. Works with any agent."
-    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Recommended as the design-system file format for the website and game UI. Alpha: the format may change."
+    notes: "Security review: 2026-11-04, repo 6e5da53 / npm 0.4.0, approved (GAM-19): no network, no install scripts, Google-owned, 0 advisories. Used by ui-designer for DESIGN.md (allowlist: Bash(design.md *))."
 
   - id: gsap-skills
     name: GSAP Skills
