@@ -104,7 +104,13 @@ def main():
     if a.resume:
         for slug, ag in agents.items():
             if ag["status"] == "paused":
-                call("POST", f"/agents/{ag['id']}/resume", {})
+                try:
+                    call("POST", f"/agents/{ag['id']}/resume", {})
+                except SystemExit as e:
+                    if "verifying" not in str(e):
+                        raise
+                    print(f"  agent {slug}: already verifying; check again in a minute")
+                    continue
                 agents[slug] = call("GET", f"/agents/{ag['id']}")
                 print(f"  agent {slug}: resumed")
 

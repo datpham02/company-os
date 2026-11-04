@@ -4,6 +4,9 @@ All notable changes to the Game Studio framework are recorded here. The format f
 
 ## [Unreleased]
 
+### Added
+- `scripts/setup/sync-instructions.py`: pushes role texts from Git into a live Paperclip company (OQ-040). Used on 2026-11-05 after the M1 restructure; `Game Director` renamed `Director` in Soucean; old company `GAM` archived after its open work moved to SOU-1..SOU-10.
+
 ### Changed
 - **Restructure into `knowledge/` and departments (ADR-019, migration map step M1).** Moved with `scripts/maintenance/move-files.py` (mapping in `scripts/maintenance/m1-moves.json`, links rewritten):
   - `company/` → `knowledge/company/` (`RULES.md` → `policies/rules.md`); `workflows/` → `knowledge/company/workflows/`;

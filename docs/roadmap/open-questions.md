@@ -364,7 +364,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Found (2026-11-04, Paperclip 2026.1023.0):** `company import --target existing` goes through the "safe" route `/api/companies/{id}/imports/{preview,apply}`, which returns `403 Safe import route does not allow replace collision strategy`. Only `rename` and `skip` work. The re-import with `--collision replace` described in ADR-012, OQ-007 and OQ-023 therefore cannot update existing agents.
 - **Also found:** importing from the working repository picks up gitignored copies under `.claude/worktrees/`. A package built in a clean folder with only `knowledge/company/` and `knowledge/company/agents/` matches all 8 live agents (after `knowledge/company/agents/qa` declared `slug: qa-engineer`).
 - **Options:** the Board edits agents in the UI from Git (current); a sync script using the agent API (`PATCH /api/agents/{id}` and the instructions-bundle routes seen in the installed code, not in the public docs); a fresh company import (loses issue history).
-- **Status:** Open.
+- **Resolved for role texts (2026-11-05):** the official CLI has `paperclipai agent instructions-file:get|put` (route `/api/agents/{id}/instructions-bundle/file`). Paperclip 2026.1023.0 rejects the CLI's `put` with `422 INSTRUCTION_BASE_REQUIRED` because it omits `baseRevisionId`; `scripts/setup/sync-instructions.py` sends it. Used to apply the M1 role texts to all 8 Soucean agents. Renames go through `paperclipai agent update`.
+- **Status:** Partly resolved. Adapter config and allowlists are still applied by hand.
 
 ### OQ-041 — WIP limit through `maxConcurrentRuns`
 - **Question:** If an implementer agent has `runtimeConfig.heartbeat.maxConcurrentRuns: 1`, are review or comment wakes for its other Tasks queued, dropped, or delayed until its current run ends?
