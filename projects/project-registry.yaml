@@ -48,10 +48,10 @@ projects:
     agents: [game-director, producer, project-manager, game-designer, gameplay-programmer, ui-designer, qa]
     frameworkVersion: 0.1.0
 
-  - id: game-website              # placeholder id; the Board picks the final name, which becomes the repository name
-    name: Game Website (name to be decided)
+  - id: soucean-game              # Board named it 2026-11-04; also the repository name datpham02/soucean-game
+    name: Soucean Game
     type: platform                # ADR-014 (Accepted 2026-11-04)
     status: planned               # Board decision 2026-11-04. No repository, Paperclip project or external account yet.
-                                  # Plan (approved 2026-11-04): docs/plans/game-website-plan.md. Contract: docs/design/game-platform-contract.md (GAM-16).
+                                  # Plan (approved 2026-11-04): docs/plans/soucean-game-plan.md. Contract: docs/design/game-platform-contract.md (GAM-16).
     agents: [game-director, producer, project-manager, web-engineer, ui-designer, qa]
     frameworkVersion: 0.1.0
