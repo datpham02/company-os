@@ -68,6 +68,7 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 - [project-system.md](design/project-system.md): project registration, configuration, lifecycle, isolation.
 - [dependency-system.md](design/dependency-system.md): dependency registry, categories, versions, licenses.
 - [integration-system.md](design/integration-system.md): integration boundaries and adapter responsibilities.
+- [game-platform-contract.md](design/game-platform-contract.md): how games and platform projects work together (`PLANNED`, filled by GAM-16).
 
 ### Workflows (`../workflows/`)
 - [../workflows/README.md](../workflows/README.md): index of the 12 studio workflows.
@@ -78,6 +79,9 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 - [codex-integration.md](integrations/codex-integration.md)
 - [cursor-integration.md](integrations/cursor-integration.md)
 - [openspec-integration.md](integrations/openspec-integration.md)
+
+### Plans (`plans/`)
+- [game-website-plan.md](plans/game-website-plan.md): plan for the multi-game website (`PROPOSED`, ADR-014).
 
 ### Decisions (`decisions/`)
 - [decisions/README.md](decisions/README.md): ADR index and process.
@@ -91,7 +95,7 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 
 ### Studio content (outside `docs/`)
 - [../company/](../company/): COMPANY, ORGANIZATION, RULES, OPERATING_MODEL.
-- [../agents/](../agents/): seven agent role definitions.
+- [../agents/](../agents/): eight agent role definitions (`web-engineer` is a draft, ADR-014).
 - [../projects/](../projects/): project registry and configuration schema.
 - [../dependencies/](../dependencies/): external dependency registry.
 - [../runtime/README.md](../runtime/README.md): Runtime placeholder (`PLANNED`).

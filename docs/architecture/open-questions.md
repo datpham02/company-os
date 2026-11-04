@@ -45,6 +45,10 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-033 | How well do Cursor CLI headless runs confine agents, with and without Paperclip's automatic `--yolo`? | Partially verified | Cursor provider |
 | OQ-034 | Paperclip started with `npx` leaks `npm_*` environment variables into agent runs | Resolved | — |
 | OQ-035 | Reviewer not woken after an in-run hand-off to an execution stage | Worked around | Stage 1 review flow |
+| OQ-036 | Supabase anonymous sign-in, account linking and free-tier limits for the website | Open | Website M1 (ADR-014) |
+| OQ-037 | Hosting choice: preview deploys per branch, production only on Board action, free tier | Open | Website M0 (ADR-014) |
+| OQ-038 | Ad-network approval, placement policy for game pages, and consent requirements | Open | Website ads milestone |
+| OQ-039 | Vietnamese legal requirements for a free game website with ads (Decree 147/2024, Decree 13/2023) | Open | Website public launch |
 
 ## Entries
 
@@ -333,6 +337,26 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Workaround (`IMPLEMENTED`):** [`runtime/tools/review-wake-watchdog.ts`](../../runtime/tools/review-wake-watchdog.ts) wakes the pending agent participant through the public API after 90 s. Verified: it woke the reviewers of GAM-3 and GAM-4, both completed their reviews, and a second sweep made no duplicate wakes.
 - **Next:** report upstream to Paperclip with the reproduction; remove the watchdog once fixed.
 - **Status:** Worked around.
+
+### OQ-036 — Supabase identity and free tier for the website
+- **Assumption (`UNVERIFIED`):** Supabase Auth supports anonymous sign-in, and an anonymous user can later link Google or an email address while keeping the same user id, so their scores stay theirs. The free tier allows a separate dev project and a prod project. Inactive free projects may be paused.
+- **Verify:** read the current Supabase docs for anonymous sign-ins, identity linking, free-tier project limits and pausing, and check whether the anonymous sign-in rate limits and CAPTCHA options are enough for a public site.
+- **Status:** Open.
+
+### OQ-037 — Website hosting
+- **Assumption (`UNVERIFIED`):** Cloudflare Pages (or a similar static host) gives free preview deploys per branch on non-production URLs, and production deploys from the Default Branch, which only the Board merges. It also allows custom headers (CSP) and serving game builds as static files.
+- **Verify:** confirm the features and free-tier limits. Confirm that preview deploys cannot use production secrets. Compare with GitHub Pages, Netlify and Vercel.
+- **Status:** Open.
+
+### OQ-038 — Ad network and consent
+- **Assumption (`UNVERIFIED`):** Google AdSense needs an owned domain, original content, enough real traffic and a privacy policy. Pages with embedded games may face extra placement rules, and ads near interactive content need a clear margin. Serving ads to EEA/UK visitors needs a certified consent tool.
+- **Verify:** read the current AdSense program and placement policies, ads.txt requirements, and alternatives. Check consent-tool requirements for the expected audience (Vietnam first; EU only if expected).
+- **Status:** Open.
+
+### OQ-039 — Legal requirements for the website in Vietnam
+- **Question:** Does a free browser-game website with ads and no payments need registration or a licence under Decree 147/2024/ND-CP (online games) or other rules? What does Decree 13/2023/ND-CP on personal data require for anonymous ids and optional email linking? Payments would add a licence, a payment provider, refunds and tax.
+- **Owner:** the Board Operator, with a lawyer. Agents MUST NOT treat any answer as settled without the Board's confirmation.
+- **Status:** Open.
 
 ## Conflicts
 

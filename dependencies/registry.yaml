@@ -187,3 +187,211 @@ dependencies:
     usedBy: [producer, project-manager, game-designer, gameplay-programmer, ui-designer, qa]
     compatibility: "Uses GH_TOKEN/GITHUB_TOKEN env for auth in automation."
     notes: "Used for PR creation and status checks."
+
+  - id: ui-ux-pro-max-skill
+    name: UI/UX Pro Max Skill
+    category: web-design
+    source:
+      repository: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill
+    license: MIT
+    required: false
+    versionConstraint: "pin to a release tag when adopted (v2.15.0 seen)"
+    verifiedVersion: null
+    install:
+      strategy: skill-pack
+      reference: https://github.com/nextlevelbuilder/ui-ux-pro-max-skill#readme
+    integrationStatus: candidate
+    usedBy: [ui-designer, web-engineer]
+    compatibility: "Claude Code plugin (`/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill`) or npm CLI `ui-ux-pro-max-cli` (`uipro init --ai claude` or `--ai codex`). Its search script needs Python 3."
+    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Design-knowledge skill (styles, palettes, font pairings). Overlaps with taste-skill, impeccable and hallmark: adopt at most one or two of the four."
+
+  - id: awesome-design-md
+    name: Awesome DESIGN.md
+    category: web-design
+    source:
+      repository: https://github.com/VoltAgent/awesome-design-md
+    license: MIT
+    required: false
+    versionConstraint: "reference-only; no releases"
+    verifiedVersion: null
+    install:
+      strategy: reference-only
+      reference: https://github.com/VoltAgent/awesome-design-md#readme
+    integrationStatus: candidate
+    usedBy: [ui-designer]
+    compatibility: "Collection of DESIGN.md files; nothing to install."
+    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Inspiration only. The files imitate real brands' design systems, so do not ship a brand look-alike (trademark risk). Links to a paid site."
+
+  - id: open-design
+    name: Open Design
+    category: web-design
+    source:
+      repository: https://github.com/nexu-io/open-design
+    license: Apache-2.0
+    required: false
+    versionConstraint: "pin to a release tag when adopted (open-design-v0.27.0 seen)"
+    verifiedVersion: null
+    install:
+      strategy: external-service
+      reference: https://github.com/nexu-io/open-design#readme
+    integrationStatus: candidate
+    usedBy: []
+    compatibility: "Standalone app (desktop, Docker or web) that can expose an MCP server. The Docker path conflicts with ADR-013 (no Docker required in v1)."
+    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Defer. A full application whose README states always-on scrubbed telemetry, with a paid credits tier. Bundles skills that overlap other entries."
+
+  - id: taste-skill
+    name: Taste Skill
+    category: web-design
+    source:
+      repository: https://github.com/Leonxlnx/taste-skill
+    license: MIT
+    required: false
+    versionConstraint: "pin to a release tag when adopted (v2.1.5 seen)"
+    verifiedVersion: null
+    install:
+      strategy: skill-pack
+      reference: https://github.com/Leonxlnx/taste-skill#readme
+    integrationStatus: candidate
+    usedBy: [ui-designer, web-engineer]
+    compatibility: "`npx skills add https://github.com/Leonxlnx/taste-skill --skill design-taste-frontend`, or the Claude Code or Codex plugin marketplace. Needs Node 22+ and a Chromium browser."
+    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Design-taste skill with reference images and a browser check. Fetches reference photos from the network (no API key). Overlaps with impeccable, hallmark and ui-ux-pro-max-skill."
+
+  - id: impeccable
+    name: Impeccable
+    category: web-design
+    source:
+      repository: https://github.com/pbakaus/impeccable
+      docs: https://impeccable.style
+    license: Apache-2.0
+    required: false
+    versionConstraint: "pin to a release tag when adopted (cli-v4.8.0 seen)"
+    verifiedVersion: null
+    install:
+      strategy: skill-pack
+      reference: https://github.com/pbakaus/impeccable#readme
+    integrationStatus: candidate
+    usedBy: [ui-designer, web-engineer]
+    compatibility: "`npx impeccable install`, then `/impeccable init` (Claude Code) or `$impeccable init` (Codex). The installer also adds agent hooks."
+    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Design critique and refinement skill plus a rule-based CLI. RISK: its live-mode Apply step can launch claude or codex with permissions bypassed. If approved, set IMPECCABLE_LIVE_COPY_AGENT to chat or off, and review the hooks."
+
+  - id: react-bits
+    name: React Bits
+    category: web-design
+    source:
+      repository: https://github.com/DavidHDev/react-bits
+      docs: https://reactbits.dev
+    license: MIT with Commons Clause (custom; no SPDX id)
+    required: false
+    versionConstraint: "copy components at a recorded commit"
+    verifiedVersion: null
+    install:
+      strategy: project-local
+      reference: https://reactbits.dev
+    integrationStatus: candidate
+    usedBy: [web-engineer]
+    compatibility: "Component source registry installed through shadcn or jsrepo, for example `npx shadcn@latest add @react-bits/SplitText-TS-TW`. React only."
+    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Animated React components. The Commons Clause forbids reselling the components themselves; use inside the site appears allowed (confirm before approval). Some components pull in GSAP, Three.js or OGL, so review each component and its packages separately."
+
+  - id: emil-design-eng-skills
+    name: Skills for Designers and Engineers (Emil Kowalski)
+    category: web-design
+    source:
+      repository: https://github.com/emilkowalski/skills
+    license: MIT
+    required: false
+    versionConstraint: "pin to a commit when adopted (no releases)"
+    verifiedVersion: null
+    install:
+      strategy: skill-pack
+      reference: https://github.com/emilkowalski/skills#readme
+    integrationStatus: candidate
+    usedBy: [ui-designer, web-engineer]
+    compatibility: "`npx skills@latest add emilkowalski/skills`. Claude Code and Codex support is not stated in the README (UNVERIFIED)."
+    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Skills for motion and interaction polish (emil-design-eng, animate, review-animations). Text only, no runtime."
+
+  - id: hallmark
+    name: Hallmark
+    category: web-design
+    source:
+      repository: https://github.com/Nutlope/hallmark
+    license: MIT
+    required: false
+    versionConstraint: "pin to a commit when adopted (no releases)"
+    verifiedVersion: null
+    install:
+      strategy: skill-pack
+      reference: https://github.com/Nutlope/hallmark#readme
+    integrationStatus: candidate
+    usedBy: [ui-designer]
+    compatibility: "`npx skills add nutlope/hallmark -g`, or the Claude Code plugin marketplace. Browser checks need puppeteer-core and Chrome."
+    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Skill against generic AI-looking UI. Uses Wikimedia photos, each with its own license and attribution. batureren/hallmark is a fork; use only the official repository. Overlaps with taste-skill and impeccable."
+
+  - id: google-design-md
+    name: DESIGN.md (Google Labs)
+    category: web-design
+    source:
+      repository: https://github.com/google-labs-code/design.md
+      docs: https://stitch.withgoogle.com/docs/design-md/specification
+      package: npm:@google/design.md
+    license: Apache-2.0
+    required: false
+    versionConstraint: "pin when adopted (0.4.0 seen; alpha)"
+    verifiedVersion: null
+    install:
+      strategy: project-local
+      reference: https://github.com/google-labs-code/design.md#readme
+    integrationStatus: candidate
+    usedBy: [ui-designer, web-engineer]
+    compatibility: "File format plus CLI: `npx @google/design.md lint DESIGN.md`. Exports to Tailwind or DTCG tokens. Works with any agent."
+    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Recommended as the design-system file format for the website and game UI. Alpha: the format may change."
+
+  - id: gsap-skills
+    name: GSAP Skills
+    category: web-design
+    source:
+      repository: https://github.com/greensock/gsap-skills
+    license: MIT
+    required: false
+    versionConstraint: "pin to a commit when adopted (no releases)"
+    verifiedVersion: null
+    install:
+      strategy: skill-pack
+      reference: https://github.com/greensock/gsap-skills#readme
+    integrationStatus: candidate
+    usedBy: [web-engineer]
+    compatibility: "`npx skills add https://github.com/greensock/gsap-skills`, or the Claude Code plugin marketplace."
+    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Skills for GSAP animation and ScrollTrigger. Useful only if the site uses GSAP. GSAP itself ships under GreenSock's own no-charge license, not an OSI license (UNVERIFIED; check gsap.com/licensing before approval)."
+
+  - id: scroll-world
+    name: Scroll World
+    category: web-design
+    source:
+      repository: https://github.com/oso95/scroll-world
+    license: MIT
+    required: false
+    versionConstraint: "pin to a commit when adopted (no releases)"
+    verifiedVersion: null
+    install:
+      strategy: skill-pack
+      reference: https://github.com/oso95/scroll-world#readme
+    integrationStatus: candidate
+    usedBy: []
+    compatibility: "Claude Code plugin marketplace, or `npx skills add oso95/scroll-world`."
+    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Defer. Needs paid external services (Monid CLI with an API key and balance, Higgsfield credits) and produces heavy scroll-scrubbed video. Copies exist (ChecheChat/scroll-world); use only the official repository. Not needed for a game-list site."
+
+  - id: canvas-ui
+    name: Canvas UI
+    category: web-design
+    source:
+      repository: https://github.com/DavidHDev/canvas-ui
+    license: MIT with Commons Clause (custom; no SPDX id)
+    required: false
+    versionConstraint: "copy components at a recorded commit"
+    verifiedVersion: null
+    install:
+      strategy: project-local
+      reference: https://github.com/DavidHDev/canvas-ui#readme
+    integrationStatus: candidate
+    usedBy: []
+    compatibility: "Component source registry through shadcn, for example `npx shadcn@latest add @canvas-ui/liquid-react`. WebGL and WebGPU builds."
+    notes: "Facts from the repository README and the GitHub API on 2026-11-04. NOT security-reviewed (security-architecture.md section 11.1). Defer. Full effects need Chrome's experimental HTML-in-canvas API. Heavy GPU and bundle cost next to a running game. A young project, under the Commons Clause."

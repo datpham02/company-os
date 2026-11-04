@@ -11,6 +11,8 @@
 | Paperclip board access and API keys | Reassign tasks, approve actions, change agents |
 | Game source code (Default Branch) | Corrupted product |
 | User home directory | SSH keys, VPN config, other projects (the audit found e.g. `~/.ssh`, `*.ovpn` in home) |
+| Production credentials of platform projects (backend admin keys, hosting, DNS, ad network, payments) | Player data leak, defacement, ad-account ban, fraud ([§10](#10-production-environments-platform-projects)) |
+| Production player data | Privacy breach (Decree 13/2023/ND-CP, GDPR) |
 
 ## 2. Credential handling
 
@@ -120,6 +122,9 @@ Agents MUST NOT run (enforced by Provider deny lists where possible, and by rule
 | Hire (create) an Agent Instance | Yes | Board Operator | Paperclip `hire_agent` approval (`VERIFIED` type) |
 | Use `bypass` permission profile | Yes | Board Operator | Agent Instance config change log |
 | Budget override | Yes | Board Operator | Paperclip `budget_override_required` (`VERIFIED` type) |
+| Create an external account or project for a platform (backend, hosting, domain, ad network, payments) | Yes (ADR-014) | Board Operator | Paperclip issue comment |
+| Production deploy, production migration or production secret change | Yes (ADR-014) | Board Operator, who also performs it | Platform repository release notes |
+| Merge a security-sensitive platform PR (auth, RLS, reward or payment code) | Yes: human review **plus** `qa` (ADR-014) | Board Operator | GitHub PR review + Paperclip |
 
 ## 9. Destructive operation safeguards
 
@@ -127,6 +132,74 @@ Agents MUST NOT run (enforced by Provider deny lists where possible, and by rule
 2. Worktree cleanup never discards uncommitted changes.
 3. Branch protection is the technical backstop if an agent ignores rules.
 4. Every Run's commit range is recorded so changes can be reverted.
+
+## 10. Production environments (platform projects)
+
+Status: `PROPOSED` ([ADR-014](../decisions/ADR-014-platform-project-type.md)). It applies to every project with `type: platform`. Game repositories have no production backend, so it does not apply to them.
+
+### 10.1 Environments
+
+| Environment | Who uses it | Backend project | Credentials held by |
+|---|---|---|---|
+| Local / dev | Agents, Board | A separate **dev** backend project (for example a Supabase free-tier project named `<platform>-dev`) with fake data only | Paperclip company secrets bound **only** to the agents of that platform project |
+| Preview | Agents (read results), Board | The dev project. Preview deploys of Task Branches go to non-production URLs | Hosting's own build integration; no hosting token for agents |
+| Production | Board only | A separate **prod** backend project with real player data | The Board Operator, in a password manager and in the hosting provider's secret store. **Never** in Paperclip, a repository or an agent environment |
+
+### 10.2 Production keys are never bound to agents
+- Agents MUST NOT receive any production credential. This covers backend service-role or admin keys, database passwords, backend management access tokens, hosting API tokens with production rights, DNS or registrar logins, ad-network accounts and payment-provider keys.
+- These MUST NOT be stored as Paperclip company secrets, because a binding mistake would reach an agent. The Board keeps them outside Paperclip.
+- A public client key that ships in the production web build by design (for example Supabase's anon or publishable key) MAY appear in production build configuration that the Board manages. It is protected by RLS, not by secrecy. Agents still use the dev project's key during development.
+- Dev-project credentials MUST be different from production credentials, and MUST NOT give access to production data.
+- An agent that finds a production credential MUST stop and report it. The Board then rotates the credential.
+
+### 10.3 Production deploys are done by the Board
+- Code reaches production only through a Board action. Either the Board merges to the Default Branch and the hosting provider auto-deploys it, or the Board promotes a build by hand.
+- Database migrations reach production only when the Board applies them after the PR is merged. Agents MUST NOT run migration commands against production.
+- Production secrets, environment variables, DNS, ad-network settings and domain changes are Board actions.
+- Agents MAY prepare release notes and a deploy checklist for each release.
+
+### 10.4 Human review for security-sensitive code
+- A PR that touches any of the following is **security-sensitive**:
+  - authentication and account linking;
+  - RLS policies, migrations that create or change tables or policies, and database functions with elevated rights (`SECURITY DEFINER`);
+  - server functions that accept scores or grant rewards or entitlements;
+  - payment code;
+  - secret or environment configuration;
+  - Content-Security-Policy and other security headers.
+- A security-sensitive PR needs **two approvals:** a `qa` review **and** a review by the Board Operator, a human. A `qa` approval alone MUST NOT lead to a merge.
+- The platform repository SHOULD list these paths in `.github/CODEOWNERS` and its `AGENTS.md`. The authoring agent MUST mark the PR (`Security-sensitive: yes`).
+- Payment code MUST NOT be written before a separate payments ADR and legal review exist. That review covers the Vietnamese online-game licence (Decree 147/2024/ND-CP), a payment provider, refunds and tax.
+
+### 10.5 Player data
+- Store the minimal data set defined by the platform's `docs/requirements.md`. Every table with player data MUST have RLS enabled.
+- Agents MUST NOT read, export or copy production player data, including for debugging. Production incidents are handled by the Board.
+- Ads and any non-essential cookies load only after consent. Consent and the privacy policy are platform features.
+
+## 11. Supply-chain safety
+
+Status: `PROPOSED` (Board request, 2026-11-04). External code is the easiest way to get malicious behaviour into the studio. A skill, plugin, hook or MCP server runs **with the agent's permissions**, and its text is read as instructions. An npm package's install script runs on the studio machine. Every external item is therefore treated as untrusted code until it is reviewed.
+
+### 11.1 Studio dependencies (registry entries)
+Before an entry moves to `approved`, the evaluation Task MUST record a security review against the reviewed commit or version. It covers:
+1. **Origin.** The repository is the official one: the owner matches the project, it is not a fork or a copy, and the npm package name and publisher match the repository (check for typosquats).
+2. **Install path.** Read the install scripts (`preinstall` / `postinstall`), installers, `curl | sh` lines, and anything that writes outside the install directory or changes Provider settings.
+3. **Agent-facing text.** Read every `SKILL.md`, plugin manifest, hook, command and agent prompt in full. Look for prompt injection, instructions to read secrets or home-directory files, to send data out, to disable permissions (for example `--dangerously-skip-permissions`, `bypassPermissions` or `--dangerously-bypass-approvals-and-sandbox`), or to install more things.
+4. **Runtime behaviour.** Network calls, telemetry, required accounts or API keys, paid services, and data sent to third parties.
+5. **Health.** Maintainer activity, recent ownership or maintainer changes, open security advisories (GitHub Security Advisories, OSV, `npm audit`), and license.
+6. **Trial.** If installation is local and harmless, test in a scratch directory outside every repository, with no secrets in the environment and no Paperclip keys bound.
+
+Rules:
+- Pin integrated items to an exact version or commit SHA. `@latest` MUST NOT be used for integrated items. An upgrade is a new review of the diff since the reviewed version.
+- The Board installs. Agents MUST NOT install skills, plugins, hooks or MCP servers by themselves.
+- A finding of malicious or deceptive behaviour → `rejected`, with the reason in `notes`. A risky but legitimate option (for example a mode that bypasses permissions) → approve only with that option disabled, and record how.
+
+### 11.2 Game and platform repositories
+- A Task MAY add a runtime or dev package only when its acceptance criteria need it. The PR MUST list each added or upgraded package with its version and why it is needed.
+- The lockfile is committed. CI and agents install with `npm ci`, not `npm install`, except when adding a package on purpose.
+- Check new packages for look-alike names, very new or single-maintainer packages, install scripts, and advisories (`npm audit`). Reviewers (`qa`, and the Board for platform security-sensitive PRs) check the package list in the diff.
+- No script tags from CDNs without a pinned version and Subresource Integrity. The platform's CSP allows only the origins that are needed (the backend, the ad network after consent).
+- Art, audio, fonts and code snippets come only from sources with a known license, recorded in the repository (for example in `CREDITS.md`).
+- A game build MUST NOT include any third-party script that the game's design does not list. In particular: no analytics, no ad SDK, and no remote code loading.
 
 ## Related documents
 - [../operations/security-operations.md](../operations/security-operations.md) · [../../company/RULES.md](../../company/RULES.md) · [../decisions/ADR-009-approval-before-merge.md](../decisions/ADR-009-approval-before-merge.md)

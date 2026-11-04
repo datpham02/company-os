@@ -11,7 +11,8 @@
 #
 # - id: node-arena
 #   name: Node Arena
-#   status: active                # proposed | initializing | active | maintenance | archived
+#   type: game                    # game (default) | platform (ADR-014)
+#   status: active                # planned | proposed | initializing | active | maintenance | archived
 #   repository:
 #     url: https://github.com/datpham02/node-arena.git
 #     defaultBranch: main
@@ -45,4 +46,12 @@ projects:
     paperclip:
       projectId: "260f303b-5861-4b0e-809d-da68e38c26be"
     agents: [game-director, producer, project-manager, game-designer, gameplay-programmer, ui-designer, qa]
+    frameworkVersion: 0.1.0
+
+  - id: game-website              # placeholder id; the Board picks the final name, which becomes the repository name
+    name: Game Website (name to be decided)
+    type: platform                # ADR-014 (Proposed)
+    status: planned               # Board decision 2026-11-04. No repository, Paperclip project or external account yet.
+                                  # Plan: docs/plans/game-website-plan.md. Contract: docs/design/game-platform-contract.md (GAM-16).
+    agents: [game-director, producer, project-manager, web-engineer, ui-designer, qa]
     frameworkVersion: 0.1.0
