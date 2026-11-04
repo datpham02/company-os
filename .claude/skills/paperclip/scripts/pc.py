@@ -122,8 +122,9 @@ def cmd_overview(a):
     order = {"in_review": 0, "in_progress": 1, "blocked": 2, "todo": 3, "backlog": 4}
     for i in sorted(open_issues, key=lambda x: (order.get(x["status"], 9), x.get("issueNumber") or 0)):
         # The list endpoint omits blockers, so read them per issue.
-        blockers = [b.get("identifier") for b in (issue(i["id"]).get("blockedBy") or []) if isinstance(b, dict)]
-        after = f"  [after {', '.join(blockers)}]" if blockers else ""
+        blockers = [b.get("identifier") for b in (issue(i["id"]).get("blockedBy") or [])
+                    if isinstance(b, dict) and b.get("status") not in ("done", "cancelled")]
+        after = f"  [after {', '.join(blockers)}]" if blockers else ("  [ready]" if i["status"] == "backlog" else "")
         print(f"  {i['identifier']:7} {i['status']:11} {who(i, n):20} {i['title'][:70]}{after}")
     if not open_issues:
         print("  (none)")
@@ -156,7 +157,15 @@ def cmd_show(a):
 
 def cmd_log(a):
     log = call("GET", f"/heartbeat-runs/{a.run_id}/log") or {}
-    text = "".join(json.loads(line).get("chunk", "") for line in str(log.get("content", "")).splitlines() if line.startswith("{"))
+    parts = []
+    for line in str(log.get("content", "")).splitlines():
+        if not line.startswith("{"):
+            continue
+        try:
+            parts.append(json.loads(line).get("chunk", ""))
+        except json.JSONDecodeError:  # the log endpoint can cut the last line mid-record
+            parts.append(line)
+    text = "".join(parts)
     print(text[-a.tail:] if a.tail else text)
 
 
@@ -169,6 +178,11 @@ def cmd_release(a):
         if not i.get("assigneeAgentId"):
             print(f"{key}: has no agent assignee; assign it first")
             continue
+        ws = i.get("currentExecutionWorkspace") or {}
+        if ws.get("sourceIssueId") and ws["sourceIssueId"] != i["id"]:
+            # Issues created inside another issue's run inherit that run's worktree (gap G-10).
+            call("PATCH", f"/issues/{i['id']}", {"executionWorkspaceId": None, "executionWorkspacePreference": "isolated_workspace"})
+            print(f"{key}: detached from inherited workspace {ws.get('name')}; it gets its own worktree")
         res = call("PATCH", f"/issues/{i['id']}", {"status": "todo"})
         print(f"{key}: released -> {res['status']} (the assignee is woken now)")
 

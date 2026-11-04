@@ -77,6 +77,8 @@ The **reporting rule** is required. Without it, an agent sometimes wraps Papercl
 - adds npm build/test commands: `Bash(npm ci*)`, `Bash(npm install*)`, `Bash(npm run *)`, `Bash(npm test*)`, `Bash(npx tsc*)`;
 - appends a git rule to the reporting rule: push only the task branch by its literal name, as one standalone command, and open the PR with one standalone `gh pr create --base main --head <branch>` command.
 
+**Syncing a task branch with `main` (added 2026-11-04, Board decision during GAM-11).** Parallel tasks conflict once one of them merges, and a rebase would need a force-push, which stays denied. The `workspace-write` profile therefore also allows `Bash(git fetch origin*)`, `Bash(git merge origin/main*)`, `Bash(git merge --no-edit origin/main*)`, `Bash(git merge --continue*)` and `Bash(git merge --abort*)`. The git rule adds: to bring the task branch up to date with main, run `git fetch origin`, then `git merge origin/main` as separate standalone commands (never rebase), resolve conflicts, commit the merge and push normally. A local merge cannot reach `main` on GitHub, because pushes to `main` stay denied here and blocked by branch protection.
+
 The `read-only` profile still denies every push. The hard guard is GitHub branch protection on `main`: PR required, 1 approval, no force-push, no deletion.
 
 Each Game Repository's local clone uses `credential.helper = !gh auth git-credential`, so a `GH_TOKEN` in the agent's environment is the credential for both `git push` and `gh`. **Until the fine-grained `GH_TOKEN` is bound, a push would use the host's own `gh` login, which can reach every repository of the account** ([security-operations.md](../operations/security-operations.md) §2).
