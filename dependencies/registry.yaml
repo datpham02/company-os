@@ -42,7 +42,7 @@ dependencies:
       strategy: global-cli
       reference: https://code.claude.com/docs
     integrationStatus: approved     # ADR-008; Paperclip adapter claude_local
-    usedBy: [game-director, producer, project-manager, game-designer, gameplay-programmer, ui-designer]
+    usedBy: [director, producer, project-manager, game-designer, gameplay-programmer, ui-designer]
     compatibility: "Paperclip adapter type claude_local."
     notes: "See docs/integrations/claude-code-integration.md."
 

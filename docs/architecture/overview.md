@@ -30,9 +30,9 @@ The "Execution" box is deliberately abstract. Who fills it is decided by [ADR-01
 |---|---|---|---|
 | Paperclip | Operate the company: agents, projects, tasks, approvals, heartbeats | Paperclip project | External; not installed (OQ-024) |
 | Game Studio Core | Define the studio: company, roles, rules, workflows | This repo | Documented (files exist); nothing automated |
-| Agent Definitions | One role definition per agent | This repo, `agents/` | Documented (8 roles) |
-| Workflow definitions | Documented processes with gates | This repo, `workflows/` | Documented (12 workflows) |
-| Project Registry | Which games exist and where their repos are | This repo, `projects/` | Empty registry; schema `PROPOSED` |
+| Agent Definitions | One role definition per agent | This repo, `knowledge/company/agents/` | Documented (8 roles) |
+| Workflow definitions | Documented processes with gates | This repo, `knowledge/company/workflows/` | Documented (12 workflows) |
+| Project Registry | Which games exist and where their repos are | This repo, `knowledge/projects/` | Empty registry; schema `PROPOSED` |
 | Dependency Registry | Which external tools the studio uses | This repo, `dependencies/` | Candidate entries |
 | Integrations | Contracts for Paperclip, Claude Code, Codex, OpenSpec | This repo, `docs/integrations/` | Documented; no adapter code |
 | Agent Runtime | Execute Tasks locally (dispatcher, launcher, workspace, git, reporter) | This repo, `runtime/` | `PLANNED` |
@@ -53,7 +53,7 @@ GitHub stores the result; humans merge it.
 
 ## 5. Primary execution flow (one Task)
 
-1. The Board Operator (or a manager agent such as `project-manager`) creates a Task in Paperclip, inside the Paperclip project mapped to a Game Project, and assigns an Agent Instance. See [task-delegation.md](../../workflows/task-delegation.md).
+1. The Board Operator (or a manager agent such as `project-manager`) creates a Task in Paperclip, inside the Paperclip project mapped to a Game Project, and assigns an Agent Instance. See [task-delegation.md](../../knowledge/company/workflows/task-delegation.md).
 2. Paperclip wakes the agent with a heartbeat (trigger: assignment).
 3. The executor resolves the project's repository and prepares a Task Workspace (Git worktree) on a Task Branch.
 4. The executor launches the Provider CLI in the Task Workspace with the role instructions, studio rules, and Task context.
@@ -62,7 +62,7 @@ GitHub stores the result; humans merge it.
 7. Review stage: `qa` or another agent reviews. Approval stage: the Board Operator approves.
 8. The Board Operator merges the pull request. The Task moves to `done`.
 
-Detail: [development-cycle.md](../../workflows/development-cycle.md), [runtime-architecture.md](runtime-architecture.md), [data-flow.md](data-flow.md).
+Detail: [development-cycle.md](../../knowledge/company/workflows/development-cycle.md), [runtime-architecture.md](runtime-architecture.md), [data-flow.md](data-flow.md).
 
 ## 6. External system boundaries
 
@@ -85,4 +85,4 @@ Detail: [development-cycle.md](../../workflows/development-cycle.md), [runtime-a
 
 ## Related documents
 - [system-components.md](system-components.md) · [runtime-architecture.md](runtime-architecture.md) · [data-flow.md](data-flow.md) · [security-architecture.md](security-architecture.md)
-- [../decisions/README.md](../decisions/README.md) · [open-questions.md](open-questions.md)
+- [../decisions/README.md](../decisions/README.md) · [open-questions.md](../roadmap/open-questions.md)

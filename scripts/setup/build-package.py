@@ -1,11 +1,12 @@
-"""Build a clean Paperclip company package from this repository (docs/operations/studio-bootstrap.md).
+"""Build a clean Paperclip company package from this repository (docs/operations/company-bootstrap.md).
 
 Stdlib only. Writes nothing to Paperclip. Usage (from the repository root):
 
     python -I scripts/setup/build-package.py --prefix SOU
     python -I scripts/setup/build-package.py --prefix SOU --out <dir> --workspace <dir>
 
-Sources: company/COMPANY.md, agents/*/AGENTS.md, config/paperclip/agents.json.
+Sources: knowledge/company/COMPANY.md, knowledge/company/agents/*/AGENTS.md,
+knowledge/departments/*/agents/*/AGENTS.md, config/paperclip/agents.json (ADR-019).
 The built package is local to this machine: it contains this machine's workspace path and
 Cursor CLI path, so it is written outside the repository and never committed.
 The generated .paperclip.yaml is block YAML in the shape of Paperclip's own export.
@@ -85,15 +86,23 @@ def main():
     if os.path.exists(a.out):
         shutil.rmtree(a.out)
     os.makedirs(a.out)
-    shutil.copytree(os.path.join(REPO, "company"), os.path.join(a.out, "company"),
-                    ignore=shutil.ignore_patterns("ORGANIZATION.md", "RULES.md", "OPERATING_MODEL.md"))
+    os.makedirs(os.path.join(a.out, "company"))
+    shutil.copy(os.path.join(REPO, "knowledge", "company", "COMPANY.md"), os.path.join(a.out, "company", "COMPANY.md"))
 
-    agents_dir = os.path.join(REPO, "agents")
+    role_roots = [os.path.join(REPO, "knowledge", "company", "agents")]
+    dept_root = os.path.join(REPO, "knowledge", "departments")
+    role_roots += [os.path.join(dept_root, d, "agents") for d in sorted(os.listdir(dept_root))
+                   if os.path.isdir(os.path.join(dept_root, d, "agents"))]
     found = {}
-    for d in sorted(os.listdir(agents_dir)):
-        src = os.path.join(agents_dir, d, "AGENTS.md")
-        if os.path.isfile(src):
-            found[frontmatter_slug(src)] = src
+    for root in role_roots:
+        for d in sorted(os.listdir(root)):
+            src = os.path.join(root, d, "AGENTS.md")
+            if not os.path.isfile(src):
+                continue
+            slug = frontmatter_slug(src)
+            if slug in found:
+                sys.exit(f"duplicate agent slug {slug}: {found[slug]} and {src}")
+            found[slug] = src
     missing = set(conf["agents"]) ^ set(found)
     if missing:
         sys.exit(f"agents.json and agents/ disagree on: {sorted(missing)}")

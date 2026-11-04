@@ -3,7 +3,7 @@
 - **Status:** Accepted (Board Operator, 2026-11-04)
 - **Date:** 2026-11-04
 - **Deciders:** Board Operator
-- **Related:** ADR-005, ADR-009, ADR-010, ADR-012, [project-system.md](../design/project-system.md), [security-architecture.md §10](../architecture/security-architecture.md#10-production-environments-platform-projects), [game-platform-contract.md](../design/game-platform-contract.md), Paperclip issue GAM-16, OQ-036 to OQ-039
+- **Related:** ADR-005, ADR-009, ADR-010, ADR-012, [project-system.md](../design/project-system.md), [security-architecture.md §10](../architecture/security-architecture.md#10-production-environments-platform-projects), [game-platform-contract.md](../../knowledge/company/shared/game-platform-contract.md), Paperclip issue GAM-16, OQ-036 to OQ-039
 
 ## Context
 The Board Operator plans a **multi-game website**. It lists the studio's games, lets players play them in the browser, runs shared online features (one player identity, weekly leaderboards) and earns money from **ads placed on the website page, never inside a game**. Lamplight Vigil is the first game on it.
@@ -36,7 +36,7 @@ Facts about external services in this ADR (Supabase anonymous sign-in and accoun
 - The project lifecycle gains a status `planned`: the Board has decided the project will exist, but no repository, Paperclip project or external account exists yet.
 - A `planned` entry MAY omit `repository`. All other statuses still require it.
 - While a project is `planned`, agents MAY write plan documents in this framework repository only. They MUST NOT create repositories, Paperclip projects or external accounts.
-- `planned → initializing` happens when the Board creates the repository and the Paperclip project, following [project-initialization.md](../../workflows/project-initialization.md).
+- `planned → initializing` happens when the Board creates the repository and the Paperclip project, following [project-initialization.md](../../knowledge/company/workflows/project-initialization.md).
 
 ### 3. Platform documentation set
 A platform repository MUST contain, from its seed commit:
@@ -48,12 +48,12 @@ A platform repository MUST contain, from its seed commit:
 | `docs/architecture.md` | Frontend, backend, data model, RLS model, environments, deploy flow |
 | `docs/game-platform-contract.md` | A pointer to the framework contract version this platform implements, plus any platform-side notes. It MUST NOT redefine the contract. |
 
-- The **game platform contract** lives in this framework repository at [docs/design/game-platform-contract.md](../design/game-platform-contract.md), because several games and platforms share it. Until GAM-16 delivers, that file is a placeholder with status `PLANNED`. A new or superseding ADR adopts GAM-16's design. Nobody designs the contract in parallel to GAM-16.
+- The **game platform contract** lives in this framework repository at [docs/design/game-platform-contract.md](../../knowledge/company/shared/game-platform-contract.md), because several games and platforms share it. Until GAM-16 delivers, that file is a placeholder with status `PLANNED`. A new or superseding ADR adopts GAM-16's design. Nobody designs the contract in parallel to GAM-16.
 - The contract MUST keep the Board's rules: ads only on platform pages; no ad SDK or ad hook inside a game that declares no ad capability; rewards and purchases are optional capabilities that only the platform server grants.
 
 ### 4. New role: `web-engineer`
-- A new role **Web Engineer** ([agents/web-engineer/AGENTS.md](../../agents/web-engineer/AGENTS.md)) builds platform projects: frontend, backend schema, migrations, data-access rules (RLS), server functions and deploy configuration for non-production environments. It reports to `project-manager`, has permission profile `workspace-write`, and writes code.
-- No DevOps role is added now. A single website on managed hosting does not need one. Deploy configuration is part of `web-engineer` work, and production deploys stay with the Board (§5). `devops-engineer` joins the planned-roles list in [ORGANIZATION.md](../../company/ORGANIZATION.md). Add it when the studio runs more than one platform, or self-hosted infrastructure.
+- A new role **Web Engineer** ([agents/web-engineer/AGENTS.md](../../knowledge/departments/web/agents/web-engineer/AGENTS.md)) builds platform projects: frontend, backend schema, migrations, data-access rules (RLS), server functions and deploy configuration for non-production environments. It reports to `project-manager`, has permission profile `workspace-write`, and writes code.
+- No DevOps role is added now. A single website on managed hosting does not need one. Deploy configuration is part of `web-engineer` work, and production deploys stay with the Board (§5). `devops-engineer` joins the planned-roles list in [ORGANIZATION.md](../../knowledge/company/ORGANIZATION.md). Add it when the studio runs more than one platform, or self-hosted infrastructure.
 - `qa` reviews platform work as it reviews games, including web end-to-end tests with Playwright MCP.
 
 ### 5. Production security rules

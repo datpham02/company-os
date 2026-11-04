@@ -29,9 +29,9 @@ OpenSpec manages *spec artefacts inside one repository*. It does not assign work
 | Step | Actor | OpenSpec action | Paperclip / Game Studio action |
 |---|---|---|---|
 | 1. Explore an idea | `game-designer` | `/opsx:explore` | Task "Explore: <feature>"; findings in comment |
-| 2. Propose a change | `game-designer` (design) or `gameplay-programmer` (technical) | `/opsx:propose <change>` creates `openspec/changes/<change>/` on a Task Branch | Task → `in_review`; review by `game-director` or `project-manager` |
+| 2. Propose a change | `game-designer` (design) or `gameplay-programmer` (technical) | `/opsx:propose <change>` creates `openspec/changes/<change>/` on a Task Branch | Task → `in_review`; review by `director` or `project-manager` |
 | 3. Validate | proposer | `openspec validate <change>` | Must pass before review |
-| 4. Approve proposal | `game-director` / Board for pillar-affecting changes | — | Execution-policy approval stage |
+| 4. Approve proposal | `director` / Board for pillar-affecting changes | — | Execution-policy approval stage |
 | 5. Break down | `project-manager` | reads `tasks.md` | Creates Paperclip sub-tasks, one per task group |
 | 6. Implement | implementers | `/opsx:apply` on the change | development-cycle per sub-task |
 | 7. Archive | `project-manager` after merge | `/opsx:archive <change>` merges deltas into `specs/` | Separate small Task and PR |
@@ -56,4 +56,4 @@ Then record `specs.tool: openspec` in the project's registry entry. The flags fo
 Installed 1.11.0 is older than the latest 1.16.0. Pin a version in the registry before adoption and run `openspec update` in each Game Repository after upgrading (`update` refreshes instruction files, `VERIFIED` help text).
 
 ## Related documents
-- [../design/dependency-system.md](../design/dependency-system.md) · [../../workflows/development-cycle.md](../../workflows/development-cycle.md) · [../../agents/game-designer/AGENTS.md](../../agents/game-designer/AGENTS.md)
+- [../design/dependency-system.md](../design/dependency-system.md) · [../../knowledge/company/workflows/development-cycle.md](../../knowledge/company/workflows/development-cycle.md) · [../../knowledge/departments/game/agents/game-designer/AGENTS.md](../../knowledge/departments/game/agents/game-designer/AGENTS.md)

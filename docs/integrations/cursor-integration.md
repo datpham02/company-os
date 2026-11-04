@@ -3,7 +3,7 @@
 **Provider ID:** `cursor` (Paperclip adapter type; package `@paperclipai/adapter-cursor-local`) · **Verified against:** `agent --help` of Cursor CLI **2026.10.22-27dcf5f**, installed on the Windows studio machine on 2026-11-03 with the official installer (`irm 'https://cursor.com/install?win32=true' | iex`, from https://cursor.com/docs/cli/installation). Paperclip adapter behavior was read from the installed `@paperclipai/adapter-cursor-local` 2026.1023.0 package and checked with Test Environment; no Task has run through it yet. Labels follow [../conventions.md](../conventions.md).
 
 ## 1. Role in the studio
-Third AI Execution Provider, added on 2026-11-03 through [add-execution-provider.md](../../workflows/add-execution-provider.md). It is registered as an additional provider. It does not replace Codex (ADR-008).
+Third AI Execution Provider, added on 2026-11-03 through [add-execution-provider.md](../../knowledge/company/workflows/add-execution-provider.md). It is registered as an additional provider. It does not replace Codex (ADR-008).
 
 Main reason to use it: Cursor can run non-Claude models. That gives `qa` a different model from most implementers without needing an OpenAI account. Stage 1: Paperclip's `cursor` adapter. Stage 2: a Runtime Cursor Provider Adapter (`PLANNED`).
 

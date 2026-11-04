@@ -6,12 +6,12 @@
 
 | Concept | What it is | Where it is defined | Example |
 |---|---|---|---|
-| **Agent Role** | Responsibilities and authority, independent of any AI vendor | `agents/<agent-id>/AGENTS.md` | `gameplay-programmer` |
+| **Agent Role** | Responsibilities and authority, independent of any AI vendor | `knowledge/company/agents/<agent-id>/AGENTS.md` | `gameplay-programmer` |
 | **Agent Instance** | A registered Paperclip agent fulfilling a role on a specific provider | Paperclip | "Gameplay Programmer (Codex)" |
 | **AI Execution Provider** | The CLI that does the reasoning and editing | [dependencies/registry.yaml](../../dependencies/registry.yaml), integration docs | Claude Code CLI |
 | **Skill** | Loadable know-how package (`SKILL.md`) | External skill packs, registered as Dependencies | Godot scene skill |
 | **Tool** | Executable capability: CLI program or MCP server | Dependencies | Playwright MCP, `git`, `gh`, OpenSpec CLI |
-| **Workflow** | Multi-step process across roles with gates | `workflows/` | development-cycle |
+| **Workflow** | Multi-step process across roles with gates | `knowledge/company/workflows/` | development-cycle |
 
 Rules:
 - A role MUST NOT require a specific Provider. It MAY state a *preferred* Provider in metadata.
@@ -43,7 +43,7 @@ Status: `APPROVED` (ADR-012, accepted 2026-11-03). YAML frontmatter compatible w
 
 ```yaml
 ---
-slug: gameplay-programmer          # optional; Paperclip URL key, only when it differs from the directory name (agents/qa uses qa-engineer)
+slug: gameplay-programmer          # optional; Paperclip URL key, only when it differs from the directory name (knowledge/company/agents/qa uses qa-engineer)
 name: Gameplay Programmer          # Agent Companies field
 title: Gameplay Programmer         # Agent Companies field (Paperclip title)
 reportsTo: project-manager         # Agent ID of the manager; null for the root
@@ -57,7 +57,7 @@ metadata:
     preferredProviders: [claude_local, codex_local]   # superseded by `allocation` (provider-allocation.md); kept until ADR-015 is decided
     tools: [git, github-cli, openspec] # dependency IDs from dependencies/registry.yaml; `git` is assumed present
     canWriteCode: true
-    allocation:                    # inputs to docs/design/provider-allocation.md
+    allocation:                    # inputs to knowledge/company/policies/provider-allocation.md
       workType: [implementation]   # planning | implementation | review | ui-design | docs | long-context; main one first
       workload: 3                  # relative token use: implementer 3, designer/reviewer 2, others 1
       writesCode: true
@@ -74,9 +74,9 @@ Constraints on the file:
 ## 4. From role to running agent
 
 1. Role defined in Git (this repository).
-2. Board Operator registers an Agent Instance in Paperclip ([agent-onboarding.md](../../workflows/agent-onboarding.md)): name, title, `reportsTo`, capabilities (from the role's description), adapter type (`claude_local` / `codex_local`, or `process` in Stage 2), adapter config (cwd strategy, model, timeout, permission flags derived from `permissionProfile`), budget.
+2. Board Operator registers an Agent Instance in Paperclip ([agent-onboarding.md](../../knowledge/company/workflows/agent-onboarding.md)): name, title, `reportsTo`, capabilities (from the role's description), adapter type (`claude_local` / `codex_local`, or `process` in Stage 2), adapter config (cwd strategy, model, timeout, permission flags derived from `permissionProfile`), budget.
 3. Instructions: the `AGENTS.md` body is supplied to the instance (Paperclip import or adapter instruction settings, OQ-023).
-4. Paperclip wakes the instance on heartbeats; each Run follows [development-cycle.md](../../workflows/development-cycle.md).
+4. Paperclip wakes the instance on heartbeats; each Run follows [development-cycle.md](../../knowledge/company/workflows/development-cycle.md).
 
 **Multiple instances of one role.** To run Tasks for the same role in parallel, register additional instances (e.g. `gameplay-programmer-2`). Whether one Paperclip agent can run concurrent heartbeats for different Tasks is `UNVERIFIED` (OQ-030).
 
@@ -89,21 +89,21 @@ Every Agent Instance MUST, on every Run:
 4. Work only in the provided Task Workspace and on its Task Branch.
 5. Post a comment summarizing what it did, what remains, and links (branch, PR) before the Run ends. Paperclip enforces "comment required" (`VERIFIED`).
 6. Never mark its own code change `done`; move it to `in_review`.
-7. Follow [../../company/RULES.md](../../company/RULES.md).
-8. Follow the task hygiene in [task-contract.md](task-contract.md): stay in the write set, one Task in progress, the blocker lines, record review decisions. Agents cannot read this repository at run time, so each role file repeats these rules in its own `## Task hygiene` section.
+7. Follow [../../knowledge/company/policies/rules.md](../../knowledge/company/policies/rules.md).
+8. Follow the task hygiene in [task-contract.md](../../knowledge/company/standards/task-contract.md): stay in the write set, one Task in progress, the blocker lines, record review decisions. Agents cannot read this repository at run time, so each role file repeats these rules in its own `## Task hygiene` section.
 
 ## 6. Defined roles (v1)
 
 | Agent ID | Reports to | Permission profile | Writes code |
 |---|---|---|---|
-| [`game-director`](../../agents/game-director/AGENTS.md) | — (root) | read-only | No |
-| [`producer`](../../agents/producer/AGENTS.md) | `game-director` | read-only | No |
-| [`project-manager`](../../agents/project-manager/AGENTS.md) | `producer` | read-only | No |
-| [`game-designer`](../../agents/game-designer/AGENTS.md) | `game-director` | workspace-write (docs/specs only) | No |
-| [`gameplay-programmer`](../../agents/gameplay-programmer/AGENTS.md) | `project-manager` | workspace-write | Yes |
-| [`ui-designer`](../../agents/ui-designer/AGENTS.md) | `project-manager` | workspace-write | Yes (UI) |
-| [`qa`](../../agents/qa/AGENTS.md) | `project-manager` | workspace-write (tests only) | Tests only |
-| [`web-engineer`](../../agents/web-engineer/AGENTS.md) | `project-manager` | workspace-write (dev/test environments only) | Yes (platform projects, ADR-014) |
+| [`director`](../../knowledge/company/agents/director/AGENTS.md) | — (root) | read-only | No |
+| [`producer`](../../knowledge/company/agents/producer/AGENTS.md) | `director` | read-only | No |
+| [`project-manager`](../../knowledge/company/agents/project-manager/AGENTS.md) | `producer` | read-only | No |
+| [`game-designer`](../../knowledge/departments/game/agents/game-designer/AGENTS.md) | `director` | workspace-write (docs/specs only) | No |
+| [`gameplay-programmer`](../../knowledge/departments/game/agents/gameplay-programmer/AGENTS.md) | `project-manager` | workspace-write | Yes |
+| [`ui-designer`](../../knowledge/company/agents/ui-designer/AGENTS.md) | `project-manager` | workspace-write | Yes (UI) |
+| [`qa`](../../knowledge/company/agents/qa/AGENTS.md) | `project-manager` | workspace-write (tests only) | Tests only |
+| [`web-engineer`](../../knowledge/departments/web/agents/web-engineer/AGENTS.md) | `project-manager` | workspace-write (dev/test environments only) | Yes (platform projects, ADR-014) |
 
 ## Related documents
-- [company-design.md](company-design.md) · [../decisions/ADR-012-agent-definition-format.md](../decisions/ADR-012-agent-definition-format.md) · [../../workflows/agent-onboarding.md](../../workflows/agent-onboarding.md) · [../architecture/security-architecture.md](../architecture/security-architecture.md)
+- [company-design.md](company-design.md) · [../decisions/ADR-012-agent-definition-format.md](../decisions/ADR-012-agent-definition-format.md) · [../../knowledge/company/workflows/agent-onboarding.md](../../knowledge/company/workflows/agent-onboarding.md) · [../architecture/security-architecture.md](../architecture/security-architecture.md)

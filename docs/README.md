@@ -26,15 +26,15 @@ Game Studio is a reusable framework for running an AI-powered, multi-project gam
 5. **Humans approve merges.** No agent merges unreviewed work ([ADR-009](decisions/ADR-009-approval-before-merge.md)).
 6. **Register, don't vendor.** External tools are referenced, never copied in ([ADR-007](decisions/ADR-007-external-dependency-registry.md)).
 7. **Runtime data stays local.** Logs, state, and worktrees live outside the repository ([ADR-010](decisions/ADR-010-runtime-data-outside-repository.md)).
-8. **Verified claims only.** Unverified behaviour is labelled `UNVERIFIED` and tracked in [open-questions.md](architecture/open-questions.md).
+8. **Verified claims only.** Unverified behaviour is labelled `UNVERIFIED` and tracked in [open-questions.md](roadmap/open-questions.md).
 
 ## 3. Reading order
 
 | You are… | Read in this order |
 |---|---|
-| **An AI agent new to the repo** | [guides/ai-agent-onboarding.md](guides/ai-agent-onboarding.md) → [glossary.md](glossary.md) → [architecture/overview.md](architecture/overview.md) → the documents for your task |
-| **The Board Operator** | [architecture/overview.md](architecture/overview.md) → [decisions/README.md](decisions/README.md) → [architecture/open-questions.md](architecture/open-questions.md) → [operations/installation.md](operations/installation.md) |
-| **An implementer of the Runtime** | [guides/implementation-roadmap.md](guides/implementation-roadmap.md) → [architecture/runtime-architecture.md](architecture/runtime-architecture.md) → [integrations/paperclip-integration.md](integrations/paperclip-integration.md) → [architecture/security-architecture.md](architecture/security-architecture.md) |
+| **An AI agent new to the repo** | [guides/ai-agent-onboarding.md](guides/ai-agent-onboarding.md) → [terminology.md](vision/terminology.md) → [architecture/overview.md](architecture/overview.md) → the documents for your task |
+| **The Board Operator** | [architecture/overview.md](architecture/overview.md) → [decisions/README.md](decisions/README.md) → [roadmap/open-questions.md](roadmap/open-questions.md) → [operations/installation.md](operations/installation.md) |
+| **An implementer of the Runtime** | [roadmap/phases.md](roadmap/phases.md) → [architecture/runtime-architecture.md](architecture/runtime-architecture.md) → [integrations/paperclip-integration.md](integrations/paperclip-integration.md) → [architecture/security-architecture.md](architecture/security-architecture.md) |
 | **Defining agents or workflows** | [design/company-design.md](design/company-design.md) → [design/agent-system.md](design/agent-system.md) → [design/workflow-system.md](design/workflow-system.md) |
 
 ## 4. Authority
@@ -43,13 +43,15 @@ The hierarchy below is defined in [conventions.md §3](conventions.md#3-source-o
 
 1. Accepted ADRs → 2. Architecture → 3. Design → 4. Workflows → 5. Integrations → 6. Operations → 7. READMEs and guides.
 
-Conflicts are never resolved silently. They are logged in [architecture/open-questions.md § Conflicts](architecture/open-questions.md#conflicts).
+Conflicts are never resolved silently. They are logged in [architecture/open-questions.md § Conflicts](roadmap/open-questions.md#conflicts).
 
 ## 5. Document map
 
 ### Foundations
 - [conventions.md](conventions.md): normative terms, status labels, hierarchy, ownership, naming.
-- [glossary.md](glossary.md): the single definition of every term.
+
+### Vision (`vision/`)
+- [terminology.md](vision/terminology.md): the single definition of every term.
 
 ### Architecture (`architecture/`)
 - [overview.md](architecture/overview.md): vision, components, flows, boundaries.
@@ -59,7 +61,7 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 - [data-flow.md](architecture/data-flow.md): what flows between Paperclip, Game Studio, Runtime, providers, Git, tools.
 - [security-architecture.md](architecture/security-architecture.md): credentials, permissions, approval boundaries.
 - [stage1-gap-analysis.md](architecture/stage1-gap-analysis.md): requirements Paperclip did not meet in Stage 1, and the response to each.
-- [open-questions.md](architecture/open-questions.md): unverified assumptions (`OQ-NNN`) and conflicts (`C-NNN`).
+- [company-os-migration-map.md](architecture/company-os-migration-map.md): file-by-file restructure into `knowledge/` and departments (M1 done 2026-11-05).
 
 ### Design (`design/`)
 - [company-design.md](design/company-design.md): organization, hierarchy, decision authority.
@@ -68,12 +70,6 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 - [project-system.md](design/project-system.md): project registration, configuration, lifecycle, isolation.
 - [dependency-system.md](design/dependency-system.md): dependency registry, categories, versions, licenses.
 - [integration-system.md](design/integration-system.md): integration boundaries and adapter responsibilities.
-- [game-platform-contract.md](design/game-platform-contract.md): how games and platform projects work together (`PLANNED`, filled by GAM-16).
-- [task-contract.md](design/task-contract.md): task fields, splitting, conflict prevention, WIP, blocker protocol, liveness (`PROPOSED`).
-- [provider-allocation.md](design/provider-allocation.md): how agents are spread over however many AI providers the Board has (`PROPOSED`).
-
-### Workflows (`../workflows/`)
-- [../workflows/README.md](../workflows/README.md): index of the 13 studio workflows.
 
 ### Integrations (`integrations/`)
 - [paperclip-integration.md](integrations/paperclip-integration.md)
@@ -86,23 +82,30 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 - [decisions/README.md](decisions/README.md): ADR index and process.
 
 ### Operations (`operations/`)
-- [windows-setup.md](operations/windows-setup.md), [installation.md](operations/installation.md), [studio-bootstrap.md](operations/studio-bootstrap.md), [configuration.md](operations/configuration.md), [runtime-management.md](operations/runtime-management.md), [logging-and-debugging.md](operations/logging-and-debugging.md), [backup-and-recovery.md](operations/backup-and-recovery.md), [troubleshooting.md](operations/troubleshooting.md), [security-operations.md](operations/security-operations.md)
+- [windows-setup.md](operations/windows-setup.md), [installation.md](operations/installation.md), [company-bootstrap.md](operations/company-bootstrap.md), [configuration.md](operations/configuration.md), [runtime-management.md](operations/runtime-management.md), [logging-and-debugging.md](operations/logging-and-debugging.md), [backup-and-recovery.md](operations/backup-and-recovery.md), [troubleshooting.md](operations/troubleshooting.md), [security-operations.md](operations/security-operations.md)
 
 ### Guides (`guides/`)
 - [ai-agent-onboarding.md](guides/ai-agent-onboarding.md): answers the ten orientation questions every new agent needs.
-- [implementation-roadmap.md](guides/implementation-roadmap.md): what to build, in what order, and what must be verified first.
 
-### Studio content (outside `docs/`)
-- [../company/](../company/): COMPANY, ORGANIZATION, RULES, OPERATING_MODEL.
-- [../agents/](../agents/): eight agent role definitions (`web-engineer` added by ADR-014).
-- [../projects/](../projects/): project registry and configuration schema.
+### Roadmap (`roadmap/`)
+- [phases.md](roadmap/phases.md): what to build, in what order, and what must be verified first.
+- [open-questions.md](roadmap/open-questions.md): unverified assumptions (`OQ-NNN`) and conflicts (`C-NNN`).
+
+### Company knowledge (`../knowledge/`, ADR-019)
+- [../knowledge/README.md](../knowledge/README.md): scopes and loading order.
+- [../knowledge/company/README.md](../knowledge/company/README.md): Company Core: COMPANY, ORGANIZATION, OPERATING_MODEL, policies (rules, provider allocation), standards (task contract), shared roles, company workflows, cross-department contracts (game–platform contract).
+- [../knowledge/departments/README.md](../knowledge/departments/README.md): Game and Web charters, department roles, workflows and domain rules.
+- [../knowledge/projects/README.md](../knowledge/projects/README.md): project registry, schema and entrypoints.
+
+### Outside `docs/` and `knowledge/`
 - [../dependencies/](../dependencies/): external dependency registry.
-- [../runtime/README.md](../runtime/README.md): Runtime placeholder (`PLANNED`).
+- [../config/](../config/), [../scripts/](../scripts/): Paperclip agent configuration, setup and maintenance scripts.
+- [../runtime/README.md](../runtime/README.md): Runtime gap filler and start script; the Runtime itself is `PLANNED`.
 
 ## 6. How AI agents should navigate
 
 1. Start at [guides/ai-agent-onboarding.md](guides/ai-agent-onboarding.md). It links to the authoritative answer for each core question.
-2. Before acting on a claim about an external system, check its status label. Do not rely on `UNVERIFIED` behaviour; consult [open-questions.md](architecture/open-questions.md).
+2. Before acting on a claim about an external system, check its status label. Do not rely on `UNVERIFIED` behaviour; consult [open-questions.md](roadmap/open-questions.md).
 3. Before proposing an architectural change, read the relevant ADR. Accepted ADRs are binding.
 4. When documents disagree, apply [conventions.md §3](conventions.md#3-source-of-truth-hierarchy) and log the conflict.
-5. Use [glossary.md](glossary.md) terms exactly. "Task" means a Paperclip issue; "Run" means one CLI process execution.
+5. Use [terminology.md](vision/terminology.md) terms exactly. "Task" means a Paperclip issue; "Run" means one CLI process execution.

@@ -56,4 +56,4 @@ Switching an Agent Instance to `bypass` (Claude `dangerouslySkipPermissions`, Co
 - [ ] Paperclip version vs. pinned version
 
 ## Related documents
-[../architecture/security-architecture.md](../architecture/security-architecture.md) · [../../company/RULES.md](../../company/RULES.md)
+[../architecture/security-architecture.md](../architecture/security-architecture.md) · [../../knowledge/company/policies/rules.md](../../knowledge/company/policies/rules.md)

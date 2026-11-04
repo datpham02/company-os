@@ -1,6 +1,6 @@
 # Dependencies
 
-External tools the studio uses or is evaluating. The data is in [registry.yaml](registry.yaml). The rules are in [../docs/design/dependency-system.md](../docs/design/dependency-system.md), and the process for adding one is [../workflows/add-external-dependency.md](../workflows/add-external-dependency.md).
+External tools the studio uses or is evaluating. The data is in [registry.yaml](registry.yaml). The rules are in [../docs/design/dependency-system.md](../docs/design/dependency-system.md), and the process for adding one is [../knowledge/company/workflows/add-external-dependency.md](../knowledge/company/workflows/add-external-dependency.md).
 
 **Nothing in this directory is vendored code** ([ADR-007](../docs/decisions/ADR-007-external-dependency-registry.md)).
 

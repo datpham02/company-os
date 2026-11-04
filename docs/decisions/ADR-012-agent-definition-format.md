@@ -26,7 +26,7 @@ Agent Roles must be defined in Git, provider-independent, and loadable into Pape
 - Codex treats `AGENTS.md` as instructions for the directory it lives in. These files are only loaded if Codex is started inside `agents/<agent-id>/`, which the studio does not do.
 - The format is a draft (`v1-draft`); upstream changes must be tracked (OQ-007).
 - Paperclip **copies** each role's instructions into its own data directory at import time. Git stays the source of truth, but a change to `agents/<id>/AGENTS.md` reaches Paperclip only after a re-import (`--collision replace`) or a manual update (OQ-023).
-- Imported agents get Paperclip defaults (adapter `claude_local`, budget 0, ACP engine, agent creation allowed). Adapter config, permission profiles and budgets are set after import ([agent-onboarding.md](../../workflows/agent-onboarding.md)).
+- Imported agents get Paperclip defaults (adapter `claude_local`, budget 0, ACP engine, agent creation allowed). Adapter config, permission profiles and budgets are set after import ([agent-onboarding.md](../../knowledge/company/workflows/agent-onboarding.md)).
 
 ## Reconsider when
 - The Agent Companies format changes incompatibly, or

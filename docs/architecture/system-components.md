@@ -25,7 +25,7 @@ Interface details: [../integrations/paperclip-integration.md](../integrations/pa
 | | |
 |---|---|
 | **Purpose** | Single source of truth for *what the studio is*: identity, organization, rules, operating model. |
-| **Responsibilities** | Maintain [company/](../../company/) files; define decision authority and approval policy; version the studio definition (VERSION, CHANGELOG). |
+| **Responsibilities** | Maintain [../../knowledge/company/](../../knowledge/company/) files; define decision authority and approval policy; version the studio definition (VERSION, CHANGELOG). |
 | **Inputs** | Board Operator decisions; accepted ADRs. |
 | **Outputs** | Markdown definitions consumed by agents, by Paperclip setup ([company-design.md](../design/company-design.md)), and by the Runtime. |
 | **Dependencies** | None at runtime. |
@@ -40,8 +40,8 @@ Interface details: [../integrations/paperclip-integration.md](../integrations/pa
 |---|---|
 | **Purpose** | Reusable, provider-independent definition of each Agent Role. |
 | **Responsibilities** | Define ID, name, role, mission, responsibilities, authority, capabilities, tools, inputs, outputs, constraints, collaboration, escalation, success criteria. |
-| **Inputs** | [agent-system.md](../design/agent-system.md) contract; [company/ORGANIZATION.md](../../company/ORGANIZATION.md). |
-| **Outputs** | `agents/<agent-id>/AGENTS.md`, used as (a) the instruction body given to the Provider at Run time, (b) the source for registering Agent Instances in Paperclip. |
+| **Inputs** | [agent-system.md](../design/agent-system.md) contract; [../../knowledge/company/ORGANIZATION.md](../../knowledge/company/ORGANIZATION.md). |
+| **Outputs** | `knowledge/company/agents/<agent-id>/AGENTS.md`, used as (a) the instruction body given to the Provider at Run time, (b) the source for registering Agent Instances in Paperclip. |
 | **Dependencies** | Skills and Tools named in each definition must be registered in [dependencies/registry.yaml](../../dependencies/registry.yaml) before use. |
 | **Must not** | Name a specific Provider as mandatory; contain adapter config, secrets, or absolute paths (ADR-012). |
 | **Status** | 7 roles defined. Format accepted (ADR-012); imported into Paperclip on 2026-11-03. |
@@ -67,8 +67,8 @@ Interface details: [../integrations/paperclip-integration.md](../integrations/pa
 | | |
 |---|---|
 | **Purpose** | Map each Game Project to its repository, configuration, and Paperclip project. |
-| **Responsibilities** | Hold one entry per Game Project ([projects/project-registry.yaml](../../projects/project-registry.yaml)); validate entries against [projects/project-config.schema.yaml](../../projects/project-config.schema.yaml). |
-| **Inputs** | [project-initialization.md](../../workflows/project-initialization.md), [register-existing-repository.md](../../workflows/register-existing-repository.md). |
+| **Responsibilities** | Hold one entry per Game Project ([projects/project-registry.yaml](../../knowledge/projects/registry.yaml)); validate entries against [projects/project-config.schema.yaml](../../knowledge/projects/project-config.schema.yaml). |
+| **Inputs** | [project-initialization.md](../../knowledge/company/workflows/project-initialization.md), [register-existing-repository.md](../../knowledge/company/workflows/register-existing-repository.md). |
 | **Outputs** | Project ID → repository URL, default branch, engine, enabled agents, dependencies, workflow overrides, Paperclip project ID. |
 | **Dependencies** | GitHub (repository exists); Paperclip (project exists). |
 | **Must not** | Contain local absolute paths or credentials (those belong in local Runtime config, ADR-010). |
@@ -82,7 +82,7 @@ Interface details: [../integrations/paperclip-integration.md](../integrations/pa
 |---|---|
 | **Purpose** | Record every external tool the studio may use, without copying it. |
 | **Responsibilities** | Hold one entry per Dependency with source, category, version constraint, install reference, required/optional, integration status, compatibility, license. |
-| **Inputs** | [add-external-dependency.md](../../workflows/add-external-dependency.md). |
+| **Inputs** | [add-external-dependency.md](../../knowledge/company/workflows/add-external-dependency.md). |
 | **Outputs** | [dependencies/registry.yaml](../../dependencies/registry.yaml); used by setup docs, agents, and (later) Runtime validation. |
 | **Dependencies** | None. |
 | **Must not** | Vendor external source (ADR-007); imply that a listed dependency is approved for installation. |

@@ -1,5 +1,5 @@
 {
-  "_comment": "Portable Paperclip agent configuration. No secrets, no machine paths. {PREFIX} is the company issue prefix. Built into a package by scripts/setup/build-package.py (docs/operations/studio-bootstrap.md).",
+  "_comment": "Portable Paperclip agent configuration. No secrets, no machine paths. {PREFIX} is the company issue prefix. Built into a package by scripts/setup/build-package.py (docs/operations/company-bootstrap.md).",
   "company": {
     "name": "Soucean"
   },
@@ -98,7 +98,8 @@
     }
   },
   "agents": {
-    "game-director": {
+    "director": {
+      "department": "company",
       "profile": "claude-read-only",
       "permissions": {
         "canCreateAgents": true,
@@ -106,6 +107,7 @@
       }
     },
     "producer": {
+      "department": "company",
       "profile": "claude-read-only",
       "permissions": {
         "canCreateAgents": true,
@@ -113,6 +115,7 @@
       }
     },
     "project-manager": {
+      "department": "company",
       "profile": "claude-read-only",
       "permissions": {
         "canCreateAgents": true,
@@ -120,6 +123,7 @@
       }
     },
     "game-designer": {
+      "department": "game",
       "profile": "claude-workspace-write",
       "permissions": {
         "canCreateSkills": true
@@ -129,6 +133,7 @@
       ]
     },
     "ui-designer": {
+      "department": "company",
       "profile": "claude-workspace-write",
       "permissions": {
         "canCreateSkills": true
@@ -142,6 +147,7 @@
       ]
     },
     "qa-engineer": {
+      "department": "company",
       "profile": "claude-workspace-write",
       "permissions": {
         "canCreateSkills": true
@@ -151,6 +157,7 @@
       ]
     },
     "gameplay-programmer": {
+      "department": "game",
       "profile": "cursor-workspace-write",
       "permissions": {
         "canCreateSkills": true
@@ -160,6 +167,7 @@
       ]
     },
     "web-engineer": {
+      "department": "web",
       "profile": "cursor-workspace-write",
       "permissions": {},
       "secrets": [
@@ -172,13 +180,15 @@
       "name": "Lamplight Vigil",
       "repo": "datpham02/lamplight-vigil",
       "lead": "producer",
-      "description": "2D arcade survival game about aiming light. Phaser 3 + TypeScript. Repository datpham02/lamplight-vigil (public)."
+      "description": "2D arcade survival game about aiming light. Phaser 3 + TypeScript. Repository datpham02/lamplight-vigil (public).",
+      "department": "game"
     },
     "soucean-game": {
       "name": "Soucean Game",
       "repo": "datpham02/soucean-game",
       "lead": "producer",
-      "description": "Multi-game website (platform project, ADR-014). Lists and hosts the studio games; ads only on the website page, never inside a game. Repository datpham02/soucean-game (public); its plans live in that repository."
+      "description": "Multi-game website (platform project, ADR-014). Lists and hosts the studio games; ads only on the website page, never inside a game. Repository datpham02/soucean-game (public); its plans live in that repository.",
+      "department": "web"
     }
   }
 }

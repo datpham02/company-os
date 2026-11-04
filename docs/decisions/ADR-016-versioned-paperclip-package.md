@@ -3,7 +3,7 @@
 - **Status:** Proposed
 - **Date:** 2026-11-04
 - **Deciders:** Board Operator
-- **Related:** ADR-012, OQ-007, OQ-023, OQ-031, OQ-040, [studio-bootstrap.md](../operations/studio-bootstrap.md)
+- **Related:** ADR-012, OQ-007, OQ-023, OQ-031, OQ-040, [studio-bootstrap.md](../operations/company-bootstrap.md)
 
 ## Context
 ADR-012 imports roles from Git, but adapter config, permission allowlists, budgets and limits were then set by hand in the UI, and are not versioned. Facts checked on 2026-11-04 (Paperclip 2026.1023.0):

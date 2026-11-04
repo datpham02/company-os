@@ -15,7 +15,7 @@
 
 ## 2. Minimum routine (`PROPOSED`)
 
-- Agents push Task Branches at the end of every Run ([development-cycle.md](../../workflows/development-cycle.md) step 8), so the remote holds nearly all work.
+- Agents push Task Branches at the end of every Run ([development-cycle.md](../../knowledge/company/workflows/development-cycle.md) step 8), so the remote holds nearly all work.
 - Weekly: `npx paperclipai company export` into a private location outside all repositories.
 - Before every Paperclip upgrade: export, and back up the Paperclip data directory once its location and safe-copy procedure are verified (OQ-025).
 

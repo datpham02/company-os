@@ -57,9 +57,9 @@ Currently registered in Claude Code (`claude mcp list`, 2026-11-03): `playwright
 
 ## 6. Studio setup in Paperclip
 
-Import the company and agents instead of creating them in the UI: [studio-bootstrap.md](studio-bootstrap.md). The manual route below remains for reference. Follow [../integrations/paperclip-integration.md §9](../integrations/paperclip-integration.md#9-setup-procedure-summary):
-1. Create the company from [../../company/COMPANY.md](../../company/COMPANY.md).
-2. Create agents from [../../company/ORGANIZATION.md](../../company/ORGANIZATION.md) via [../../workflows/agent-onboarding.md](../../workflows/agent-onboarding.md).
+Import the company and agents instead of creating them in the UI: [company-bootstrap.md](company-bootstrap.md). The manual route below remains for reference. Follow [../integrations/paperclip-integration.md §9](../integrations/paperclip-integration.md#9-setup-procedure-summary):
+1. Create the company from [../../knowledge/company/COMPANY.md](../../knowledge/company/COMPANY.md).
+2. Create agents from [../../knowledge/company/ORGANIZATION.md](../../knowledge/company/ORGANIZATION.md) via [../../knowledge/company/workflows/agent-onboarding.md](../../knowledge/company/workflows/agent-onboarding.md).
 3. Add the GitHub token as a company secret named `GITHUB_TOKEN`/`GH_TOKEN`/`PAPERCLIP_GITHUB_TOKEN` (`VERIFIED` names) and bind it to code-writing agents.
 
 Optional, `UNVERIFIED` (OQ-007): preview a company import without writing:

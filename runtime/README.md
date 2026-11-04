@@ -6,7 +6,7 @@ The Agent Runtime executes Tasks locally on the studio's Windows machine ([ADR-0
 
 - Design: [../docs/architecture/runtime-architecture.md](../docs/architecture/runtime-architecture.md)
 - Component contracts: [../docs/architecture/system-components.md](../docs/architecture/system-components.md) §8–13
-- Before writing code: [../docs/guides/implementation-roadmap.md](../docs/guides/implementation-roadmap.md) Phase 0 and Phase 2
+- Before writing code: [../docs/roadmap/phases.md](../docs/roadmap/phases.md) Phase 0 and Phase 2
 
 Planned layout (directories are created with the first code, not before):
 

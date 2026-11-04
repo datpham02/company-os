@@ -24,7 +24,7 @@
    echo "Respond with hello." | codex exec --json -
    ```
    (Both are the same probes Paperclip's environment tests use, `VERIFIED`.)
-6. Record the cause in the Task ([task-failure-handling.md](../../workflows/task-failure-handling.md) step 5).
+6. Record the cause in the Task ([task-failure-handling.md](../../knowledge/company/workflows/task-failure-handling.md) step 5).
 
 ## 3. Logging rules
 

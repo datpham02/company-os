@@ -12,7 +12,7 @@ The studio needs company management, agent registration, a project and task trac
 - Paperclip MUST be used as an independent application. It MUST NOT be forked into, vendored into, or developed inside the Game Studio repository.
 - Paperclip owns: company and organization records, agent registration and status, projects, tasks (issues), assignment, task status, approvals, heartbeat scheduling, budgets, and the audit log.
 - Game Studio owns: the *definitions* that Paperclip is configured from (roles, rules, workflows, project registry, dependencies) and any execution capability Paperclip lacks.
-- Game Studio MUST NOT re-implement a capability Paperclip provides unless a documented integration gap requires it. Every such gap MUST be recorded in [open-questions.md](../architecture/open-questions.md) or an ADR.
+- Game Studio MUST NOT re-implement a capability Paperclip provides unless a documented integration gap requires it. Every such gap MUST be recorded in [open-questions.md](../roadmap/open-questions.md) or an ADR.
 - Game Studio MUST use only Paperclip interfaces that are documented by Paperclip (REST API, CLI, adapters, plugin system, company import/export).
 
 ## Alternatives considered
