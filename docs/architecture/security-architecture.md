@@ -124,7 +124,7 @@ Agents MUST NOT run (enforced by Provider deny lists where possible, and by rule
 | Budget override | Yes | Board Operator | Paperclip `budget_override_required` (`VERIFIED` type) |
 | Create an external account or project for a platform (backend, hosting, domain, ad network, payments) | Yes (ADR-014) | Board Operator | Paperclip issue comment |
 | Production deploy, production migration or production secret change | Yes (ADR-014) | Board Operator, who also performs it | Platform repository release notes |
-| Merge a security-sensitive platform PR (auth, RLS, reward or payment code) | Yes: human review **plus** `qa` (ADR-014) | Board Operator | GitHub PR review + Paperclip |
+| Merge a security-sensitive platform PR (auth, authorization, score validation, reward or payment code) | Yes: human review **plus** `qa` (ADR-014) | Board Operator | GitHub PR review + Paperclip |
 
 ## 9. Destructive operation safeguards
 

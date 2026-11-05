@@ -171,6 +171,23 @@ dependencies:
     compatibility: "Needs a Hoppscotch account/instance (HOPPSCOTCH_SERVER_URL for self-hosted, per official docs). Only relevant for games with HTTP backends."
     notes: "License not checked (repository not cloned). Need: OQ-026."
 
+  - id: docker-desktop
+    name: Docker Desktop (Docker Engine and Compose)
+    category: development-tools
+    source:
+      repository: https://docs.docker.com/desktop/
+    license: "Docker Subscription Service Agreement (free for small businesses and personal use; check the terms when the company grows)"
+    required: false
+    versionConstraint: ">=27.0"
+    verifiedVersion: "Docker CLI 27.5.1 on the Windows company machine (2026-11-05); engine not running at check time"
+    install:
+      strategy: global-cli
+      reference: https://docs.docker.com/desktop/setup/install/windows-install/
+    integrationStatus: approved
+    usedBy: [web-engineer, qa]
+    compatibility: "Windows engine uses the WSL2 backend. Only for platform projects' local stack (ADR-021); not used by Paperclip or agents' host processes (ADR-013)."
+    notes: "Board starts the stack; agents only run the listed test command. Docker access can mount host paths, so allowlists name exact commands."
+
   - id: github-cli
     name: GitHub CLI
     category: development-tools
