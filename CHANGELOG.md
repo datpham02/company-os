@@ -5,6 +5,9 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
+- Game platform contract version 1 (ADR-020): the Board-approved GAM-16 design (adapter, mount, embedding, manifest, host behaviour, identity, names, server-side validation, weekly boards, data, credentials) recorded in `knowledge/company/shared/game-platform-contract.md`, replacing the placeholder. D4 (provider) stays pending.
+
+### Added
 - `scripts/setup/sync-instructions.py`: pushes role texts from Git into a live Paperclip company (OQ-040). Used on 2026-11-05 after the M1 restructure; `Game Director` renamed `Director` in Soucean; old company `GAM` archived after its open work moved to SOU-1..SOU-10.
 
 ### Changed
