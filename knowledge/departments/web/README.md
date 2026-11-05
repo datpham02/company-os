@@ -8,7 +8,7 @@
 Build and run the platform that lists and hosts the company's games: the website, its backend and its non-production environments.
 
 ## Scope
-- In scope: projects with `type: platform`; frontend, backend schema, migrations, data-access rules (RLS), server functions, deploy configuration for non-production environments.
+- In scope: projects with `type: platform`; frontend, the Laravel + MySQL backend (API, migrations, authorization, Reverb real-time, [ADR-021](../../../docs/decisions/ADR-021-laravel-mysql-backend.md)), deploy configuration for non-production environments. Everything runs locally until the Board decides hosting.
 - Out of scope: game code (games are separate projects); production deploys, production secrets and external accounts (Board only, below); payment code until a payments ADR and legal review exist.
 
 ## Roles
@@ -30,10 +30,10 @@ Build and run the platform that lists and hosts the company's games: the website
 The full rules are in [production-environments.md](domain/production-environments.md). In short:
 - Agents never receive production credentials; they work against dev or test projects only.
 - Production deploys, migrations, secrets, DNS and ad-network settings are Board actions.
-- Auth, RLS, server-side scoring or rewards, secrets configuration, security headers and payment code are security-sensitive: `qa` review **and** a human Board review.
+- Authentication, authorization policies, server-side scoring or rewards, secrets configuration, security headers and payment code are security-sensitive: `qa` review **and** a human Board review.
 
 ## Board-only actions
-Creating the platform repository, the Paperclip project and agent instances, and the Supabase, hosting, domain, ad-network and payment accounts (ADR-014 §6). Agents may propose them and write step-by-step instructions.
+Creating the platform repository, the Paperclip project and agent instances, and the hosting, domain, ad-network and payment accounts (ADR-014 §6). Agents may propose them and write step-by-step instructions.
 
 ## Design tools
 Web-design tools and skills are listed in the dependency registry with category `web-design`. Use only entries with status `approved` or `integrated`, after the supply-chain review ([security-architecture.md §11](../../../docs/architecture/security-architecture.md#11-supply-chain-safety)).
@@ -47,7 +47,7 @@ Web-design tools and skills are listed in the dependency registry with category 
 | Soucean Game | see registry | [knowledge/projects/soucean-game](../../projects/soucean-game/README.md) |
 
 ## Open questions
-OQ-036 (sign-in and free-tier limits), OQ-037 (hosting), OQ-038 (ads and consent), OQ-039 (Vietnamese legal requirements) in [open-questions.md](../../../docs/roadmap/open-questions.md).
+OQ-036 (superseded by ADR-021), OQ-037 (hosting; candidate Vietnix VPS), OQ-038 (ads and consent), OQ-039 (Vietnamese legal requirements) in [open-questions.md](../../../docs/roadmap/open-questions.md).
 
 ## Related
 [../README.md](../README.md) · [../../company/ORGANIZATION.md](../../company/ORGANIZATION.md)

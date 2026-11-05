@@ -2,7 +2,7 @@
 
 - **Status:** `APPROVED`, contract version **1** ([ADR-020](../../../docs/decisions/ADR-020-game-platform-contract.md)).
 - **Source:** designed by `director` (then `game-director`) in Paperclip issue GAM-16 (sections 3 and 4) and approved by the Board on 2026-11-04. GAM-16 is in the archived company "Game Studio Soucean"; this file is now the source of truth.
-- **Pending:** D4, the choice of backend and hosting provider. Provider names below (Supabase, Cloudflare) are the recommended candidates, not decisions. Nothing may depend on a specific provider until the Board decides D4.
+- **Backend (D4, decided 2026-11-05, [ADR-021](../../../docs/decisions/ADR-021-laravel-mysql-backend.md)):** a Laravel (PHP) application with MySQL; no Supabase. Event-driven real-time uses Laravel Reverb; a fast-paced game gets its own game server, decided per game. **Hosting is pending** (candidate: a Vietnix VPS); until then everything runs locally.
 - **Owners:** design `director`; Game side the Game department, platform side the Web department ([shared contract](../../departments/README.md#placement-rules)).
 - **Applies to:** every game and every platform project. Amends [ADR-014](../../../docs/decisions/ADR-014-platform-project-type.md) §3, which pointed here.
 
@@ -20,7 +20,7 @@ onPause(cb) / onResume(cb)   each returns an unsubscribe function
 
 - A game declares only the capabilities it uses, and never calls a capability that is absent from `capabilities`. Lamplight Vigil declares `leaderboard` only.
 - **With no platform injected, the game falls back to `LocalPlatform`**: `localStorage` only, zero network, full gameplay. The same path keeps the game alive when the backend is down.
-- **Review rule:** gameplay code (for a Phaser game: `src/beam`, `src/enemies`, `src/hud`, `src/scenes`) imports nothing backend-related. A grep for the provider name outside the single adapter file fails review.
+- **Review rule:** gameplay code (for a Phaser game: `src/beam`, `src/enemies`, `src/hud`, `src/scenes`) imports nothing backend-related. Network calls to the backend live only in the adapter; a backend URL or HTTP client used outside the adapter fails review.
 
 **Optional capabilities, named now and implemented nowhere yet:**
 
@@ -87,7 +87,7 @@ Each submission carries `player_id`, `game_id`, `week`, `score`, `duration_ms`, 
 - **Per-game plausibility model.** Each game documents the maximum reachable score for a given duration, seed and version, and the server rejects anything above it (with a small tolerance). Lamplight Vigil's model is exact, because its spawn timing is deterministic: `S_max(t) = floor(t × SCORE_PER_SECOND_SURVIVED) + N(t) × SCORE_PER_BANISH`, tolerance 1 % + 1 point.
 - Further checks: counters within the model, minimum duration 1 s, a seed that matches the week.
 - **Rate limits** per player per hour and per IP per hour, generous enough that a real player never meets them.
-- **Database access:** the public (anon) role may read the leaderboard view and execute one validating `submit_score` function. It has no direct insert, update or delete on the scores table. All checks live inside that function.
+- **Database access:** MySQL is never reachable from the internet; the Laravel application is its only client. Clients call the API only: one endpoint to submit a score (which runs every check above) and read-only endpoints for leaderboards. No endpoint updates or deletes scores except Board-only admin actions.
 - **Flag, do not reject,** runs that are plausible but statistically unusual; a human looks at them.
 - No replay verification. A patched client can still submit a plausible false score; this is accepted and published: implausible entries are removed without notice.
 
@@ -109,7 +109,7 @@ Each submission carries `player_id`, `game_id`, `week`, `score`, `duration_ms`, 
 | `seed`, `game_version` | plausibility check |
 | `created_at` | ordering and rate limits |
 
-- No email unless the player links an account. No analytics. No IP column; the privacy note states that the provider processes IP addresses for rate limits and keeps request logs.
+- No email unless the player links an account. No analytics. No IP column in the scores table; the privacy note states that the server processes IP addresses for rate limits and keeps request logs for a limited time.
 - The leaderboard view exposes display name, score, duration, week and rank only, never `player_id`, an auth id or an email.
 - **Retention:** weekly score rows 12 months, then deleted. Deletion on request by `player_id`; the delete control lives in the game or on the website. A player who cleared their site data can no longer be identified, and the privacy note says so.
 - A short privacy note is required **before** the build is public. Consent banner, full policy, Decree 13/2023 and GDPR work are website-level (OQ-039).
@@ -119,16 +119,17 @@ Each submission carries `player_id`, `game_id`, `week`, `score`, `duration_ms`, 
 
 | Credential | Secret? | Held by | May appear |
 |---|---|---|---|
-| Backend public (anon / publishable) key | No, public by design | Board account, injected at build time | The browser bundle and a build-time environment variable; never a literal in a repository (ADR-010) |
-| Backend admin (`service_role`) key | Yes, bypasses row-level security | Board only | Nowhere in a repository, CI, agent environment, issue or comment |
-| Backend account and database password | Yes | Board only | Provider console only |
-| Hosting account and CI deploy token | Yes | Board only | CI secret store, scoped to deploying one project |
+| Player token (issued by Laravel to one anonymous or linked player) | Yes, but only for that player | The player's browser | That browser's storage; never logged |
+| Backend base URL | No | — | Build-time configuration of the game and website |
+| Laravel `APP_KEY`, production `.env` | Yes | Board only | The production server only; never in a repository, CI log, agent environment, issue or comment |
+| Production MySQL password | Yes | Board only | The production server's `.env`; MySQL listens on localhost or a private network only |
+| Server SSH key, hosting account, deploy token | Yes | Board only | Board's machine and password manager; CI secret store if CI deploys, scoped to one project |
 
-**The public key protects nothing; row-level security plus `submit_score` are the boundary.** A review that accepts a weaker policy "because the key is secret" has the model backwards.
+**The Laravel API is the boundary.** The browser never talks to MySQL. Every rule in this contract is enforced in Laravel code (validation, policies, rate limiters), never only in the game client, which an attacker can change.
 
-Agents **may**: write migrations, row-level-security policies and `submit_score` as code for Board review; write client code that reads the public key from a build-time variable; document the backend.
+Agents **may**: write Laravel code, migrations and tests for Board review, and run them against a local database with fake data; write client code that calls the API through the adapter; document the backend.
 
-Agents **may not**: create or own provider accounts; hold, read, request, print or store the admin key, the database password or a deploy token (if one appears anywhere, report it, do not use or echo it, and ask the Board to rotate it); apply migrations to a live project or edit the database by hand; run admin-key operations; add a third-party SDK to a game, in particular **no ad SDK and no analytics SDK**; weaken a policy to make a test pass.
+Agents **may not**: create or own hosting accounts; hold, read, request, print or store a production `APP_KEY`, `.env`, database password, SSH key or deploy token (if one appears anywhere, report it, do not use or echo it, and ask the Board to rotate it); run migrations or commands against a production database, or edit it by hand; run Board-only admin actions; add a third-party SDK to a game, in particular **no ad SDK and no analytics SDK**; weaken a validation rule, policy or rate limit to make a test pass.
 
 Migrations live in the repository and are reviewed like code; the database is never edited by hand in a console. Production rules for the website: [production-environments.md](../../departments/web/domain/production-environments.md).
 
@@ -136,16 +137,17 @@ Migrations live in the repository and are reviewed like code; the database is ne
 
 | Risk | Required mitigation |
 |---|---|
-| A writable public database | No direct write grant; every migration reviewed; a QA test that tries a direct insert, update and delete with the public key and requires all three to be denied |
+| Score tampering through the API | Every check in §7 runs server-side; QA tests that submit an over-ceiling score, a wrong week, a too-short run and a burst over the rate limit, and require all to be rejected |
+| MySQL exposed to the internet | MySQL bound to localhost or a private network; checked at every deploy |
 | Name abuse on a public board | §6 rules and the Board-only hide |
-| A free-tier backend pausing when traffic is low | Decided with D4, before building on a free tier |
+| Server downtime or data loss once hosted | Daily MySQL backups stored outside the server, a tested restore, uptime monitoring (ADR-021) |
 | Personal data creep | §9: every new column goes to the Board |
 
 ## 12. Versioning
 
 - This is contract version **1**. A game's manifest and a platform's `docs/game-platform-contract.md` name the version they implement.
 - Additive changes (a new optional capability, a new manifest field) raise the minor version and keep old games working. Changing or removing anything raises the major version and needs a new ADR.
-- Version 2 is expected to add the iframe message schema and any D4 provider specifics.
+- Version 2 is expected to add the iframe message schema and the API endpoint list.
 
 ## Related documents
 [ADR-020](../../../docs/decisions/ADR-020-game-platform-contract.md) · [ADR-014](../../../docs/decisions/ADR-014-platform-project-type.md) · [Game charter](../../departments/game/README.md) · [Web charter](../../departments/web/README.md) · [security-architecture.md](../../../docs/architecture/security-architecture.md)

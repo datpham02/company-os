@@ -5,7 +5,8 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
-- Game platform contract version 1 (ADR-020): the Board-approved GAM-16 design (adapter, mount, embedding, manifest, host behaviour, identity, names, server-side validation, weekly boards, data, credentials) recorded in `knowledge/company/shared/game-platform-contract.md`, replacing the placeholder. D4 (provider) stays pending.
+- ADR-021: backend is Laravel + MySQL (no Supabase); Laravel Reverb for event-driven real-time, a dedicated server per fast-paced game; everything local in a Docker Compose stack until hosting is decided (candidate Vietnix VPS). Contract, Web production rules, `web-engineer` role, OQ-036/037 and the dependency registry (Docker Desktop) updated; QA may run `docker compose run --rm test`.
+- Game platform contract version 1 (ADR-020): the Board-approved GAM-16 design (adapter, mount, embedding, manifest, host behaviour, identity, names, server-side validation, weekly boards, data, credentials) recorded in `knowledge/company/shared/game-platform-contract.md`, replacing the placeholder. The backend part of D4 is decided in ADR-021.
 
 ### Added
 - `scripts/setup/sync-instructions.py`: pushes role texts from Git into a live Paperclip company (OQ-040). Used on 2026-11-05 after the M1 restructure; `Game Director` renamed `Director` in Soucean; old company `GAM` archived after its open work moved to SOU-1..SOU-10.

@@ -154,6 +154,9 @@
       },
       "secrets": [
         "GH_TOKEN"
+      ],
+      "extraAllowedTools": [
+        "Bash(docker compose run --rm test*)"
       ]
     },
     "gameplay-programmer": {

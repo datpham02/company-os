@@ -45,7 +45,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-033 | How well do Cursor CLI headless runs confine agents, with and without Paperclip's automatic `--yolo`? | Partially verified | Cursor provider |
 | OQ-034 | Paperclip started with `npx` leaks `npm_*` environment variables into agent runs | Resolved | — |
 | OQ-035 | Reviewer not woken after an in-run hand-off to an execution stage | Worked around | Stage 1 review flow |
-| OQ-036 | Supabase anonymous sign-in, account linking and free-tier limits for the website | Open | Website M4 (ADR-014) |
+| OQ-036 | Supabase anonymous sign-in, account linking and free-tier limits for the website | Superseded (ADR-021: Laravel + MySQL) | — |
 | OQ-037 | Hosting choice: preview deploys per branch, production only on Board action, free tier | Open | Website M6 (ADR-014) |
 | OQ-038 | Ad-network approval, placement policy for game pages, and consent requirements | Open | Website ads milestone |
 | OQ-039 | Vietnamese legal requirements for a free game website with ads (Decree 147/2024, Decree 13/2023) | Open | Website public launch |
@@ -341,14 +341,17 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Status:** Worked around.
 
 ### OQ-036 — Supabase identity and free tier for the website
+- **Superseded 2026-11-05 by [ADR-021](../decisions/ADR-021-laravel-mysql-backend.md):** the Board chose Laravel + MySQL and no Supabase. Anonymous identity becomes a Laravel-issued token; account linking is Laravel code.
 - **Assumption (`UNVERIFIED`):** Supabase Auth supports anonymous sign-in, and an anonymous user can later link Google or an email address while keeping the same user id, so their scores stay theirs. The free tier allows a separate dev project and a prod project. Inactive free projects may be paused.
 - **Verify:** read the current Supabase docs for anonymous sign-ins, identity linking, free-tier project limits and pausing, and check whether the anonymous sign-in rate limits and CAPTCHA options are enough for a public site.
 - **Status:** Open.
 
 ### OQ-037 — Website hosting
-- **Assumption (`UNVERIFIED`):** Cloudflare Pages (or a similar static host) gives free preview deploys per branch on non-production URLs, and production deploys from the Default Branch, which only the Board merges. It also allows custom headers (CSP) and serving game builds as static files.
-- **Verify:** confirm the features and free-tier limits. Confirm that preview deploys cannot use production secrets. Compare with GitHub Pages, Netlify and Vercel.
-- **Status:** Open.
+- **Constraint (ADR-021):** a VPS or cloud server that runs PHP-FPM, Laravel Reverb (long-lived WebSocket process), later a game server, and MySQL behind HTTPS. Shared hosting does not qualify.
+- **Board direction (2026-11-05):** Vietnamese provider; **candidate Vietnix NVMe VPS** (at least 2 vCPU / 4 GB, Ubuntu LTS, root). AWS was considered and set aside for now (cost, USD billing and egress, managed MySQL not listed for the Hanoi Local Zone). Everything runs locally until the Board decides.
+- **Ask Vietnix before buying:** managed MySQL or not; snapshots and backups on the NVMe line; datacenter location; Anti-DDoS add-on and its filtering capacity; IPv4 and reverse DNS; upgrade path without reinstall.
+- **Also verify with a lawyer (OQ-039):** whether a G1 licence applies and what player data must be stored in Vietnam (Decree 147/2024, Art. 39).
+- **Status:** Open (candidate chosen; not purchased).
 
 ### OQ-038 — Ad network and consent
 - **Assumption (`UNVERIFIED`):** Google AdSense needs an owned domain, original content, enough real traffic and a privacy policy. Pages with embedded games may face extra placement rules, and ads near interactive content need a clear margin. Serving ads to EEA/UK visitors needs a certified consent tool.

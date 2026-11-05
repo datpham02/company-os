@@ -7,14 +7,14 @@
 
 | Environment | Who uses it | Backend project | Credentials held by |
 |---|---|---|---|
-| Local / dev | Agents, Board | A separate **dev** backend project (for example a Supabase free-tier project named `<platform>-dev`) with fake data only | Paperclip company secrets bound **only** to the agents of that platform project |
-| Preview | Agents (read results), Board | The dev project. Preview deploys of Task Branches go to non-production URLs | Hosting's own build integration; no hosting token for agents |
-| Production | Board only | A separate **prod** backend project with real player data | The Board Operator, in a password manager and in the hosting provider's secret store. **Never** in Paperclip, a repository or an agent environment |
+| Local / dev | Agents, Board | The Laravel application on the company machine with a local MySQL or SQLite database and fake data only (ADR-021) | Paperclip company secrets bound **only** to the agents of that platform project |
+| Preview | Agents (read results), Board | Not set up while everything runs locally. When hosting exists: a separate staging database with fake data, on non-production URLs | Board only; no hosting token for agents |
+| Production | Board only | Not created yet (hosting pending; candidate Vietnix VPS). A separate production database with real player data, reachable only by the production Laravel application | The Board Operator, in a password manager and in the hosting provider's secret store. **Never** in Paperclip, a repository or an agent environment |
 
 ## 2. Production keys are never bound to agents
-- Agents MUST NOT receive any production credential. This covers backend service-role or admin keys, database passwords, backend management access tokens, hosting API tokens with production rights, DNS or registrar logins, ad-network accounts and payment-provider keys.
+- Agents MUST NOT receive any production credential. This covers the production Laravel `APP_KEY` and `.env`, database passwords, server SSH keys, hosting API tokens with production rights, DNS or registrar logins, ad-network accounts and payment-provider keys.
 - These MUST NOT be stored as Paperclip company secrets, because a binding mistake would reach an agent. The Board keeps them outside Paperclip.
-- A public client key that ships in the production web build by design (for example Supabase's anon or publishable key) MAY appear in production build configuration that the Board manages. It is protected by RLS, not by secrecy. Agents still use the dev project's key during development.
+- The browser never receives a database credential. It receives only the backend base URL and, per player, a token issued by Laravel.
 - Dev-project credentials MUST be different from production credentials, and MUST NOT give access to production data.
 - An agent that finds a production credential MUST stop and report it. The Board then rotates the credential.
 
@@ -27,8 +27,8 @@
 ## 4. Human review for security-sensitive code
 - A PR that touches any of the following is **security-sensitive**:
   - authentication and account linking;
-  - RLS policies, migrations that create or change tables or policies, and database functions with elevated rights (`SECURITY DEFINER`);
-  - server functions that accept scores or grant rewards or entitlements;
+  - authorization policies and gates, middleware, rate limiters, and migrations that create or change tables;
+  - endpoints or jobs that accept scores or grant rewards or entitlements;
   - payment code;
   - secret or environment configuration;
   - Content-Security-Policy and other security headers.
@@ -37,7 +37,7 @@
 - Payment code MUST NOT be written before a separate payments ADR and legal review exist. That review covers the Vietnamese online-game licence (Decree 147/2024/ND-CP), a payment provider, refunds and tax.
 
 ## 5. Player data
-- Store the minimal data set defined by the platform's `docs/requirements.md`. Every table with player data MUST have RLS enabled.
+- Store the minimal data set defined by the platform's `docs/requirements.md` and the [game platform contract](../../../company/shared/game-platform-contract.md) §9. Every table with player data is accessed only through Laravel code that checks the caller.
 - Agents MUST NOT read, export or copy production player data, including for debugging. Production incidents are handled by the Board.
 - Ads and any non-essential cookies load only after consent. Consent and the privacy policy are platform features.
 
