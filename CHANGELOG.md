@@ -4,6 +4,9 @@ All notable changes to the Game Studio framework are recorded here. The format f
 
 ## [Unreleased]
 
+### Fixed
+- Reviewers editing the author's branch (SOU-2 commit db51e6d, SOU-18 commit e7e3f88, both by `web-engineer` on Cursor): the task-contract rule was not in any role text. All eight role files now forbid a reviewer from editing, committing, rebasing or pushing the author's branch, and the `git` rule in `config/paperclip/agents.json` says only the assignee commits and pushes. Gap G-13.
+
 ### Added
 - ADR-021: backend is Laravel + MySQL (no Supabase); Laravel Reverb for event-driven real-time, a dedicated server per fast-paced game; everything local in a Docker Compose stack until hosting is decided (candidate Vietnix VPS). Contract, Web production rules, `web-engineer` role, OQ-036/037 and the dependency registry (Docker Desktop) updated; QA may run `docker compose run --rm test`.
 - Game platform contract version 1 (ADR-020): the Board-approved GAM-16 design (adapter, mount, embedding, manifest, host behaviour, identity, names, server-side validation, weekly boards, data, credentials) recorded in `knowledge/company/shared/game-platform-contract.md`, replacing the placeholder. The backend part of D4 is decided in ADR-021.
