@@ -329,7 +329,8 @@ def cmd_comment(a):
 def cmd_assign(a):
     i = issue(a.key)
     ag = agent(i["companyId"], a.agent)
-    body = {"assigneeAgentId": ag["id"]}
+    # Clear a user assignee (e.g. the Board after a stuck review): Paperclip allows only one assignee.
+    body = {"assigneeAgentId": ag["id"], "assigneeUserId": None}
     if a.status:
         body["status"] = a.status
     res = call("PATCH", f"/issues/{i['id']}", body)
