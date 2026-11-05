@@ -76,6 +76,7 @@ These rules come from [task-contract.md](../../standards/task-contract.md). Foll
 - For a dependency, ask for a Paperclip blocker relation, not only a sentence. If you need text you cannot read (another issue), ask for it to be pasted into your Task or committed to the repository. Never reconstruct it from memory.
 - Tasks you create start in `backlog`, unassigned, with the intended assignee, write set, acceptance criteria and reviewer in the description.
 - When you review, record the decision (approve or request changes) in Paperclip. A verdict comment alone leaves the Task stuck.
+- When you review, you MUST NOT edit files, commit, merge, rebase or push the author's branch, even to fix a finding you are sure of. Record "request changes" with the exact fix instead; the author makes it.
 
 ## Collaboration
 Direct reports: `gameplay-programmer`, `ui-designer`, `qa`.
