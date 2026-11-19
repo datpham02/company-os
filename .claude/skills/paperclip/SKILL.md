@@ -23,8 +23,8 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 | `overview` | Company, projects, agents and every open issue (review first, then in progress, blocked, todo, backlog) |
 | `show SOU-8 [--comments N] [--description]` | One issue: status, assignee, current stage, blockers, branch, latest comments, runs |
 | `log <run-id> [--tail N]` | Output of one run; take run ids from `show` |
-| `triage` | Read-only daily sweep (knowledge/company/workflows/daily-triage.md): what needs the Board, blocked issues and whether they name an unblock owner, stalled reviews, quiet tasks, ready backlog, agents over WIP 1 |
-| `release SOU-8 [SOU-9 …] [--force]` | `backlog` → `todo`. **The assignee starts working immediately and spends usage.** First runs the Write Set conflict guard (below); then refuses an issue with no review/approval stage, open blockers, or a busy assignee. `--force` skips only those later checks, and only on the user's explicit word |
+| `triage` | Read-only daily sweep (knowledge/company/workflows/daily-triage.md): what needs the Board, blocked issues and whether they name an unblock owner, stalled reviews, quiet tasks, ready backlog, and agents with more than one `in_progress` issue across all projects (or "COULD NOT CHECK WIP" when that cannot be read) |
+| `release SOU-8 [SOU-9 …] [--force]` | `backlog` → `todo`. **The assignee starts working immediately and spends usage.** First runs two hard guards (below): the WIP limit and the Write Set conflict guard. Then refuses an issue with no review/approval stage or with open blockers. `--force` skips only those last checks, and only on the user's explicit word |
 | `approve SOU-8 "comment"` | Board approval: sets `done` with the comment. Only works while the issue waits on the Board |
 | `request-changes SOU-8 "comment"` | Board sends the work back to the implementer with the comment |
 | `comment SOU-8 "text"` | Board comment without a decision |
@@ -43,6 +43,16 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 - Never change agent permissions, adapters, secrets or company settings through this skill. Those are configuration changes. Discuss them first and record them in the docs (security-architecture.md §4).
 
 - **Daily triage.** When the user asks what is stuck or what needs them, run `triage` first and lead with "Needs the Board". Suggest it once per working day.
+
+## WIP limit (`release`, `triage`)
+
+Each agent holds at most **one `in_progress` issue across all projects of the company** (task-contract.md §5). `release` refuses an issue whose assignee already has one, naming it; `--force` never skips this. Rules:
+
+- Only status `in_progress` counts. `in_review`, `blocked`, `todo` and `backlog` do not, so a reviewer still gets review wakes while it has its own task. Issues assigned to the Board or another user count against no agent.
+- In one `release` command, an issue released earlier takes its agent's slot (it is `todo`, not yet `in_progress`), so the next issue for that agent is refused. An issue refused by a guard takes no slot; one released with `--force` does.
+- Any failure to read the full in_progress list refuses the release ("WIP could not be verified"); `triage` prints "COULD NOT CHECK WIP" instead of "(none)".
+- Issue lists are read page by page with Paperclip's keyset cursor (`sortField=id&sortDir=asc&afterId=…`, 1000 per page) until an empty page, for WIP, the Write Set guard and `triage`.
+- Not atomic: two release commands started at the same moment can both pass. `maxConcurrentRuns` is unchanged (still 20); runtime enforcement waits for OQ-041.
 
 ## Write Set conflict guard (`release`)
 

@@ -6,8 +6,10 @@ All notable changes to the Game Studio framework are recorded here. The format f
 
 ### Added
 - Write Set conflict guard in the Paperclip skill's `release` (task-contract.md §4.1, E1): every release compares the issue's Write Set with every unmerged issue of the same project (including `done` issues whose merge Paperclip has not seen) and refuses on overlap, listing issues and paths. `--force` no longer skips the Write Set check. Tests in `.claude/skills/paperclip/scripts/test_pc.py`.
+- WIP limit in the Paperclip skill (task-contract.md §5, E2): `release` refuses an issue whose assignee already has an `in_progress` issue in any project of the company, including one released earlier in the same command, and `--force` no longer skips this; `triage` reports breaches from the same calculation and says when WIP could not be checked. `maxConcurrentRuns` is unchanged (OQ-041).
 
 ### Fixed
+- The Paperclip skill read only the first page (500) of the paginated issue list. `release`, the Write Set guard and `triage` now read every page with the keyset cursor and refuse to act on a partial list.
 - Reviewers editing the author's branch (SOU-2 commit db51e6d, SOU-18 commit e7e3f88, both by `web-engineer` on Cursor): the task-contract rule was not in any role text. All eight role files now forbid a reviewer from editing, committing, rebasing or pushing the author's branch, and the `git` rule in `config/paperclip/agents.json` says only the assignee commits and pushes. Gap G-13.
 
 ### Added

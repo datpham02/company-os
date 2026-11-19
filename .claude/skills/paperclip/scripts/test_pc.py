@@ -8,6 +8,7 @@ import io
 import os
 import sys
 import unittest
+import urllib.parse
 from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # python -I leaves the script folder off sys.path
@@ -144,13 +145,20 @@ class ComparisonReason(unittest.TestCase):
 
 
 class FakePaperclip:
-    """Minimal stand-in for pc.call / pc.issue that records writes."""
+    """Minimal stand-in for pc.call / pc.issue that records writes.
 
-    def __init__(self, issues, fail_list=False):
+    The issue list behaves like Paperclip 2026.1023.0's: comma-separated `status`, keyset pages with
+    sortField=id, sortDir=asc, afterId, and `limit` (page_limit stands in for the server cap).
+    fail_list: True fails every list call; "in_progress" only the WIP listing; "unfiltered" only the full one.
+    """
+
+    def __init__(self, issues, fail_list=False, page_limit=None):
         self.issues = {i["id"]: i for i in issues}
         self.by_key = {i["identifier"]: i for i in issues}
         self.fail_list = fail_list
+        self.page_limit = page_limit
         self.writes = []
+        self.list_calls = []
 
     def issue(self, ref):
         i = self.by_key.get(ref) or self.issues.get(ref)
@@ -158,15 +166,26 @@ class FakePaperclip:
             raise pc.ApiError(f"GET /issues/{ref} -> 404")
         return dict(i)
 
+    def list_page(self, query):
+        q = {k: v[0] for k, v in urllib.parse.parse_qs(query).items()}
+        self.list_calls.append(q)
+        if (self.fail_list is True or (self.fail_list == "unfiltered" and "status" not in q)
+                or (self.fail_list and q.get("status") == self.fail_list)):
+            raise pc.ApiError("Paperclip is not reachable")
+        assert q.get("sortField") == "id" and q.get("sortDir") == "asc", q
+        statuses = set(q["status"].split(",")) if "status" in q else None
+        rows = sorted(self.issues.values(), key=lambda i: i["id"])
+        rows = [i for i in rows if (statuses is None or i["status"] in statuses)
+                and ("afterId" not in q or i["id"] > q["afterId"])]
+        limit = min(int(q["limit"]), self.page_limit or int(q["limit"]))
+        # The list endpoint omits the execution workspace.
+        return [{k: v for k, v in i.items() if k != "currentExecutionWorkspace"} for i in rows[:limit]]
+
     def call(self, method, path, body=None):
-        if method == "GET" and path == f"/companies/{CID}/issues":
-            if self.fail_list:
-                raise pc.ApiError("Paperclip is not reachable")
-            # The list endpoint omits the execution workspace.
-            return [{k: v for k, v in i.items() if k != "currentExecutionWorkspace"} for i in self.issues.values()]
-        if method == "GET" and path.startswith(f"/companies/{CID}/issues?status="):
-            s = path.split("=", 1)[1]
-            return [i for i in self.issues.values() if i["status"] == s]
+        if method == "GET" and path.startswith(f"/companies/{CID}/issues?"):
+            return self.list_page(path.split("?", 1)[1])
+        if method == "GET" and path.endswith(("/comments", "/runs")):
+            return []
         if method == "PATCH":
             self.writes.append((path, body))
             iid = path.rsplit("/", 1)[1]
@@ -268,9 +287,9 @@ class ReleaseIntegration(unittest.TestCase):
 
     def test_api_failure_is_not_an_empty_list(self):
         cand = make(40, status="backlog", paths=("src/a.ts",))
-        fake = FakePaperclip([cand], fail_list=True)
+        fake = FakePaperclip([cand], fail_list="unfiltered")
         out = release(fake, "SOU-40", force=True)
-        self.assertIn("could not read Paperclip", out)
+        self.assertIn("Write Set conflict check could not read Paperclip", out)
         self.assertEqual(fake.writes, [])
 
     def test_missing_candidate_write_set_blocks_even_with_force(self):
@@ -287,6 +306,202 @@ class ReleaseIntegration(unittest.TestCase):
         self.assertIn("not released", release(fake, "SOU-42"))
         out = release(fake, "SOU-42", force=True)
         self.assertIn("released -> todo", out)
+
+
+# ---------- P0.2: WIP limit ----------
+
+def row(n, status="in_progress", agent="ag-1", project=PA, company=CID, user=None):
+    return {"id": f"id-{n}", "identifier": f"SOU-{n}", "status": status, "companyId": company,
+            "projectId": project, "assigneeAgentId": agent, "assigneeUserId": user}
+
+
+class WipCalculation(unittest.TestCase):
+    def test_zero(self):
+        self.assertEqual(pc.agent_wip([], CID), {})
+
+    def test_one(self):
+        self.assertEqual(pc.agent_wip([row(1)], CID), {"ag-1": ["SOU-1"]})
+
+    def test_two_in_different_projects(self):
+        self.assertEqual(pc.agent_wip([row(1, project=PA), row(2, project=PB)], CID), {"ag-1": ["SOU-1", "SOU-2"]})
+
+    def test_agents_are_separate(self):
+        self.assertEqual(pc.agent_wip([row(1, agent="ag-1"), row(2, agent="ag-2")], CID),
+                         {"ag-1": ["SOU-1"], "ag-2": ["SOU-2"]})
+
+    def test_board_and_user_issues_do_not_count(self):
+        self.assertEqual(pc.agent_wip([row(1, agent=None, user="local-board")], CID), {})
+
+    def test_other_statuses_do_not_count(self):
+        rows = [row(n, status=s) for n, s in enumerate(
+            ("in_review", "blocked", "todo", "backlog", "done", "cancelled"), start=1)]
+        self.assertEqual(pc.agent_wip(rows, CID), {})
+
+    def test_malformed_fails_closed(self):
+        missing_agent = row(1)
+        del missing_agent["assigneeAgentId"]
+        missing_status = row(2)
+        del missing_status["status"]
+        for bad in ([missing_agent], [missing_status], [{"status": "in_progress"}], ["SOU-1"],
+                    [row(3, company="co-other")]):
+            with self.assertRaises(pc.ApiError, msg=repr(bad)):
+                pc.agent_wip(bad, CID)
+
+
+class IssueListing(unittest.TestCase):
+    def listing(self, fake, status=None):
+        with mock.patch.object(pc, "call", fake.call):
+            return pc.list_issues(CID, status)
+
+    def test_reads_every_page(self):
+        fake = FakePaperclip([make(n) for n in range(10, 17)], page_limit=3)
+        with mock.patch.object(pc, "ISSUE_PAGE_LIMIT", 3):
+            rows = self.listing(fake)
+        self.assertEqual(len(rows), 7)
+        self.assertEqual([c.get("afterId") for c in fake.list_calls], [None, "id-12", "id-15", "id-16"])
+
+    def test_wip_found_on_a_later_page(self):
+        issues = [make(n, status="in_review", assignee=f"ag-{n}") for n in range(10, 16)]
+        issues.append(make(19, status="in_progress", assignee="ag-1"))
+        fake = FakePaperclip(issues, page_limit=2)
+        with mock.patch.object(pc, "call", fake.call), mock.patch.object(pc, "ISSUE_PAGE_LIMIT", 2):
+            self.assertEqual(pc.company_wip(CID), {"ag-1": ["SOU-19"]})
+
+    def test_short_server_page_is_not_mistaken_for_the_end(self):
+        # The server caps a page below what was asked: pc.py must not stop early or skip rows silently.
+        fake = FakePaperclip([make(n) for n in range(10, 16)], page_limit=2)
+        rows = self.listing(fake)  # asks for 1000, gets 2 per page
+        self.assertEqual([r["id"] for r in rows], [f"id-{n}" for n in range(10, 16)])
+
+    def test_unexpected_shapes_fail(self):
+        for page in ({"items": []}, None, [{"identifier": "SOU-1"}]):
+            with mock.patch.object(pc, "call", return_value=page):
+                with self.assertRaises(pc.ApiError, msg=repr(page)):
+                    pc.list_issues(CID)
+
+    def test_cursor_that_does_not_advance_fails(self):
+        same = [{"id": "id-1"}, {"id": "id-2"}]
+        with mock.patch.object(pc, "call", return_value=same):
+            with self.assertRaises(pc.ApiError):
+                pc.list_issues(CID)
+
+
+class WipReleaseGate(unittest.TestCase):
+    def test_free_agent_released(self):
+        fake = FakePaperclip([make(50, status="backlog", paths=("a.ts",)),
+                              make(51, status="in_review", paths=("b.ts",))])  # in_review does not count
+        self.assertIn("SOU-50: released -> todo", release(fake, "SOU-50"))
+
+    def test_busy_agent_blocked_with_active_task_named(self):
+        fake = FakePaperclip([make(50, status="backlog", paths=("a.ts",)),
+                              make(12, status="in_progress", paths=("b.ts",))])
+        out = release(fake, "SOU-50")
+        self.assertIn("SOU-50: not released: assignee already has SOU-12 in progress (WIP limit 1", out)
+        self.assertEqual(fake.writes, [])
+
+    def test_active_task_in_another_project_blocks(self):
+        fake = FakePaperclip([make(50, status="backlog", paths=("a.ts",), project=PA),
+                              make(12, status="in_progress", paths=("a.ts",), project=PB)])
+        self.assertIn("already has SOU-12 in progress", release(fake, "SOU-50"))
+        self.assertEqual(fake.writes, [])
+
+    def test_force_cannot_bypass(self):
+        fake = FakePaperclip([make(50, status="backlog", paths=("a.ts",)),
+                              make(12, status="in_progress", paths=("b.ts",))])
+        out = release(fake, "SOU-50", force=True)
+        self.assertIn("--force does not override", out)
+        self.assertEqual(fake.writes, [])
+
+    def test_api_failure_is_not_zero_wip(self):
+        fake = FakePaperclip([make(50, status="backlog", paths=("a.ts",))], fail_list="in_progress")
+        out = release(fake, "SOU-50", force=True)
+        self.assertIn("WIP could not be verified", out)
+        self.assertEqual(fake.writes, [])
+
+    def test_no_workspace_mutation_when_wip_blocks(self):
+        cand = make(50, status="backlog", paths=("a.ts",), ws={"sourceIssueId": "id-9", "name": "SOU-9-x"})
+        fake = FakePaperclip([cand, make(12, status="in_progress", paths=("b.ts",))])
+        out = release(fake, "SOU-50", force=True)
+        self.assertNotIn("detached", out)
+        self.assertEqual(fake.writes, [])
+
+    def test_batch_releases_at_most_one_per_agent(self):
+        fake = FakePaperclip([make(60, status="backlog", paths=("a.ts",)),
+                              make(61, status="backlog", paths=("b.ts",))])
+        out = release(fake, "SOU-60", "SOU-61")
+        self.assertIn("SOU-60: released", out)
+        self.assertIn("SOU-61: not released: assignee already has SOU-60 (released earlier in this command)", out)
+        self.assertEqual(fake.writes, [("/issues/id-60", {"status": "todo"})])
+
+    def test_rejected_task_does_not_reserve_the_slot(self):
+        clash = make(59, status="in_review", paths=("a.ts",), assignee="ag-9")
+        first = make(60, status="backlog", paths=("a.ts",))  # Write Set conflict with SOU-59
+        second = make(61, status="backlog", paths=("b.ts",))
+        fake = FakePaperclip([clash, first, second])
+        out = release(fake, "SOU-60", "SOU-61")
+        self.assertIn("SOU-60: not released.", out)
+        self.assertIn("SOU-61: released -> todo", out)
+        self.assertEqual(fake.writes, [("/issues/id-61", {"status": "todo"})])
+
+    def test_forced_release_reserves_the_slot(self):
+        first = make(60, status="backlog", paths=("a.ts",))
+        first["executionPolicy"] = {}  # forceable problem
+        fake = FakePaperclip([first, make(61, status="backlog", paths=("b.ts",))])
+        out = release(fake, "SOU-60", "SOU-61", force=True)
+        self.assertIn("SOU-60: released -> todo", out)
+        self.assertIn("SOU-61: not released: assignee already has SOU-60", out)
+
+    def test_other_agent_released_in_same_batch(self):
+        fake = FakePaperclip([make(60, status="backlog", paths=("a.ts",), assignee="ag-1"),
+                              make(61, status="backlog", paths=("b.ts",), assignee="ag-1"),
+                              make(62, status="backlog", paths=("c.ts",), assignee="ag-2")])
+        out = release(fake, "SOU-60", "SOU-61", "SOU-62")
+        self.assertIn("SOU-62: released", out)
+        self.assertEqual([w[0] for w in fake.writes], ["/issues/id-60", "/issues/id-62"])
+
+    def test_reserved_task_already_running_is_named_once(self):
+        fake = FakePaperclip([make(60, status="backlog", paths=("a.ts",)),
+                              make(61, status="backlog", paths=("b.ts",))])
+        real_patch = fake.call
+
+        def run_starts_at_once(method, path, body=None):
+            res = real_patch(method, path, body)
+            if method == "PATCH" and body == {"status": "todo"}:
+                fake.issues[path.rsplit("/", 1)[1]]["status"] = "in_progress"
+            return res
+        fake.call = run_starts_at_once
+        out = release(fake, "SOU-60", "SOU-61")
+        self.assertIn("SOU-61: not released: assignee already has SOU-60 in progress", out)
+        self.assertNotIn("released earlier", out)
+
+
+class TriageWip(unittest.TestCase):
+    def triage(self, fake):
+        out = io.StringIO()
+        with mock.patch.object(pc, "call", fake.call), mock.patch.object(pc, "issue", fake.issue), \
+                mock.patch.object(pc, "company", return_value={"id": CID, "name": "Soucean"}), \
+                mock.patch.object(pc, "names", return_value={"ag-1": "web-engineer", "ag-2": "qa"}), \
+                contextlib.redirect_stdout(out):
+            pc.cmd_triage(argparse.Namespace(company=None, quiet_hours=1e9))
+        text = out.getvalue()
+        return text[text.index("\nWIP:"):]
+
+    def test_breach_lists_both_across_projects(self):
+        fake = FakePaperclip([make(1, project=PA), make(2, project=PB), make(3, assignee="ag-2")])
+        wip = self.triage(fake)
+        self.assertIn("web-engineer has 2 in progress (limit 1): SOU-1, SOU-2", wip)
+        self.assertNotIn("qa", wip)
+        self.assertEqual(wip.count("in progress"), 1)
+
+    def test_single_active_task_is_no_breach(self):
+        fake = FakePaperclip([make(1), make(2, status="in_review")])
+        self.assertIn("(none)", self.triage(fake))
+
+    def test_failure_is_visible_not_none(self):
+        fake = FakePaperclip([make(1), make(2)], fail_list="in_progress")
+        wip = self.triage(fake)
+        self.assertIn("COULD NOT CHECK WIP", wip)
+        self.assertNotIn("(none)", wip)
 
 
 if __name__ == "__main__":
