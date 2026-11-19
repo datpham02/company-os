@@ -70,6 +70,7 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 - [project-system.md](design/project-system.md): project registration, configuration, lifecycle, isolation.
 - [dependency-system.md](design/dependency-system.md): dependency registry, categories, versions, licenses.
 - [integration-system.md](design/integration-system.md): integration boundaries and adapter responsibilities.
+- [review-package.md](design/review-package.md): `PROPOSED` diff handoff to a read-only reviewer (OQ-042).
 
 ### Integrations (`integrations/`)
 - [paperclip-integration.md](integrations/paperclip-integration.md)

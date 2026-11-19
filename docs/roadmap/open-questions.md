@@ -428,7 +428,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Recommendation:** option 1 is viable only in the *strict* form: no shell, read-only file tools, deny rules for every write tool, diff delivered from outside. A shell allowlist for git, even "read-only", must not be used. Next steps before any production use:
   - a Board decision on how the diff reaches the reviewer;
   - a Paperclip run in a sandbox company, started only with the Board's approval because it shares the instance with the production company.
-- **Status:** Open. Option 1 is partly verified outside Paperclip (strict form only). G-13 stays unresolved.
+- **Diff handoff design (2026-11-20, `PROPOSED`, not implemented):** [review-package.md](../design/review-package.md). A trusted Board-side packager builds a read-only review package (patch, before and after files, brief, manifest) from the PR's pinned SHAs with tree-to-tree git plumbing. The strict reviewer reads it with `Read`, `Grep` and `Glob`; a relay returns the verdict. Open points U1–U7 are in that document; the main one, U1, is how the stage decision is recorded without giving the reviewer a shell or credentials.
+- **Status:** Open. Option 1 is partly verified outside Paperclip (strict form only); its diff handoff is designed but not built. G-13 stays unresolved.
 
 ## Conflicts
 
