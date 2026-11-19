@@ -152,10 +152,11 @@ class FakePaperclip:
     fail_list: True fails every list call; "in_progress" only the WIP listing; "unfiltered" only the full one.
     """
 
-    def __init__(self, issues, fail_list=False, page_limit=None):
+    def __init__(self, issues, fail_list=False, page_limit=None, fail_writes=False):
         self.issues = {i["id"]: i for i in issues}
         self.by_key = {i["identifier"]: i for i in issues}
         self.fail_list = fail_list
+        self.fail_writes = fail_writes
         self.page_limit = page_limit
         self.writes = []
         self.list_calls = []
@@ -181,11 +182,28 @@ class FakePaperclip:
         # The list endpoint omits the execution workspace.
         return [{k: v for k, v in i.items() if k != "currentExecutionWorkspace"} for i in rows[:limit]]
 
+    AGENTS = [{"id": "ag-1", "name": "web-engineer", "urlKey": "web-engineer"},
+              {"id": "ag-2", "name": "qa-engineer", "urlKey": "qa-engineer"}]
+
     def call(self, method, path, body=None):
         if method == "GET" and path.startswith(f"/companies/{CID}/issues?"):
             return self.list_page(path.split("?", 1)[1])
         if method == "GET" and path.endswith(("/comments", "/runs")):
             return []
+        if method == "GET" and path == "/companies":
+            return [{"id": CID, "name": "Soucean", "issuePrefix": "SOU", "status": "active"}]
+        if method == "GET" and path == f"/companies/{CID}/agents":
+            return self.AGENTS
+        if method == "POST":
+            self.writes.append((method, path, body))
+            if self.fail_writes:
+                raise pc.ApiError(f"POST {path} -> 500")
+            if path == f"/companies/{CID}/issues":
+                return {"identifier": "SOU-99", **body}
+            return {"id": "run-1", "status": "queued"}
+        if method == "PATCH" and self.fail_writes:
+            self.writes.append((method, path, body))
+            raise pc.ApiError(f"PATCH {path} -> 500")
         if method == "PATCH":
             self.writes.append((path, body))
             iid = path.rsplit("/", 1)[1]
@@ -502,6 +520,169 @@ class TriageWip(unittest.TestCase):
         wip = self.triage(fake)
         self.assertIn("COULD NOT CHECK WIP", wip)
         self.assertNotIn("(none)", wip)
+
+
+# ---------- P0.3: only `release` starts a task ----------
+
+def run_cmd(fake, fn, **kw):
+    """Run a pc.py command; returns (stdout, GateError/ApiError or None)."""
+    out = io.StringIO()
+    err = None
+    with mock.patch.object(pc, "call", fake.call), mock.patch.object(pc, "issue", fake.issue), \
+            contextlib.redirect_stdout(out):
+        try:
+            fn(argparse.Namespace(company=None, **kw))
+        except pc.ApiError as e:
+            err = e
+    return out.getvalue(), err
+
+
+def create_args(**kw):
+    base = dict(title="New task", assignee="web-engineer", project=None, desc=ws_desc("src/a.ts"), desc_file=None,
+                review=["qa-engineer"], no_approval=False, status="backlog")
+    base.update(kw)
+    return base
+
+
+class CreateGate(unittest.TestCase):
+    def test_payload_is_backlog_and_never_requests_a_workspace(self):
+        fake = FakePaperclip([])
+        out, err = run_cmd(fake, pc.cmd_create, **create_args())
+        self.assertIsNone(err)
+        (method, path, body), = fake.writes
+        self.assertEqual((method, path), ("POST", f"/companies/{CID}/issues"))
+        self.assertEqual(body["status"], "backlog")
+        for field in ("parentId", "executionWorkspaceId", "inheritExecutionWorkspaceFromIssueId",
+                      "executionWorkspacePreference", "projectWorkspaceId"):
+            self.assertNotIn(field, body)
+        self.assertIn("not started; run: release SOU-99", out)
+
+    def test_status_todo_refused_before_any_call(self):
+        fake = FakePaperclip([])
+        _, err = run_cmd(fake, pc.cmd_create, **create_args(status="todo"))
+        self.assertIsInstance(err, pc.GateError)
+        self.assertIn("release", str(err))
+        self.assertEqual(fake.writes, [])
+
+    def test_failed_create_does_nothing_else(self):
+        fake = FakePaperclip([], fail_writes=True)
+        _, err = run_cmd(fake, pc.cmd_create, **create_args())
+        self.assertIsNotNone(err)
+        self.assertEqual([w[1] for w in fake.writes], [f"/companies/{CID}/issues"])  # no assign, status or wake
+
+
+class AssignGate(unittest.TestCase):
+    def test_backlog_stays_backlog_without_status_change(self):
+        fake = FakePaperclip([make(70, status="backlog", assignee=None)])
+        out, err = run_cmd(fake, pc.cmd_assign, key="SOU-70", agent="web-engineer", status=None)
+        self.assertIsNone(err)
+        self.assertEqual(fake.writes, [("/issues/id-70", {"assigneeAgentId": "ag-1", "assigneeUserId": None})])
+        self.assertEqual(fake.issues["id-70"]["status"], "backlog")
+        self.assertIn("not started; run: release SOU-70", out)
+
+    def test_status_todo_refused(self):
+        fake = FakePaperclip([make(70, status="backlog")])
+        _, err = run_cmd(fake, pc.cmd_assign, key="SOU-70", agent="web-engineer", status="todo")
+        self.assertIsInstance(err, pc.GateError)
+        self.assertIn("release SOU-70", str(err))
+        self.assertEqual(fake.writes, [])
+
+    def test_started_issue_refused_without_parking(self):
+        for status in ("todo", "in_progress", "in_review", "blocked"):
+            fake = FakePaperclip([make(71, status=status, assignee=None)])
+            _, err = run_cmd(fake, pc.cmd_assign, key="SOU-71", agent="web-engineer", status=None)
+            self.assertIsInstance(err, pc.GateError, status)
+            self.assertIn("--status backlog", str(err))
+            self.assertEqual(fake.writes, [], status)
+
+    def test_started_issue_parked_to_backlog_then_needs_release(self):
+        board_parked = make(72, status="in_review", assignee=None)
+        board_parked["assigneeUserId"] = "local-board"
+        fake = FakePaperclip([board_parked])
+        _, err = run_cmd(fake, pc.cmd_assign, key="SOU-72", agent="web-engineer", status="backlog")
+        self.assertIsNone(err)
+        self.assertEqual(fake.writes, [("/issues/id-72", {"assigneeAgentId": "ag-1", "assigneeUserId": None,
+                                                          "status": "backlog"})])
+
+    def test_closed_issue_assignable(self):
+        fake = FakePaperclip([make(73, status="done", assignee=None)])
+        _, err = run_cmd(fake, pc.cmd_assign, key="SOU-73", agent="web-engineer", status=None)
+        self.assertIsNone(err)
+        self.assertNotIn("status", fake.writes[0][1])
+
+    def test_assign_never_releases_or_wakes(self):
+        fake = FakePaperclip([make(70, status="backlog", assignee=None)])
+        with mock.patch.object(pc, "cmd_release") as rel, mock.patch.object(pc, "wip_guard") as wip:
+            run_cmd(fake, pc.cmd_assign, key="SOU-70", agent="web-engineer", status=None)
+        rel.assert_not_called()
+        wip.assert_not_called()
+        self.assertFalse(any("wakeup" in str(w) or w[1].get("status") == "todo" for w in fake.writes))
+
+    def test_api_failure_reported_without_status_change(self):
+        fake = FakePaperclip([make(70, status="backlog", assignee=None)], fail_writes=True)
+        _, err = run_cmd(fake, pc.cmd_assign, key="SOU-70", agent="web-engineer", status=None)
+        self.assertIsNotNone(err)
+        self.assertEqual(len(fake.writes), 1)
+        self.assertNotIn("status", fake.writes[0][2])
+        self.assertEqual(fake.issues["id-70"]["status"], "backlog")
+
+
+class CommentAndWakeGate(unittest.TestCase):
+    def test_comment_refused_on_agent_assigned_backlog(self):
+        fake = FakePaperclip([make(80, status="backlog")])
+        _, err = run_cmd(fake, pc.cmd_comment, key="SOU-80", text="note")
+        self.assertIsInstance(err, pc.GateError)
+        self.assertEqual(fake.writes, [])
+
+    def test_comment_allowed_elsewhere(self):
+        for issue_ in (make(81, status="backlog", assignee=None), make(82, status="in_progress"),
+                       make(83, status="in_review")):
+            fake = FakePaperclip([issue_])
+            _, err = run_cmd(fake, pc.cmd_comment, key=issue_["identifier"], text="note")
+            self.assertIsNone(err, issue_["status"])
+            self.assertEqual(fake.writes[0][:2], ("POST", f"/issues/{issue_['id']}/comments"))
+
+    def test_wake_on_backlog_issue_refused(self):
+        fake = FakePaperclip([make(84, status="backlog")])
+        _, err = run_cmd(fake, pc.cmd_wake, agent="web-engineer", issue="SOU-84", reason="r")
+        self.assertIsInstance(err, pc.GateError)
+        self.assertEqual(fake.writes, [])
+
+    def test_wake_on_released_issue_allowed(self):
+        fake = FakePaperclip([make(85, status="in_review", assignee="ag-2")])
+        _, err = run_cmd(fake, pc.cmd_wake, agent="qa-engineer", issue="SOU-85", reason="r")
+        self.assertIsNone(err)
+        self.assertEqual(fake.writes[0][1], "/agents/ag-2/wakeup?companyId=co-1")
+
+
+class OnlyReleaseStarts(unittest.TestCase):
+    """Every local command that writes, run against a backlog issue: only release moves it out of backlog."""
+
+    def test_no_other_command_moves_backlog_out(self):
+        attempts = [
+            (pc.cmd_assign, dict(key="SOU-90", agent="web-engineer", status=None)),
+            (pc.cmd_assign, dict(key="SOU-90", agent="web-engineer", status="todo")),
+            (pc.cmd_assign, dict(key="SOU-90", agent="web-engineer", status="backlog")),
+            (pc.cmd_comment, dict(key="SOU-90", text="go")),
+            (pc.cmd_wake, dict(agent="web-engineer", issue="SOU-90", reason="r")),
+            (pc.cmd_approve, dict(key="SOU-90", comment="ok")),
+            (pc.cmd_request_changes, dict(key="SOU-90", comment="fix")),
+        ]
+        for fn, kw in attempts:
+            fake = FakePaperclip([make(90, status="backlog", paths=("a.ts",))])
+            run_cmd(fake, fn, **kw)
+            self.assertEqual(fake.issues["id-90"]["status"], "backlog", fn.__name__)
+            self.assertFalse(any("wakeup" in str(w) or "/comments" in str(w) for w in fake.writes), fn.__name__)
+        fake = FakePaperclip([make(90, status="backlog", paths=("a.ts",))])
+        self.assertIn("released -> todo", release(fake, "SOU-90"))
+
+    def test_release_still_runs_both_hard_guards(self):
+        fake = FakePaperclip([make(91, status="backlog", paths=("a.ts",))])
+        with mock.patch.object(pc, "wip_guard", wraps=pc.wip_guard) as wip, \
+                mock.patch.object(pc, "write_set_guard", wraps=pc.write_set_guard) as ws:
+            release(fake, "SOU-91", force=True)
+        wip.assert_called_once()
+        ws.assert_called_once()
 
 
 if __name__ == "__main__":
