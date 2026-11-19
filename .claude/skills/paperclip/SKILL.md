@@ -33,6 +33,7 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 | `create --title … --assignee … [--project …] [--desc … / --desc-file …] [--review qa] [--no-approval]` | New issue, always in `backlog` (`--status todo` is refused), with a Board approval stage. Each `--review` adds an agent review stage before it. Start it with `release` |
 | `wake qa-engineer [--issue SOU-8]` | Start an agent run now. Refused with `--issue` on a `backlog` issue |
 | `cancel-run <run-id>` | Stop a queued or running run |
+| `review-pack <KEY> --source-fixture F --state-file S --allow-repo o/r` · `review-pack --status\|--unstage [--abandon]\|--cleanup --state-file S` | **OQ-042 Phase 1, local only.** Builds and stages a review package from fixture files (below). Does not call Paperclip, GitHub or git |
 
 ## Rules
 
@@ -43,6 +44,26 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 - Never change agent permissions, adapters, secrets or company settings through this skill. Those are configuration changes. Discuss them first and record them in the docs (security-architecture.md §4).
 
 - **Daily triage.** When the user asks what is stuck or what needs them, run `triage` first and lead with "Needs the Board". Suggest it once per working day.
+
+## Review packager, Phase 1 (`review-pack`, OQ-042)
+
+Implements Phase 1 of [docs/design/review-package.md](../../../docs/design/review-package.md) (design still `PROPOSED`). Code: `scripts/review_pack.py`; tests: `scripts/test_review_pack.py`, run as part of `test_pc.py`.
+
+- **Inputs are fixture files only.**
+  - `--source-fixture` holds PR data in the `review-source-fixture@1` shape (blobs as base64; each blob's git id is recomputed).
+  - `--state-file` holds issue and run state in the `review-state-fixture@1` shape, standing in for Paperclip.
+  - Phase 1 never runs git, reads a repository or worktree, calls GitHub or Paperclip, or uses a token.
+- **Roots.** `--review-root` and `--staging-root` (or `COMPANY_OS_REVIEW_ROOT` / `COMPANY_OS_STAGING_ROOT`) are required. They must be absolute, separate, not nested, and outside every Git repository. Nothing is written elsewhere.
+- **`review-pack <KEY>`** validates everything first (design §5.2 and §5.3) and fails closed:
+  - it builds `store/<KEY>/<head>/` atomically, with `READY` last, or reuses an intact one;
+  - it then stages a verified copy in `<Staging Root>/current/` under an exclusive `staging.lock`;
+  - it prints the `pc.py wake code-reviewer --issue <KEY>` command; it never runs it.
+- **One review at a time.** Another issue, or another head, is refused while staging is held.
+  - `--status` shows the lock, its runs and whether it is stale (run finished, or no run for 24 h).
+  - `--unstage` refuses while a reviewer run is active. It also refuses while the review has not been relayed, unless `--abandon` is given (logged). Phase 1 has no relay, so `--abandon` is the normal way to clear staging.
+- **`--cleanup`** removes packages of issues `done` or `cancelled` for 14+ days, oldest first. It never touches an open issue's package or the staged one. Deletion is two-step through `store/.trash`, and failures are logged and retried. A build over the 2 GB cap first cleans up, then refuses.
+- **Audit:** `<Review Root>/audit.log`, append-only JSON lines, rotated by size and never deleted.
+- **Not a security boundary:** every agent runs as the same Windows user and can read or change both roots. G-13 stays open.
 
 ## Start gate: only `release` starts a task
 

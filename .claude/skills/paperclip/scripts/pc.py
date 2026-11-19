@@ -17,7 +17,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-API = os.environ.get("PAPERCLIP_URL", "http://127.0.0.1:3100/api").rstrip("/")
+# python -I leaves the script folder off sys.path; append it (after the standard library) for review_pack.
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+import review_pack  # noqa: E402  (OQ-042 Phase 1: local only, no git, GitHub or Paperclip)
+
+API =os.environ.get("PAPERCLIP_URL", "http://127.0.0.1:3100/api").rstrip("/")
 BOARD_USER = "local-board"
 ACTIVE_RUN = {"queued", "starting", "running"}
 if hasattr(sys.stdout, "reconfigure"):
@@ -772,10 +776,11 @@ def main():
     s = sub.add_parser("cancel-run", help="cancel a queued or running run")
     s.add_argument("run_id")
     s.set_defaults(fn=cmd_cancel_run)
+    review_pack.add_parser(sub)
     a = p.parse_args()
     try:
         a.fn(a)
-    except ApiError as e:
+    except (ApiError, review_pack.ReviewPackError) as e:
         print("error:", e, file=sys.stderr)
         sys.exit(1)
 
