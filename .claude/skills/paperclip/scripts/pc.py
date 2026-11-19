@@ -90,6 +90,63 @@ def issue(key):
     return call("GET", f"/issues/{urllib.parse.quote(key)}")
 
 
+ISSUE_PAGE_LIMIT = 1000  # Paperclip's ISSUE_LIST_MAX_LIMIT; the default page is 500
+
+
+def list_issues(cid, status=None):
+    """Every issue of a company (optionally of the given comma-separated statuses), all pages.
+
+    The list endpoint is paginated (Paperclip 2026.1023.0: limit default 500, max 1000). Pages are read with its
+    keyset cursor (sortField=id, sortDir=asc, afterId=<last id>), which needs no offset and does not skip rows
+    when issues change between pages. Reading ends at the first empty page. Raises ApiError on any request failure or unexpected page, so a partial
+    read is never returned as a complete list.
+    """
+    rows, after = [], None
+    while True:
+        q = {"limit": ISSUE_PAGE_LIMIT, "sortField": "id", "sortDir": "asc"}
+        if status:
+            q["status"] = status
+        if after:
+            q["afterId"] = after
+        page = call("GET", f"/companies/{cid}/issues?" + urllib.parse.urlencode(q))
+        if not isinstance(page, list):
+            raise ApiError("the issue list came back in an unexpected shape")
+        if any(not isinstance(r, dict) or not r.get("id") for r in page):
+            raise ApiError("the issue list has a row without an id")
+        if page and after is not None and page[0]["id"] <= after:
+            raise ApiError("the issue list did not advance past the previous page")
+        if not page:  # stop only on an empty page: a short page may be the server's cap or read filter
+            return rows
+        rows.extend(page)
+        after = page[-1]["id"]
+
+
+def agent_wip(rows, cid):
+    """{agentId: [issue identifiers]} of the in_progress issues in rows, across all projects of company cid.
+
+    WIP is task-contract.md §5 taken literally: issues whose status is `in_progress`. in_review, blocked, todo
+    and the rest do not count. Issues without an agent assignee (the Board, a user) are skipped. A row missing
+    a field needed to decide, or from another company, raises ApiError instead of being skipped.
+    """
+    wip = {}
+    for r in rows:
+        if not isinstance(r, dict) or not r.get("id") or any(k not in r for k in ("status", "companyId", "assigneeAgentId")):
+            raise ApiError("an issue row lacks id, status, companyId or assigneeAgentId, so WIP cannot be verified")
+        if r["companyId"] != cid:
+            raise ApiError(f"the issue list for company {cid} returned an issue of another company")
+        if r["status"] != "in_progress" or not r["assigneeAgentId"]:
+            continue
+        wip.setdefault(r["assigneeAgentId"], []).append(r.get("identifier") or r["id"][:8])
+    for keys in wip.values():
+        keys.sort()
+    return wip
+
+
+def company_wip(cid):
+    """Current WIP of every agent of the company, from one complete in_progress listing."""
+    return agent_wip(list_issues(cid, "in_progress"), cid)
+
+
 def names(cid):
     return {a["id"]: a["name"] for a in agents(cid)}
 
@@ -348,9 +405,7 @@ def unmerged_project_issues(cand, cache):
     pid, cid = cand.get("projectId"), cand.get("companyId")
     if not pid:
         raise WriteSetError("it has no project, so it cannot be compared with its project's other Tasks; set a project first")
-    listing = call("GET", f"/companies/{cid}/issues")
-    if not isinstance(listing, list):
-        raise ApiError("the issue list came back in an unexpected shape; nothing was compared")
+    listing = list_issues(cid)
     out = []
     for s in listing:
         if s.get("id") == cand["id"] or s.get("status") == "cancelled":
@@ -399,15 +454,29 @@ def write_set_guard(cand, cache):
     return out
 
 
-def release_problems(i, busy_agents):
-    """Task-contract checks (knowledge/company/standards/task-contract.md §2, §5) before an issue may start."""
+def wip_guard(i, reserved):
+    """Report line when the assignee already holds its WIP slot (task-contract.md §5), else None.
+
+    Hard check: --force does not skip it. Counts the company's in_progress issues in every project, plus
+    `reserved` ({agentId: key}): issues released earlier in the same command, which are `todo` and not yet
+    `in_progress`. May raise ApiError, which the caller treats as "WIP not verified" and refuses.
+    """
+    aid = i["assigneeAgentId"]
+    held = [k for k in company_wip(i["companyId"]).get(aid, []) if k != i.get("identifier")]
+    if aid in reserved and reserved[aid] not in held:  # its run may already have moved it to in_progress
+        held.append(f"{reserved[aid]} (released earlier in this command)")
+    if held:
+        return f"assignee already has {', '.join(held)} in progress (WIP limit 1, all projects); --force does not override this check"
+    return None
+
+
+def release_problems(i):
+    """Forceable task-contract checks (task-contract.md §2) before an issue may start. --force skips these only."""
     problems = []
     if not WRITE_SET_HEADING.search(i.get("description") or ""):
         problems.append("no '## Write set' in the description")
     if not ((i.get("executionPolicy") or {}).get("stages")):
         problems.append("no review or approval stage (agent-created tasks get none, G-10)")
-    if i.get("assigneeAgentId") in busy_agents:
-        problems.append(f"assignee already has {busy_agents[i['assigneeAgentId']]} in progress (WIP 1)")
     open_blockers = [b.get("identifier") for b in (i.get("blockedBy") or [])
                      if isinstance(b, dict) and b.get("status") != "done"]
     if open_blockers:
@@ -416,7 +485,9 @@ def release_problems(i, busy_agents):
 
 
 def cmd_release(a):
-    busy = {}
+    # Hard guards (WIP, Write Set) run on every release before anything changes; --force skips neither.
+    # Not atomic: two release commands run at the same moment can both pass the WIP check.
+    reserved = {}  # agentId -> key released earlier in this command (now todo, not yet in_progress)
     cache = {}  # full issues fetched by the Write Set guard, reused across the keys of one release
     for key in a.keys:
         i = issue(key)
@@ -426,7 +497,14 @@ def cmd_release(a):
         if not i.get("assigneeAgentId"):
             print(f"{key}: has no agent assignee; assign it first")
             continue
-        # The Write Set guard runs on every release, before anything changes; --force does not skip it.
+        try:
+            busy = wip_guard(i, reserved)
+        except ApiError as e:
+            print(f"{key}: not released: WIP could not be verified ({e}). Nothing was changed.")
+            continue
+        if busy:
+            print(f"{key}: not released: {busy}. Nothing was changed.")
+            continue
         try:
             report = write_set_guard(i, cache)
         except ApiError as e:
@@ -435,11 +513,7 @@ def cmd_release(a):
         if report:
             print(f"{key}: not released.\n" + "\n".join(report))
             continue
-        if not busy:
-            for o in call("GET", f"/companies/{i['companyId']}/issues?status=in_progress") or []:
-                if o.get("assigneeAgentId"):
-                    busy[o["assigneeAgentId"]] = o["identifier"]
-        problems = release_problems(i, busy)
+        problems = release_problems(i)
         if problems and not a.force:
             print(f"{key}: not released: " + "; ".join(problems) + ". Fix it, or pass --force if the Board accepts it.")
             continue
@@ -450,7 +524,7 @@ def cmd_release(a):
             print(f"{key}: detached from inherited workspace {ws.get('name')}; it gets its own worktree")
         res = call("PATCH", f"/issues/{i['id']}", {"status": "todo"})
         cache[i["id"]] = {**i, "status": res.get("status", "todo")}  # later keys compare against it
-        busy[i["assigneeAgentId"]] = key
+        reserved[i["assigneeAgentId"]] = key  # later keys of this command see the occupied slot
         print(f"{key}: released -> {res['status']} (the assignee is woken now)"
               + (f"; accepted with: {'; '.join(problems)}" if problems else ""))
 
@@ -466,10 +540,9 @@ def cmd_triage(a):
     """Read-only sweep for knowledge/company/workflows/daily-triage.md. Changes nothing."""
     c = company(a.company)
     n = names(c["id"])
-    summaries = [i for i in call("GET", f"/companies/{c['id']}/issues") if i["status"] not in ("done", "cancelled")]
+    summaries = [i for i in list_issues(c["id"]) if i["status"] not in ("done", "cancelled")]
     full = [issue(s["id"]) for s in summaries]  # the list endpoint omits blockers and execution state
     sections = {k: [] for k in ("Needs the Board", "Blocked", "Review stalled", "Quiet", "Ready to release", "WIP")}
-    in_progress = {}
     for i in full:
         key, status, age = i["identifier"], i["status"], hours_since(i.get("updatedAt"))
         title = i["title"][:60]
@@ -496,14 +569,19 @@ def cmd_triage(a):
             if not any(r.get("agentId") == part.get("agentId") and (r.get("createdAt") or "") >= started for r in runs(i["id"])) and age > 0.05:
                 sections["Review stalled"].append((age, f"{key} waiting on {n.get(part.get('agentId'), '?')} with no run, {age:.1f}h | {title}"))
         elif status == "in_progress":
-            in_progress.setdefault(i.get("assigneeAgentId"), []).append(key)
             if age >= a.quiet_hours:
                 sections["Quiet"].append((age, f"{key} on {who(i, n)}, no update for {age:.0f}h | {title}"))
         elif status == "backlog" and not open_blockers:
             sections["Ready to release"].append((age, f"{key} on {who(i, n)}, waiting {age:.0f}h | {title}"))
-    for agent_id, keys in in_progress.items():
-        if agent_id and len(keys) > 1:
-            sections["WIP"].append((0, f"{n.get(agent_id, agent_id[:8])} has {len(keys)} in progress: {', '.join(keys)}"))
+    # Same calculation as the release gate, across every project of the company.
+    try:
+        wip = company_wip(c["id"])
+    except ApiError as e:
+        wip = None
+        sections["WIP"].append((0, f"COULD NOT CHECK WIP: {e}. WIP is unknown, not clear"))
+    for agent_id, keys in sorted((wip or {}).items(), key=lambda kv: n.get(kv[0], kv[0])):
+        if len(keys) > 1:
+            sections["WIP"].append((0, f"{n.get(agent_id, agent_id[:8])} has {len(keys)} in progress (limit 1): {', '.join(keys)}"))
     print(f"Triage for {c['name']} ({len(full)} open issues)")
     for title, rows in sections.items():
         print(f"\n{title}:")

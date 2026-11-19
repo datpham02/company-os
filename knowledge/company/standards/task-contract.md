@@ -58,7 +58,7 @@ Agent-created Tasks are created in `backlog`, **unassigned**, with the intended 
 
 ## 5. WIP and capacity
 
-1. **One `in_progress` Task per Agent Instance** (E2). The `project-manager` does not release a second Task to a busy agent. The planned enforcement is `maxConcurrentRuns: 1` on implementer agents (`UNVERIFIED`: a reviewer agent must still receive its review wakes while it has a Task of its own; test before applying).
+1. **One `in_progress` Task per Agent Instance** (E2), counted across every project of the company. The `project-manager` does not release a second Task to a busy agent. The Paperclip skill's `release` refuses one and `--force` does not skip it; `triage` lists any agent over the limit ([the skill](../../../.claude/skills/paperclip/SKILL.md#wip-limit-release-triage)). Only `in_progress` counts: `in_review`, `blocked` and `todo` are not implementation WIP under this rule. A release made in the Paperclip UI or by an agent is not checked. The runtime enforcement planned for later is `maxConcurrentRuns: 1` on implementer agents (`UNVERIFIED`: a reviewer agent must still receive its review wakes while it has a Task of its own; test before applying).
 2. A role that serves several projects has **one queue**, ordered by the `producer`'s cross-project priorities.
 3. If one role's queue is longer than the milestone allows, the `producer` asks the Board for a second instance ([agent-onboarding.md](../workflows/agent-onboarding.md) case B).
 
