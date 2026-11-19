@@ -51,6 +51,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-039 | Vietnamese legal requirements for a free game website with ads (Decree 147/2024, Decree 13/2023) | Open | Website public launch |
 | OQ-040 | How are existing Paperclip agents updated from Git, given that import into an existing company refuses `--collision replace`? | Open | Studio bootstrap, ADR-016 |
 | OQ-041 | Does `maxConcurrentRuns: 1` enforce WIP 1 without delaying an agent's review wakes? | Open | Task contract, ADR-017 |
+| OQ-042 | How can a reviewer be kept from writing to the author's Task Workspace and branch (G-13)? | Open | Security, ADR-006, task-contract §8 |
 
 ## Entries
 
@@ -73,6 +74,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
   - Worktrees live **inside** the primary checkout, so `git status` there shows `?? .paperclip/`. Game Repositories MUST ignore `.paperclip/` in `.gitignore`.
   - Cancelling a Task did not remove its worktree or branch. Cleanup behavior is still unknown.
   - `claude_local` runs in the Task's worktree; Paperclip posts a "Workspace Ready" comment with strategy, branch and cwd. `process` agents do not (OQ-003).
+- **Result (2026-11-19, source audit of the installed 2026.1023.0; not run):** every run on an issue, including a review-stage participant's, reuses the issue's worktree (OQ-042). The terminal reaper treats `done` and `cancelled` alike and archives a worktree only when it is clean and its merge is verified (`merged_via_pr` / `merged_by_ancestry`), so an unmerged cancelled Task keeps its worktree and branch. Paperclip commits in a worktree only in one repair path (a dirty worktree on the wrong branch is committed to `paperclip/rescue/<issue>/<ts>`) and never pushes.
 - **Status:** Partially verified. Stage 1 owner: Paperclip. See C-001.
 
 ### OQ-003 — Context passed to `process` adapters
@@ -326,6 +328,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
   - Without `GH_TOKEN`, `gh` is unauthenticated, so QA could not see the PR by itself.
   - It found that inherited `npm_*` variables from the Paperclip process (started with `npx`) pointed npm at another directory, and worked around it by sanitizing the environment (see OQ-034).
 - **Update (2026-11-04):** The missing wake is not specific to `cursor`; it is OQ-035. With the watchdog, `qa` reviewed GAM-3 and recorded its decision.
+- **Adapter source (2026-11-19, installed 2026.1023.0):** the `cursor` adapter accepts `cwd`, `instructionsFilePath`, `promptTemplate`, `model`, `mode` (`plan` or `ask` only), `command`, `extraArgs`, `env`, `timeoutSec`, `graceSec`. It has no allowlist, sandbox or permission key. `--auto-review` is not referenced by the adapter; it is passed to the CLI unchanged.
 - **Open:** A working shell allowlist format for Cursor CLI; whether `--auto-review` is acceptable as the `workspace-write` control.
 - **Status:** Partially verified.
 
@@ -375,6 +378,18 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Why it matters:** Two Tasks ran on one agent at once (GAM-25 and GAM-45). The limit would stop that, but must not stall reviews.
 - **Verification method:** scratch company; one agent with limit 1; start a long Task, then send a review hand-off to the same agent; record what happens.
 - **Status:** Open.
+
+### OQ-042 — Reviewer isolation (G-13)
+- **Why it matters:** `web-engineer` (Cursor) committed to the author's branch while reviewing SOU-2 and SOU-18. Role text is the only guard.
+- **Found (2026-11-19, source audit of Paperclip 2026.1023.0 and its adapters; nothing was run):**
+  - The review stage only reassigns the issue (`issue-execution-policy.js` `buildPendingStagePatch`: status `in_review` plus the participant as assignee). A run's workspace comes from the issue's `executionWorkspaceId` with preference `reuse_existing` (`heartbeat/environment-selection.js`, `heartbeat/workspace-preparation.js`), so **the reviewer runs in the author's worktree, on the author's branch**, with the same write access. "Changes requested" returns the issue to the author in the same worktree.
+  - No supported setting gives a review participant its own or a read-only workspace: stage participants carry only `type/agentId/userId`; the workspace strategy has no read-only or mount field. Workspace hooks (`provisionCommand` on every realization, teardown and cleanup on archive) all target the same worktree; a reviewer checkout built in a hook would be a second worktree owner (ADR-006). The `low_trust_review` trust preset only upgrades `shared_workspace` to `isolated_workspace`; it does not separate a reviewer from an issue's existing worktree.
+  - Providers: `claude_local` (engine `cli`) passes our `--allowedTools`/`--disallowedTools` through `extraArgs`, so edits and git writes can be refused per agent. `filesystemScope` needs Bubblewrap and throws on Windows. `codex_local` defaults to `--dangerously-bypass-approvals-and-sandbox` unless `extraArgs` sets a sandbox (no Codex agent is used). `cursor` accepts only `mode` (`plan`/`ask`) and `extraArgs`; it has no allowlist, sandbox or permission key, and adds `--yolo` unless `--trust` is given.
+  - Our reviewers also implement (`qa` reviews code and writes tests; `web-engineer` reviews `ui-designer`), and permission profiles are per agent, not per stage. A read-only profile on them would stop their implementation work.
+  - A reviewer that runs tests executes the author's own build scripts (`npm test`, `npm run …`), which can run any command, so allowing tests is not a write boundary.
+- **Options left:** (1) a separate review-only Agent Instance on `claude_local` with no edit tools, no `git add/commit/push` and no build commands (reads, diffs, `gh pr view` only; tests left to CI or the author's evidence), which needs Board approval for the new agent and a live test; (2) an upstream Paperclip feature: a per-stage workspace (detached read-only checkout of the PR head) or a read-only flag for review participants; (3) branch protection on task branches so only the author's token can push, which needs one GitHub token per agent.
+- **Verification method for option 1:** scratch company and repository; a review-only `claude_local` agent; ask it to edit a tracked file, `git add`, `git commit` and `git push`; record that each is refused and the author's branch is unchanged.
+- **Status:** Open. G-13 stays unresolved.
 
 ## Conflicts
 

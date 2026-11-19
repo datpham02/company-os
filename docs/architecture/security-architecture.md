@@ -91,6 +91,13 @@ Paperclip's `filesystemScope` / `networkScope` confinement needs Bubblewrap and 
 
 **Important conflict with Paperclip defaults:** Paperclip's `claude_local` adapter defaults `dangerouslySkipPermissions` to `true` ("required for headless runs where interactive approval is impossible", `VERIFIED`). Using the `bypass` profile by default contradicts this document. Until OQ-011 is resolved, the `bypass` profile MAY be used only for Agent Instances whose GitHub token cannot push to protected branches and whose working directory is a Task Workspace, and the Board Operator MUST approve its use per Agent Instance. Recorded as C-002.
 
+**Reviewer isolation boundary (G-13, OQ-042; source audit 2026-11-19).** A review-stage agent runs in the author's Task Workspace, on the author's branch: Paperclip 2026.1023.0 reuses the issue's worktree for every run and has no per-stage or read-only workspace. Nothing technical stops a reviewer from writing there:
+- `claude_local` reviewers (`qa`) have the `workspace-write` profile, whose push rule `{PREFIX}-*` matches every task branch, the author's included.
+- `cursor` reviewers (`web-engineer`) have no allowlist at all (`--trust --auto-review`).
+- Running the author's tests runs the author's scripts, so allowing tests is not a write boundary.
+
+The controls are the reviewer rules in every role file and the task contract (§8), GitHub branch protection on `main`, and the Board discarding any reviewer commit. Options are in OQ-042.
+
 ## 5. Filesystem permissions
 
 - Agents run as the Board Operator's Windows user account (ADR-013). They can technically read anything that user can read.
