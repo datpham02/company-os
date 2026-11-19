@@ -8,6 +8,7 @@ default: the only active company).
 """
 import argparse
 import datetime
+import fnmatch
 import json
 import re
 import os
@@ -185,6 +186,219 @@ WRITE_SET_HEADING = re.compile(r"^#+\s*(write set|files? owned|file ownership|af
 UNBLOCK_OWNER = re.compile(r"^\W*unblock owner\W*:", re.I | re.M)
 
 
+# ---------- write set conflict guard (task-contract.md §4.1) ----------
+#
+# Every `release` runs this guard; --force does not skip it. It compares the candidate's Write Set with the
+# Write Set of every unmerged Task of the same project and refuses the release on any overlap.
+#
+# Write Set format (task-contract.md §2): list items under a `## Write set` heading (also accepted: the other
+# WRITE_SET_HEADING forms). A path is the item's code span (`src/a.ts`), or its first word when it has none.
+# Paths are relative to the project repository. Globs are allowed (*, ?, [...], **). One item `none` = no files.
+#
+# "Unmerged" (verified against Paperclip 2026.1023.0, services/execution-workspaces.js):
+# - todo, in_progress, in_review, blocked, and any status this script does not know: compared;
+# - backlog: compared only when it has its own execution workspace (work started, then parked);
+# - done: compared unless its workspace shows the merge: deliveryState merged_via_pr / merged_by_ancestry, or the
+#   workspace was archived by Paperclip's terminal reaper (cleanupReason "issue_terminal"), which archives only
+#   after it has verified the merge. A done Task with no execution workspace has no branch Paperclip knows of
+#   and is not compared;
+# - cancelled: not compared.
+
+GLOB_CHARS = "*?["
+MERGED_DELIVERY_STATES = {"merged_via_pr", "merged_by_ancestry"}
+REAPER_CLEANUP_REASON = "issue_terminal"
+LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?(.*\S)\s*$")
+CODE_SPAN = re.compile(r"`([^`]+)`")
+NO_FILES = {"none", "nothing", "n/a", "no files"}
+
+
+class WriteSetError(Exception):
+    """A Write Set that cannot be read, so overlap cannot be ruled out."""
+
+
+def _looks_like_path(text):
+    return bool(text) and not re.search(r"[\s()]", text) and bool(re.search(r"[/\\.*?\[]", text))
+
+
+def normalize_path(raw):
+    """Project-relative path -> tuple of segments. Rejects absolute paths and '..'."""
+    p = raw.strip().replace("\\", "/")
+    if p.startswith("/") or re.match(r"^[A-Za-z]:", p):
+        raise WriteSetError(f"absolute path {raw!r}; use a path relative to the project repository")
+    segments = tuple(s for s in p.split("/") if s not in ("", "."))
+    if ".." in segments:
+        raise WriteSetError(f"path {raw!r} leaves the project ('..')")
+    if not segments:
+        raise WriteSetError(f"path {raw!r} names the whole repository; list the files or folders")
+    return segments
+
+
+def parse_write_set(description):
+    """Paths of the Write Set as segment tuples. [] means the Task declares no files. Raises WriteSetError."""
+    lines = (description or "").splitlines()
+    start = next((n for n, ln in enumerate(lines) if WRITE_SET_HEADING.match(ln)), None)
+    if start is None:
+        raise WriteSetError("no '## Write set' section")
+    items = []
+    for ln in lines[start + 1:]:
+        if re.match(r"^\s*#", ln):
+            break
+        m = LIST_ITEM.match(ln)
+        if m:
+            items.append(m.group(1))
+    if not items:
+        raise WriteSetError("the '## Write set' section lists no paths")
+    if len(items) == 1 and items[0].strip("`. ").lower() in NO_FILES:
+        return []
+    paths = []
+    for item in items:
+        if item.count("`") % 2:
+            raise WriteSetError(f"item {item!r} has an unclosed backtick")
+        spans = CODE_SPAN.findall(item)
+        if spans:
+            if not _looks_like_path(spans[0].strip()):
+                raise WriteSetError(f"item {item!r} does not start with a path")
+            raw = [s.strip() for s in spans if _looks_like_path(s.strip())]
+        else:
+            first = item.split()[0].rstrip(",;:")
+            if not _looks_like_path(first):
+                raise WriteSetError(f"item {item!r} is not a path; write paths in backticks")
+            raw = [first]
+        paths.extend((r, normalize_path(r)) for r in raw)
+    return paths
+
+
+def _literal_ends(seg):
+    cut = [seg.find(c) for c in GLOB_CHARS if c in seg]
+    first, last = min(cut), max(seg.rfind(c) for c in "*?]")
+    return seg[:first], seg[last + 1:]
+
+
+def _segment_overlap(a, b):
+    a, b = a.casefold(), b.casefold()
+    ga, gb = any(c in a for c in GLOB_CHARS), any(c in b for c in GLOB_CHARS)
+    if not ga and not gb:
+        return a == b
+    if ga and not gb:
+        return fnmatch.fnmatchcase(b, a)
+    if gb and not ga:
+        return fnmatch.fnmatchcase(a, b)
+    # Two patterns: overlap is possible when their literal prefixes and suffixes agree (conservative).
+    (pa, sa), (pb, sb) = _literal_ends(a), _literal_ends(b)
+    return (pa.startswith(pb) or pb.startswith(pa)) and (sa.endswith(sb) or sb.endswith(sa))
+
+
+def paths_overlap(left, right):
+    """True when two Write Set entries can name the same file.
+
+    An entry covers itself and everything below it, so a folder overlaps every path inside it. Comparison is
+    case-insensitive: the studio runs on Windows, where `Scene.ts` and `scene.ts` are one file. `**` matches any
+    depth, so the paths overlap once the segments before it match.
+    """
+    for x, y in zip(left, right):
+        if "**" in x or "**" in y:
+            return True
+        if not _segment_overlap(x, y):
+            return False
+    return True
+
+
+def comparison_reason(i):
+    """Why issue i counts as unmerged work (its status label), or None when it is not compared."""
+    status = i.get("status")
+    ws = i.get("currentExecutionWorkspace") or {}
+    if status == "cancelled":
+        return None
+    if status == "backlog":
+        return "backlog, work started" if ws and ws.get("sourceIssueId") == i.get("id") else None
+    if status == "done":
+        if not ws:
+            return None
+        if ws.get("deliveryState") in MERGED_DELIVERY_STATES:
+            return None
+        if ws.get("status") in ("archived", "cleanup_failed") and (ws.get("cleanupReason") or "").startswith(REAPER_CLEANUP_REASON):
+            return None
+        return f"done, not merged (delivery {ws.get('deliveryState') or 'unknown'})"
+    return status or "unknown status"
+
+
+def find_write_set_conflicts(candidate_paths, others):
+    """others: [(issue, reason)]. Returns (conflicts, unreadable), both in issue-number order.
+
+    conflicts: [(issue, reason, [(candidate raw path, other raw path)])]; unreadable: [(issue, reason, error)].
+    """
+    conflicts, unreadable = [], []
+    for o, reason in sorted(others, key=lambda x: (x[0].get("issueNumber") or 0, x[0].get("identifier") or "")):
+        try:
+            other_paths = parse_write_set(o.get("description"))
+        except WriteSetError as e:
+            unreadable.append((o, reason, str(e)))
+            continue
+        pairs = sorted({(cr, orr) for cr, cs in candidate_paths for orr, os_ in other_paths if paths_overlap(cs, os_)})
+        if pairs:
+            conflicts.append((o, reason, pairs))
+    return conflicts, unreadable
+
+
+def unmerged_project_issues(cand, cache):
+    """Unmerged issues of the candidate's project, except the candidate: [(full issue, reason)].
+
+    Raises WriteSetError when the candidate has no project, ApiError when Paperclip cannot be read.
+    """
+    pid, cid = cand.get("projectId"), cand.get("companyId")
+    if not pid:
+        raise WriteSetError("it has no project, so it cannot be compared with its project's other Tasks; set a project first")
+    listing = call("GET", f"/companies/{cid}/issues")
+    if not isinstance(listing, list):
+        raise ApiError("the issue list came back in an unexpected shape; nothing was compared")
+    out = []
+    for s in listing:
+        if s.get("id") == cand["id"] or s.get("status") == "cancelled":
+            continue
+        if "projectId" in s and s["projectId"] != pid:
+            continue
+        full = cache.get(s["id"])
+        if full is None:
+            full = cache[s["id"]] = issue(s["id"])  # the list omits the execution workspace
+        if full.get("companyId") != cid or full.get("projectId") != pid:
+            continue
+        reason = comparison_reason(full)
+        if reason:
+            out.append((full, reason))
+    return out
+
+
+def write_set_guard(cand, cache):
+    """Report lines when the release must stop, [] when the Write Set is clear. May raise ApiError."""
+    title = f"{cand.get('identifier')} — {cand.get('title')}"
+    try:
+        candidate_paths = parse_write_set(cand.get("description"))
+        others = unmerged_project_issues(cand, cache)
+    except WriteSetError as e:
+        return [f"Release blocked: the Write Set cannot be checked: {e}.", f"Candidate: {title}"]
+    conflicts, unreadable = find_write_set_conflicts(candidate_paths, others)
+    if not conflicts and not unreadable:
+        return []
+    out = ["Release blocked: Write Set conflicts detected." if conflicts else
+           "Release blocked: other unmerged Tasks have a Write Set that cannot be checked.", "", f"Candidate: {title}"]
+    for o, reason, pairs in conflicts:
+        out.append(f"Conflicts with: {o.get('identifier')} — {o.get('title')} ({reason})")
+        out += [f"  - {c}" if c == p else f"  - {c}  (overlaps {p})" for c, p in pairs]
+    for o, reason, err in unreadable:
+        out.append(f"Cannot check: {o.get('identifier')} — {o.get('title')} ({reason}): {err}")
+    out.append("")
+    if conflicts:
+        out.append("Resolve the overlapping Write Set before releasing this task: narrow it, or add a blocker "
+                   "relation and release after the other Task is merged.")
+    if unreadable:
+        out.append("Fix the Write Set of the Task(s) above so overlap can be checked.")
+    if any(r.startswith("done") for _, r, _ in conflicts) or any(r.startswith("done") for _, r, _ in unreadable):
+        out.append("A done Task counts until Paperclip sees its merge; after merging, update the project "
+                   "repository's local main (git pull --ff-only origin main).")
+    out.append("--force does not override this check.")
+    return out
+
+
 def release_problems(i, busy_agents):
     """Task-contract checks (knowledge/company/standards/task-contract.md §2, §5) before an issue may start."""
     problems = []
@@ -203,6 +417,7 @@ def release_problems(i, busy_agents):
 
 def cmd_release(a):
     busy = {}
+    cache = {}  # full issues fetched by the Write Set guard, reused across the keys of one release
     for key in a.keys:
         i = issue(key)
         if i["status"] != "backlog":
@@ -210,6 +425,15 @@ def cmd_release(a):
             continue
         if not i.get("assigneeAgentId"):
             print(f"{key}: has no agent assignee; assign it first")
+            continue
+        # The Write Set guard runs on every release, before anything changes; --force does not skip it.
+        try:
+            report = write_set_guard(i, cache)
+        except ApiError as e:
+            print(f"{key}: not released: the Write Set conflict check could not read Paperclip ({e}). Nothing was changed.")
+            continue
+        if report:
+            print(f"{key}: not released.\n" + "\n".join(report))
             continue
         if not busy:
             for o in call("GET", f"/companies/{i['companyId']}/issues?status=in_progress") or []:
@@ -225,6 +449,7 @@ def cmd_release(a):
             call("PATCH", f"/issues/{i['id']}", {"executionWorkspaceId": None, "executionWorkspacePreference": "isolated_workspace"})
             print(f"{key}: detached from inherited workspace {ws.get('name')}; it gets its own worktree")
         res = call("PATCH", f"/issues/{i['id']}", {"status": "todo"})
+        cache[i["id"]] = {**i, "status": res.get("status", "todo")}  # later keys compare against it
         busy[i["assigneeAgentId"]] = key
         print(f"{key}: released -> {res['status']} (the assignee is woken now)"
               + (f"; accepted with: {'; '.join(problems)}" if problems else ""))
@@ -386,7 +611,7 @@ def main():
     s.set_defaults(fn=cmd_log)
     s = sub.add_parser("release", help="backlog -> todo; wakes the assignee (task-contract checks first)")
     s.add_argument("keys", nargs="+")
-    s.add_argument("--force", action="store_true", help="release despite failed task-contract checks (Board decision)")
+    s.add_argument("--force", action="store_true", help="release despite failed task-contract checks (Board decision); never skips the Write Set conflict guard")
     s.set_defaults(fn=cmd_release)
     s = sub.add_parser("triage", help="read-only sweep: Board queue, blocked, stalled, quiet, ready, WIP")
     s.add_argument("--quiet-hours", type=float, default=24, help="in_progress with no update for this long is 'quiet'")

@@ -24,7 +24,7 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 | `show SOU-8 [--comments N] [--description]` | One issue: status, assignee, current stage, blockers, branch, latest comments, runs |
 | `log <run-id> [--tail N]` | Output of one run; take run ids from `show` |
 | `triage` | Read-only daily sweep (knowledge/company/workflows/daily-triage.md): what needs the Board, blocked issues and whether they name an unblock owner, stalled reviews, quiet tasks, ready backlog, agents over WIP 1 |
-| `release SOU-8 [SOU-9 …] [--force]` | `backlog` → `todo`. **The assignee starts working immediately and spends usage.** Refuses an issue with no write set, no review/approval stage, open blockers, or a busy assignee; `--force` only on the user's explicit word |
+| `release SOU-8 [SOU-9 …] [--force]` | `backlog` → `todo`. **The assignee starts working immediately and spends usage.** First runs the Write Set conflict guard (below); then refuses an issue with no review/approval stage, open blockers, or a busy assignee. `--force` skips only those later checks, and only on the user's explicit word |
 | `approve SOU-8 "comment"` | Board approval: sets `done` with the comment. Only works while the issue waits on the Board |
 | `request-changes SOU-8 "comment"` | Board sends the work back to the implementer with the comment |
 | `comment SOU-8 "text"` | Board comment without a decision |
@@ -43,6 +43,17 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 - Never change agent permissions, adapters, secrets or company settings through this skill. Those are configuration changes. Discuss them first and record them in the docs (security-architecture.md §4).
 
 - **Daily triage.** When the user asks what is stuck or what needs them, run `triage` first and lead with "Needs the Board". Suggest it once per working day.
+
+## Write Set conflict guard (`release`)
+
+Every `release` compares the issue's `## Write set` with the Write Set of every unmerged issue of the **same project**, and refuses the release on any overlap, listing each conflicting issue and path. `--force` never skips it, and it changes nothing when it refuses. Rules (task-contract.md §4.1; code and comments in `scripts/pc.py`):
+
+- **Format:** list items under `## Write set` (or `## Files owned …`), one path per item in backticks, relative to the project repository; globs `*`, `?`, `[…]`, `**` allowed; a single item `none` means no files. A folder covers everything inside it. Comparison ignores case (Windows). `..`, absolute paths and unclosed backticks are refused.
+- **Unmerged:** `todo`, `in_progress`, `in_review`, `blocked` and unknown statuses; `backlog` only once it has its own execution workspace; `done` until Paperclip shows the merge (workspace `deliveryState` `merged_via_pr` / `merged_by_ancestry`, or archived by Paperclip's reaper, `cleanupReason` `issue_terminal`). A `done` issue with no execution workspace is not compared. `cancelled` is ignored.
+- **Refused as well:** a candidate with no project or no readable Write Set, an unmerged issue whose Write Set cannot be read, and any failure to read Paperclip.
+- **A merged PR still blocks** when Paperclip cannot see the merge: update the project repository's local `main` (`git pull --ff-only origin main`) so `merged_by_ancestry` applies.
+- Fix a refusal by narrowing a Write Set or adding a blocker relation and releasing after the merge. The guard never creates blockers or edits other issues.
+- Tests: `python -I .claude/skills/paperclip/scripts/test_pc.py` (no Paperclip needed).
 
 ## Known behaviour (see docs/architecture/stage1-gap-analysis.md)
 

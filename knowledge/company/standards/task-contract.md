@@ -50,7 +50,7 @@ Agent-created Tasks are created in `backlog`, **unassigned**, with the intended 
 
 ## 4. Conflict prevention
 
-1. Before release, compare the Task's write set with every Task of the same project that is **not merged yet**: `in_progress`, `in_review`, `blocked`, and approved but not merged (E1). Overlap: add a blocker relation and do not release.
+1. Before release, compare the Task's write set with every Task of the same project that is **not merged yet**: `in_progress`, `in_review`, `blocked`, and approved but not merged (E1). Overlap: add a blocker relation and do not release. The Paperclip skill's `release` command enforces this check on every release and `--force` does not skip it; its exact rules (path format, which statuses count as unmerged, how a merge is detected) are in [the skill](../../../.claude/skills/paperclip/SKILL.md#write-set-conflict-guard-release). A release made in the Paperclip UI is not checked.
 2. A Task that finds it must change a file outside its write set stops and comments. The `project-manager` re-checks overlap before it continues. Unrelated fixes become follow-up Tasks (R7.2).
 3. After each merge, the `project-manager` comments on every open PR of that project whose write set overlaps the merged change: `git fetch origin`, then `git merge origin/main` as separate commands, resolve, re-run tests, push. Never rebase or force-push ([security-architecture.md §4](../../../docs/architecture/security-architecture.md#4-agent-permissions-provider-level)).
 4. The Board merges PRs one at a time, in dependency order.
