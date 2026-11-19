@@ -430,7 +430,10 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
   - a Paperclip run in a sandbox company, started only with the Board's approval because it shares the instance with the production company.
 - **Diff handoff design (2026-11-20, `PROPOSED`, not implemented):** [review-package.md](../design/review-package.md).
 - **Board decisions (2026-11-20), now in the design:**
-  - **U1:** the reviewer ends with a JSON verdict. A Board-side Verdict Relay checks the run, issue, reviewer, head SHA and schema, then records findings and the decision with its own identity. Human-approval fallback.
+  - **U1:** the reviewer returns a JSON verdict. A Board-side Verdict Relay validates the run, issue, reviewer, head SHA and verdict schema.
+    - The relay records the decision **only when its identity is the active review-stage participant**. The proposal makes the Board Operator user (or a dedicated relay user, if Paperclip supports one) the stage participant; `code-reviewer` only gives advice and is woken by hand.
+    - If that arrangement is unavailable, or Paperclip refuses the relay, the relay posts the findings only and the Board Operator records the decision manually (`pc.py approve` / `pc.py request-changes`).
+    - V1–V3 are unverified sandbox questions.
   - **U2:** manual trigger only (`pc.py review-pack`); no `provisionCommand`, watchdog or automatic lifecycle.
   - **U4:** 50 files, 1 MB patch, 256 KB per file, 10 context files, 2 GB Review Root, 14 days after closure. Over a limit, the package is refused with "split the Task".
   - **U5:** GitHub API first (object-only repository as fallback); never a working repository.
