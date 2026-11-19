@@ -62,13 +62,13 @@ Hard constraints:
 | Review Packager (`pc.py review-pack`) | T | GitHub API (PR, files, blobs) | `<Review Root>/store`, the audit log | Packager token (§6) |
 | Stager (part of `review-pack`) | T | the store, Paperclip run status | `<Staging Root>/current`, the staging lock | Board API session |
 | `code-reviewer` | U | `<Staging Root>/current`; the author's worktree is also readable (its cwd, §9) | nothing | none |
-| Verdict Relay (`pc.py review-relay`) | T | the Paperclip run, its log, the issue, the staged manifest | an issue comment and decision, the audit log | Board API session |
+| Verdict Relay (`pc.py review-relay`) | T | the Paperclip run, its log, the issue, the staged manifest | an issue comment; the decision only as the active stage participant (§3.3); the audit log | Board API session (not exclusive, V3) |
 
 ## 2. Approved decisions
 
 | Decision | Approved direction | Status |
 |---|---|---|
-| U1 | The reviewer returns a JSON verdict. A Board-side Verdict Relay validates it and records it with its own identity. Human-approval fallback | Design (§3). **Paperclip compatibility needs sandbox validation** |
+| U1 | The reviewer returns a JSON verdict. A Board-side Verdict Relay validates it, and records the decision only when its identity is the active review-stage participant (proposed: the Board Operator user; `code-reviewer` advisory, woken by hand). Otherwise it posts findings only and the Board Operator decides manually | Design (§3.3). **Participant arrangement and API compatibility need sandbox validation (V1–V3)** |
 | U2 | Manual trigger `pc.py review-pack`. No production `provisionCommand`, no watchdog, no automatic lifecycle | Design (§1, §11) |
 | U4 | Limits: 50 files, 1 MB patch, 256 KB per file, 10 context files, 2 GB Review Root, 14 days after closure. Over a limit, fail and request a Task split | Design (§5, §8) |
 | U5 | Prefer the GitHub API or an object-only repository. Never trust a working repository | Design (§4): **GitHub API for the first implementation** |
@@ -115,7 +115,7 @@ The installed Paperclip 2026.1023.0 refuses a stage decision from anyone but the
 
 The design therefore proposes:
 - **Relay identity is the stage participant.** The Task's review stage names the Board Operator user, or a dedicated relay user if Paperclip offers one, as participant. `code-reviewer` is not a stage participant; it is woken for the issue by hand and gives advice.
-- The relay records the decision as that user.
+- The relay records the decision as that user, and only while that user is the active participant (§3.4, check 1).
 - Whether an agent woken for an issue it is not assigned to runs normally in the issue's workspace, without a checkout conflict, is **unverified** (V2).
 - **Fallback, always available:** the relay posts the findings comment only, and the Board records the decision with `pc.py approve` or `pc.py request-changes`. These already require the issue to wait on the Board.
 

@@ -11,7 +11,7 @@ All notable changes to the Game Studio framework are recorded here. The format f
 - Reviewer isolation re-audit (P1.1, G-13): a source audit of Paperclip 2026.1023.0 and its adapters found no supported way to keep a reviewer out of the author's worktree and branch. G-13 stays unresolved; findings and options are in OQ-042, OQ-002, OQ-033 and security-architecture §4. Task contract §8 and the `qa` role text now say the review runs in the author's workspace (`qa` is no longer told to check out the branch there). No configuration changed.
 - OQ-042 experiment (2026-11-20): a dedicated Claude Code reviewer tested on native Windows outside Paperclip, in a throwaway repository. With read-only tools and a diff supplied from outside it reviewed correctly and every write was refused. With git read commands allowed through Bash, `git diff/log/show --output=<file>` wrote files inside and outside the repository. OQ-042 stays open, and G-13 stays unresolved. No configuration changed.
 - Review package design (`docs/design/review-package.md`, `PROPOSED`) for the OQ-042 diff handoff, revised with the Board decisions U1, U2, U4, U5, U6 and U7:
-  - a Board-side Verdict Relay with a human fallback;
+  - a Board-side Verdict Relay with a human fallback. Paperclip records a stage decision only from the active stage participant, so the relay can record it only when its identity is that participant (proposed: the Board Operator user, with `code-reviewer` advisory). Otherwise the Board Operator records the decision manually. The participant arrangement and API compatibility still need sandbox validation (V1–V3);
   - a manual `pc.py review-pack` trigger;
   - the approved limits and retention;
   - the GitHub API as the first source, never a working repository;
