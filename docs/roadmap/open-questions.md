@@ -428,8 +428,18 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Recommendation:** option 1 is viable only in the *strict* form: no shell, read-only file tools, deny rules for every write tool, diff delivered from outside. A shell allowlist for git, even "read-only", must not be used. Next steps before any production use:
   - a Board decision on how the diff reaches the reviewer;
   - a Paperclip run in a sandbox company, started only with the Board's approval because it shares the instance with the production company.
-- **Diff handoff design (2026-11-20, `PROPOSED`, not implemented):** [review-package.md](../design/review-package.md). A trusted Board-side packager builds a read-only review package (patch, before and after files, brief, manifest) from the PR's pinned SHAs with tree-to-tree git plumbing. The strict reviewer reads it with `Read`, `Grep` and `Glob`; a relay returns the verdict. Open points U1–U7 are in that document; the main one, U1, is how the stage decision is recorded without giving the reviewer a shell or credentials.
-- **Status:** Open. Option 1 is partly verified outside Paperclip (strict form only); its diff handoff is designed but not built. G-13 stays unresolved.
+- **Diff handoff design (2026-11-20, `PROPOSED`, not implemented):** [review-package.md](../design/review-package.md).
+- **Board decisions (2026-11-20), now in the design:**
+  - **U1:** the reviewer ends with a JSON verdict. A Board-side Verdict Relay checks the run, issue, reviewer, head SHA and schema, then records findings and the decision with its own identity. Human-approval fallback.
+  - **U2:** manual trigger only (`pc.py review-pack`); no `provisionCommand`, watchdog or automatic lifecycle.
+  - **U4:** 50 files, 1 MB patch, 256 KB per file, 10 context files, 2 GB Review Root, 14 days after closure. Over a limit, the package is refused with "split the Task".
+  - **U5:** GitHub API first (object-only repository as fallback); never a working repository.
+  - **U6:** a dedicated fine-grained read-only token (Metadata, Contents and Pull requests: read; selected repositories), packager only.
+  - **U7:** immutable per-issue, per-head storage, and one serialized `current` staging folder, the only one given to the reviewer.
+- **Found while designing U1:** Paperclip 2026.1023.0 lets only the current stage participant record a stage decision ("Only the active reviewer or approver can advance the current execution stage"). The relay can therefore decide only if its own user identity is the stage participant, with `code-reviewer` advisory and woken by hand.
+- **Still to validate in a sandbox:** V1 (a user as stage participant), V2 (a run for a non-assignee agent), V3 (whether agents reach Board endpoints in `local_trusted` mode), V5 (retention from closure or merge), V6 (fork PRs). V4 (automatic trigger) is for a later phase.
+- **Nothing is implemented:** no packager, relay, token, agent or Paperclip change.
+- **Status:** Open. Option 1 is partly verified outside Paperclip (strict form only); its diff handoff is designed, with decisions U1, U2 and U4–U7 approved, but not built. G-13 stays unresolved.
 
 ## Conflicts
 
