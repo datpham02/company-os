@@ -1,12 +1,12 @@
 # Review Package: Diff Handoff for a Read-Only Reviewer
 
 - **Status:** `PROPOSED` (design only; nothing implemented). Part of [OQ-042](../roadmap/open-questions.md#oq-042--reviewer-isolation-g-13). Does not resolve G-13.
-- **Date:** 2026-11-20
+- **Date:** 2026-11-20, revised 2026-11-20 with the Board decisions U1, U2, U4, U5, U6 and U7 (§10).
 - **Contract owner for:** how the changes of a code Task reach a strict, read-only `code-reviewer`, and how its verdict comes back.
 
 ## 0. Problem and constraints
 
-The OQ-042 experiment (2026-11-20) found:
+The OQ-042 experiment (2026-11-20) found three things:
 - A Claude Code reviewer with only `Read`, `Grep` and `Glob` reviews well when it is handed a diff.
 - A reviewer with "read-only" git commands through Bash can write files (`git diff|log|show --output=<file>`), even outside the repository.
 - Native Windows gives no OS-level boundary in that setup.
@@ -14,231 +14,332 @@ The OQ-042 experiment (2026-11-20) found:
 So the reviewer gets **no shell, no git, no write tool and no credentials**. Something else must produce what it reads.
 
 Hard constraints:
-- **R1.** Reviewer tools: `Read`, `Grep`, `Glob` only. No `Bash`, `PowerShell`, git, `Edit`, `Write` or `NotebookEdit`.
-- **R2.** No author or Git credentials in the reviewer's environment.
+- **R1.** The reviewer's tools are `Read`, `Grep` and `Glob` only. No `Bash`, `PowerShell`, git, `Edit`, `Write` or `NotebookEdit`.
+- **R2.** No author credentials, Git credentials or packager token in the reviewer's environment.
 - **R3.** No write access to the author's Task Workspace, by the reviewer or by anything acting for it.
-- **R4.** ADR-006: Paperclip stays the only owner of worktrees. The handoff creates no worktree, checkout or branch.
-- **R5.** A separate directory is a convenience, not an isolation boundary. On native Windows, the reviewer and the packager run as the same user (security-architecture §5).
+- **R4.** ADR-006 holds: Paperclip stays the only owner of worktrees. The handoff creates no worktree, checkout or branch.
+- **R5.** A separate directory is a convenience, not an isolation boundary. On native Windows, the reviewer, the packager and every agent run as the same user (security-architecture §5).
 
 ## 1. Architecture and data flow
 
-```text
- Author agent ──push──▶ GitHub PR (head SHA)                  Paperclip
-      │                                                          │ issue → in_review,
-      ▼                                                          │ stage participant = code-reviewer
- Task Workspace (worktree, Paperclip-owned)                      │
-      │  (packager never reads or writes it)                     ▼
-      ▼                                             ┌──────────────────────────┐
- Shared git object store ◀── read-only plumbing ──  │ Review Packager (trusted, │
-                                                    │ Company OS, Board side)  │
- GitHub API ◀── PR head/base SHA, read-only ─────── │ builds + validates       │
-                                                    └────────────┬─────────────┘
-                                                                 │ writes (atomic)
-                                                                 ▼
-                                   <Review Root>/<ISSUE-KEY>/<head-sha>/   (package, then READY)
-                                                                 │ Read / Grep / Glob only
-                                                                 ▼
-                                           code-reviewer run (claude --print, strict profile)
-                                                                 │ final message = verdict JSON
-                                                                 ▼
-                                      Verdict Relay (trusted) ──▶ Paperclip decision + comment
-```
-
-**Steps:**
-1. The author pushes the Task Branch and opens a PR (development-cycle).
-2. The issue enters the `review` stage with `code-reviewer` as participant.
-3. The **Review Packager** resolves the PR for the issue and reads its head and base SHAs from GitHub.
-4. It checks that both commits exist in the local object store, then builds the package from those two commits only.
-5. The package is built in a temporary folder and renamed into place. A `READY` file is written last.
-6. The reviewer runs (a Paperclip wake, see §6). Its prompt names the package path. It reads the package and writes nothing.
-7. The reviewer ends with a verdict block in a fixed format.
-8. The **Verdict Relay** reads the run output and records the decision and findings on the issue (§3.4, open question U1).
-
-**Two trusted components, both outside the reviewer:**
-
-| Component | Runs as | Reads | Writes |
-|---|---|---|---|
-| Review Packager | Board side (`pc.py` command, later the watchdog) | git objects through plumbing, GitHub PR metadata | only `<Review Root>` |
-| Verdict Relay | Board side | the reviewer's run log via the Paperclip API | the Paperclip issue (decision, comment) |
-
-## 2. Recommended approach and alternatives
-
-**Recommended: a read-only review package** (option C below). It holds the patch, full before and after text of each changed file, the Task's review brief, and a manifest. It is built from the PR's **pinned head and base SHAs** with tree-to-tree git plumbing, and checked against GitHub.
-
-| Option | What the reviewer gets | Pros | Cons |
-|---|---|---|---|
-| A. Patch file only | `patch.diff` | Smallest; simplest | Line numbers lack context; the reviewer would read the author's worktree for the rest, and that worktree may hold uncommitted or unpushed changes |
-| B. Snapshot of changed files plus metadata | After-state of changed files, manifest | Exact line references | No hunks; harder to see what changed; no base for deleted or modified lines |
-| **C. Review package (patch plus before/after files plus brief plus manifest)** | All of A and B, the acceptance criteria and the write set | Exact commit; self-contained; works without the worktree; checksummed | More code (validation, limits, retention); disk use |
-| D. Diff from the GitHub API only | Patch and file contents fetched by the packager over HTTPS | No local git at all, so untrusted repo config cannot run code | Needs network and a token; rate limits; large PRs paginate |
-
-Choose C, built from local git objects, with the SHAs pinned and checked against GitHub. Keep D as the fallback when objects are missing or the repository config cannot be trusted (§5).
-
-## 3. Package format
-
-### 3.1 Layout
+**Trust:**
+- **[T]** trusted: Board-side code run by the Board Operator.
+- **[U]** untrusted: author output, repository content, and the reviewer's output, which is treated as data.
 
 ```text
-<Review Root>/                      # outside every repository and Workspace Root; not synced to cloud
-  <ISSUE-KEY>/<head-sha>/           # e.g. SOU-12/3f2a…; one package per reviewed head
-    READY                           # empty; written last. No READY means not ready, so do not review
-    manifest.json
-    REVIEW.md                       # review brief: task goal, acceptance criteria, write set, instructions
-    patch.diff                      # unified diff base..head, 5 lines of context
-    files/head/<repo path>          # full text at head for added, modified and renamed files
-    files/base/<repo path>          # full text at base for modified, deleted and renamed files
-    context/<repo path>             # optional: unchanged files named in the Task's Read set (bounded)
+ [U] Author agent ──push──▶ GitHub PR (pinned head SHA)
+                                 ▲
+                                 │ ③ read-only API (packager token, §6)
+ Board Operator                  │
+   │ ① pc.py review-pack <KEY>   │
+   ▼                             │
+ [T] Review Packager ────────────┘
+   │ ④ validate, build, manifest (§4, §5)
+   ▼
+ [T] Review Storage  <Review Root>/store/<KEY>/<head-sha>/   (immutable, READY last)
+   │ ⑤ stage (copy, verify) under the staging lock (§7)
+   ▼
+ [T] Reviewer Staging  <Staging Root>/current/   (one review at a time)
+   │ ⑥ Board wakes the reviewer for <KEY> (pc.py wake, manual)
+   ▼
+ [U] code-reviewer run: claude --print, Read/Grep/Glob only,
+     --add-dir <Staging Root>/current  (cwd: the author's worktree; Paperclip decides this)
+   │ ⑦ final message ends with a JSON verdict
+   ▼
+ [T] Verdict Relay (pc.py review-relay <KEY> <run-id>, manual)
+   │ ⑧ verify run, issue, reviewer, head SHA, schema (§3)
+   ▼
+ Paperclip: findings comment + stage decision, or the Board decides by hand (fallback)
+   │ ⑨ unstage; ⑩ retention and cleanup (§8)
 ```
 
-- Repository paths are kept as they are, so a finding `src/Calculator.cs:17` refers to `files/head/src/Calculator.cs` line 17. That is the same file at the PR head.
-- Files are written as raw blobs (`git cat-file blob <sha>`), with no smudge filter, line-ending change or textconv.
+**Every step is started by the Board Operator (U2).** Nothing runs on a Paperclip event, a watchdog or a `provisionCommand`.
 
-### 3.2 `manifest.json`
+**Components:**
 
-```json
-{
-  "schema": "company-os/review-package@1",
-  "packager": { "version": "0.1.0" },
-  "createdAt": "2026-11-20T10:00:00Z",
-  "issue": { "key": "SOU-12", "id": "<uuid>", "project": "<project id>" },
-  "repository": "owner/name",
-  "pullRequest": { "number": 41, "url": "https://github.com/owner/name/pull/41" },
-  "baseSha": "<40 hex>", "headSha": "<40 hex>", "mergeBaseSha": "<40 hex>",
-  "verifiedAgainstGitHub": true,
-  "limits": { "maxFiles": 50, "maxPatchBytes": 1048576, "maxFileBytes": 262144, "maxContextFiles": 10 },
-  "files": [
-    { "path": "src/Calculator.cs", "status": "M", "oldPath": null, "mode": "100644",
-      "binary": false, "encoding": "utf-8", "bytes": 812,
-      "headSha256": "<hex>", "baseSha256": "<hex>", "included": "full" }
-  ],
-  "omitted": [ { "path": "assets/logo.png", "reason": "binary" } ],
-  "warnings": [],
-  "patchSha256": "<hex>"
-}
-```
+| Component | Trust | Reads | Writes | Credentials |
+|---|---|---|---|---|
+| Review Packager (`pc.py review-pack`) | T | GitHub API (PR, files, blobs) | `<Review Root>/store`, the audit log | Packager token (§6) |
+| Stager (part of `review-pack`) | T | the store, Paperclip run status | `<Staging Root>/current`, the staging lock | Board API session |
+| `code-reviewer` | U | `<Staging Root>/current`; the author's worktree is also readable (its cwd, §9) | nothing | none |
+| Verdict Relay (`pc.py review-relay`) | T | the Paperclip run, its log, the issue, the staged manifest | an issue comment and decision, the audit log | Board API session |
 
-- `status` is one of `A`, `M`, `D`, `R` or `C` (with `oldPath`), or `T` for a type change.
-- `included` is one of `full`, `patch-only`, `metadata-only` or `omitted`.
+## 2. Approved decisions
 
-### 3.3 Reviewer access
-- **Diff:** `patch.diff`.
-- **Source:** `files/head` and `files/base`, plus `context/` for the Read set.
-- **Line references:** paths and line numbers of `files/head`; for removed lines, `files/base` labelled `(base)`.
-- **Instructions:** `REVIEW.md` (generated from the issue's goal, acceptance criteria, write set and the reviewer checklist).
-- **Package location:** the run is given one fixed extra directory, `--add-dir <Review Root>`. The prompt, built from the issue key, names `<Review Root>/<ISSUE-KEY>/<head-sha>/`.
+| Decision | Approved direction | Status |
+|---|---|---|
+| U1 | The reviewer returns a JSON verdict. A Board-side Verdict Relay validates it and records it with its own identity. Human-approval fallback | Design (§3). **Paperclip compatibility needs sandbox validation** |
+| U2 | Manual trigger `pc.py review-pack`. No production `provisionCommand`, no watchdog, no automatic lifecycle | Design (§1, §11) |
+| U4 | Limits: 50 files, 1 MB patch, 256 KB per file, 10 context files, 2 GB Review Root, 14 days after closure. Over a limit, fail and request a Task split | Design (§5, §8) |
+| U5 | Prefer the GitHub API or an object-only repository. Never trust a working repository | Design (§4): **GitHub API for the first implementation** |
+| U6 | A dedicated fine-grained read-only GitHub token for the packager only | Design (§6). No token created |
+| U7 | Per-issue storage keyed by head SHA. One `current` staging directory, which is the only one given to the reviewer. Serialized | Design (§7) |
 
-The reviewer is told to read only the package. A deny rule on the author's worktree (`Read(./**)`) would make that technical. It is untested (U3).
+## 3. Verdict return and the Verdict Relay (U1)
 
-### 3.4 Verdict return
+### 3.1 Reviewer output
 
-The reviewer writes nothing. Its **final message** must end with one fenced block:
+The reviewer writes nothing. Its **final message** must end with exactly one fenced `json` block:
 
 ```json
-{"verdict": "changes_requested", "issue": "SOU-12", "headSha": "<40 hex>",
+{"schema": "company-os/review-verdict@1",
+ "verdict": "changes_requested", "issue": "SOU-12", "headSha": "<40 hex>",
  "findings": [{"path": "src/Calculator.cs", "line": 17, "side": "head", "severity": "critical",
-               "title": "Off-by-one in Average", "detail": "…", "fix": "use i < values.Length"}]}
+               "title": "Off-by-one in Average", "detail": "…", "fix": "use i < values.Length"}],
+ "notReviewed": [{"path": "assets/logo.png", "reason": "binary"}]}
 ```
 
-The **Verdict Relay** reads the run log through the Paperclip API (`GET /heartbeat-runs/{id}/log`, as `pc.py log` already does). It accepts the block only when all of these hold:
-- the JSON parses against the schema;
-- `issue` and `headSha` match the package;
-- the package's head is still the PR head.
+Schema rules:
+- `verdict` is `approved` or `changes_requested`.
+- `severity` is one of `critical`, `high`, `medium` or `low`.
+- `side` is `head` or `base`.
+- `path` must be one of the files in the manifest.
+- `line` must be within that file at that side.
+- `changes_requested` needs at least one finding (Paperclip requires a comment for every decision; the relay builds it from the findings).
 
-It then posts the findings as a comment and records the stage decision.
+### 3.2 Paperclip API use
 
-**How the decision is recorded is open (U1).** Paperclip expects the decision from the stage participant. Recording it on the reviewer's behalf may need the reviewer's identity, which would break R2, or a Board-side path whose semantics are unverified. The alternative is to let the reviewer call one Paperclip reporting helper. That puts a shell back, which is exactly what failed in the experiment, so it is the fallback only after its own experiment.
+Every endpoint below is already used by `pc.py`. Whether the decision step works for this setup is **unverified**.
 
-## 4. Validation (packager; fail closed)
+| Step | Call | Purpose |
+|---|---|---|
+| Issue | `GET /api/issues/<KEY>` | `id`, `status`, `executionState` (current stage, participant) |
+| Runs | `GET /api/issues/<id>/runs` | the run exists on this issue, with its `agentId`, `status` and `createdAt` |
+| Run output | `GET /api/heartbeat-runs/<run-id>/log` | the final message, to extract the verdict |
+| Findings | `POST /api/issues/<id>/comments` | the findings as a Board comment, with a relay receipt marker |
+| Decision | `PATCH /api/issues/<id>` with `status` and `comment` | approve (`done`) or request changes (`in_progress`), as `pc.py approve` / `request-changes` do today |
 
-The packager treats the repository, its config and its contents as **untrusted** (an author agent can write `.git/config`, `.gitattributes` and file contents).
+### 3.3 Authority: the main open point
+
+The installed Paperclip 2026.1023.0 refuses a stage decision from anyone but the current participant (`issue-execution-policy.js`: "Only the active reviewer or approver can advance the current execution stage"). So a relay acting as the Board **cannot** record a decision for a review stage whose participant is the `code-reviewer` agent. Using the agent's own key would break R2.
+
+The design therefore proposes:
+- **Relay identity is the stage participant.** The Task's review stage names the Board Operator user, or a dedicated relay user if Paperclip offers one, as participant. `code-reviewer` is not a stage participant; it is woken for the issue by hand and gives advice.
+- The relay records the decision as that user.
+- Whether an agent woken for an issue it is not assigned to runs normally in the issue's workspace, without a checkout conflict, is **unverified** (V2).
+- **Fallback, always available:** the relay posts the findings comment only, and the Board records the decision with `pc.py approve` or `pc.py request-changes`. These already require the issue to wait on the Board.
+
+**Authentication.** Paperclip runs in `local_trusted` mode, where the Board API is reached on loopback without login. The relay therefore has no credential of its own, and any process of the same Windows user can make the same calls. Whether an agent's run can reach Board-level endpoints this way is **unverified** (V3). Under the current setup this is not an exclusive authority. Stronger options would be a Paperclip deployment mode with authenticated Board sessions, or a separate OS account; both are outside this design.
+
+### 3.4 Relay checks (fail closed)
+
+The relay accepts a verdict only when all of these hold:
+1. `<KEY>` resolves to an issue in `in_review`, and its current participant is the relay's identity.
+2. `<run-id>` is in `GET /issues/<id>/runs`, its `agentId` is `code-reviewer`, its status is finished successfully, and it was created after the current staging time.
+3. The staging lock names this `<KEY>` and `headSha`, and the staged manifest still verifies against the store.
+4. The PR head on GitHub still equals `headSha`. If the author pushed since, the review is stale.
+5. Exactly one verdict block, valid against the schema; `issue` and `headSha` equal the staging lock; every finding points into the manifest.
+
+Any failed check stops the relay with a reason, and nothing is recorded.
+
+### 3.5 Duplicates, retries and refusals
+
+- **Receipt.** Every comment the relay posts carries `relay-receipt: <run-id> <headSha>`. Before posting, the relay looks for that receipt on the issue and in the audit log. If it is found, it does nothing ("already relayed"), so re-running the command is safe.
+- **Order.** Post the comment first, then the decision. If the decision fails after the comment, re-running finds the receipt, skips the comment and retries only the decision.
+- **Transient errors** (network, HTTP 5xx): up to 3 attempts with backoff, then stop and report. No queue, no background retry.
+- **Refusal** (HTTP 4xx, for example 422 "Only the active reviewer…"): no retry. The relay leaves the findings comment, writes the refusal to the audit log, and tells the Board to decide by hand (fallback).
+- **A second verdict for the same head** (a new run): refused while a receipt exists for that head. The Board decides which review stands.
+
+## 4. Source of changes (U5)
+
+**Risk of a working repository as input.** The author agent can write that repository's `.git/config`, `.gitattributes`, hooks and files. Git commands that read the index or worktree can run author-controlled programs as the Board user: fsmonitor, hooks, filters, textconv and external diff. Even tree-to-tree plumbing reads the repository-local config. **The packager never reads the author's worktree or its repository.**
+
+| | **Option A: GitHub API** (recommended first) | Option B: object-only repository |
+|---|---|---|
+| Source | PR metadata and blobs over HTTPS | A packager-owned bare repository, fetched from GitHub |
+| Runs git locally | No | Yes (`fetch` and plumbing), in a repository whose config only the packager writes |
+| Repository-controlled code | None | None if: a bare repository, no checkout, `core.hooksPath` set to null, `GIT_CONFIG_NOSYSTEM=1`, global config nulled, no `.gitattributes` applied (no worktree), and only `cat-file`, `ls-tree`, `diff-tree --no-ext-diff --no-textconv` and `merge-base` |
+| Integrity | Each blob's git SHA-1 is recomputed from its content and compared with the tree entry and the PR file list | git verifies objects on fetch (`fetch.fsckObjects=true`); the commit and tree chain from the pinned SHA |
+| Limits | Rate limits; the PR files list paginates (100 per page); a file's `patch` is omitted when too large | Disk; first fetch time |
+| Shared with Paperclip | Nothing | Nothing (a separate bare repository, not the Primary Checkout) |
+
+**Recommendation: Option A** for the first implementation:
+- it has no local git process and no repository on the Board side;
+- it reads exactly what the Board would merge;
+- the 50-file and 1 MB limits keep it within rate limits.
+
+Option B is the fallback if API limits or completeness become a problem. It needs its own review before use.
+
+**Option A procedure** (all reads, using the packager token):
+1. `GET /repos/{o}/{r}/pulls/{n}`: take `head.sha` and `base.sha`; refuse if the PR is closed or its head repository is a fork the token cannot read.
+2. `GET /repos/{o}/{r}/compare/{base}...{head}`: take `merge_base_commit.sha`. Use the merge base, not the base tip, for "before" content.
+3. `GET /repos/{o}/{r}/pulls/{n}/files?per_page=100&page=…`: read every page until it is empty. The number of files must equal `changed_files` from step 1, otherwise refuse.
+4. For each file, get the before and after blobs by SHA (`GET /repos/{o}/{r}/git/blobs/{sha}`, base64). Recompute `sha1("blob " + len + "\0" + bytes)` and compare it with the blob SHA. The head blob SHA comes from the tree at `head.sha` (`GET /git/trees/{head}?recursive=1`, or per path).
+5. Build `patch.diff` from the two blob sets with a fixed in-process diff (unified, 5 lines of context). Never use the `patch` field as the only source, since GitHub omits it for large files.
+6. Re-read step 1. If `head.sha` changed, discard and stop ("PR head moved; run again").
+7. Context files (the Task's Read set): blobs at `head.sha`, verified the same way.
+
+## 5. Package format, limits and validation (U4)
+
+### 5.1 Layout
+
+```text
+<Review Root>/                        # outside every repository and the Workspace Root; never committed or synced
+  store/<ISSUE-KEY>/<head-sha>/       # immutable once READY
+    READY                             # written last; a package without READY does not exist
+    manifest.json
+    REVIEW.md                         # brief: Task goal, acceptance criteria, write set, reviewer instructions, verdict schema
+    patch.diff
+    files/head/<repo path>            # after-state of A/M/R/C files
+    files/base/<repo path>            # before-state (merge base) of M/D/R/C files
+    context/<repo path>               # Read-set files at head
+  audit.log                           # append-only JSON lines (§8)
+<Staging Root>/                       # a separate folder, NOT inside <Review Root>
+  current/                            # a verified copy of exactly one package
+  staging.lock
+```
+
+- Paths keep the repository layout, so the finding `src/Calculator.cs:17` refers to `files/head/src/Calculator.cs` line 17.
+- `manifest.json` uses the fields of schema `company-os/review-package@1`:
+  - `issue`, `repository`, `pullRequest`, `baseSha`, `headSha`, `mergeBaseSha`, `source` (`github-api`), `limits`;
+  - per file: `path`, `status`, `oldPath`, `mode`, `binary`, `encoding`, `bytes`, `gitBlobSha` (before and after), `sha256`, `included`;
+  - `notReviewable`, `patchSha256`, `createdAt`, `packagerVersion`.
+
+### 5.2 Limits (approved defaults)
+
+| Limit | Value | Over the limit |
+|---|---:|---|
+| Changed files | 50 | **Refuse**: "too large to review; split the Task" |
+| `patch.diff` size | 1 MB | **Refuse**: split the Task |
+| Any changed text file (before or after) | 256 KB | **Refuse**: split the Task, or the Board reviews that file by hand |
+| Context files (Read set) | 10 | **Refuse**: narrow the Read set |
+| `<Review Root>` total | 2 GB | Clean up eligible packages (§8); if still over, **refuse** new packages |
+
+- **Nothing is dropped silently.**
+- Content that cannot be reviewed as text (binary files, symlinks, submodules) is never truncated. It is listed in `manifest.json` `notReviewable` and at the top of `REVIEW.md`, and the reviewer must repeat it in `notReviewable`.
+- A Read-set file missing at head refuses the package.
+
+### 5.3 Validation (fail closed)
 
 | Check | Rule | On failure |
 |---|---|---|
-| PR and SHAs | The PR is found from the issue's branch or link. Head and base SHAs come from GitHub. Both objects exist locally (`git cat-file -e`). The local branch tip equals the PR head | Refuse: "head not pushed / objects missing"; fallback D or Board |
-| Git commands | Tree-to-tree plumbing only: `rev-parse`, `cat-file`, `ls-tree`, `diff-tree -p -M --no-ext-diff --no-textconv`. Never commands that read the index or worktree (`status`, `diff` without two trees), so `core.fsmonitor` and hooks never run. Run with `GIT_CONFIG_NOSYSTEM=1`, `GIT_CONFIG_GLOBAL` set to the null device, and `-c core.hooksPath=<null>`. Repository-local config stays untrusted (U5) | Refuse on any non-zero exit |
-| Paths | Reject or encode: absolute paths, drive letters, `..`, empty segments, NUL or control characters, `:` (alternate data streams), trailing dot or space, Windows reserved names (`CON`, `NUL`, `COM1`…), components over 255, total over the path limit. Reject case-insensitive collisions on Windows. After joining, the resolved real path must stay inside the package folder | Skip the file: `omitted` with a reason. Refuse the package if a changed path is rejected |
-| Symlinks, submodules | Mode `120000` is metadata only (target recorded as text, never created). Mode `160000` is metadata only | `metadata-only` |
-| Binary | numstat `-`, a NUL byte in the first 8 KB, or a file larger than `maxFileBytes` | `metadata-only` (sizes and hashes) |
-| Encoding | Not valid UTF-8 | Contents included raw; `encoding` set to `unknown`; warning |
-| Size | Over `maxFiles` changed files or `maxPatchBytes` | **Refuse:** "too large to review; split the Task" (task-contract §2 size). Context files over the limit are dropped with a warning |
-| Missing context | A Read-set file is missing at head | Warning in the manifest; review continues |
-| Integrity | Before `READY`: compute and record `sha256` of every file; recompute the patch from the stored blobs | Refuse |
-| Staleness | The PR head moved during the build | Discard and rebuild |
+| Inputs to `review-pack` | `<KEY>` matches `^[A-Z]+-\d+$`; the issue exists, is `in_review` and has a code project; its PR is found from the Task's branch or the PR link in the issue; the repository is in the token's allowed list | Refuse; nothing written |
+| Paths | Reject: absolute paths, drive letters, `..`, empty segments, NUL or control characters, `:` (alternate data streams), trailing dot or space, Windows reserved names (`CON`, `NUL`, `COM1`…), a component over 255, the total path length limit, case-insensitive collisions. After joining, the resolved real path must stay inside the package folder | **Refuse** the package |
+| Symlinks (`120000`), submodules (`160000`) | Never created on disk; target or commit recorded as text | `notReviewable` |
+| Binary | A NUL byte in the first 8 KB, or GitHub reports no text diff | `notReviewable` (sizes and blob SHAs listed) |
+| Encoding | Not valid UTF-8 | Included raw, `encoding: unknown`, listed in `REVIEW.md` |
+| Integrity | Every blob SHA recomputed (§4). Every file's SHA-256 in the manifest. `patchSha256` | Refuse |
+| Staleness | PR head changed during the build | Discard the build and refuse |
+| Atomicity | Build in `store/<KEY>/.tmp-<random>/`, rename to `<head-sha>/`, write `READY` last. An existing `<head-sha>/` with `READY` is reused, never overwritten | Leftover `.tmp-*` is removed by the next run of the same key |
 
-Content is untrusted input for the reviewer too: code comments may carry prompt injection. `REVIEW.md` tells the reviewer to treat package content as data. With no write tools, the worst case is a manipulated verdict. The Board's approval and merge (ADR-009) remain the last gate.
+Package content is untrusted input for the reviewer, and code comments may carry prompt injection. `REVIEW.md` tells the reviewer to treat it as data. With no write tools, the worst case is a manipulated verdict. The Board's approval and merge (ADR-009) stay the last gate.
 
-## 5. Security boundaries and remaining risks
+## 6. Packager GitHub token (U6)
+
+- **Type:** a **fine-grained personal access token** dedicated to the packager. Never an agent's `GH_TOKEN`, and never a broad classic token when a dedicated token can be used.
+- **Repository access:** "Only select repositories", listing each game and web repository the studio reviews. Adding a repository is a Board action.
+- **Permissions (read-only):**
+  - Metadata: read (always required);
+  - Contents: read (blobs, trees, compare);
+  - Pull requests: read (PR and file list).
+  - No other permission. Contents and Pull requests have **no write**.
+- **Storage:** Windows Credential Manager, under a generic credential such as `company-os/review-packager`. Not in Git, not in `config/`, not in Paperclip secrets, and not bound to any agent. The packager reads it at start, passes it only in the `Authorization` header, and never logs it. Error messages are redacted.
+- **Expiry:** at most 90 days, recorded in the operations runbook. The packager warns when fewer than 14 days remain (from the token metadata, if the API exposes it; otherwise from the recorded date).
+- **Rotation:** create the new token, store it, run one dry `review-pack`, then revoke the old token in GitHub.
+- **Revocation:** revoke at once if it may have leaked. The packager treats HTTP 401 or 403 as "token invalid or revoked" and refuses, with no fallback to another credential.
+- **Not visible to agents:** it is never in an agent's environment. On the same Windows user, a determined agent process could still read Credential Manager entries (§9).
+
+## 7. Cross-task isolation: storage and staging (U7)
+
+- **Storage** (`<Review Root>/store/<KEY>/<head-sha>/`): one immutable package per issue and head. Only the packager creates or deletes it. It is never given to the reviewer.
+- **Staging** (`<Staging Root>/current/`): a verified copy of exactly one package. It is the only path passed to the reviewer (`--add-dir <Staging Root>/current`, a fixed `extraArgs` value of the `code-reviewer` agent). It sits outside `<Review Root>`, so the reviewer cannot reach the store through it. Copies, not links or junctions.
+- **Staging lock** (`staging.lock`, JSON): `{issue, headSha, packagePath, stagedAt, stagedBy, runId|null}`.
+
+Staging is one-at-a-time:
+1. `review-pack <KEY>` builds or reuses the package, then stages it.
+2. Staging requires that no lock exists, or that the lock names the same issue and head (re-staging is a no-op).
+3. To replace another issue's staging, the Board runs `pc.py review-pack --unstage`. That command refuses while the locked review's run is active (`queued`, `starting`, `running`). It also refuses while that review is not yet relayed, unless `--abandon` is given, which is logged.
+4. Staging verifies the copy against the store's manifest (every SHA-256), then writes `current/READY`.
+5. **Serialization:** only one `code-reviewer` review is in flight. The Board wakes `code-reviewer` only for the issue named in the lock; `review-pack` prints the exact `pc.py wake` command. A second review waits.
+6. **Crash or abandoned staging:**
+   - A lock whose run is finished, failed or cancelled, or that has had no run for 24 hours, is reported by `review-pack --status` as stale.
+   - The Board clears it with `--unstage --abandon`.
+   - Nothing is cleared automatically.
+   - `current/` is cleared only by `--unstage` and after a successful relay.
+
+**This is not an OS-level boundary.** All agents run as the same Windows user:
+- any agent process with a shell (authors on Cursor have one) can read the store, the staging folder and the lock, and can change them;
+- staging only keeps the strict reviewer's own tools away from other issues' packages.
+
+## 8. Retention, cleanup and audit (U4)
+
+- **Retention starts when the issue reaches `done` or `cancelled`**, and runs for 14 days. Packages of open issues are never deleted.
+- **Open detail (V5):** Paperclip's `done` is not proof of merge (ADR-009 needs a separate GitHub merge). Should retention wait for a confirmed merge or closed PR as well?
+- **Cleanup** runs only when the Board runs `pc.py review-pack --cleanup`. It removes packages of closed issues older than 14 days, oldest first. No scheduled task.
+- **When the 2 GB cap is reached:** new builds first trigger a cleanup of eligible packages. If the store is still over the cap, the build is **refused** with the size and the list of the largest open-issue packages. The Board decides; nothing open is deleted.
+- **Deletion is two-step:** rename to `store/.trash/<KEY>-<head>-<time>/`, then delete. A failure is logged and retried at the next `--cleanup`. A package half-deleted never keeps its `READY`, because `READY` is removed first. The staged package is never deleted.
+- **Audit log** (`<Review Root>/audit.log`, append-only JSON lines) records `build`, `reuse`, `refuse`, `stage`, `unstage`, `abandon`, `relay`, `relay-refused`, `cleanup` and `cleanup-failed`. Each entry has a timestamp, the issue, the head SHA, the run id and the reason. It never holds tokens or source content. The log is kept for one year (rotation by size, never deleted on cleanup).
+
+## 9. Security boundaries and remaining risks
 
 **What the design gives:**
 - the reviewer's toolset has no write, shell or git path (verified outside Paperclip in the OQ-042 experiment);
-- the reviewer needs nothing from the author's worktree;
-- git runs only in a trusted Board-side component, restricted to tree-to-tree plumbing.
+- no git runs on any repository an agent can write;
+- the packager token never reaches an agent's environment;
+- the reviewer's tools see only one package.
 
 **What it does not give:**
-- **No OS boundary.** The packager, the reviewer and every agent run as the same Windows user. The reviewer's limits are Claude Code permission checks, not filesystem isolation (OQ-027).
-- **G-13 is not fixed by this alone.** Until the reviewer is a separate strict agent on every code review, other reviewers keep the old behaviour. Paperclip still starts every review run in the author's worktree.
-- **Repository-local config.** Plumbing tree-to-tree commands do not run external diff, textconv, fsmonitor or hooks, but git still reads `.git/config`. Option D removes this entirely; an isolated object-only clone is the middle path (U5).
-- **Packager credentials.** Reading PR metadata needs a GitHub token on the Board side. Use a read-only, fine-grained token, never an agent's `GH_TOKEN`.
-- **Package tampering.** Any agent process could edit the package before the reviewer reads it (same user). The checksums in the manifest catch accidental changes, not a determined writer. The relay re-verifies the head SHA.
-- **Verdict path (U1).** Until it is solved, a human or the Board records the decision.
-- **Cursor:** cannot be confined (OQ-033), so it is never used as `code-reviewer`.
+- **No OS boundary.** Native Windows gives no filesystem isolation in the tested setup. Packager, relay, reviewer and every agent run as the same user. Claude Code's tool permissions are not OS isolation.
+- **Paperclip still starts review runs in the author's worktree.** The reviewer can read it, and anything else its tools can reach.
+- **Tampering.** A same-user agent process can change staging or stored packages. Checksums in the manifest detect accidental corruption only, because a writer who can change the data can also change the manifest. The relay re-checks the head SHA against GitHub, which limits but does not prevent a manipulated review.
+- **Board authority in `local_trusted` mode** is not exclusive to the relay (§3.3, V3).
+- **G-13 is not resolved** by this design. Other review paths are unchanged until a strict `code-reviewer` handles every code review.
+- **Cursor must never be used as `code-reviewer`** (OQ-033: no allowlist or permission key).
 
-## 6. Paperclip integration (no ADR-006 change)
+**Stronger isolation would need one of:**
+- separate Windows accounts: agents under one account, the packager and relay under another, with NTFS ACLs that give agents no access to `<Review Root>` and the reviewer read-only access to `<Staging Root>` (OQ-027);
+- containers or VMs per agent; the studio runs agents natively today (ADR-013);
+- a future Paperclip feature: a read-only per-stage workspace holding the PR head.
 
-| Need | Native Paperclip | Company OS (custom) |
+## 10. Paperclip integration (no ADR-006 change)
+
+| Need | Native Paperclip | Company OS (custom, not built) |
 |---|---|---|
-| Review stage, participant, wake | `executionPolicy` review stage; assignment wake (OQ-035 gaps handled by the watchdog) | none |
-| Reviewer agent | `claude_local`, engine `cli`, `extraArgs`: `--restricted --tools Read,Grep,Glob --strict-mcp-config --permission-mode dontAsk --permission-prompts none --settings <reviewer settings> --add-dir <Review Root>` | A new agent definition and profile; no `GH_TOKEN` bound |
-| Run cwd | Always the issue's worktree (cannot change) | The reviewer is told to read the package; `Read(./**)` deny (U3) |
-| Package build trigger | `provisionCommand` runs before each run with `PAPERCLIP_AGENT_ID` and `PAPERCLIP_ISSUE_ID` (U2: ordering, failure and timeout behaviour unverified; changing a project's workspace strategy is a production change) | Phase 1: a Board command (`pc.py review-pack <KEY>`). Phase 2: the review-wake watchdog builds before it wakes |
-| Verdict | Run log API; issue decision API | Verdict Relay (U1) |
-| Worktree lifecycle | Paperclip only | Never touched. The packager owns only `<Review Root>` |
+| Review stage | `executionPolicy` review stage. Under U1 the participant is the relay's user identity (§3.3) | Stage set by `pc.py create --review <user>`, needs a small change (V1) |
+| Reviewer agent | `claude_local`, engine `cli`, `extraArgs`: `--restricted --tools Read,Grep,Glob --strict-mcp-config --permission-mode dontAsk --permission-prompts none --settings <reviewer settings> --add-dir <Staging Root>/current` | Agent definition, settings file; no secrets bound |
+| Trigger | Manual wake: `POST /agents/<id>/wakeup` with the issue (`pc.py wake`) | `pc.py review-pack` (build, stage, print the wake command) |
+| Verdict | Run log and issue APIs (§3.2) | `pc.py review-relay` |
+| Worktrees | Created and cleaned by Paperclip only | Never touched; the packager owns only `<Review Root>` and `<Staging Root>` |
 
-ADR-006 holds:
-- the packager creates no worktree, checkout or branch;
-- it reads git objects;
-- `<Review Root>` is not a Task Workspace;
-- worktree creation and cleanup stay with Paperclip.
+**A future automatic trigger (not designed for build now).** A later phase could call the same `review-pack` and `review-relay` code from the review-wake watchdog or from a project `provisionCommand`. Either needs:
+- answers on run ordering and failure behaviour (OQ-042 V4);
+- its own approval, because both act on production issues;
+- the same staging serialization;
+- an unchanged manual path as the fallback.
 
-**Retention and cleanup.** The packager is the single owner of `<Review Root>`:
-- it keeps every package of an issue until the issue is `done` or `cancelled`, plus 14 days (audit of what was reviewed);
-- superseded heads are kept until then, read-only;
-- it caps the total size of `<Review Root>` (default 2 GB), removing the oldest packages of closed issues first;
-- it never deletes the package of an open issue;
-- packages hold source code, so `<Review Root>` lives on the studio machine only and is never committed, synced or attached to issues.
+## 11. Implementation phases (none started)
 
-## 7. Implementation phases
+| Phase | Deliverables | Acceptance | Depends on | Stop if |
+|---|---|---|---|---|
+| 0 Design approval | This document, reviewed | Board approves the design and the open points it accepts | — | The Board rejects the approach |
+| 1 Packager CLI | `pc.py review-pack` built from fixture data (recorded GitHub API responses), store, staging, lock, cleanup, audit log; unit tests | Every §5.3 rule and §5.2 limit has a test; atomic build; staging refuses a second issue; no files outside the two roots change | Phase 0 | A rule cannot be enforced without running git on an agent-writable repository |
+| 2 Strict reviewer tests | Repeat the OQ-042 experiment on a staged package | Defects found with correct `files/head` lines; verdict block valid; write, shell and git attempts all fail; the store and other packages are not reachable through the reviewer's tools | Phase 1 | The reviewer can read outside `current/` and the cwd, or write anything |
+| 3 GitHub source | Option A against a throwaway GitHub repository with the dedicated token | Blob SHAs verified; pagination complete; head-moved and missing-patch cases refused; token never logged | Phase 1; a token created by the Board | The token needs more than read permissions |
+| 4 Paperclip sandbox and relay API | A separate sandbox company: review stage with a user participant, a manual wake of `code-reviewer`, `review-relay` | V1–V3 answered; the decision is recorded or refused as §3.5 says; the fallback works | Phases 1–3; Board approval to start Paperclip | The sandbox would touch the production company, or Paperclip refuses every relay identity |
+| 5 Sandbox end-to-end | Author Task, PR, package, review, relay, decision, merge, cleanup | All §12 criteria in the sandbox | Phase 4 | Any criterion fails |
+| 6 Production proposal | Written proposal: agent, profile, stages, runbook, token. **Separate approval** | — | Phase 5 | — |
 
-| Phase | Scope | Needs approval |
-|---|---|---|
-| 0 | This design | Board review of this document |
-| 1 | Packager CLI (stdlib Python, like `pc.py`): build and validate from two SHAs in a given repository. Unit tests for paths, limits, binary, symlinks, collisions, staleness. Integrity test: `.git` and the worktree byte-identical before and after | No (offline, throwaway repository) |
-| 2 | Strict reviewer on a package, outside Paperclip: repeat the OQ-042 experiment with the package. Test the `Read(./**)` deny (U3) and the verdict block format | No (sandbox) |
-| 3 | GitHub check and PR lookup (`gh` read-only, Board token); fallback D | Token scope decision |
-| 4 | Verdict recording experiment (U1) in a **sandbox Paperclip company** | Yes: start Paperclip; sandbox company |
-| 5 | Trigger: `pc.py review-pack`, then the watchdog or `provisionCommand` (U2), in the sandbox company | Yes |
-| 6 | Production: `code-reviewer` agent, profile, role text, review stages pointing to it, `sync-instructions` | Yes: new agent, configuration, ADR if roles or ADR-006 wording change |
+## 12. Acceptance criteria (for the finished work, not met by this document)
 
-## 8. Acceptance criteria
+- [ ] The packager reads only the GitHub API (or an object-only repository after its own review). No git runs on a Task Workspace, the Primary Checkout or any repository an agent can write.
+- [ ] Every §5.3 rule refuses as specified. Every §5.2 limit refuses with "split the Task". Nothing is dropped silently.
+- [ ] Packages are immutable per head SHA, `READY` is written last, and stale heads are refused.
+- [ ] The reviewer's tools are `Read`, `Grep` and `Glob`. It reaches only `<Staging Root>/current` besides its cwd. Write, shell and git attempts fail.
+- [ ] Only one review is staged at a time. Another issue's active staging cannot be replaced.
+- [ ] The relay accepts only a verdict that passes §3.4. A re-run never duplicates a comment or decision. A refusal leaves the human fallback.
+- [ ] The packager token is read-only, limited to selected repositories, and never in an agent environment or a log.
+- [ ] Retention, the 2 GB cap and cleanup behave as §8 says, and are logged.
+- [ ] No worktree or branch is created, moved or deleted (ADR-006).
+- [ ] G-13 is not marked resolved by this work alone.
 
-- [ ] The packager builds a package from pinned SHAs. `.git`, the Primary Checkout and every Task Workspace are byte-identical before and after (hash snapshot).
-- [ ] Every validation rule in §4 has a test that refuses or omits as specified, including traversal, reserved names, ADS, collisions, symlinks, binary and oversize.
-- [ ] A package is never used without `READY`, and never when the PR head no longer matches `headSha`.
-- [ ] The strict reviewer finds the planted defects from the package alone, with correct `files/head` line references, and its toolset is `Read, Grep, Glob`.
-- [ ] Repeated write, shell and git attempts by the reviewer all fail, and the package and the repository are unchanged.
-- [ ] The verdict reaches the issue without the reviewer holding a shell or credentials (U1 resolved), in a sandbox Paperclip company.
-- [ ] No step creates, moves or deletes a worktree or branch (ADR-006).
-- [ ] Documentation states the remaining risks of §5. G-13 is not marked resolved by this work alone.
+## 13. Open validation questions
 
-## 9. Unresolved questions
-
-- **U1 Decision recording.** Can the stage decision be recorded without the reviewer making an API call itself? If not, is one narrowly allowlisted reporting call acceptable after its own bypass test?
-- **U2 Trigger.** Does `provisionCommand` run before every run, synchronously, with a usable failure path? Or does the watchdog build first and let a run that finds no `READY` end without a decision (and is that run then retried or blocked by Paperclip)?
-- **U3 Worktree reads.** Does a `Read(./**)` deny rule work while the cwd is the worktree, without breaking `--add-dir` reads?
-- **U4 Limits.** Final values for `maxFiles`, `maxPatchBytes`, `maxFileBytes` and retention; per project or global.
-- **U5 Untrusted repository config.** Is local plumbing with a null global and system config enough? Or must packages always come from an object-only clone or the GitHub API (option D)?
-- **U6 Token.** Which GitHub token does the Board side use to read PR metadata?
-- **U7 Cross-Task reads.** The fixed `--add-dir <Review Root>` lets a reviewer read other issues' packages. Is that acceptable, or should each run get its own folder (would need per-run `extraArgs`, which Paperclip does not offer)?
+- **V1 Stage participant.** Can a review stage name the Board Operator user, or a dedicated relay user, while `code-reviewer` is woken for the issue without being a participant? Does `pc.py create --review` need a user option?
+- **V2 Non-assignee run.** Does a `code-reviewer` woken for an issue it is not assigned to run without a checkout conflict, and in which cwd?
+- **V3 Board authority.** In `local_trusted` mode, can an agent's own process reach Board-level endpoints? If yes, the relay's authority is not exclusive, and that must be recorded as a risk or fixed by the deployment mode.
+- **V4 Automatic trigger.** Ordering and failure behaviour of the watchdog or `provisionCommand` path (future phase only).
+- **V5 Retention start.** Issue closure (approved default) or confirmed merge?
+- **V6 Fork PRs.** Are PRs from forks in scope? The token may not read them.
 
 ## Related documents
 [../roadmap/open-questions.md](../roadmap/open-questions.md) (OQ-027, OQ-033, OQ-035, OQ-042) · [../architecture/stage1-gap-analysis.md](../architecture/stage1-gap-analysis.md) (G-13) · [../architecture/security-architecture.md](../architecture/security-architecture.md) · [../decisions/ADR-006-git-worktree-for-concurrent-tasks.md](../decisions/ADR-006-git-worktree-for-concurrent-tasks.md) · [../decisions/ADR-009-approval-before-merge.md](../decisions/ADR-009-approval-before-merge.md) · [../../knowledge/company/standards/task-contract.md](../../knowledge/company/standards/task-contract.md)
