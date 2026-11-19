@@ -685,5 +685,14 @@ class OnlyReleaseStarts(unittest.TestCase):
         ws.assert_called_once()
 
 
+# ---------- OQ-042 Phase 1: review packager (tests live in test_review_pack.py) ----------
+import test_review_pack as _review_pack_tests  # noqa: E402
+
+for _name, _obj in vars(_review_pack_tests).items():
+    if isinstance(_obj, type) and issubclass(_obj, unittest.TestCase) and _obj.__module__ == _review_pack_tests.__name__:
+        globals()["ReviewPack" + _name] = _obj  # prefixed, so no helper or class here is shadowed
+del _name, _obj  # otherwise unittest also collects the last class through _obj
+
+
 if __name__ == "__main__":
     unittest.main()

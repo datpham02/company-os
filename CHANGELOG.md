@@ -5,6 +5,14 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
+- OQ-042 Phase 1 review packager (`pc.py review-pack`, `scripts/review_pack.py`), built from fixture files only. It does not use git, GitHub, Paperclip or a token.
+  - Immutable `store/<KEY>/<head>/` packages: manifest with SHA-256, atomic build with `READY` last, reuse of intact packages.
+  - Every §5.2 limit and §5.3 validation rule enforced fail-closed.
+  - One-review-at-a-time staging under an exclusive lock, with `--status`, `--unstage` and `--abandon`.
+  - Retention cleanup with a 2 GB cap and two-step deletion.
+  - An append-only JSONL audit log.
+  - 62 new tests.
+  The design stays `PROPOSED`; G-13 stays unresolved.
 - Write Set conflict guard in the Paperclip skill's `release` (task-contract.md §4.1, E1): every release compares the issue's Write Set with every unmerged issue of the same project (including `done` issues whose merge Paperclip has not seen) and refuses on overlap, listing issues and paths. `--force` no longer skips the Write Set check. Tests in `.claude/skills/paperclip/scripts/test_pc.py`.
 - WIP limit in the Paperclip skill (task-contract.md §5, E2): `release` refuses an issue whose assignee already has an `in_progress` issue in any project of the company, including one released earlier in the same command, and `--force` no longer skips this; `triage` reports breaches from the same calculation and says when WIP could not be checked. `maxConcurrentRuns` is unchanged (OQ-041).
 - Start gate in the Paperclip skill (P0.3): only `release` starts a task. `create` always creates in `backlog` (`--status todo` refused); `assign` never changes a `backlog` issue's status, refuses `--status todo`, and hands over a started issue only with `--status backlog`; `comment` refuses an agent-assigned `backlog` issue and `wake --issue` a `backlog` issue, since Paperclip wakes the agent on both. Paperclip UI, MCP `create_task` and agents' direct API paths are not covered.
