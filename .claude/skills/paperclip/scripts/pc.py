@@ -623,44 +623,84 @@ def cmd_cancel(a):
     print(f"{a.key}: cancelled (was {i['status']}) -> {res['status']}")
 
 
+# ---------- start gate: only `release` starts a task (task-contract.md §2, P0.3) ----------
+#
+# Wake rules read from Paperclip 2026.1023.0 (routes/issues.js, services/issue-assignment-wakeup.js,
+# services/issue-comment-wakeup.js):
+# - creating or reassigning an issue wakes its agent assignee unless the issue is `backlog` (or closed);
+# - moving an issue out of `backlog` wakes its agent assignee;
+# - a comment by anyone but the assignee wakes the assignee unless the issue is done or cancelled, backlog
+#   included; the comment API has no option to post without waking.
+# So create, assign and comment refuse anything that would start an unreleased issue, and only `release`
+# (with its WIP and Write Set guards) moves an issue out of backlog. --force does not apply to these refusals.
+
+START_ONLY_BY_RELEASE = "only `release` starts a task, after its WIP and Write Set checks"
+
+
+class GateError(ApiError):
+    """A command refused because it would start a task outside `release`."""
+
+
 def cmd_comment(a):
     i = issue(a.key)
+    if i.get("status") == "backlog" and i.get("assigneeAgentId"):
+        raise GateError(f"{a.key} is backlog and assigned to an agent; a Board comment wakes that agent and it starts "
+                        f"the task ({START_ONLY_BY_RELEASE}). Release it first, or put the note in its description.")
     call("POST", f"/issues/{i['id']}/comments", {"body": a.text})
     print(f"{a.key}: comment posted")
 
 
 def cmd_assign(a):
+    if a.status == "todo":
+        raise GateError(f"assign --status todo is not allowed: {START_ONLY_BY_RELEASE}. "
+                        f"Assign it in backlog, then run: release {a.key}")
     i = issue(a.key)
+    status = i.get("status")
+    if status not in ("backlog", "done", "cancelled") and a.status != "backlog":
+        raise GateError(f"{a.key} is {status}; Paperclip wakes a new agent assignee at once unless the issue is backlog, "
+                        f"which would skip release's checks. Park and hand it over with: assign {a.key} {a.agent} "
+                        f"--status backlog, then: release {a.key}")
     ag = agent(i["companyId"], a.agent)
     # Clear a user assignee (e.g. the Board after a stuck review): Paperclip allows only one assignee.
     body = {"assigneeAgentId": ag["id"], "assigneeUserId": None}
-    if a.status:
+    if a.status and a.status != status:
         body["status"] = a.status
     res = call("PATCH", f"/issues/{i['id']}", body)
-    print(f"{a.key}: assigned to {ag['name']} | status {res['status']}")
+    print(f"{a.key}: assigned to {ag['name']} | status {res['status']}"
+          + (f" (not started; run: release {a.key})" if res["status"] == "backlog" else ""))
 
 
 def cmd_create(a):
+    if a.status == "todo":
+        raise GateError(f"create --status todo is not allowed: {START_ONLY_BY_RELEASE}. "
+                        "Create it in backlog, then release it")
     c = company(a.company)
     desc = open(a.desc_file, encoding="utf-8").read() if a.desc_file else (a.desc or "")
     ag = agent(c["id"], a.assignee)
     stages = [{"type": "review", "participants": [{"type": "agent", "agentId": agent(c["id"], r)["id"]}]} for r in a.review]
     if not a.no_approval:
         stages.append({"type": "approval", "participants": [{"type": "user", "userId": BOARD_USER}]})
-    body = {"title": a.title, "description": desc, "assigneeAgentId": ag["id"], "status": a.status}
+    # Always backlog: an assigned backlog issue wakes nobody. The Board is not inside a run, so Paperclip does
+    # not make it inherit a run's workspace; no parentId or workspace field is sent.
+    body = {"title": a.title, "description": desc, "assigneeAgentId": ag["id"], "status": "backlog"}
     if a.project:
         body["projectId"] = project(c["id"], a.project)["id"]
     if stages:
         body["executionPolicy"] = {"stages": stages}
     i = call("POST", f"/companies/{c['id']}/issues", body)
     print(f"created {i['identifier']} | {ag['name']} | status {i['status']} | stages: "
-          + (" -> ".join(s["type"] for s in stages) or "none"))
+          + (" -> ".join(s["type"] for s in stages) or "none")
+          + f" | not started; run: release {i['identifier']}")
 
 
 def cmd_wake(a):
+    target = issue(a.issue) if a.issue else None
+    if target and target.get("status") == "backlog":
+        raise GateError(f"{a.issue} is backlog; waking an agent on it starts unreleased work ({START_ONLY_BY_RELEASE}). "
+                        f"Run: release {a.issue}")
     c = company(a.company)
     ag = agent(c["id"], a.agent)
-    payload = {"issueId": issue(a.issue)["id"]} if a.issue else {}
+    payload = {"issueId": target["id"]} if target else {}
     r = call("POST", f"/agents/{ag['id']}/wakeup?companyId={c['id']}",
              {"source": "on_demand", "triggerDetail": "manual", "reason": a.reason, "payload": payload})
     print(f"woke {ag['name']}: run {r.get('id')} {r.get('status')}")
@@ -704,16 +744,17 @@ def main():
     s.add_argument("key")
     s.add_argument("comment")
     s.set_defaults(fn=cmd_cancel)
-    s = sub.add_parser("comment", help="post a Board comment")
+    s = sub.add_parser("comment", help="post a Board comment (refused on an agent-assigned backlog issue: it would wake the agent)")
     s.add_argument("key")
     s.add_argument("text")
     s.set_defaults(fn=cmd_comment)
-    s = sub.add_parser("assign", help="assign an issue to an agent")
+    s = sub.add_parser("assign", help="assign an issue to an agent; never starts it (use release)")
     s.add_argument("key")
     s.add_argument("agent")
-    s.add_argument("--status", choices=["backlog", "todo"])
+    s.add_argument("--status", choices=["backlog", "todo"],
+                   help="backlog: park a started issue while handing it over; todo is refused (use release)")
     s.set_defaults(fn=cmd_assign)
-    s = sub.add_parser("create", help="create an issue (default: backlog, Board approval stage)")
+    s = sub.add_parser("create", help="create an issue in backlog with a Board approval stage; start it with release")
     s.add_argument("--title", required=True)
     s.add_argument("--assignee", required=True)
     s.add_argument("--project")
@@ -721,9 +762,9 @@ def main():
     s.add_argument("--desc-file")
     s.add_argument("--review", action="append", default=[], help="reviewer agent (repeatable, in order)")
     s.add_argument("--no-approval", action="store_true", help="skip the Board approval stage")
-    s.add_argument("--status", choices=["backlog", "todo"], default="backlog")
+    s.add_argument("--status", choices=["backlog", "todo"], default="backlog", help="todo is refused (use release)")
     s.set_defaults(fn=cmd_create)
-    s = sub.add_parser("wake", help="wake an agent now")
+    s = sub.add_parser("wake", help="wake an agent now (refused with --issue on a backlog issue)")
     s.add_argument("agent")
     s.add_argument("--issue")
     s.add_argument("--reason", default="Woken by the Board Operator")

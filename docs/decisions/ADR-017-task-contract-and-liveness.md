@@ -27,6 +27,7 @@ In the first two days of Stage 1, parallel Tasks conflicted on the same file bec
 - Planning takes slightly longer (write sets, relations); merge conflicts and forgotten Tasks should drop.
 - `pc.py triage` and release checks are added to the Paperclip skill. Enforcing WIP in Paperclip (`maxConcurrentRuns: 1`) waits for OQ-041.
 - Implementation note (2026-11-19; the status of this ADR is unchanged): `pc.py release` enforces the write-set overlap check and WIP 1 (`in_progress` only, across all projects) as hard guards that `--force` does not skip, and `triage` reports WIP breaches from the same calculation. Releases made outside the skill are not checked.
+- Implementation note (2026-11-19, P0.3; status unchanged): in the skill, `create` and `assign` never start a Task and `comment` and `wake --issue` refuse an unreleased one, so `release` is the only local start gate. Paperclip-native paths (UI, MCP `create_task`, `paperclip-issue-update.sh`, direct API) remain outside it.
 - Paperclip's own issue monitor and blocker-attention fields (`monitorNextCheckAt`, `blockerAttention`, seen in the API) may replace part of the triage later (`UNVERIFIED`).
 
 ## Reconsider when
