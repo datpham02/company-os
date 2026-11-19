@@ -4,6 +4,9 @@ All notable changes to the Game Studio framework are recorded here. The format f
 
 ## [Unreleased]
 
+### Added
+- Write Set conflict guard in the Paperclip skill's `release` (task-contract.md §4.1, E1): every release compares the issue's Write Set with every unmerged issue of the same project (including `done` issues whose merge Paperclip has not seen) and refuses on overlap, listing issues and paths. `--force` no longer skips the Write Set check. Tests in `.claude/skills/paperclip/scripts/test_pc.py`.
+
 ### Fixed
 - Reviewers editing the author's branch (SOU-2 commit db51e6d, SOU-18 commit e7e3f88, both by `web-engineer` on Cursor): the task-contract rule was not in any role text. All eight role files now forbid a reviewer from editing, committing, rebasing or pushing the author's branch, and the `git` rule in `config/paperclip/agents.json` says only the assignee commits and pushes. Gap G-13.
 
