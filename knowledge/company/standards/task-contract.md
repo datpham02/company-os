@@ -107,7 +107,7 @@ Event-driven wakes are not enough (E6). The [daily-triage](../workflows/daily-tr
 
 1. Reviewer ≠ author, on a different provider where possible.
 2. The reviewer records a decision (approve / request changes) in Paperclip; a verdict comment alone is not a decision.
-3. A reviewer never edits, rebases or pushes the author's branch.
+3. A reviewer never edits, rebases or pushes the author's branch. Paperclip runs the review in the author's own Task Workspace, so this rule is enforced by role text and Board checks only, not technically (G-13, OQ-042). The reviewer does not switch branches there and commits nothing; a reviewer commit is discarded and the Task sent back.
 4. "Changes requested" goes back to the author on the same branch, with the review stages kept.
 
 ## Related documents
