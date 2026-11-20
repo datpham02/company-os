@@ -17,6 +17,8 @@
 - D-AUTH-01, D-AUTH-02, D-AUTH-04 and D-AUTH-05 stay as approved.
 - **D-AUTH-03 is under reconsideration.** Its approval stays in the record, but its condition is not met (§1).
 
+**Follow-up:** the open points of the Phase A.4 report were decided in [auth-migration-phase-a5-board-decisions.md](auth-migration-phase-a5-board-decisions.md) (D-AUTH-10 to D-AUTH-15). The decisions below are unchanged.
+
 ## Summary
 
 | ID | Question | Recommendation | Approval | Implementation authorization |
