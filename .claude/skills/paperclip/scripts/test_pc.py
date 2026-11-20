@@ -701,6 +701,14 @@ for _name, _obj in vars(_review_github_tests).items():
         globals()["ReviewGitHub" + _name] = _obj
 del _name, _obj
 
+# ---------- OQ-042 Phase 4a: Verdict Relay (tests live in test_review_relay.py) ----------
+import test_review_relay as _review_relay_tests  # noqa: E402
+
+for _name, _obj in vars(_review_relay_tests).items():
+    if isinstance(_obj, type) and issubclass(_obj, unittest.TestCase) and _obj.__module__ == _review_relay_tests.__name__:
+        globals()["ReviewRelay" + _name] = _obj
+del _name, _obj
+
 
 if __name__ == "__main__":
     unittest.main()

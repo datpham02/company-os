@@ -20,6 +20,7 @@ import urllib.request
 # python -I leaves the script folder off sys.path; append it (after the standard library) for review_pack.
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import review_pack  # noqa: E402  (OQ-042 Phase 1: local only, no git, GitHub or Paperclip)
+import review_relay  # noqa: E402  (OQ-042 Phase 4a: Verdict Relay)
 
 API =os.environ.get("PAPERCLIP_URL", "http://127.0.0.1:3100/api").rstrip("/")
 BOARD_USER = "local-board"
@@ -715,6 +716,10 @@ def cmd_cancel_run(a):
     print(f"run {a.run_id} cancelled")
 
 
+def cmd_review_relay(a):
+    review_relay.cmd_review_relay(a, call, lambda: agent(company(a.company)["id"], review_pack.REVIEWER_AGENT)["id"])
+
+
 def main():
     p = argparse.ArgumentParser(prog="pc.py", description="Paperclip control for the Game Studio Board Operator")
     p.add_argument("--company", help="company name, issue prefix or id (default: the only active company)")
@@ -777,6 +782,7 @@ def main():
     s.add_argument("run_id")
     s.set_defaults(fn=cmd_cancel_run)
     review_pack.add_parser(sub)
+    review_relay.add_parser(sub, cmd_review_relay)
     a = p.parse_args()
     try:
         a.fn(a)

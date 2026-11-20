@@ -5,6 +5,11 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
+- OQ-042 Review Package Phase 4a, Verdict Relay (`pc.py review-relay <KEY> --run-id R`, `scripts/review_relay.py`):
+  - checks the issue is `in_review` with the relay identity as active participant, the run is a succeeded `code-reviewer` run started after staging, the staged package verifies, the PR head is unchanged, and the run's final message holds exactly one valid verdict whose findings point into the package;
+  - posts the findings with a `relay-receipt`, then records the decision; re-runs never duplicate; 5xx/network errors get 3 attempts; a 4xx keeps the comment, is audited as `relay-refused` and leaves the Board fallback.
+
+  55 new tests against a fake Paperclip. **Not yet run against Paperclip:** the sandbox validation (V1–V3) needs Board approval. G-13 stays open.
 - OQ-042 Review Package Phase 3, GitHub source (`review-pack <KEY> --github-pr N --github-repo o/r --task-file T`, `scripts/review_github.py`):
   - reads a pull request over the GitHub REST API with the packager's read-only token from Windows Credential Manager;
   - reads every page of the file list and the trees at head and at the merge base;
