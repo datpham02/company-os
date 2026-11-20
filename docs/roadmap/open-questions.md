@@ -264,6 +264,11 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Backup observed (2026-11-20, D-STEP2-01):** `POST /api/instance/database-backups` (instance admin) created a gzip SQL dump in the instance's `data/backups` folder, verified with `gzip -t`; the same call pruned 35 older files under the retention policy (7 daily, 4 weekly, 1 monthly). See [step2-board-decisions.md](step2-board-decisions.md) §6a. **No restore has been tested** (verification case VA-9 in [auth-migration-verification-plan.md](../architecture/auth-migration-verification-plan.md)).
 - **Phase A.4 (2026-11-20):** a manual backup also works with automatic backups disabled. Paperclip 2026.1023.0 has **no user-facing restore command**: its restore routine is used only inside `worktree init`, which snapshots a running instance. A restore of a backup file is therefore not a supported procedure; see [auth-migration-phase-a4-verification.md](../architecture/auth-migration-phase-a4-verification.md) VA-9. Backup creation alone is not proof of recoverability.
 - **Board decision D-AUTH-10 (2026-11-20):** a backup does not establish recoverability; E8 stays unmet until a restore is verified; no improvised restore against the live instance. Restore planning is workstream WS-1 of [auth-migration-phase-a5-plan.md](../architecture/auth-migration-phase-a5-plan.md); nothing executed.
+- **WS-1.1 research (2026-11-20, source, docs and issues; nothing executed):** see [auth-migration-ws1-restore-research.md](../architecture/auth-migration-ws1-restore-research.md).
+  - No Paperclip version up to v2026.1117.0, nor `master`, has a supported database restore. Paperclip's documentation names what disaster recovery needs (the database, the secrets master key and the object store) but gives no procedure.
+  - On this machine every backup uses the JavaScript engine, because no `pg_dump` or `psql` is installed. Open upstream issue #17854 reports that restoring such a backup drops all CHECK constraints.
+  - Candidates for an isolated test, both unsupported: a cold copy of the stopped instance folder (recommended first), or a dump made with `pg_dump` 18 and then restored.
+  - Still open; E8 is not met.
 - **Status:** Partially verified (backup creation only).
 
 ### OQ-026 — Hoppscotch MCP
