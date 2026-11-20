@@ -126,4 +126,6 @@ Step 3 will follow the design's order, since the design is the approved contract
 
 **Next step:** Board review. Phase 2 tooling has not started.
 
-**Board decision record:** [step2-board-decisions.md](step2-board-decisions.md) (D-STEP2-01 to D-STEP2-06), proposed and approved 2026-11-20 as recommended. Nothing has been applied yet.
+**Board decision record:** [step2-board-decisions.md](step2-board-decisions.md) (D-STEP2-01 to D-STEP2-06), proposed and approved 2026-11-20 as recommended.
+
+**D-STEP2-01 applied (2026-11-20):** after a fresh database backup, `Bash(curl *)` was removed from the six live Claude agents and from both profiles in `agents.json`; the two Cursor agents are unchanged. Per-agent results and rollback references are in the [execution record](step2-board-decisions.md#6a-execution-record-d-step2-01-2026-11-20). G-14 stays open.

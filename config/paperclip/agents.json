@@ -21,7 +21,6 @@
         "dangerouslySkipPermissions": false
       },
       "allowedTools": [
-        "Bash(curl *)",
         "Bash(cat *)",
         "Bash(*paperclip-issue-update.sh*)",
         "Bash(*paperclip-upload-artifact.sh*)",
@@ -46,7 +45,6 @@
       },
       "permissionMode": "acceptEdits",
       "allowedTools": [
-        "Bash(curl *)",
         "Bash(cat *)",
         "Bash(*paperclip-issue-update.sh*)",
         "Bash(*paperclip-upload-artifact.sh*)",
