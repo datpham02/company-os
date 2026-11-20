@@ -221,6 +221,41 @@ Each new revision's `beforeConfig` contains `Bash(curl *)` and its `afterConfig`
 
 **Not done (out of scope):** Cursor agents (policy deferred); G-14 exploitability (needs the D-STEP2-02 sandbox); `authenticated` mode; the Node/PATH issue in `start-studio.cmd`. **G-14 stays open.**
 
+## 6b. Execution record: D-STEP2-02 part (c) (2026-11-20)
+
+**Authorization:** D-STEP2-02 (approved); the Board Operator chose part (c): no agent runs first. The sandbox Claude Code identity question (§3.1) stays open, so no agent ran.
+
+**Loopback isolation (§3.1).**
+- Before stopping: all eight live agents idle, no run in progress.
+- Live watchdog and Paperclip stopped; ports 3100 and 54329 had no listener; the live database folder's timestamp did not change while the sandbox ran.
+- The live Postgres exited with its Paperclip process before `pg_ctl stop` could run (unclean shutdown). On restart Paperclip ran startup recovery and reached `ready`; agents, open issues and the D-STEP2-01 change were unchanged.
+- Sandbox: own home folder outside `~/.paperclip`, instance `sandbox`, port 3200, Postgres 54339, fresh `.env` secrets; telemetry, update checks and backups off. Test scripts were fixed to `127.0.0.1:3200`; the mode-switch script refused to start if anything listened on 3100.
+- After the tests every sandbox process was stopped and no sandbox port was listening; only then was the studio started again (with the fixed `start-studio.cmd`: Paperclip and the watchdog both on Node 24).
+
+**Credential isolation.** No `GH_TOKEN`, production API key, secret or secret binding was used. The only credentials were sandbox ones: the Board Operator's sandbox account, a CLI board token stored in the sandbox folder, and agent keys of a sandbox agent. The sandbox test agent used the `process` adapter, was paused, had every wake disabled and recorded 0 runs.
+
+**Results.**
+
+| Test | Mode | Result |
+|---|---|---|
+| Keyless read, write, instance-admin read | `local_trusted` | 200 / 201 / 200: keyless is the Board and instance admin |
+| Keyless write with a foreign `Origin` | `local_trusted` | 201: accepted |
+| Keyless request with a foreign `Host` | `local_trusted` | 403 |
+| Agent key: read an issue not assigned to it; list agents | both | 200 (G-8 server side confirmed) |
+| Agent key: instance-admin read; close another issue | both | 401; 403 |
+| Agent key: create an issue without a run | `authenticated` | 201 |
+| Keyless read, write, admin read, agent-key creation | `authenticated` | 403 / 403 / 401 / 403 |
+| Board sign-in on Windows (browser) and CLI board token | `authenticated` | Works |
+| New user after the switch: company access, admin | `authenticated` | None; cannot claim admin |
+| Promote and grant access in `local_trusted`, then switch | both | Works; the board token then sees the companies and is admin |
+| `pc.py overview` | `authenticated` | 403: no `Authorization` header |
+
+Evidence files (JSON, tokens redacted) are kept with the sandbox, outside the repository.
+
+**Identity isolation for agent runs (prepared, not done).** The Board chose a separate Windows user for the sandbox agents (§3.1). Found while preparing it: the studio machine's workspace folder, which holds `company-os` and the other repositories, grants **Modify to all Authenticated Users**, so any new Windows user could read and change the production repositories. The Board Operator's profile (Paperclip data, Claude Code login, Node) is private. The sandbox user therefore needs an explicit deny on the workspace folder, its own Node 24, `paperclipai` and Claude Code login, and a passing read-only isolation check (identity, no credential variables, no git/GitHub credentials, production paths unreadable and unwritable, live instance stopped) before any agent runs. Creating the user and changing folder permissions are the Board Operator's steps.
+
+**Not done:** agent runs (identity decision, §3.1); G-14 exploitability from a `claude_local` run; OQ-041 queueing and G-9 option 2 (both need agent runs); board-token support in the scripts; any change to the studio instance's mode.
+
 ## 7. Exit criteria
 
 Step 2 follow-up is complete when:

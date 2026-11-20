@@ -52,7 +52,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-040 | How are existing Paperclip agents updated from Git, given that import into an existing company refuses `--collision replace`? | Open | Studio bootstrap, ADR-016 |
 | OQ-041 | Does `maxConcurrentRuns: 1` enforce WIP 1 without delaying an agent's review wakes? | Answered from source (not run): wakes are queued, so a busy reviewer's review waits | Task contract, ADR-017 |
 | OQ-042 | How can a reviewer be kept from writing to the author's Task Workspace and branch (G-13)? | Open | Security, ADR-006, task-contract §8 |
-| OQ-043 | Can the studio run Paperclip in `authenticated` mode on Windows, so that no local process is the Board by default (G-14)? | Open | Security, Runtime prerequisites |
+| OQ-043 | Can the studio run Paperclip in `authenticated` mode on Windows, so that no local process is the Board by default (G-14)? | Partially verified (sandbox, no agent runs): works on Windows and closes keyless Board access; migration and script auth needed | Security, Runtime prerequisites |
 
 ## Entries
 
@@ -457,7 +457,14 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
   - Do agents keep working with only their keys?
   - How do `pc.py`, `post-import.py`, `sync-instructions.py` and the review-wake watchdog authenticate (board API key)?
 - **Verification method:** a separate Paperclip instance with its own data folder and port, never the studio instance; switch the mode; run one agent task and each script.
-- **Status:** Open. Needs Board approval to run the separate instance.
+- **Sandbox results (2026-11-20, D-STEP2-02 part (c), no agent runs):** a separate instance (own home folder, instance `sandbox`, port 3200, Postgres 54339, fresh secrets, telemetry and backups off), with the studio instance stopped and port 3100 checked free. Evidence: [step2-board-decisions.md §6b](step2-board-decisions.md#6b-execution-record-d-step2-02-part-c-2026-11-20).
+  - **Windows sign-in works.** `authenticated` mode starts on native Windows 11. `paperclipai auth bootstrap-ceo --force` issued an invite; the Board Operator created an account and signed in in a browser. `paperclipai auth login` (a CLI challenge approved in that browser) returned a board token. OQ-031's wizard problem does not apply to this path.
+  - **Keyless Board access is closed.** Every keyless request is refused (`403 Board access required`; admin routes `401`).
+  - **Migration is not automatic.** The implicit `local-board` user keeps `instance_admin` and owns the existing companies. A user who signs up after the switch is a Board user with no company access and cannot claim admin (`/bootstrap/claim` refuses once an admin exists). Working path, verified: sign up in `authenticated` mode; switch back to `local_trusted` briefly; promote that user (`POST /api/admin/users/:id/promote-instance-admin`) and grant company access (`PUT /api/admin/users/:id/company-access`) keyless; switch to `authenticated`. After that the board token saw both companies and could act as admin.
+  - **Agent keys** in `authenticated` mode: same-company reads work (issues not assigned to the agent, the agent list); instance-admin reads are refused (`401`); a cross-issue write without a run is refused (`403`, needs `X-Paperclip-Run-Id`); creating an issue without a run is **allowed** (`201`).
+  - **Scripts:** `pc.py`, `post-import.py`, `sync-instructions.py` and `review-wake-watchdog.ts` send no `Authorization` header; `pc.py overview` against the sandbox fails with `403`. Each needs board-token support before the studio switches.
+  - **Not tested:** agent runs in `authenticated` mode (needs a Board decision on the sandbox's Claude Code identity, §3.1); whether a `claude_local` run can reach the API with `curl` (G-14 exploitability).
+- **Status:** Partially verified. Remaining: agent runs, script auth, a migration runbook, and a Board decision before any change to the studio instance.
 
 ## Conflicts
 
