@@ -458,7 +458,10 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
   - **U7:** immutable per-issue, per-head storage, and one serialized `current` staging folder, the only one given to the reviewer.
 - **Found while designing U1:** Paperclip 2026.1023.0 lets only the current stage participant record a stage decision ("Only the active reviewer or approver can advance the current execution stage"). The relay can therefore decide only if its own user identity is the stage participant, with `code-reviewer` advisory and woken by hand.
 - **Still to validate in a sandbox:** V1 (a user as stage participant), V2 (a run for a non-assignee agent), V3 (whether agents reach Board endpoints in `local_trusted` mode), V5 (retention from closure or merge), V6 (fork PRs). V4 (automatic trigger) is for a later phase.
-- **Nothing is implemented:** no packager, relay, token, agent or Paperclip change.
+- **Nothing was implemented at design time.** Since then:
+  - the Phase 1 packager has been merged (PR #29, audited in PR #30);
+  - the relay, token, agent and Paperclip changes are still not done.
+- **Review Package Phase 2 (2026-11-20, outside Paperclip, Claude Code 2.1.329, model `sonnet`):** a strict reviewer on a staged fixture package found all three planted defects at the right `files/head` lines with a valid verdict block. Every read, glob or grep outside its cwd and `current/` was refused (store, another issue's package, the staging lock, the audit log, an outside canary), and no file changed. The read boundary comes from Claude Code's `--restricted` flag (together with `--add-dir current`), not from the settings' `allow` rules, so the reviewer profile must always carry it. See [review-package-phase2-results.md](../design/review-package-phase2-results.md). Not verified inside Paperclip.
 - **Status:** Open. Option 1 is partly verified outside Paperclip (strict form only); its diff handoff is designed, with decisions U1, U2 and U4–U7 approved, but not built. G-13 stays unresolved.
 
 ### OQ-043 — Authenticated mode instead of `local_trusted` (G-14)
