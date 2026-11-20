@@ -79,6 +79,7 @@ Order:
 
 ### D-AUTH-03 — Watchdog strategy
 
+> **Under reconsideration (2026-11-20).** Phase A.2 found from source that the built-in scheduler skips the OQ-035 case, so this decision's condition is not met. The approval below stays as the historical record. The re-decision D-AUTH-03R in [auth-migration-phase-a3-board-decisions.md](auth-migration-phase-a3-board-decisions.md) was approved on 2026-11-20: option A, a manual Board sweep after the migration. The security conditions below (no Board credential for the watchdog, no automation user, live watchdog untouched until the switch) still apply. Not implemented.
 
 **Decision:** APPROVED.
 
