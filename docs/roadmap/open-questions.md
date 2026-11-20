@@ -451,7 +451,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Status:** Open. Option 1 is partly verified outside Paperclip (strict form only); its diff handoff is designed, with decisions U1, U2 and U4–U7 approved, but not built. G-13 stays unresolved.
 
 ### OQ-043 — Authenticated mode instead of `local_trusted` (G-14)
-- **Why it matters:** in `local_trusted` mode a request without `Authorization` is the Board and instance admin (`middleware/auth.js` 153-163). Any agent able to reach `127.0.0.1:3100` (Claude profiles allow `Bash(curl *)`; Cursor has no allowlist) could act as the Board. Whether an agent run can actually reach it has not been tested.
+- **Why it matters:** in `local_trusted` mode a request without `Authorization` is the Board and instance admin (`middleware/auth.js` 153-163). Any agent able to reach `127.0.0.1:3100` could act as the Board. The Claude profiles allowed `Bash(curl *)` until D-STEP2-01 removed it on 2026-11-20; Cursor agents still have no allowlist. Whether an agent run can actually reach it has not been tested.
 - **Questions:**
   - Does `authenticated` mode work on native Windows for the Board's sign-in (the onboarding sign-in failed, OQ-031)?
   - Do agents keep working with only their keys?

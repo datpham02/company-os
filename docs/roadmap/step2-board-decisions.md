@@ -181,8 +181,8 @@ Each item requires the relevant approval and execution scope.
 |---|---|---|
 | D-STEP2-01 — Remove Claude curl access | Approved | Approves removing `Bash(curl *)` from both Claude profiles as a controlled configuration change. Cursor policy deferred |
 | D-STEP2-02 — Isolated sandbox | Approved | Approves a disposable sandbox under §3 and §3.1. Reusing this Windows user's Claude Code session is **not** approved by this record; it needs its own Board-approved exception. **Part (c) done (§6b); agent-run part cancelled by the Board 2026-11-20** |
-| D-STEP2-03 — Concurrency validation | Approved | Sandbox validation only; live `maxConcurrentRuns` unchanged. The `request-changes` WIP check needs a separate implementation approval |
-| D-STEP2-04 — MCP task creation | Approved | Planning workflow and sandbox validation; live adapter changes deferred until verified |
+| D-STEP2-03 — Concurrency validation | Approved | Sandbox validation only; live `maxConcurrentRuns` unchanged. The `request-changes` WIP check needs a separate implementation approval. **Sandbox validation not run: cancelled with the sandbox agent runs 2026-11-20 (§6b)** |
+| D-STEP2-04 — MCP task creation | Approved | Planning workflow and sandbox validation; live adapter changes deferred until verified. **Sandbox validation not run: cancelled with the sandbox agent runs 2026-11-20 (§6b)** |
 | D-STEP2-05 — Drift checker candidate | Approved | Design and implementation planning only; implementation needs Phase 2 authorization |
 | D-STEP2-06 — Reviewer isolation | Approved | G-13 stays open; review-package work continues |
 
@@ -223,7 +223,7 @@ Each new revision's `beforeConfig` contains `Bash(curl *)` and its `afterConfig`
 
 ## 6b. Execution record: D-STEP2-02 part (c) (2026-11-20)
 
-**Authorization:** D-STEP2-02 (approved); the Board Operator chose part (c): no agent runs first. The sandbox Claude Code identity question (§3.1) stays open, so no agent ran.
+**Authorization:** D-STEP2-02 (approved); the Board Operator chose part (c): no agent runs first, so no agent ran. The sandbox Claude Code identity question (§3.1) was later superseded: the Board cancelled the agent runs (below).
 
 **Loopback isolation (§3.1).**
 - Before stopping: all eight live agents idle, no run in progress.
@@ -252,7 +252,7 @@ Each new revision's `beforeConfig` contains `Bash(curl *)` and its `afterConfig`
 
 The evidence files (JSON, tokens redacted) are deleted with the sandbox (Board decision, 2026-11-20); this record is the remaining evidence.
 
-**Agent runs cancelled (Board decision, 2026-11-20).** The Board started preparing a separate Windows user for sandbox agent runs (§3.1), then decided the agent-run tests are not needed and ordered the sandbox removed: instance, evidence files and scripts, plus the sandbox Windows user and its folder rule (Board Operator steps). One finding from that preparation stands on its own: the studio machine's workspace folder, which holds `company-os` and the other repositories, grants **Modify to all Authenticated Users**, so any other local Windows account can read and change the production repositories. The Board Operator's profile (Paperclip data, Claude Code login, Node) is private.
+**Agent runs cancelled (Board decision, 2026-11-20).** The Board started preparing a separate Windows user for sandbox agent runs (§3.1), then decided the agent-run tests are not needed and ordered the sandbox removed: instance, evidence files and scripts, plus the sandbox Windows user, its profile and its folder rule. That removal is done by hand by the Board Operator and was still pending when this was recorded. One finding from that preparation stands on its own: the studio machine's workspace folder, which holds `company-os` and the other repositories, grants **Modify to all Authenticated Users**, so any other local Windows account can read and change the production repositories. The Board Operator's profile (Paperclip data, Claude Code login, Node) is private.
 
 **Not done, and not planned after the cancellation:** G-14 exploitability from an agent run; OQ-041 queueing (D-STEP2-03); G-9 option 2, the per-tool MCP restriction (D-STEP2-04). These stay unverified, so any live change that depends on them needs another basis or a new Board decision. **Still open:** board-token support in the scripts; any change to the studio instance's mode.
 
