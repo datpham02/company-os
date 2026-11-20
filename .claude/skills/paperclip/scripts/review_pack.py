@@ -160,7 +160,7 @@ def assert_contained(path, root):
     """Refuse a path that leaves root or passes through a symlink or junction below root.
 
     Any process of the same Windows user can replace a folder under the roots with a junction. Without this
-    check the packager would follow it and write or delete outside its roots (audit 2026-11-21, D1)."""
+    check the packager would follow it and write or delete outside its roots (audit 2026-11-20, D1)."""
     rel = os.path.relpath(os.path.abspath(path), os.path.abspath(root))
     if rel == os.pardir or rel.startswith(os.pardir + os.sep) or os.path.isabs(rel):
         raise ReviewPackError(f"{path} is outside {root}")

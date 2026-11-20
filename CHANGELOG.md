@@ -28,7 +28,7 @@ All notable changes to the Game Studio framework are recorded here. The format f
   Recorded the finding that Paperclip accepts a stage decision only from the current participant. Documentation only; nothing implemented, G-13 unresolved.
 
 ### Fixed
-- Review packager audit (2026-11-21), regression tests for each fix:
+- Review packager audit (2026-11-20), regression tests for each fix:
   - **D1:** a junction or symlink planted under the Review or Staging Root made the packager write or delete outside its roots (verified on Windows 11). It now refuses any link below its roots and in packages.
   - **D3:** names shaped like 8.3 short names (for example `LONGFI~1.CS`) could alias another file. They are now refused.
   - **D2:** `CON .txt`-style device names are now refused as well.
