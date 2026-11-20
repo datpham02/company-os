@@ -180,7 +180,7 @@ Each item requires the relevant approval and execution scope.
 | Decision | Board outcome | Notes |
 |---|---|---|
 | D-STEP2-01 — Remove Claude curl access | Approved | Approves removing `Bash(curl *)` from both Claude profiles as a controlled configuration change. Cursor policy deferred |
-| D-STEP2-02 — Isolated sandbox | Approved | Approves a disposable sandbox under §3 and §3.1. Reusing this Windows user's Claude Code session is **not** approved by this record; it needs its own Board-approved exception |
+| D-STEP2-02 — Isolated sandbox | Approved | Approves a disposable sandbox under §3 and §3.1. Reusing this Windows user's Claude Code session is **not** approved by this record; it needs its own Board-approved exception. **Part (c) done (§6b); agent-run part cancelled by the Board 2026-11-20** |
 | D-STEP2-03 — Concurrency validation | Approved | Sandbox validation only; live `maxConcurrentRuns` unchanged. The `request-changes` WIP check needs a separate implementation approval |
 | D-STEP2-04 — MCP task creation | Approved | Planning workflow and sandbox validation; live adapter changes deferred until verified |
 | D-STEP2-05 — Drift checker candidate | Approved | Design and implementation planning only; implementation needs Phase 2 authorization |
@@ -250,11 +250,11 @@ Each new revision's `beforeConfig` contains `Bash(curl *)` and its `afterConfig`
 | Promote and grant access in `local_trusted`, then switch | both | Works; the board token then sees the companies and is admin |
 | `pc.py overview` | `authenticated` | 403: no `Authorization` header |
 
-Evidence files (JSON, tokens redacted) are kept with the sandbox, outside the repository.
+The evidence files (JSON, tokens redacted) are deleted with the sandbox (Board decision, 2026-11-20); this record is the remaining evidence.
 
-**Identity isolation for agent runs (prepared, not done).** The Board chose a separate Windows user for the sandbox agents (§3.1). Found while preparing it: the studio machine's workspace folder, which holds `company-os` and the other repositories, grants **Modify to all Authenticated Users**, so any new Windows user could read and change the production repositories. The Board Operator's profile (Paperclip data, Claude Code login, Node) is private. The sandbox user therefore needs an explicit deny on the workspace folder, its own Node 24, `paperclipai` and Claude Code login, and a passing read-only isolation check (identity, no credential variables, no git/GitHub credentials, production paths unreadable and unwritable, live instance stopped) before any agent runs. Creating the user and changing folder permissions are the Board Operator's steps.
+**Agent runs cancelled (Board decision, 2026-11-20).** The Board started preparing a separate Windows user for sandbox agent runs (§3.1), then decided the agent-run tests are not needed and ordered the sandbox removed: instance, evidence files and scripts, plus the sandbox Windows user and its folder rule (Board Operator steps). One finding from that preparation stands on its own: the studio machine's workspace folder, which holds `company-os` and the other repositories, grants **Modify to all Authenticated Users**, so any other local Windows account can read and change the production repositories. The Board Operator's profile (Paperclip data, Claude Code login, Node) is private.
 
-**Not done:** agent runs (identity decision, §3.1); G-14 exploitability from a `claude_local` run; OQ-041 queueing and G-9 option 2 (both need agent runs); board-token support in the scripts; any change to the studio instance's mode.
+**Not done, and not planned after the cancellation:** G-14 exploitability from an agent run; OQ-041 queueing (D-STEP2-03); G-9 option 2, the per-tool MCP restriction (D-STEP2-04). These stay unverified, so any live change that depends on them needs another basis or a new Board decision. **Still open:** board-token support in the scripts; any change to the studio instance's mode.
 
 ## 7. Exit criteria
 
