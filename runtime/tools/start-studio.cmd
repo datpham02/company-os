@@ -12,6 +12,34 @@ set "WORKSPACE=%USERPROFILE%\game-studio-workspace"
 set "HEALTH=http://127.0.0.1:3100/api/health"
 if not exist "%WORKSPACE%" mkdir "%WORKSPACE%"
 
+rem Find paperclipai. It is a global npm package, so it lives with one Node version. With nvm-windows the
+rem active Node can change (nvm use), which hides paperclipai from PATH. Order: PAPERCLIP_NODE_DIR if set,
+rem then PATH, then the newest nvm Node folder that has paperclipai.cmd. The folder found is put first on
+rem PATH for the windows started below, so Paperclip runs on the Node it was installed with.
+set "PAPERCLIP_DIR="
+if not defined NVM_HOME set "NVM_HOME=%LOCALAPPDATA%\nvm"
+if defined PAPERCLIP_NODE_DIR if exist "%PAPERCLIP_NODE_DIR%\paperclipai.cmd" set "PAPERCLIP_DIR=%PAPERCLIP_NODE_DIR%"
+if not defined PAPERCLIP_DIR (
+  where paperclipai >nul 2>nul
+  if not errorlevel 1 set "PAPERCLIP_DIR=PATH"
+)
+if not defined PAPERCLIP_DIR (
+  for /f "delims=" %%D in ('dir /b /ad /on "%NVM_HOME%\v*" 2^>nul') do (
+    if exist "%NVM_HOME%\%%D\paperclipai.cmd" set "PAPERCLIP_DIR=%NVM_HOME%\%%D"
+  )
+)
+if not defined PAPERCLIP_DIR (
+  echo paperclipai was not found on PATH or in any nvm Node folder. Set PAPERCLIP_NODE_DIR to the folder that holds paperclipai.cmd.
+  pause
+  exit /b 1
+)
+if /i "%PAPERCLIP_DIR%"=="PATH" (
+  echo Using paperclipai from PATH.
+) else (
+  echo Using paperclipai from %PAPERCLIP_DIR%
+  set "PATH=%PAPERCLIP_DIR%;%PATH%"
+)
+
 powershell -NoProfile -Command "try { Invoke-WebRequest -UseBasicParsing '%HEALTH%' -TimeoutSec 2 | Out-Null; exit 0 } catch { exit 1 }"
 if not errorlevel 1 (
   echo Paperclip is already running.
