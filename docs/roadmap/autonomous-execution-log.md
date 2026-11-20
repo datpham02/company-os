@@ -198,3 +198,16 @@ No runtime action. Documentation committed in PR #42. Status: READY FOR BOARD RE
 - The token was found nowhere.
 - Not covered live: several pages, a moved head, modified/renamed/deleted files, the 401/403 path.
 - Record: [review-package-phase3-github.md](../design/review-package-phase3-github.md) §4.
+
+### Step 3, Review Package Phase 4a: Verdict Relay, offline (2026-11-21)
+
+**Status:** code and offline tests done on branch `feat/review-relay-phase4a`; committed in the Phase 4a pull request.
+
+**Split:** §11 Phase 4 needs a sandbox Paperclip and a real `code-reviewer` run, which need Board approval. 4a builds and tests the relay against a fake Paperclip; 4b is the sandbox validation.
+
+**Done:**
+- `review_relay.py` and `pc.py review-relay <KEY> --run-id R`: the five §3.4 checks, the receipt, comment-then-decision order, 3 attempts on network/5xx errors, no retry on 4xx with the Board fallback named, and refusal of a second run for the same head.
+- 55 new tests (`test_review_relay.py`). `test_pc.py`: 233 tests OK with `-W error`.
+- Record: [review-package-phase4a-relay.md](../design/review-package-phase4a-relay.md).
+
+**Not done:** Phase 4b (V1–V3 in a sandbox). It needs the Board decisions listed in that record, §4. No Paperclip instance or agent was started. G-13 stays open.
