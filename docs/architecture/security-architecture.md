@@ -58,7 +58,7 @@ All flags are `VERIFIED` present in the installed CLIs (Claude Code 2.1.273, Cod
   "extraArgs": [
     "--permission-mode", "acceptEdits",
     "--allowedTools",
-    "Bash(curl *)", "Bash(cat *)",
+    "Bash(cat *)",
     "Bash(*paperclip-issue-update.sh*)", "Bash(*paperclip-upload-artifact.sh*)", "mcp__Paperclip_projects",
     "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)", "Bash(git show*)", "Bash(git add*)", "Bash(git commit*)",
     "--disallowedTools", "Bash(git push*)",
@@ -66,6 +66,8 @@ All flags are `VERIFIED` present in the installed CLIs (Claude Code 2.1.273, Cod
   ]
 }
 ```
+
+**`Bash(curl *)` removed (2026-11-20, D-STEP2-01, G-14).** The tested profile allowed it. In `local_trusted` mode a keyless loopback request is the Board, so the rule could let an agent act as the Board. No role uses `curl`; do not add network commands back without a security review ([step2-board-decisions.md](../roadmap/step2-board-decisions.md)).
 
 This is the `workspace-write` profile. Add each project's build and test commands to `--allowedTools`. For `read-only` roles, drop `--permission-mode acceptEdits` and the `git add` / `git commit` entries.
 

@@ -191,6 +191,36 @@ Each item requires the relevant approval and execution scope.
 
 Approval covers the recommended decisions only. §5 still applies: each production change needs its own approval and execution scope.
 
+## 6a. Execution record: D-STEP2-01 (2026-11-20)
+
+**Authorization:** Board Operator in chat: apply D-STEP2-01 to the six live Claude agents in Soucean, after a fresh database backup; remove only the exact `Bash(curl *)` entry; change nothing else.
+
+**Preparation.**
+- Paperclip 2026.1023.0 was not running. It was started for this change. `start-studio.cmd` could not start it, because the active Node is now v22.22.1 and `paperclipai` is installed under nvm v24.22.1; it was started with Node v24 on the PATH of its own window only (`nvm use` unchanged). Health: `ok`, `local_trusted`, `127.0.0.1:3100`.
+- **Backup:** `POST /api/instance/database-backups` created `paperclip-20261120-140321.sql.gz` (13,359,264 bytes, 4.7 s; `gzip -t` OK). The previous backup was from 2026-11-06. Paperclip's retention policy (7 daily, 4 weekly, 1 monthly) pruned 35 older backup files during this backup.
+- **Dry run:** 8 agents; the six `claude_local` agents each had exactly one `Bash(curl *)`; the two `cursor` agents had none; all idle.
+
+**Change.** `PATCH /api/agents/:id` with only `adapterConfig.extraArgs` (Paperclip merges `adapterConfig` shallowly), the list minus the exact element. The script re-read every agent first and would have stopped on any difference from the dry run.
+
+**Verification** (all eight agents read back; `adapterConfig` compared in full, other agent fields compared except timestamps and status):
+
+| Agent | Adapter | Result | `extraArgs` | New config revision | Rollback target (pre-change revision) |
+|---|---|---|---|---|---|
+| Director | claude_local | OK, curl removed, nothing else changed | 14 → 13 | `78906eaa-a26d-4003-a6b3-3d334bee4820` | `e2f177de-26c8-4826-8761-b4f86c7d1043` |
+| Producer | claude_local | OK, curl removed, nothing else changed | 14 → 13 | `30a23a25-8a19-4f97-be51-f72556a384bb` | none (first revision); restore from its `beforeConfig` |
+| Project Manager | claude_local | OK, curl removed, nothing else changed | 14 → 13 | `18bb7a33-7ac3-41a5-a886-4df529d8ee49` | none (first revision); restore from its `beforeConfig` |
+| Game Designer | claude_local | OK, curl removed, nothing else changed | 38 → 37 | `2b1564a6-5382-4e91-8af2-1998d59e00e1` | `41cd2bef-70cc-408c-aa0f-bac323271595` |
+| QA Engineer | claude_local | OK, curl removed, nothing else changed | 39 → 38 | `f3b56974-5da9-4a18-9aa0-1d9e86329fb2` | `079991a1-5640-4bb1-b68c-1cea7a0e5a94` |
+| UI Designer | claude_local | OK, curl removed, nothing else changed | 40 → 39 | `c696494c-57a7-4ee7-92d1-2487a6dcd518` | `3b0f6f62-8c0d-48b6-8722-a2fde5ea3675` |
+| Gameplay Programmer | cursor | Unchanged | — | none (latest 2026-11-04) | — |
+| Web Engineer | cursor | Unchanged | — | none (latest 2026-11-04) | — |
+
+Each new revision's `beforeConfig` contains `Bash(curl *)` and its `afterConfig` does not; the only removed element is `Bash(curl *)`.
+
+**Rollback.** `POST /api/agents/:id/config-revisions/<rollback target>/rollback` restores that revision's whole configuration. The narrowest rollback is a `PATCH` that puts `Bash(curl *)` back into `extraArgs` at its old position, taken from the new revision's `beforeConfig`. Database backup: `paperclip-20261120-140321.sql.gz`.
+
+**Not done (out of scope):** Cursor agents (policy deferred); G-14 exploitability (needs the D-STEP2-02 sandbox); `authenticated` mode; the Node/PATH issue in `start-studio.cmd`. **G-14 stays open.**
+
 ## 7. Exit criteria
 
 Step 2 follow-up is complete when:
