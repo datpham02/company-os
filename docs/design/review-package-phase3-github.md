@@ -52,7 +52,7 @@ It follows design §4 option A, reads only. The steps below are numbered as in �
 **Note on "missing-patch".**
 - §4 step 5 says the `patch` field must never be the only source, because GitHub omits it for large files. The packager therefore ignores `patch` and builds the diff from blobs, so a missing `patch` field is **not** a reason to refuse.
 - What is refused is missing **content**: a blob or tree GitHub does not return, or returns truncated.
-- This interpretation should be confirmed by the Board.
+- **Confirmed by the Board Operator (2026-11-20, in chat):** "missing-patch" means "missing the data needed to build the diff", not "missing the `patch` field".
 
 **Not covered offline:**
 - GitHub's real response shapes;
