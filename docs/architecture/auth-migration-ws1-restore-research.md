@@ -136,7 +136,8 @@ Even the "full" seed plan excludes `agent_identity_keys`. The default "minimal" 
 
 | Aspect | Assessment |
 |---|---|
-| Method | Stop the source instance **cleanly** (server and embedded PostgreSQL), so that `postmaster.pid` is gone. Copy the **whole instance folder** to a new location: `db` (PostgreSQL data directory), `secrets/master.key`, `.env`, `config.json`, `data/storage`, `data/backups`, `workspaces`. Point a new isolated instance at the copy, with a different instance id and ports, and start it |
+| Method | Stop the source instance **cleanly** (server and embedded PostgreSQL), verified by the checklist in §9.1, not by the absence of `postmaster.pid` alone. Copy the **whole instance folder** to a **separate destination** (§9.3): `db` (PostgreSQL data directory), `secrets/master.key`, `.env`, `config.json`, `data/storage`, `data/backups`, `workspaces`. Change configuration only in the copy. Quarantine the clone (§9.2) before and while starting it |
+| Clone safety | A clone carries the source's secrets, users, keys, agents, routines and integrations. Changing the instance id and ports alone does **not** make it safe (§9.2) |
 | Completeness | Keeps the PostgreSQL cluster physically, so constraints, sequences, extensions and the migration journal are exact. Keeps the master key, secrets and files together [inference] |
 | Requirements | A clean shutdown (an unclean stop needs WAL recovery, which works but is not a "cold" copy); the same PostgreSQL major version (18) and platform; the copied config edited for the new folder, ports and instance id (`config.json` holds absolute paths) |
 | Across machines or users | Same OS and architecture and PostgreSQL major version required. Folder permissions must allow the new user. Absolute paths in the config and in project workspace records must be rebound [inference] |
@@ -151,7 +152,7 @@ Even the "full" seed plan excludes `agent_identity_keys`. The default "minimal" 
 | Paperclip-supported | No | No |
 | Fidelity on this machine | Low with JavaScript dumps (constraints lost); high only with `pg_dump` 18 | High (physical copy) [inference] |
 | Extra tooling | `pg_dump` and `psql` 18 to be installed (a decision) | None |
-| Needs the source stopped | No for backup; yes for a consistent file copy of the keys and storage | Yes, a clean stop |
+| Needs the source stopped | No for backup; yes for a consistent file copy of the keys and storage | Yes, a clean stop verified per §9.1 |
 | Covers keys and files | Only if copied separately | Yes |
 | Restores to a point in time | Any dump | Only when stopped |
 | Recommended for an isolated test | Second, after a tooling decision | **First** |
@@ -165,7 +166,7 @@ Even the "full" seed plan excludes `agent_identity_keys`. The default "minimal" 
 
 ## 9. Proposed isolated verification (not executed)
 
-1. **Source instance:** a fresh isolated instance; own home folder, instance id, ports and fresh secrets; live instance stopped (§3.1 boundaries of [step2-board-decisions.md](../roadmap/step2-board-decisions.md)).
+1. **Source instance:** a fresh isolated instance with its own home folder, instance id, ports and fresh secrets. It is **not** a copy of the live instance. Whether the live instance must be stopped is discussed in §9.4: there is no technical dependency, only an existing governance rule.
 2. **Seed** through the API. As in A.4, plus:
    - a company secret, to prove master-key handling;
    - an attachment or artifact, to prove storage;
@@ -173,13 +174,13 @@ Even the "full" seed plan excludes `agent_identity_keys`. The default "minimal" 
 3. **Snapshot** through the API: every company, issue (with assignee, status, `executionPolicy` and `executionState`), each issue's activity, decision ids (`lastDecisionId`), memberships with roles, instance admins, and secret metadata.
 4. **Backup or copy:**
    - Candidate A: take the dump with the chosen engine;
-   - Candidate B: stop the source **cleanly** (`postmaster.pid` gone) and copy the folder.
-5. **Stop** the source cleanly and keep it untouched.
-6. **Restore** into a **second** isolated instance: new home folder, instance id and ports.
-7. **Start** the restored instance and check health and startup recovery.
+   - Candidate B: stop the source and **verify a clean shutdown** with the §9.1 checklist; then copy the folder under the §9.3 protections.
+5. **Stop** the source (verified per §9.1) and keep it untouched. The §9.3 manifest proves this.
+6. **Restore** into a **second** isolated instance: new home folder, instance id and ports. Configuration changes are made only in the copy.
+7. **Quarantine** (§9.2), then **start** the restored instance, and check health and startup recovery.
 8. **Compare:**
    - **Field-level:** per-record JSON equality of the snapshot fields, keyed by id; not row counts alone.
-   - **Constraints:** a read-only catalog query (`pg_constraint` count by type) on both clusters, so that a #17854-style constraint loss shows up.
+   - **Constraints:** a read-only catalog query (`pg_constraint` count by type) on both clusters, so that a #17854-style constraint loss shows up. This needs a read-only SQL client, and none is installed (§5), so the client is part of the tooling decision (§10).
    - **Secrets:** a secret created before can still be resolved (a decrypt test through Paperclip).
    - **Storage:** the attachment can be downloaded.
    - **Auth:** the Board key or a session from the source works (Candidate B), or the expected invalidation is documented (Candidate A with new secrets).
@@ -195,16 +196,92 @@ Even the "full" seed plan excludes `agent_identity_keys`. The default "minimal" 
 **Stop conditions:**
 - the method needs the live instance or its data folder;
 - the target folder is not empty;
-- an unclean source stop;
-- any write to the source after the snapshot.
+- an unclean **or unverified** source shutdown (§9.1). No copy is made then;
+- any write to the source after the snapshot; the §9.3 manifest differs;
+- a quarantine check fails (§9.2).
 
-**Teardown:** as in A.4 §6.
+**Teardown:** as in A.4 §6, plus the secure handling of the clone in §9.3.
+
+### 9.1 Clean-shutdown verification checklist
+
+**Source facts:**
+- Paperclip stops embedded PostgreSQL in an ordered shutdown when it receives SIGINT or SIGTERM (`server/dist/index.js` 1684-1700, 1724-1727). [source]
+- Killing the process does not run that shutdown path. That is the likely cause of the unclean live stops in A.4 (§2.3). [inference]
+- The embedded PostgreSQL log reaches the server log only when `PAPERCLIP_EMBEDDED_POSTGRES_VERBOSE=true` (`index.js` 295-311). [source]
+- `pg_controldata` is not shipped (§5). [local]
+
+**All of the following must hold before a copy is made:**
+
+1. **Shutdown method:** the source was stopped by the ordered path (Ctrl+C in its console, or an equivalent signal), not by killing the process. How to send it reliably on Windows from a hidden window is **unverified** and must be settled first.
+2. **Server gone:** no `node` process whose command line contains the source home folder or instance id.
+3. **PostgreSQL gone:** no `postgres` process whose command line contains the source `db` folder, and nothing listening on the source Postgres port.
+4. **PostgreSQL status:** `pg_ctl status -D <source db>` reports "no server running".
+5. **PostgreSQL shutdown log:** the source ran with `PAPERCLIP_EMBEDDED_POSTGRES_VERBOSE=true`, and its log contains PostgreSQL's normal shutdown message ("database system is shut down") after the last activity.
+6. **Cluster state:**
+   - Either `pg_controldata` reports "shut down", which needs a separately approved PostgreSQL client tool;
+   - or, as an after-the-fact check on the **copy only**, the clone's first startup log says "database system was shut down at …" and contains no crash-recovery messages ("was interrupted", "redo starts at").
+7. **`postmaster.pid`** is absent. This is required, but **not sufficient** on its own.
+
+**Stop:** if any item fails or cannot be verified, **do not copy**. If item 6 fails on the copy, discard the copy and record the result as a failed attempt.
+
+### 9.2 Clone quarantine (side-effect prevention)
+
+A restored clone holds the source's secrets, users, Board and agent keys, agents, routines and integrations. **Changing the instance id and ports alone does not make it safe.**
+
+**Before the first start of the clone:**
+1. **Source content by construction:** the test source is seeded only with what the test needs:
+   - no agents with real adapters, and no repositories;
+   - no routines, webhooks, email or chat channels, AI connections, plugins or other external integrations.
+   - **Evidence:** the source snapshot includes the empty integration lists (for example `GET /api/companies/:id/routines`, `/ai-connections`, `/email/connections`).
+2. **Scheduler off:** start the clone with `HEARTBEAT_SCHEDULER_ENABLED=false` (`server/dist/config.js` 246), so that no recovery, wake or routine sweep runs. [source]
+3. **Backups off:** set `PAPERCLIP_DB_BACKUP_ENABLED=false` (or the config flag), so that the clone writes no backups and prunes none.
+4. **Telemetry and update checks off** in the clone's config. SF-2 shows the CLI still contacts npm despite `updates.checkEnabled: false`. **Outbound network** therefore cannot be ruled out by configuration alone. Either accept that single known call in writing, or block outbound traffic for the clone's process, which is a security change needing approval.
+5. **Loopback only:** the clone binds `127.0.0.1` on its own ports. The test helper asserts the clone's port on every request. No browser, CLI or script uses the source's API base.
+
+**Right after start, before any comparison:**
+
+6. **Agents:** list them. If any exists, every one is paused and has `wakeOnDemand` off, and the run list is empty.
+7. **Routines and jobs:** the routines list is empty, or every routine is paused. No new heartbeat runs, wakeup requests or deliveries appear during the test. Check the run and activity lists at start and at end.
+8. **Identity:** the clone shares the source's instance secrets, so the source's Board key also works on the clone. This is expected for the comparison. Use it **only** against the clone's port, never paste it anywhere else, and revoke nothing on the source.
+
+**Evidence to record:**
+- the environment variables used (names and values, no secrets);
+- the empty integration and routine lists;
+- agent states;
+- run and wakeup counts at start and end;
+- the asserted port in every request.
+
+**Stop:** any run, wake, delivery, outbound integration or request to a port other than the clone's.
+
+### 9.3 Source-copy protection (Candidate B)
+
+1. **Manifest before the copy:** SHA-256 and size for every file under the stopped source folder, recorded outside both folders.
+2. **Copy to a separate, empty destination** inside the Board Operator's profile, which is private. Not a synced folder (for example OneDrive) and not removable media. Use a copy that never deletes from the source (no mirror or move mode).
+3. **Verify the copy:** compute the same manifest on the destination; it must match file for file.
+4. **Change only the copy:** home path, instance id and ports in the copy's `config.json`, and anything else §9.2 requires. The source configuration is never edited.
+5. **Source unchanged:** re-run the source manifest at the end of the test; it must equal the first one.
+6. **Secure handling:** the clone holds the master key, `.env` secrets and keys, so it is treated like the original:
+   - restricted folder;
+   - no sharing;
+   - no inclusion in the repository or in evidence files.
+7. **Teardown:** stop the clone (§9.1 order); delete the clone folder; confirm its absence; delete the manifest files only after the Board has reviewed them, since they contain hashes, not secrets.
+
+**Stop:** a manifest mismatch at step 3 or step 5.
+
+### 9.4 Live-instance downtime
+
+- **Technical analysis:** the test uses a **fresh isolated source**, never the live instance or its data. Both test instances use their own folders, instance ids and ports, and no agents run. Nothing in the procedure depends on the live instance being stopped. [inference]
+- **Governance:** [step2-board-decisions.md](../roadmap/step2-board-decisions.md) §3.1 (Board-approved) requires stopping the live instance "before running any sandbox experiment involving local HTTP requests or G-14 validation". This test makes local HTTP requests to the test instances, so the rule applies as written. The rule was set for G-14 experiments, where an agent could reach port 3100.
+- **Proposal:** run the restore test **without live downtime**, with the safeguards of §9.2 step 5 (port asserted on every request, no agents). That needs a Board decision to waive or narrow §3.1 for this test (§10). Without that decision the §3.1 rule stands, and the live instance must be stopped.
 
 ## 10. Prerequisites and Board decisions
 
 1. **Method acceptance:** Candidate B and/or Candidate A, knowing both are **unsupported** by Paperclip.
 2. **Tooling, for A:** whether to install PostgreSQL 18 client tools and set `PAPERCLIP_PG_DUMP_PATH` / `PAPERCLIP_PSQL_PATH`. This would also change how **live** backups are made, which is a separate production decision.
-3. **Environment:** a new isolated environment (A.4's was torn down), with a stop of the live instance for its duration.
+3. **Environment:** a new isolated environment (A.4's was torn down).
+3a. **Live downtime:** whether to narrow the §3.1 rule for this test, so that it runs without stopping the live instance (§9.4). Otherwise the live instance must be stopped for the test.
+3b. **Quarantine:** acceptance of the §9.2 controls. That includes accepting the known npm update call (SF-2), or blocking outbound traffic for the clone, which is a separate security change.
+3c. **Tooling for verification:** a read-only SQL client for the constraint comparison (§9 step 8), and optionally `pg_controldata` (§9.1 item 6).
 4. **Version:** test on 2026.1023.0, the live version. Testing on v2026.1117.0 would need an upgrade decision. v2026.1117.0 is also a **rollback floor** and moves skill packages out of the database, which changes the backup scope.
 5. **Clean-shutdown procedure:** how to stop Paperclip without the unclean Postgres stop seen in A.4. This matters for B and for any live cold copy.
 
@@ -213,7 +290,9 @@ Even the "full" seed plan excludes `agent_identity_keys`. The default "minimal" 
 - **Silent fidelity loss:** a "successful" restore of a JavaScript dump that lost constraints (#17854). Mitigated by the constraint comparison in §9.
 - **Wrong or missing master key:** Paperclip silently creates a new key, so secrets become unreadable.
 - **Version skew:** restoring into older code is not detected.
-- **Copy location:** a cold copy duplicates secrets; keep it private.
+- **Copy location:** a cold copy duplicates secrets; keep it private and tear it down (§9.3).
+- **Clone side effects:** a started clone could run agents, routines, deliveries or outbound calls with the source's identity. Mitigated by the §9.2 quarantine.
+- **Unverified shutdown:** a copy taken after an unclean or uncertain stop is crash-consistent at best. Stopped by the §9.1 checklist.
 - **Upstream changes:** v2026.1117.0 changes the backup scope and the rollback floor.
 
 Stop conditions are in §9.
