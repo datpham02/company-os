@@ -1,7 +1,7 @@
 # Board Decision Record — Step 2 Stage 1 Validation
 
 **Date:** 2026-11-20  
-**Status:** Proposed — pending Board approval  
+**Status:** Approved — all six decisions, as recommended (Board Operator, in chat, 2026-11-20)  
 **Scope:** G-8, G-9, G-11, G-12, G-13, G-14; OQ-041, OQ-043  
 **Related PRs:** #32, #33  
 **Authority:** Board Operator
@@ -33,7 +33,7 @@ This record does not authorize production changes or Phase 2 implementation by i
 
 **Recommended decision:** Approve removal from both Claude profiles. Defer Cursor policy until its execution and permission model is reviewed.
 
-**Approval:** Pending.
+**Approval:** Approved 2026-11-20, as the recommended decision above.
 
 ### D-STEP2-02 — OQ-043: Authorize an isolated Paperclip sandbox
 
@@ -48,7 +48,7 @@ This record does not authorize production changes or Phase 2 implementation by i
 
 **Recommended decision:** Approve a disposable, isolated sandbox experiment.
 
-**Approval:** Pending.
+**Approval:** Approved 2026-11-20, as the recommended decision above.
 
 ### D-STEP2-03 — G-12: Agent concurrency
 
@@ -62,7 +62,7 @@ This record does not authorize production changes or Phase 2 implementation by i
 
 **Recommended decision:** Approve sandbox validation first. Do not change live values yet.
 
-**Approval:** Pending.
+**Approval:** Approved 2026-11-20, as the recommended decision above.
 
 ### D-STEP2-04 — G-9: Restrict MCP task creation
 
@@ -76,7 +76,7 @@ This record does not authorize production changes or Phase 2 implementation by i
 
 **Recommended decision:** Approve the planning workflow and sandbox validation. Defer live adapter changes until verified.
 
-**Approval:** Pending.
+**Approval:** Approved 2026-11-20, as the recommended decision above.
 
 ### D-STEP2-05 — G-11: Read-only configuration drift checker
 
@@ -90,7 +90,7 @@ This record does not authorize production changes or Phase 2 implementation by i
 
 **Recommended decision:** Approve design and implementation planning for a read-only checker as a Phase 2 candidate. Actual implementation requires separate Phase 2 authorization.
 
-**Approval:** Pending.
+**Approval:** Approved 2026-11-20, as the recommended decision above.
 
 ### D-STEP2-06 — G-13: Reviewer isolation
 
@@ -103,7 +103,7 @@ This record does not authorize production changes or Phase 2 implementation by i
 
 **Recommended decision:** Retain the current mitigation and keep G-13 unresolved until the review-package workflow has been validated.
 
-**Approval:** Pending.
+**Approval:** Approved 2026-11-20, as the recommended decision above.
 
 ## 3. Sandbox execution boundaries
 
@@ -179,15 +179,17 @@ Each item requires the relevant approval and execution scope.
 
 | Decision | Board outcome | Notes |
 |---|---|---|
-| D-STEP2-01 — Remove Claude curl access | Pending | |
-| D-STEP2-02 — Isolated sandbox | Pending | |
-| D-STEP2-03 — Concurrency validation | Pending | |
-| D-STEP2-04 — MCP task creation | Pending | |
-| D-STEP2-05 — Drift checker candidate | Pending | |
-| D-STEP2-06 — Reviewer isolation | Pending | |
+| D-STEP2-01 — Remove Claude curl access | Approved | Approves removing `Bash(curl *)` from both Claude profiles as a controlled configuration change. Cursor policy deferred |
+| D-STEP2-02 — Isolated sandbox | Approved | Approves a disposable sandbox under §3 and §3.1. Reusing this Windows user's Claude Code session is **not** approved by this record; it needs its own Board-approved exception |
+| D-STEP2-03 — Concurrency validation | Approved | Sandbox validation only; live `maxConcurrentRuns` unchanged. The `request-changes` WIP check needs a separate implementation approval |
+| D-STEP2-04 — MCP task creation | Approved | Planning workflow and sandbox validation; live adapter changes deferred until verified |
+| D-STEP2-05 — Drift checker candidate | Approved | Design and implementation planning only; implementation needs Phase 2 authorization |
+| D-STEP2-06 — Reviewer isolation | Approved | G-13 stays open; review-package work continues |
 
-**Board Operator:** Pending  
-**Approval date:** Pending
+**Board Operator:** approved in chat  
+**Approval date:** 2026-11-20
+
+Approval covers the recommended decisions only. §5 still applies: each production change needs its own approval and execution scope.
 
 ## 7. Exit criteria
 
