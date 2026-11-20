@@ -125,3 +125,5 @@ Step 3 will follow the design's order, since the design is the approved contract
 **Blockers:** every live or sandbox check needs Paperclip running and Board approval. Live configuration changes need Board approval and are applied by hand (G-11).
 
 **Next step:** Board review. Phase 2 tooling has not started.
+
+**Board decision record:** [step2-board-decisions.md](step2-board-decisions.md) (D-STEP2-01 to D-STEP2-06), proposed 2026-11-20; every decision is pending.
