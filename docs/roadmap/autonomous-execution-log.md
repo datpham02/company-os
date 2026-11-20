@@ -2,7 +2,7 @@
 
 Progress record for the sequential roadmap brief (Steps 0–7). Each step ends with a report to the Board Operator, and the next step starts only on the Board's authorization. Evidence lives in the linked files and commits; this log only summarizes.
 
-## Step 0: current state (2026-11-21)
+## Step 0: current state (2026-11-20)
 
 **Git.**
 - `main` at `23d3e97`, the merge of PR #29.
@@ -46,7 +46,7 @@ Progress record for the sequential roadmap brief (Steps 0–7). Each step ends w
 
 Step 3 will follow the design's order, since the design is the approved contract.
 
-## Step 1: audit of the merged review packager (2026-11-21)
+## Step 1: audit of the merged review packager (2026-11-20)
 
 **Status:** done locally on `fix/review-packager-audit`. Not committed; waiting for Board review.
 

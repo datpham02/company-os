@@ -758,7 +758,7 @@ class Cli(Env):
         self.assertIn("staged", out.getvalue())
 
 
-# ---------- regressions from the 2026-11-21 audit (docs/roadmap/autonomous-execution-log.md, Step 1) ----------
+# ---------- regressions from the 2026-11-20 audit (docs/roadmap/autonomous-execution-log.md, Step 1) ----------
 
 def make_dir_link(target, link):
     """An NTFS junction on Windows (no privilege needed), a directory symlink elsewhere."""

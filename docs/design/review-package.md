@@ -215,7 +215,7 @@ Option B is the fallback if API limits or completeness become a problem. It need
 |---|---|---|
 | Inputs to `review-pack` | `<KEY>` matches `^[A-Z]+-\d+$`; the issue exists, is `in_review` and has a code project; its PR is found from the Task's branch or the PR link in the issue; the repository is in the token's allowed list | Refuse; nothing written |
 | Paths | Reject: absolute paths, drive letters, `..`, empty segments, NUL or control characters, `:` (alternate data streams), trailing dot or space, Windows reserved names (`CON`, `NUL`, `COM1`…), a component over 255, the total path length limit, case-insensitive collisions. After joining, the resolved real path must stay inside the package folder | **Refuse** the package |
-| Windows short names | A component shaped like an 8.3 name (`LONGFI~1.CS`, `PROGRA~1`) can alias another file when 8.3 names are enabled (added after the Phase 1 audit, 2026-11-21) | **Refuse** the package |
+| Windows short names | A component shaped like an 8.3 name (`LONGFI~1.CS`, `PROGRA~1`) can alias another file when 8.3 names are enabled (added after the Phase 1 audit, 2026-11-20) | **Refuse** the package |
 | Links under the roots | The packager never follows a symlink or junction below `<Review Root>` or `<Staging Root>`, and a package never contains one. Any process of the same user can plant one (Phase 1 audit) | **Refuse**; `--cleanup` logs and skips a linked trash entry |
 | Symlinks (`120000`), submodules (`160000`) | Never created on disk; target or commit recorded as text | `notReviewable` |
 | Binary | A NUL byte in the first 8 KB, or GitHub reports no text diff | `notReviewable` (sizes and blob SHAs listed) |

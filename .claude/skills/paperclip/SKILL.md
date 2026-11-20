@@ -63,7 +63,7 @@ Implements Phase 1 of [docs/design/review-package.md](../../../docs/design/revie
   - `--unstage` refuses while a reviewer run is active. It also refuses while the review has not been relayed, unless `--abandon` is given (logged). Phase 1 has no relay, so `--abandon` is the normal way to clear staging.
 - **`--cleanup`** removes packages of issues `done` or `cancelled` for 14+ days, oldest first. It never touches an open issue's package or the staged one. Deletion is two-step through `store/.trash`, and failures are logged and retried. A build over the 2 GB cap first cleans up, then refuses.
 - **Audit:** `<Review Root>/audit.log`, append-only JSON lines, rotated by size and never deleted. A damaged line makes `--status` and `--unstage` refuse until it is repaired.
-- **Hardening (audit 2026-11-21):**
+- **Hardening (audit 2026-11-20):**
   - links: a symlink or junction under either root is refused, never followed;
   - one build per issue at a time (`store/<KEY>/.build.lock`; a lock older than 60 minutes is taken over and logged);
   - names shaped like 8.3 short names are refused;
