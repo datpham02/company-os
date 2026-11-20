@@ -693,6 +693,14 @@ for _name, _obj in vars(_review_pack_tests).items():
         globals()["ReviewPack" + _name] = _obj  # prefixed, so no helper or class here is shadowed
 del _name, _obj  # otherwise unittest also collects the last class through _obj
 
+# ---------- OQ-042 Phase 3: GitHub source (tests live in test_review_github.py) ----------
+import test_review_github as _review_github_tests  # noqa: E402
+
+for _name, _obj in vars(_review_github_tests).items():
+    if isinstance(_obj, type) and issubclass(_obj, unittest.TestCase) and _obj.__module__ == _review_github_tests.__name__:
+        globals()["ReviewGitHub" + _name] = _obj
+del _name, _obj
+
 
 if __name__ == "__main__":
     unittest.main()

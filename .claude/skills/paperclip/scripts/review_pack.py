@@ -21,12 +21,15 @@ import os
 import re
 import secrets
 import shutil
+import sys
 import unicodedata
 
 PACKAGE_SCHEMA = "company-os/review-package@1"
 VERDICT_SCHEMA = "company-os/review-verdict@1"
 SOURCE_SCHEMA = "company-os/review-source-fixture@1"
 STATE_SCHEMA = "company-os/review-state-fixture@1"
+TASK_SCHEMA = "company-os/review-task@1"
+SOURCE_KINDS = {"fixture", "github-api"}
 PACKAGER_VERSION = "0.1.0"
 
 DEFAULT_LIMITS = {
@@ -388,6 +391,39 @@ def load_source(path):
     return src
 
 
+def load_task(path, key):
+    """Phase 3 stand-in for Paperclip's issue data: issue and task fields in the review-task@1 format."""
+    t = _load_json(path, "task file")
+    if not isinstance(t, dict) or t.get("schema") != TASK_SCHEMA:
+        raise ReviewPackError(f"task file {path} is not {TASK_SCHEMA}")
+    issue = _req(t, "issue", dict, "task file")
+    if issue.get("key") != key:
+        raise ReviewPackError(f"task file is for {issue.get('key')!r}, not {key}")
+    return issue, _req(t, "task", dict, "task file")
+
+
+def load_github_source(a, key, token=None, transport=None, now=None):
+    """Phase 3 source (design §4 option A): read the PR over the GitHub API. The token never leaves the
+    Authorization header; every GitHub error is redacted and turned into a refusal."""
+    import review_github as gh  # local import: the fixture path never needs it
+    if not a.github_repo or not a.task_file:
+        raise ReviewPackError("--github-pr needs --github-repo and --task-file")
+    if a.github_repo.lower() not in {r.lower() for r in a.allow_repo}:
+        raise ReviewPackError(f"repository {a.github_repo} is not in the allowed list (--allow-repo)")
+    issue, task = load_task(a.task_file, key)
+    tok = None
+    try:
+        tok = token if token is not None else gh.read_token()
+        client = gh.GitHubClient(tok, **({"transport": transport} if transport else {}),
+                                 **({"now": now} if now else {}))
+        src = gh.fetch_source(client, a.github_repo, a.github_pr, issue, task, SOURCE_SCHEMA)
+    except gh.GitHubSourceError as e:
+        raise ReviewPackError(gh.redact(e, tok)) from None
+    for w in client.warnings:
+        print(f"warning: {w}", file=sys.stderr)
+    return src
+
+
 # ---------- package planning (validation before anything is written) ----------
 
 def _decode(data):
@@ -423,6 +459,9 @@ def plan_package(src, key, state, allowed_repos, limits):
     if not issue_state.get("project"):
         raise ReviewPackError(f"{key} has no code project")
 
+    source_kind = src.get("source", "fixture")
+    if source_kind not in SOURCE_KINDS:
+        raise ReviewPackError(f"source {source_kind!r} is not one of {sorted(SOURCE_KINDS)}")
     issue = _req(src, "issue", dict, "source fixture")
     if issue.get("key") != key:
         raise ReviewPackError(f"source fixture is for {issue.get('key')!r}, not {key}")
@@ -577,7 +616,7 @@ def plan_package(src, key, state, allowed_repos, limits):
     return {"key": key, "issue": issue, "repo": repo, "pr": pr, "shas": shas, "headAfter": head_after,
             "entries": [e[0] for e in entries], "notReviewable": not_reviewable, "context": ctx_files,
             "task": {"goal": goal, "acceptanceCriteria": criteria, "writeSet": write_set, "readSet": read_set},
-            "patch": patch_bytes, "limits": limits}
+            "patch": patch_bytes, "limits": limits, "source": source_kind}
 
 
 def _fence(text):
@@ -639,7 +678,7 @@ def build_manifest(plan, now):
         "repository": plan["repo"],
         "pullRequest": {"number": plan["pr"].get("number"), "url": plan["pr"].get("url")},
         "baseSha": plan["shas"]["baseSha"], "headSha": plan["shas"]["headSha"],
-        "mergeBaseSha": plan["shas"]["mergeBaseSha"], "source": "fixture",
+        "mergeBaseSha": plan["shas"]["mergeBaseSha"], "source": plan.get("source", "fixture"),
         "limits": plan["limits"], "files": files,
         "context": [{k: v for k, v in c.items() if k != "_store"} for c in plan["context"]],
         "notReviewable": plan["notReviewable"], "documents": {}, "patchSha256": None,
@@ -1048,6 +1087,10 @@ def add_parser(sub):
     g.add_argument("--cleanup", action="store_true", help="remove packages of issues closed 14+ days ago")
     s.add_argument("--abandon", action="store_true", help="with --unstage: drop a review that was never relayed (logged)")
     s.add_argument("--source-fixture", help="PR data in the review-source-fixture@1 format (Phase 1 source)")
+    s.add_argument("--github-pr", type=int, help="Phase 3 source: pull request number, read over the GitHub API "
+                                                 "with the packager token from Windows Credential Manager")
+    s.add_argument("--github-repo", help="with --github-pr: owner/name (must also be an --allow-repo)")
+    s.add_argument("--task-file", help="with --github-pr: issue and task data in the review-task@1 format")
     s.add_argument("--state-file", required=True, help="issue and run state in the review-state-fixture@1 format "
                                                        "(Phase 1 stand-in for Paperclip)")
     s.add_argument("--allow-repo", action="append", default=[], help="repository the packager may read (repeatable)")
@@ -1097,12 +1140,14 @@ def _run(a, rr, sr, now):
         return 0
     if not a.key:
         raise ReviewPackError("give an issue key, or one of --status, --unstage, --cleanup")
-    if not a.source_fixture:
-        raise ReviewPackError("Phase 1 builds only from --source-fixture; GitHub is Phase 3")
+    github = getattr(a, "github_pr", None) is not None
+    if bool(a.source_fixture) == github:
+        raise ReviewPackError("give exactly one source: --source-fixture, or --github-pr with --github-repo "
+                              "and --task-file")
     if not a.allow_repo:
         raise ReviewPackError("give at least one --allow-repo owner/name")
     key = a.key
-    src = load_source(a.source_fixture)
+    src = load_source(a.source_fixture) if not github else load_github_source(a, key)
     pkg, how = build(rr, sr, src, key, state, a.allow_repo, now)
     head = os.path.basename(pkg)
     result = stage(rr, sr, key, head, pkg, now)

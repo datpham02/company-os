@@ -5,6 +5,13 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
+- OQ-042 Review Package Phase 3, GitHub source (`review-pack <KEY> --github-pr N --github-repo o/r --task-file T`, `scripts/review_github.py`):
+  - reads a pull request over the GitHub REST API with the packager's read-only token from Windows Credential Manager;
+  - reads every page of the file list and the trees at head and at the merge base;
+  - every blob's git id is recomputed by the packager; a moved head, a truncated tree, a missing blob, a submodule change or a short file list are refused;
+  - the token is never logged (errors redacted); 401/403 refuse with no fallback; a warning under 14 days to expiry.
+
+  25 new tests with an in-memory fake GitHub. **Not yet run against GitHub:** that needs a throwaway repository and a token created by the Board. G-13 stays open.
 - OQ-042 Phase 1 review packager (`pc.py review-pack`, `scripts/review_pack.py`), built from fixture files only. It does not use git, GitHub, Paperclip or a token.
   - Immutable `store/<KEY>/<head>/` packages: manifest with SHA-256, atomic build with `READY` last, reuse of intact packages.
   - Every §5.2 limit and §5.3 validation rule enforced fail-closed.
