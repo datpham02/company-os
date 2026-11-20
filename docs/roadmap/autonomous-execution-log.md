@@ -154,3 +154,9 @@ Step 3 will follow the design's order, since the design is the approved contract
 No runtime action. Documentation committed in PR #42. Status: READY FOR BOARD REVIEW — PHASE B NOT AUTHORIZED.
 
 **Phase A.5 decisions and plan (2026-11-20, documentation only):** the Board Operator approved six decisions on the A.4 open points, recorded as D-AUTH-10 to D-AUTH-15 in [auth-migration-phase-a5-board-decisions.md](auth-migration-phase-a5-board-decisions.md) with every implementation authorization Pending, and planned as workstreams WS-1 to WS-7 in [auth-migration-phase-a5-plan.md](../architecture/auth-migration-phase-a5-plan.md). E8, E11 and E12 remain unmet. **No live Paperclip change, credential, user, role, ACL or log change, sandbox, restore or agent/VR test was authorized or performed.** Phase B not authorized. Committed in the Phase A.5 pull request.
+
+**WS-1.1 restore research (2026-11-20, research only):**
+- **Sources read:** the installed 2026.1023.0 source; Paperclip `v2026.1117.0` and `master` on GitHub; release notes v2026.1106.0 and v2026.1117.0; docs; upstream issues and pull requests. Labels: source, doc, issue and local read-only.
+- **Result:** no supported restore exists. JavaScript-engine backups, the only kind this machine can produce, are not faithful (issue #17854). Recommended isolated candidate: a cold copy of the stopped instance; a `pg_dump` 18 dump only after a tooling decision.
+- **Record:** [auth-migration-ws1-restore-research.md](../architecture/auth-migration-ws1-restore-research.md). OQ-025 updated; E8 still not met.
+- **Not done:** no restore, backup, upgrade, sandbox or live action. Committed in the WS-1.1 pull request.
