@@ -162,6 +162,7 @@
   - put option 2 on the Runtime prerequisites list (OQ-043);
   - decide option 3 explicitly.
 - **Status: Open (critical): source/config verified; exploitability unverified.** Not exploited and not tested live.
+- **Sandbox 2026-11-20 (D-STEP2-02, no agent runs):** keyless Board and instance-admin access confirmed over HTTP in `local_trusted` (a foreign `Origin` is accepted; only a foreign `Host` is refused); `authenticated` mode closes it on Windows. Agent exploitability is still untested. Details: [OQ-043](../roadmap/open-questions.md#oq-043--authenticated-mode-instead-of-local_trusted-g-14).
 
 ## Related documents
 [../decisions/ADR-011-execution-path-selection.md](../decisions/ADR-011-execution-path-selection.md) · [open-questions.md](../roadmap/open-questions.md) · [runtime-architecture.md](runtime-architecture.md)
