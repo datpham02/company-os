@@ -73,7 +73,9 @@
 
 ### WS-2 — Instance-admin demotion plan (VA-8, D-AUTH-11)
 
-**Objective:** a controlled way to leave exactly one intended instance admin after a migration or a rollback.
+**Objective:** a controlled way to reach exactly one intended instance admin after a migration or a rollback.
+
+"Exactly one intended instance admin" is the **target end state**, reached only after the whole procedure and its verification are complete. It is **not** a requirement to demote anyone at the moment the mode is switched. Two admins may exist temporarily, for example right after a rollback or before a re-migration, as long as that state is recorded. The guard below always applies: no demotion until the remaining admin is verified to work.
 
 **Current evidence:**
 - **Verified (runtime):** after a claim, `local-board` loses admin but keeps its `owner` membership (A4 VA-2). After a rollback to `local_trusted`, `local-board` is admin again and the claimant stays admin (A4 VA-8).
@@ -92,14 +94,17 @@
    - in `local_trusted` mode, `local-board`, which is the implicit actor.
 2. **Rollback runbook step:** after returning to `local_trusted`, demote the claimant only if the rollback is meant to be final. Otherwise keep both until the re-migration and record the temporary state.
 3. **Re-migration step:** before switching again, make sure `local-board` is the only admin so that a fresh claim link appears; or skip the claim when the claimant is still admin.
-4. **Pre-checks before any demotion:** list the instance admins (`GET /api/admin/users`); continue only if at least two exist and the remaining one can act in the current mode.
+4. **Pre-checks before any demotion:** list the instance admins (`GET /api/admin/users`). Continue only if at least two exist **and** the remaining admin has been verified to work in the current mode. Examples:
+   - in `authenticated` mode, the claimed user signs in and `GET /api/cli-auth/me` shows `isInstanceAdmin: true`;
+   - in `local_trusted` mode, a keyless admin read succeeds.
+   An admin that has not been verified does not count as the remaining admin.
 5. Decide separately whether `local-board`'s leftover **owner membership** after a claim needs handling. It is not an admin role.
 
 **Dependencies:** WS-1, so that a damaged admin state is recoverable; an isolated test of the sequence.
 
 **Required authorization:** needs approval: any demotion, live or isolated.
 
-**Acceptance criteria:** a verified, isolated run of migrate → rollback → demote → re-migrate. It ends with exactly one intended admin in each state, and admin access is never lost.
+**Acceptance criteria:** a verified, isolated run of migrate → rollback → demote → re-migrate. When each sequence is complete and verified, it ends with exactly one intended admin, and admin access is never lost. The temporary states with two admins along the way are allowed and recorded.
 
 **Rollback and recovery:** promoting again (`POST …/promote-instance-admin`) needs an admin, so the demotion must never remove the last one.
 
@@ -246,15 +251,22 @@
 - **Not verified:** agent exploitability from a real run; Cursor agents, which have no allowlist.
 
 **Proposed actions:**
-1. The primary mitigation is the switch to `authenticated` (Phase B and Phase E), because it closes the keyless path for every process.
+1. The primary mitigation is the switch to `authenticated` (Phase B and Phase E), which is expected to close the keyless path for every process. **The switch does not close G-14 by itself.**
 2. Until then, the Board decides the Cursor agent policy, for example no Cursor runs on the studio instance, or moving those roles to Claude.
-3. Evidence after the live switch: keyless requests refused on the live instance (a read-only check), plus VR-9 if WS-3's runs are authorized.
+3. **Evidence required before closing G-14 is even considered:**
+   - keyless requests refused **on the live instance** after the switch (a read-only check). The sandbox result (A4 VA-1) is not enough;
+   - an assessment of every agent execution path: Claude agents (allowlists, helper scripts, MCP) and **Cursor agents** (no allowlist, full shell). It must show that none of them can obtain Board rights by another route, for example by reading a Board credential that is available to the same Windows user;
+   - VR-9, if WS-3's runs are authorized.
 
 **Dependencies:** Phase B and Phase E for the main mitigation; WS-3 for the run evidence.
 
 **Required authorization:** needs approval: the Cursor policy, the live switch, VR-9.
 
-**Acceptance criteria:** G-14 stays **open** until the live instance runs `authenticated` with keyless refusal evidenced, or another mitigation is evidenced. D-AUTH-06's acceptance of the Claude Code credential risk does not count.
+**Acceptance criteria:** G-14 stays **open** until:
+- the live instance runs `authenticated` **and** keyless refusal is evidenced on it, **and** the agent execution path assessment (Claude and Cursor) is done; or
+- another mitigation is evidenced to the same standard.
+
+Meeting these makes G-14 eligible for a closure decision by the Board; it does not close G-14 automatically. D-AUTH-06's acceptance of the Claude Code credential risk does not count.
 
 **Stop conditions:** not applicable to planning.
 
