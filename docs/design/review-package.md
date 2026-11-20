@@ -311,7 +311,7 @@ Staging is one-at-a-time:
 
 ## 11. Implementation phases
 
-Progress (2026-11-20): Phase 1 merged (PR #29, audited in PR #30). Phase 2 run outside Paperclip, all acceptance conditions met ([review-package-phase2-results.md](review-package-phase2-results.md)). Phases 3–6 not started. G-13 stays open.
+Progress (2026-11-20): Phase 1 merged (PR #29, audited in PR #30). Phase 2 run outside Paperclip, all acceptance conditions met ([review-package-phase2-results.md](review-package-phase2-results.md)). Phase 3 code and offline tests done; the live run against GitHub waits for the Board's throwaway repository and token ([review-package-phase3-github.md](review-package-phase3-github.md)). Phases 4–6 not started. G-13 stays open.
 
 | Phase | Deliverables | Acceptance | Depends on | Stop if |
 |---|---|---|---|---|

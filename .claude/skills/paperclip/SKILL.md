@@ -33,7 +33,7 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 | `create --title … --assignee … [--project …] [--desc … / --desc-file …] [--review qa] [--no-approval]` | New issue, always in `backlog` (`--status todo` is refused), with a Board approval stage. Each `--review` adds an agent review stage before it. Start it with `release` |
 | `wake qa-engineer [--issue SOU-8]` | Start an agent run now. Refused with `--issue` on a `backlog` issue |
 | `cancel-run <run-id>` | Stop a queued or running run |
-| `review-pack <KEY> --source-fixture F --state-file S --allow-repo o/r` · `review-pack --status\|--unstage [--abandon]\|--cleanup --state-file S` | **OQ-042 Phase 1, local only.** Builds and stages a review package from fixture files (below). Does not call Paperclip, GitHub or git |
+| `review-pack <KEY> --source-fixture F --state-file S --allow-repo o/r` · `review-pack <KEY> --github-pr N --github-repo o/r --task-file T --state-file S --allow-repo o/r` · `review-pack --status\|--unstage [--abandon]\|--cleanup --state-file S` | **OQ-042 review packager.** Builds and stages a review package from fixture files (Phase 1) or from a PR over the GitHub API with the packager token (Phase 3, below). Never calls Paperclip or git |
 
 ## Rules
 
@@ -71,6 +71,28 @@ Implements Phase 1 of [docs/design/review-package.md](../../../docs/design/revie
   - filesystem errors become logged refusals;
   - `REVIEW.md` quotes Task text after the fixed instructions.
 - **Not a security boundary:** every agent runs as the same Windows user and can read or change both roots. G-13 stays open.
+
+### Phase 3: GitHub source (`--github-pr`)
+
+Code: `scripts/review_github.py`; tests: `scripts/test_review_github.py` (an in-memory fake GitHub, run as part of `test_pc.py`).
+
+- **What it reads** (design §4 option A, reads only):
+  - the PR (`head.sha`, `base.sha`, `changed_files`);
+  - the compare endpoint (merge base);
+  - every page of the PR file list (100 per page, until empty; the count must match);
+  - the trees at head and at the merge base (refused if GitHub truncates them);
+  - each blob by SHA;
+  - the PR again at the end. If the head moved, the build is refused.
+- **Verification:** every blob's git id is recomputed by the packager, and §5.2/§5.3 apply unchanged.
+- **Diff:** `patch.diff` is built from the blobs; GitHub's `patch` field is never used.
+- **Refused:** submodule changes, unsupported file statuses, and blobs GitHub does not return.
+- **Task data** comes from `--task-file` (`review-task@1`: `issue` and `task`), standing in for Paperclip.
+- **Token** (design §6): a fine-grained read-only token in Windows Credential Manager under the generic credential `company-os/review-packager`.
+  - It is sent only in the `Authorization` header and redacted from every error.
+  - 401/403 refuse with no fallback.
+  - A token that expires within 14 days triggers a warning.
+  - The Board creates and stores it; the skill never asks for it in chat.
+- **Repository:** `--github-repo` must also be an `--allow-repo`.
 
 ## Start gate: only `release` starts a task
 

@@ -725,7 +725,7 @@ class Cli(Env):
             ("--abandon only goes with --unstage", dict(abandon=True, state_file=stf)),
             ("take no issue key", dict(status=True, key="SOU-12", state_file=stf)),
             ("give an issue key", dict(state_file=stf)),
-            ("Phase 1 builds only from --source-fixture", dict(key="SOU-12", state_file=stf, allow_repo=[REPO])),
+            ("give exactly one source", dict(key="SOU-12", state_file=stf, allow_repo=[REPO])),
             ("--allow-repo", dict(key="SOU-12", source_fixture=sf, state_file=stf)),
             ("state file not found", dict(status=True, state_file=os.path.join(self.base, "nope.json"))),
             ("there is no default", dict(status=True, state_file=stf, review_root=None)),

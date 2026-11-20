@@ -180,3 +180,21 @@ No runtime action. Documentation committed in PR #42. Status: READY FOR BOARD RE
 **Record:** [review-package-phase2-results.md](../design/review-package-phase2-results.md).
 
 **Next step:** Board review. Then §11 Phase 3, the GitHub source; it needs a throwaway repository and a dedicated read-only token (decision U6, review-package.md §6).
+
+### Step 3, Review Package Phase 3: GitHub source (2026-11-20)
+
+**Status:** code and offline tests done on branch `feat/review-package-phase3-github`; committed in the Phase 3 pull request.
+
+**Done:**
+- `review_github.py` implements design §4 option A (PR, compare, paginated file list, trees, blobs, head re-check), and `review_pack.py` gained `--github-pr`/`--github-repo`/`--task-file`.
+- The token comes only from Windows Credential Manager and is redacted from all errors.
+- 25 new tests against an in-memory fake GitHub. `test_pc.py`: 178 tests OK with `-W error`.
+
+**Not done:** the live run against GitHub. It needs a throwaway repository and a fine-grained read-only token created and stored by the Board (decision U6); see [review-package-phase3-github.md](../design/review-package-phase3-github.md) §3. G-13 stays open.
+
+**Phase 3 live run (2026-11-20):** read-only, on `datpham02/soucean-game` PR #27, with the Board's token from Credential Manager.
+- The package built and staged.
+- 7/7 blob SHAs matched GitHub and the recomputed bytes.
+- The token was found nowhere.
+- Not covered live: several pages, a moved head, modified/renamed/deleted files, the 401/403 path.
+- Record: [review-package-phase3-github.md](../design/review-package-phase3-github.md) §4.
