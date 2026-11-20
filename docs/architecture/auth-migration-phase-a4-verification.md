@@ -12,15 +12,15 @@
 |---|---|---|
 | VA-1 | **PASS** (deviation) | Every keyless request refused; `/health` 200. The issue routes returned 401/404, not 403 |
 | VA-2 | **PASS** | Claim link printed; the claimant became instance admin and company owner; `local-board` lost `instance_admin` |
-| VA-3 | **PASS** | `/api/cli-auth/me` returned the claimed user; no token in any output or log |
+| VA-3 | **PASS** | `/api/cli-auth/me` returned the claimed user. No Board API token was found in the inspected outputs and logs. The one-time claim token did appear in the server log (§5.1) |
 | VA-4 | **PASS** | Guarded update, case (a): 200; ids, order, state, status and assignee unchanged; no decision |
 | VA-4b | **PASS** | Stale guard: 409 `execution_policy_changed`; nothing written |
 | VA-4c | **Hazard confirmed** | Duplicate participant **silently dropped** with a 200 |
 | VA-5 | **PASS** | Guarded update, case (b): 422; nothing written |
 | VA-6 | **PASS** | Reverse update: 200; the policy equals the original exactly |
-| VA-7 | **PASS** | Revoked key: 401 (agent-token message); viewer write: 403 "Viewer access is read-only" |
-| VA-8 | **PASS** | Back in `local_trusted`: `local-board` is admin again; keyless works; all data intact |
-| VA-9 | **BLOCKED** | Backup works; **no supported restore procedure exists**, so restore was not attempted |
+| VA-7 | **PASS** | Revoked key: 401 (agent-token message); viewer write: 403 "Viewer access is read-only". Key **expiry** was not tested |
+| VA-8 | **PASS** (residual state) | Verified mode rollback: `local-board` is admin again, keyless works, all data intact. **Residual dual-admin state:** the claimant also stays instance admin, and a later switch to `authenticated` produces no new claim link |
+| VA-9 | **BLOCKED** | Backup creation works; **no supported restore procedure exists**, so restore was not attempted. Backup creation is not proof of recoverability |
 
 - **Sandbox created:** yes.
 - **Isolation verified:** yes.
@@ -102,7 +102,7 @@ Sandbox user ids are random identifiers, not personal data.
   | `GET /admin/users` | 401 | 401 |
   | `POST /admin/users/local-board/demote-instance-admin` | 401 | 401 |
 
-- **Result: PASS.** The plan's failure criterion ("any keyless 2xx except health") was not met. **Deviation:** the issue routes answer 401 or 404 rather than 403. Clients must not rely on 403 to detect a missing login.
+- **Result: PASS.** The plan's failure criterion ("any keyless 2xx except health") was not met. **Deviation:** the issue routes answer 401 or 404 rather than 403. Clients must not rely exclusively on 403 to detect missing authentication. A 401, or a 404 on a resource known to exist, can mean the same thing.
 - **Evidence:** `VA-1-keyless.json`.
 
 ### VA-2: board claim
@@ -124,7 +124,10 @@ Sandbox user ids are random identifiers, not personal data.
 **Result: PASS.**
 
 **Observations:**
-- The claim token and code appear in the server's request log (INFO), so log files must be treated as sensitive until the claim is used.
+- **Two different secrets are involved.** Do not confuse them:
+  - the **one-time board-claim token and code**, which are part of the claim URL. They appear in the server's request log at INFO (§5.1);
+  - the **Board API token** issued later through the CLI login (VA-3). It was not found in the inspected outputs and logs.
+- Log files must be treated as sensitive at least until the claim is used. Whether a used claim token has any further value was not tested.
 - The CLI printed "Update available" at every start, so the update check reached npm despite `updates.checkEnabled: false`.
 
 **Evidence:** `VA-2-00-health-before-claim.json`, `VA-2-01-claim-status.json`, `VA-2-02-roles-after-claim.json`.
@@ -140,7 +143,9 @@ Sandbox user ids are random identifiers, not personal data.
 - HTTP 200.
 - `userId` equals the claimant's id.
 - The response also carries `isInstanceAdmin`, `memberships`, `companyIds`, `keyId` and `source`.
-- A search of the CLI output, the server log and every evidence file found no Board token. The CLI's JSON output contains only the approval URL, which holds the challenge secret, not the key.
+- **What was searched:** the CLI output, the server log and every evidence file, for the `pcp_board_` key format. No Board API token was found.
+- **What was not searched:** files outside that set.
+- **What the outputs do contain:** the CLI's JSON output holds only the approval URL. That URL carries the CLI challenge secret (`pcp_cli_auth_…`), not the Board key.
 
 **Evidence:** `VA-3-cli-auth-me.json`.
 
@@ -184,7 +189,7 @@ Sandbox user ids are random identifiers, not personal data.
 - The stage now has **one** participant: `38063505…` with the claimant's id.
 - The second participant entry (`c18efb4d…`) was removed with no error or warning.
 
-The migration procedure must keep the pre-check that VA-4 used (A2 §3.B step 5).
+**Confirmed migration hazard:** a participant update can silently remove a participant. The migration procedure **must** keep the pre-check that VA-4 used: the target user must not already be a participant of that stage (A2 §3.B step 5).
 
 **Evidence:** `VA-4c.json`.
 
@@ -217,7 +222,7 @@ The migration procedure must keep the pre-check that VA-4 used (A2 §3.B step 5)
 - **Action:** a disposable named Board key, with a 2-hour expiry, was created with the claimant's key. It answered 200, was revoked with `DELETE /board-api-keys/:id` (200), then used again.
 - **Result:** **401 "Agent token did not verify; obtain fresh credentials and retry"**.
 - **Note:** an unknown token gets the same 401 and message, so a client cannot tell revoked, expired and wrong keys apart.
-- **Not tested:** expiry itself, since keys last 30 days. It goes through the same lookup in source (A1 3.6).
+- **Not tested:** expiry itself, since keys last 30 days. The revoked-key result does not prove expiry behaviour. Expiry goes through the same lookup in source (A1 3.6), but that is **source evidence only**.
 
 **Viewer write:**
 - **Setup:** the Board Operator created a second sandbox account. It was given company access with `PUT /admin/users/:id/company-access`, which assigned **`operator` by default**, then changed to `viewer` with `PATCH /companies/:id/members/:memberId`. It is not an instance admin. Its CLI login was approved from its own browser session.
@@ -238,7 +243,11 @@ The migration procedure must keep the pre-check that VA-4 used (A2 §3.B step 5)
 - Companies, issue list and statuses, and the AVE-1, AVE-2 and AVE-3 policies, states and assignees are identical to the pre-rollback snapshot.
 - The AVE-3 decision (`lastDecisionId`) is kept.
 
-**Consequence:** after a rollback the instance has two instance admins. A later switch to `authenticated` shows **no new claim link**, because `local-board` is no longer the only admin. The claimant simply stays admin.
+**Interpretation:** a verified mode rollback, with a **residual dual-admin state**:
+- after the rollback, both `local-board` and the claimant are instance admins;
+- a later switch to `authenticated` shows **no new claim link**, because `local-board` is no longer the only admin, and the claimant simply stays admin.
+
+Whether this residual state is acceptable is a Board decision (§8).
 
 **Evidence:** `VA-8-00-before.json`, `VA-8-01-after.json`.
 
@@ -253,6 +262,7 @@ The migration procedure must keep the pre-check that VA-4 used (A2 §3.B step 5)
 - Paperclip 2026.1023.0 has no user-facing restore command. The CLI offers `db:backup` only.
 - Its restore routine (`runDatabaseRestore`, `@paperclipai/db` `backup-lib.js` 919) is called only inside `seedWorktreeDatabase`, which `worktree init` uses to snapshot a running source instance into a new worktree instance (CLI `dist/index.js` 52726-52800). It does not restore an existing backup file.
 - Following the brief, no restore was improvised, and the original sandbox was never overwritten.
+- **Backup creation is not proof of recoverability.** A valid gzip file that contains the expected tables shows that a dump was written, not that it can be restored into a working instance.
 
 **Evidence:** `VA-9-00-backup.json`.
 
@@ -268,6 +278,19 @@ The migration procedure must keep the pre-check that VA-4 used (A2 §3.B step 5)
 
 No unexpected write or state change occurred in any participant test.
 
+### 5.1 Security findings
+
+These are recorded as observed. **None is fixed**, and no exposure beyond what is stated was found or inferred.
+
+| ID | Finding | Evidence | Scope of the evidence | Status |
+|---|---|---|---|---|
+| SF-1 | The one-time board-claim URL, with its token and code, is written to the server's request log at INFO | VA-2: log lines for `GET` and `POST /board-claim/<token>…` | Sandbox log only; the live log was not inspected | Open; Board decision (§8 item 4) |
+| SF-2 | The CLI contacted npm for an update check despite `updates.checkEnabled: false` | "Update available: 2026.1117.0" printed at each sandbox start | Observed message only; the request itself was not captured | Open |
+| SF-3 | `PUT /api/admin/users/:id/company-access` creates the membership as **`operator`** by default | VA-7 setup: the access response showed `operator`, active | One call in the sandbox | Open; Board decision (§8 item 5) |
+| SF-4 | The test viewer was briefly `operator` before being changed to `viewer`. That sequence is a test setup step, **not** evidence of a least-privilege provisioning flow | VA-7 setup | — | Note |
+| SF-5 | **R8 (separate from this migration):** the studio workspace folder grants Modify to all Authenticated Users | A2 §4 | Not re-checked in A.4 | Open; outside the migration |
+| SF-6 | **G-14** (agent exploitability, Cursor agents without an allowlist) and the **Claude Code session's ability to use the Board key** remain open risks. The latter was accepted as a residual risk of D-AUTH-06 (A.3 §2). It was neither tested nor mitigated in A.4 | A2 §4; A.3 §2 | No agent run in A.4 | Open / accepted (see E12) |
+
 ## 6. Teardown
 
 1. **Sandbox stopped:** no process with the sandbox path remains; ports 3300 and 54349 are closed.
@@ -277,25 +300,50 @@ No unexpected write or state change occurred in any participant test.
 
 **Teardown: COMPLETE**, except for the deliberately kept evidence folder.
 
-## 7. Updated readiness
+## 7. Readiness reconciled against the A.2 baseline
 
-| Phase B entry criterion (A2 §5) | Before A.4 | After A.4 |
-|---|---|---|
-| E5 claim verified | Not verified | **Met** (VA-2) |
-| E6 participant update verified | Not verified | **Met** (VA-4, VA-4b, VA-5, VA-6; hazard from VA-4c documented) |
-| E7 identity and token handling | Not verified | **Met** (VA-3, VA-7); a client cannot tell revoked from wrong keys |
-| E8 backup restore | Not verified | **Not met**: Paperclip has no supported restore procedure |
-| E9 mode rollback | Not verified | **Met** (VA-8); leaves two instance admins |
-| E1, E10 | Pending | E10 met by PR #41; this record still needs to be committed and reviewed |
-| E2, E3 | Pending | Decided (D-AUTH-03R, D-AUTH-06); not implemented |
-| E4 | Pending | Met for VA (D-AUTH-07a, D-AUTH-07b) |
-| E11 agents in `authenticated` | Not verified | Not verified (D-AUTH-07c deferred) |
-| E12 separate security risks | Open | Open |
+Each row uses the exact acceptance condition of [auth-migration-phase-a2-readiness.md](auth-migration-phase-a2-readiness.md) §5.
+
+**Reading the status column:**
+- **Evidence meets the condition** means the evidence satisfies the wording. When A.2 names the Board Operator as reviewer, the criterion counts as met only after that review is recorded.
+- **Partial** or **Unclear** is explained in the row.
+
+| # | Acceptance condition (A.2 §5) | Evidence | Status after reconciliation |
+|---|---|---|---|
+| E1 | Readiness package (A.2 document and verification plan) reviewed: "Board review recorded" | The Board approved the A.3 decisions, which were built from the A.2 package. No separate record of a Board review of the A.2 package exists. This A.4 report has not been reviewed yet | **Unclear, not recorded.** The historical documents were merged in PR #41, but that is E10, not a review. The A.4 report's review is pending separately |
+| E2 | "New decision: manual sweep, credentialed watchdog or other" | D-AUTH-03R approved 2026-11-20, option A (A.3 §1) | **Met** (decision only; not implemented) |
+| E3 | "An option chosen and the residual risk accepted in writing" | D-AUTH-06 approved: Windows Credential Manager, residual risks accepted (A.3 §2) | **Met** (decision only; not implemented) |
+| E4 | "Board approves environment creation" | D-AUTH-07a approved, and the A.4 brief authorized it; environment created and torn down | **Met** |
+| E5 | "Claim works; `local-board` admin removed; owner memberships created" | VA-2 | **Evidence meets the condition**; Board review pending. Note: `local-board` keeps its own owner membership, which the condition does not cover |
+| E6 | "Case (a) keeps ids and state; case (b) refused as predicted; rollback works" | VA-4, VA-4b, VA-5, VA-6 | **Evidence meets the condition**; Board review pending. **Confirmed hazard (VA-4c):** silent deduplication, so the pre-check is mandatory |
+| E7 | "`/cli-auth/me` gives the claimed user; 401 and 403 behave as documented" | VA-3; VA-7 (revoked-key 401 with the documented agent-token message; viewer 403) | **Evidence meets the condition** for the cases run; Board review pending. **Not covered:** key expiry. A client cannot tell revoked, expired and wrong keys apart. VA-1's 401/404 on issue routes is a further deviation from 403 |
+| E8 | "A restore into the test environment succeeds" | VA-9: backup created; no supported restore procedure; restore not attempted | **Not met.** It stays not met unless the Board explicitly accepts a documented alternative |
+| E9 | "Returning to `local_trusted` restores Board access, and data is intact" | VA-8 | **Evidence meets the condition**; Board review pending. **Residual dual-admin state** (§4 VA-8); its acceptability is a Board decision |
+| E10 | "The Phase A audit, A.1, the decision record and this package are committed or explicitly archived" | PR #41 (merged into `main`, `8995e3e`) contains the Phase A audit, A.1, the D-AUTH decision record, the A.2 readiness document and the verification plan | **Met.** The A.4 report itself is not part of E10; it is in PR #42 (open) |
+| E11 | "Verified, or the Board accepts migrating without agent verification" | No agent or VR case run; D-AUTH-07c deferred | **Not met** (not verified, not accepted) |
+| E12 | "R8, G-14 and the assistant-credential risk are accepted or scheduled" | The assistant-credential risk was accepted as a residual risk of D-AUTH-06. R8 and G-14 were neither accepted nor scheduled | **Not met (partial).** One of three risks is accepted. Whether the D-AUTH-06 acceptance also counts for E12 is for the Board to confirm |
 
 **Remaining blockers for Phase B:**
-1. **E8:** no supported restore. The Board must accept a rollback path without a restore (VA-8 shows that the mode rollback alone keeps the data), or require a restore method first.
-2. **E11:** agent behaviour in `authenticated` mode is unverified.
-3. **E12:** R8, G-14 for Cursor agents, and the Claude Code credential risk are still open.
-4. Board review of this record (E1).
+1. **E1:** no recorded Board review of the A.2 package or of this report.
+2. **E5, E6, E7, E9:** Board review of the evidence.
+3. **E8:** no supported restore procedure.
+4. **E11:** agent behaviour in `authenticated` mode unverified and not accepted.
+5. **E12:** R8 and G-14 neither accepted nor scheduled.
 
-**Recommendation: READY FOR BOARD REVIEW.** The VA evidence is complete except VA-9's restore, and the blockers above need Board decisions. Phase B is **not** authorized by this record.
+## 8. Decisions for the Board
+
+None of these is decided by this report.
+
+1. **E8 restore.** Either accept the absence of a supported restore procedure, documenting the alternative (for example the VA-8 mode rollback, which kept the data), or require a separately verified restore method before Phase B.
+2. **Rollback outcome.** Is the residual dual-admin state after a mode rollback (VA-8) acceptable? If not, add a step: demote one admin after a rollback.
+3. **E11.** Authorize agent verification (D-AUTH-07c, VR-8) as a separate workstream with its own identity decision, or accept migrating without it.
+4. **SF-1.** How to handle the claim URL in server logs: for example, restrict and purge the log after the claim, keep the claim window short, or report it upstream.
+5. **SF-3.** Is the `operator` default of `company-access` acceptable, or must provisioning set a least-privilege role explicitly?
+6. **E12.** Accept or schedule R8 and G-14 for Cursor agents, and confirm whether the D-AUTH-06 acceptance of the Claude Code Board-key risk also satisfies E12.
+
+## 9. Final status
+
+**READY FOR BOARD REVIEW — PHASE B NOT AUTHORIZED.**
+
+- No implementation authorization is added or implied.
+- D-AUTH-07c and Phase B remain unauthorized.
