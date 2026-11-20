@@ -309,7 +309,9 @@ Staging is one-at-a-time:
 - the same staging serialization;
 - an unchanged manual path as the fallback.
 
-## 11. Implementation phases (none started)
+## 11. Implementation phases
+
+Progress (2026-11-20): Phase 1 merged (PR #29, audited in PR #30). Phase 2 run outside Paperclip, all acceptance conditions met ([review-package-phase2-results.md](review-package-phase2-results.md)). Phases 3–6 not started. G-13 stays open.
 
 | Phase | Deliverables | Acceptance | Depends on | Stop if |
 |---|---|---|---|---|

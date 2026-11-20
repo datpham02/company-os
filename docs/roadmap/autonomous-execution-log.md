@@ -160,3 +160,23 @@ No runtime action. Documentation committed in PR #42. Status: READY FOR BOARD RE
 - **Result:** no supported restore exists. JavaScript-engine backups, the only kind this machine can produce, are not faithful (issue #17854). Recommended isolated candidate: a cold copy of the stopped instance; a `pg_dump` 18 dump only after a tooling decision.
 - **Record:** [auth-migration-ws1-restore-research.md](../architecture/auth-migration-ws1-restore-research.md). OQ-025 updated; E8 still not met.
 - **Not done:** no restore, backup, upgrade, sandbox or live action. Committed in the WS-1.1 pull request.
+
+## Step 3: Review Package, Phase 2 (2026-11-20)
+
+**Status:** done outside Paperclip; recorded on branch `feat/review-package-phase2-tests`.
+
+**Numbering:** Step 3 follows `review-package.md` §11, as decided in Step 0, so its first subphase is §11 Phase 2 (strict reviewer tests), not the brief's "GitHub API" (§11 Phase 3).
+
+**Result:** all four acceptance conditions met.
+- Three planted defects were found at the right `files/head` lines, with a valid verdict block.
+- No write, shell or git tool was available to the reviewer.
+- Six attempts to read outside the cwd and `current/` were refused.
+- No file changed.
+
+**Key finding:** the boundary is Claude Code's `--restricted` flag, which the reviewer profile must carry.
+
+**Not done:** nothing inside Paperclip; G-13 stays open.
+
+**Record:** [review-package-phase2-results.md](../design/review-package-phase2-results.md).
+
+**Next step:** Board review. Then §11 Phase 3, the GitHub source; it needs a throwaway repository and a dedicated read-only token (decision U6, review-package.md §6).
