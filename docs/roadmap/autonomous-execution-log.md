@@ -191,3 +191,10 @@ No runtime action. Documentation committed in PR #42. Status: READY FOR BOARD RE
 - 25 new tests against an in-memory fake GitHub. `test_pc.py`: 178 tests OK with `-W error`.
 
 **Not done:** the live run against GitHub. It needs a throwaway repository and a fine-grained read-only token created and stored by the Board (decision U6); see [review-package-phase3-github.md](../design/review-package-phase3-github.md) §3. G-13 stays open.
+
+**Phase 3 live run (2026-11-20):** read-only, on `datpham02/soucean-game` PR #27, with the Board's token from Credential Manager.
+- The package built and staged.
+- 7/7 blob SHAs matched GitHub and the recomputed bytes.
+- The token was found nowhere.
+- Not covered live: several pages, a moved head, modified/renamed/deleted files, the 401/403 path.
+- Record: [review-package-phase3-github.md](../design/review-package-phase3-github.md) §4.

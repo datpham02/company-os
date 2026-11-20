@@ -1,6 +1,6 @@
 # Review Package Phase 3: GitHub source
 
-- **Status:** code and offline tests done (2026-11-20). **The live run against GitHub has not been done.** It needs a throwaway repository and the packager token, which only the Board creates (decision U6).
+- **Status:** code and offline tests done; **first live run done** (2026-11-20, §4) against `datpham02/soucean-game` PR #27 (read-only). Not covered live: pagination over several pages, a moved head, modified/renamed/deleted files, and the 401/403 path.
 - **Phase definition:** [review-package.md](review-package.md) §11, Phase 3 "GitHub source"; procedure §4 option A; token §6.
 - **Code:**
   - `.claude/skills/paperclip/scripts/review_github.py` (new);
@@ -43,11 +43,11 @@ It follows design §4 option A, reads only. The steps below are numbered as in �
 
 | Condition | Offline evidence (fake GitHub) | Live evidence |
 |---|---|---|
-| Blob SHAs verified | `test_tampered_blob_refused_by_the_packager_sha_check`; `test_file_list_sha_differing_from_head_tree_refused` | Pending |
-| Pagination complete | `test_reads_every_page_until_empty` (pages 2+2+1+empty); `test_incomplete_file_list_refused`; `test_too_many_pages_refused` | Pending |
-| Head-moved refused | `test_head_moved_is_recorded_and_refused_by_the_packager` | Pending |
-| Missing-patch cases refused | See the note below; `test_missing_blob_content_refused`, `test_truncated_tree_refused`, `test_submodule_refused` | Pending |
-| Token never logged | `test_token_never_appears_in_errors`, `test_redact_catches_token_shapes`, `test_github_errors_become_redacted_refusals`, and the manifest and `REVIEW.md` checked in `test_end_to_end_package_records_github_source` | Pending |
+| Blob SHAs verified | `test_tampered_blob_refused_by_the_packager_sha_check`; `test_file_list_sha_differing_from_head_tree_refused` | **Met** for 7/7 files of PR #27 (§4) |
+| Pagination complete | `test_reads_every_page_until_empty` (pages 2+2+1+empty); `test_incomplete_file_list_refused`; `test_too_many_pages_refused` | Partly: one page plus the empty page; count 7 = `changed_files` (§4). Several pages: offline only |
+| Head-moved refused | `test_head_moved_is_recorded_and_refused_by_the_packager` | Not tested live (nothing pushed to the repository) |
+| Missing-patch cases refused | See the note below; `test_missing_blob_content_refused`, `test_truncated_tree_refused`, `test_submodule_refused` | Not triggered live (complete tree and blobs) |
+| Token never logged | `test_token_never_appears_in_errors`, `test_redact_catches_token_shapes`, `test_github_errors_become_redacted_refusals`, and the manifest and `REVIEW.md` checked in `test_end_to_end_package_records_github_source` | **Met**: not found in output, audit log, package, staging or the repository (§4) |
 
 **Note on "missing-patch".**
 - §4 step 5 says the `patch` field must never be the only source, because GitHub omits it for large files. The packager therefore ignores `patch` and builds the diff from blobs, so a missing `patch` field is **not** a reason to refuse.
@@ -92,3 +92,32 @@ python -I .claude/skills/paperclip/scripts/pc.py review-pack TEST-1 --github-pr 
 - revoking the token makes the next run refuse with the 401/403 message.
 
 **After the run:** delete the throwaway roots. Keep or revoke the token, and keep or delete the throwaway repository, as the Board decides.
+
+## 4. Live run (2026-11-20)
+
+- **Authorization:** the Board Operator created a fine-grained token (Metadata, Contents and Pull requests read-only, `datpham02/soucean-game` only), stored it in Windows Credential Manager under `company-os/review-packager`, and asked for the run on that repository instead of a throwaway one.
+- **Target:** PR #27 (SOU-28, open), the only open PR: 7 added files. The run is read-only: nothing pushed, no review requested, no Paperclip call. The task and state files were local stand-ins; roots were in a private folder outside every repository.
+- **Command:** `pc.py review-pack SOU-28 --github-pr 27 --github-repo datpham02/soucean-game --allow-repo … --task-file … --state-file … --review-root … --staging-root …`.
+
+**Results:**
+
+| Check | Result |
+|---|---|
+| Build | Exit 0: "package built (7f22f059666b), staged". No warning; the token expiry is more than 14 days away |
+| Head | Manifest `headSha` `7f22f059666b…` equals GitHub's PR head (independent check with the Board Operator's own `gh`, read-only) |
+| Files | 7 in the manifest, 7 on GitHub (`changed_files` = 7) |
+| Blob SHAs | 7/7: manifest blob SHA = GitHub file SHA = the SHA recomputed from the staged bytes; SHA-256 matches the manifest |
+| Audit log | Two lines, `build` and `stage`, with no token |
+| Token | Read in memory to search for it, never printed. Its exact value (UTF-8 and UTF-16) and the `github_pat_` prefix were found in **none** of the 30 files of the test folder (outputs, audit log, package, staging), nor in the repository |
+
+**Not covered by this run:**
+- several result pages (the PR has 7 files);
+- a moved head (nothing was pushed);
+- modified, renamed and deleted files (the PR adds files only);
+- a truncated tree or missing blob;
+- the 401/403 path. That needs the token revoked or replaced; it is the Board's choice.
+
+These stay covered by the offline tests only.
+
+**Left in place:** the private test folder (package and staging of SOU-28). It is to be deleted when the Board no longer needs it. The token stays stored; rotate or revoke per §6.
+
