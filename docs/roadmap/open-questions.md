@@ -34,7 +34,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-022 | Engine choice and worktree compatibility | Open | Per project |
 | OQ-023 | How do role instructions reach the CLI under Paperclip adapters? | Partially verified | Stage 1 setup |
 | OQ-024 | Paperclip deployment mode and installation on this machine | Open | Stage 1 |
-| OQ-025 | Backup procedure for Paperclip data | Open | Operations |
+| OQ-025 | Backup procedure for Paperclip data | Partially verified (backup creation works; restore untested) | Operations |
 | OQ-026 | Is Hoppscotch MCP needed? | Open | Dependency evaluation |
 | OQ-027 | Stronger filesystem isolation without Docker | Open | Security |
 | OQ-028 | Framework Repository not yet under Git; GitHub account mapping | Resolved | — |
@@ -261,7 +261,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 ### OQ-025 — Paperclip backup
 - **Found:** Paperclip uses embedded PostgreSQL by default; `docs/deploy/database.md` exists in the Paperclip repo but was not reviewed for backup commands.
 - **Verification method:** Read Paperclip's database and storage deployment docs; test a restore.
-- **Status:** Open.
+- **Backup observed (2026-11-20, D-STEP2-01):** `POST /api/instance/database-backups` (instance admin) created a gzip SQL dump in the instance's `data/backups` folder, verified with `gzip -t`; the same call pruned 35 older files under the retention policy (7 daily, 4 weekly, 1 monthly). See [step2-board-decisions.md](step2-board-decisions.md) §6a. **No restore has been tested** (verification case VA-9 in [auth-migration-verification-plan.md](../architecture/auth-migration-verification-plan.md)).
+- **Status:** Partially verified (backup creation only).
 
 ### OQ-026 — Hoppscotch MCP
 - **Found:** Official package `@hoppscotch/mcp-server` (1.0.2); configured locally. Useful only for games with HTTP backends.
@@ -342,6 +343,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Found (2026-11-04):** In the studio company, when an agent sets its issue to `done` from inside its own run and the policy moves the issue to a review stage, the reviewer agent gets **no run**. This happens whatever the reviewer's adapter: reproduced with `qa` on `cursor` (GAM-3) and `producer` on `claude_local` (GAM-4), with no run after more than 3 minutes. The hand-off cancels the implementer's own run with `issue_reassigned`, and the server log shows no wake failure. Paperclip's stalled-review recovery did not fire within 8 minutes either. In code, the stage wakeup carries `interruptedRunId` into the heartbeat queue's hand-off path (`services/heartbeat/queue.js`); the exact cause is not confirmed. Experiment 0.8 (scratch company) did wake its reviewer, so the trigger is not fully understood.
 - **Workaround (`IMPLEMENTED`):** [`runtime/tools/review-wake-watchdog.ts`](../../runtime/tools/review-wake-watchdog.ts) wakes the pending agent participant through the public API after 90 s. Verified: it woke the reviewers of GAM-3 and GAM-4, both completed their reviews, and a second sweep made no duplicate wakes.
 - **Next:** report upstream to Paperclip with the reproduction; remove the watchdog once fixed.
+- **Auth migration (2026-11-20):** D-AUTH-03 ([auth-migration-board-decisions.md](auth-migration-board-decisions.md)) retires the watchdog only if Paperclip's built-in scheduler is verified, in an isolated environment, to recover these reviewer wakeups; the manual Board sweep is the fallback, and the watchdog gets no Board credential. Note: this question was observed on 2026-11-04 with the same Paperclip version and its scheduler running, so the verification must reproduce this exact scenario. The live watchdog stays as it is until then.
+- **Source finding (2026-11-20, Phase A.2):** Paperclip's sweeper does **not** recover this case. `reconcileStrandedAssignedIssues` skips an `in_review` issue whose reviewer has no run on it, or a non-terminal one (`services/recovery/service.js` 3412-3440); it re-dispatches only a reviewer whose previous run is terminal. The original wake is fire-and-forget and can be skipped, deferred or dropped without retry (`routes/issues.js` 11358-11393). Which branch dropped it in 2026-11-04 is not known. So the D-AUTH-03 condition is not met at source level; not runtime-verified. See [auth-migration-phase-a2-readiness.md](../architecture/auth-migration-phase-a2-readiness.md) §3.C.
 - **Status:** Worked around.
 
 ### OQ-036 — Supabase identity and free tier for the website
@@ -464,6 +467,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
   - **Agent keys** in `authenticated` mode: same-company reads work (issues not assigned to the agent, the agent list); instance-admin reads are refused (`401`); a cross-issue write without a run is refused (`403`, needs `X-Paperclip-Run-Id`); creating an issue without a run is **allowed** (`201`).
   - **Scripts:** `pc.py`, `post-import.py`, `sync-instructions.py` and `review-wake-watchdog.ts` send no `Authorization` header; `pc.py overview` against the sandbox fails with `403`. Each needs board-token support before the studio switches.
   - **Not tested, and cancelled:** agent runs in `authenticated` mode and G-14 exploitability from an agent run. The Board cancelled the sandbox agent runs on 2026-11-20, and the sandbox was removed.
+- **Board decisions (2026-11-20):** the migration design of [auth-migration-phase-a1.md](../architecture/auth-migration-phase-a1.md) was approved as D-AUTH-01 to D-AUTH-05 in [auth-migration-board-decisions.md](auth-migration-board-decisions.md): board claim for the Board identity, a participant migration for SOU-17, SOU-28 and SOU-30, conditional watchdog retirement, separate Board credentials (`PAPERCLIP_BOARD_TOKEN`), and verification in an isolated environment (agent runs need a separate approval). None of this is runtime-verified yet; Phase B is not authorized.
+- **Phase A.2 (2026-11-20, source):** a guarded participant update works only for issues without an active stage; an active `in_review` stage held by `local-board` must be decided before the switch, because the guarded update is refused (422). Readiness and test cases: [auth-migration-phase-a2-readiness.md](../architecture/auth-migration-phase-a2-readiness.md), [auth-migration-verification-plan.md](../architecture/auth-migration-verification-plan.md).
 - **Status:** Partially verified. Remaining before any switch of the studio instance: script board-token support, a migration runbook, a Board decision, and a check that agents still work in `authenticated` mode (no sandbox remains for it).
 
 ## Conflicts
