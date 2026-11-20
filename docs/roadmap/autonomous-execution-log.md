@@ -144,11 +144,11 @@ Step 3 will follow the design's order, since the design is the approved contract
 
 **D-AUTH-08 carried out (2026-11-20):** the Phase A audit was added as [auth-migration-phase-a-audit.md](../architecture/auth-migration-phase-a-audit.md), and the Phase A to A.3 records were committed in four commits on one branch, with a pull request to `main`. Nothing else was implemented.
 
-**Phase A.4 isolated verification (2026-11-20, D-AUTH-07a and 07b):** a disposable instance (separate home, instance `a4verify`, ports 3300/54349, fresh secrets, no agents) with the live instance stopped. VA-1 to VA-8 passed (VA-1 with different status codes; VA-4c reproduced the duplicate-participant drop); VA-9 is blocked because Paperclip has no supported restore. Sandbox deleted; live instance restarted unchanged. Record: [auth-migration-phase-a4-verification.md](../architecture/auth-migration-phase-a4-verification.md). Not committed.
+**Phase A.4 isolated verification (2026-11-20, D-AUTH-07a and 07b):** a disposable instance (separate home, instance `a4verify`, ports 3300/54349, fresh secrets, no agents) with the live instance stopped. VA-1 to VA-8 passed (VA-1 with different status codes; VA-4c reproduced the duplicate-participant drop); VA-9 is blocked because Paperclip has no supported restore. Sandbox deleted; live instance restarted unchanged. Record: [auth-migration-phase-a4-verification.md](../architecture/auth-migration-phase-a4-verification.md). Committed in PR #42; pending Board review.
 
 **Phase A.4 documentation reconciliation (2026-11-20):** the A.4 report was reviewed against its evidence and the A.2 baseline.
 - **Wording:** claim token vs Board API token, the dual-admin rollback state, expiry not tested, backup not proof of recoverability.
 - **Added:** security findings SF-1 to SF-6, a per-criterion E1 to E12 table using A.2's exact acceptance wording, and six Board decisions.
 - **Statuses:** E2, E3, E4 and E10 met. E5, E6, E7 and E9 have evidence that meets the condition and await Board review. E1 is unclear. E8, E11 and E12 are not met.
 
-No runtime action. Not committed. Status: READY FOR BOARD REVIEW — PHASE B NOT AUTHORIZED.
+No runtime action. Documentation committed in PR #42. Status: READY FOR BOARD REVIEW — PHASE B NOT AUTHORIZED.
