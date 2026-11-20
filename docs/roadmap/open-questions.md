@@ -50,8 +50,9 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-038 | Ad-network approval, placement policy for game pages, and consent requirements | Open | Website ads milestone |
 | OQ-039 | Vietnamese legal requirements for a free game website with ads (Decree 147/2024, Decree 13/2023) | Open | Website public launch |
 | OQ-040 | How are existing Paperclip agents updated from Git, given that import into an existing company refuses `--collision replace`? | Open | Studio bootstrap, ADR-016 |
-| OQ-041 | Does `maxConcurrentRuns: 1` enforce WIP 1 without delaying an agent's review wakes? | Open | Task contract, ADR-017 |
+| OQ-041 | Does `maxConcurrentRuns: 1` enforce WIP 1 without delaying an agent's review wakes? | Answered from source (not run): wakes are queued, so a busy reviewer's review waits | Task contract, ADR-017 |
 | OQ-042 | How can a reviewer be kept from writing to the author's Task Workspace and branch (G-13)? | Open | Security, ADR-006, task-contract §8 |
+| OQ-043 | Can the studio run Paperclip in `authenticated` mode on Windows, so that no local process is the Board by default (G-14)? | Open | Security, Runtime prerequisites |
 
 ## Entries
 
@@ -377,7 +378,12 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Question:** If an implementer agent has `runtimeConfig.heartbeat.maxConcurrentRuns: 1`, are review or comment wakes for its other Tasks queued, dropped, or delayed until its current run ends?
 - **Why it matters:** Two Tasks ran on one agent at once (GAM-25 and GAM-45). The limit would stop that, but must not stall reviews.
 - **Verification method:** scratch company; one agent with limit 1; start a long Task, then send a review hand-off to the same agent; record what happens.
-- **Status:** Open.
+- **Answered from source (2026-11-20, Paperclip 2026.1023.0; not run):**
+  - the limit is enforced only in `startNextQueuedRunForAgent` (`heartbeat/queue.js` 1267-1271);
+  - `enqueueWakeup` always queues the wake and creates a `queued` run (3135-3193). Wakes for the same task scope coalesce; only daily caps or `wakeOnDemand: false` drop one;
+  - queued runs are ordered with dependency-ready `in_progress` work first.
+  So with limit 1, a reviewer that has its own task running gets its review **delayed until a slot frees, not dropped**. Recommended use: limit 1 only on agents that never review (Stage 1 gap analysis, G-12).
+- **Status:** Answered from source; the scratch-company check is still useful before applying it.
 
 ### OQ-042 — Reviewer isolation (G-13)
 - **Why it matters:** `web-engineer` (Cursor) committed to the author's branch while reviewing SOU-2 and SOU-18. Role text is the only guard.
@@ -443,6 +449,15 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Still to validate in a sandbox:** V1 (a user as stage participant), V2 (a run for a non-assignee agent), V3 (whether agents reach Board endpoints in `local_trusted` mode), V5 (retention from closure or merge), V6 (fork PRs). V4 (automatic trigger) is for a later phase.
 - **Nothing is implemented:** no packager, relay, token, agent or Paperclip change.
 - **Status:** Open. Option 1 is partly verified outside Paperclip (strict form only); its diff handoff is designed, with decisions U1, U2 and U4–U7 approved, but not built. G-13 stays unresolved.
+
+### OQ-043 — Authenticated mode instead of `local_trusted` (G-14)
+- **Why it matters:** in `local_trusted` mode a request without `Authorization` is the Board and instance admin (`middleware/auth.js` 153-163). Any agent able to reach `127.0.0.1:3100` (Claude profiles allow `Bash(curl *)`; Cursor has no allowlist) could act as the Board. Whether an agent run can actually reach it has not been tested.
+- **Questions:**
+  - Does `authenticated` mode work on native Windows for the Board's sign-in (the onboarding sign-in failed, OQ-031)?
+  - Do agents keep working with only their keys?
+  - How do `pc.py`, `post-import.py`, `sync-instructions.py` and the review-wake watchdog authenticate (board API key)?
+- **Verification method:** a separate Paperclip instance with its own data folder and port, never the studio instance; switch the mode; run one agent task and each script.
+- **Status:** Open. Needs Board approval to run the separate instance.
 
 ## Conflicts
 
