@@ -451,7 +451,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Status:** Open. Option 1 is partly verified outside Paperclip (strict form only); its diff handoff is designed, with decisions U1, U2 and U4–U7 approved, but not built. G-13 stays unresolved.
 
 ### OQ-043 — Authenticated mode instead of `local_trusted` (G-14)
-- **Why it matters:** in `local_trusted` mode a request without `Authorization` is the Board and instance admin (`middleware/auth.js` 153-163). Any agent able to reach `127.0.0.1:3100` (Claude profiles allow `Bash(curl *)`; Cursor has no allowlist) could act as the Board. Whether an agent run can actually reach it has not been tested.
+- **Why it matters:** in `local_trusted` mode a request without `Authorization` is the Board and instance admin (`middleware/auth.js` 153-163). Any agent able to reach `127.0.0.1:3100` could act as the Board. The Claude profiles allowed `Bash(curl *)` until D-STEP2-01 removed it on 2026-11-20; Cursor agents still have no allowlist. Whether an agent run can actually reach it has not been tested.
 - **Questions:**
   - Does `authenticated` mode work on native Windows for the Board's sign-in (the onboarding sign-in failed, OQ-031)?
   - Do agents keep working with only their keys?
@@ -463,7 +463,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
   - **Migration is not automatic.** The implicit `local-board` user keeps `instance_admin` and owns the existing companies. A user who signs up after the switch is a Board user with no company access and cannot claim admin (`/bootstrap/claim` refuses once an admin exists). Working path, verified: sign up in `authenticated` mode; switch back to `local_trusted` briefly; promote that user (`POST /api/admin/users/:id/promote-instance-admin`) and grant company access (`PUT /api/admin/users/:id/company-access`) keyless; switch to `authenticated`. After that the board token saw both companies and could act as admin.
   - **Agent keys** in `authenticated` mode: same-company reads work (issues not assigned to the agent, the agent list); instance-admin reads are refused (`401`); a cross-issue write without a run is refused (`403`, needs `X-Paperclip-Run-Id`); creating an issue without a run is **allowed** (`201`).
   - **Scripts:** `pc.py`, `post-import.py`, `sync-instructions.py` and `review-wake-watchdog.ts` send no `Authorization` header; `pc.py overview` against the sandbox fails with `403`. Each needs board-token support before the studio switches.
-  - **Not tested, and cancelled:** agent runs in `authenticated` mode and G-14 exploitability from an agent run. The Board cancelled the sandbox agent runs on 2026-11-20 and ordered the sandbox removed.
+  - **Not tested, and cancelled:** agent runs in `authenticated` mode and G-14 exploitability from an agent run. The Board cancelled the sandbox agent runs on 2026-11-20, and the sandbox was removed.
 - **Status:** Partially verified. Remaining before any switch of the studio instance: script board-token support, a migration runbook, a Board decision, and a check that agents still work in `authenticated` mode (no sandbox remains for it).
 
 ## Conflicts

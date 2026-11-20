@@ -132,4 +132,4 @@ Step 3 will follow the design's order, since the design is the approved contract
 
 **D-STEP2-02 part (c) done (2026-11-20):** isolated sandbox, no agent runs. `authenticated` mode works on Windows and closes keyless Board access; existing data needs a manual admin and access migration; the scripts need board-token support. Agent runs wait for the sandbox identity decision. Details in the [execution record](step2-board-decisions.md#6b-execution-record-d-step2-02-part-c-2026-11-20) and OQ-043.
 
-**Sandbox agent runs cancelled (2026-11-20):** the Board decided they are not needed. The sandbox (instance, evidence files, scripts, Windows user) is removed by the Board Operator, and the studio instance was restarted. G-14 exploitability, OQ-041 and G-9 option 2 stay unverified.
+**Sandbox agent runs cancelled (2026-11-20):** the Board decided they are not needed. The studio instance was restarted. The Board Operator then removed the sandbox by hand (folder with instance, evidence files and scripts; Windows user, profile and folder rule); a check found nothing left over. G-14 exploitability, OQ-041 and G-9 option 2 stay unverified.
