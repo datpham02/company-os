@@ -7,7 +7,7 @@ How to operate execution day to day. In **Stage 1** "the runtime" is Paperclip p
 | Task | How |
 |---|---|
 | Operate Paperclip from Claude Code | Open a Claude Code session in this repository and ask in plain language. The project skill [`.claude/skills/paperclip`](../../.claude/skills/paperclip/SKILL.md) wraps the REST API: `overview`, `show`, `release`, `approve`, `request-changes`, `create`, `assign`, `wake`, `log` |
-| Start everything | Double-click `runtime/tools/start-studio.cmd` (or a Desktop shortcut to it). It starts Paperclip and the watchdog in their own windows if they are not already running, then opens the UI |
+| Start everything | Double-click `runtime/tools/start-studio.cmd` (or a Desktop shortcut to it). It starts Paperclip and the watchdog in their own windows if they are not already running, then opens the UI. It finds `paperclipai` even when `nvm use` switched to another Node: `PAPERCLIP_NODE_DIR` if set, else `PATH`, else the newest nvm Node folder that has `paperclipai.cmd`; that folder goes first on `PATH` for both windows, so the watchdog also gets Node 24 |
 | Start Paperclip | `paperclipai run` from `~/game-studio-workspace` (global install pinned to the registry version; not `npx`, OQ-034) |
 | Start the review-wake watchdog | `node runtime/tools/review-wake-watchdog.ts` from the framework repository, while Paperclip runs (OQ-035) |
 | Stop Paperclip | Stop the process (Ctrl+C in its terminal, or stop the service if you created one; see §3) |
