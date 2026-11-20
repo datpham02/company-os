@@ -94,3 +94,34 @@ Step 3 will follow the design's order, since the design is the approved contract
 **Not covered:** real multi-process races (simulated); a full disk; `rmtree` failing on open files outside the cleanup path.
 
 **Next step:** Step 2, Stage 1 validation (G-8, G-9, G-11, G-12, G-13). It waits for Board authorization.
+
+## Step 2: Stage 1 validation (2026-11-20)
+
+**Status:** documentation done on branch `docs/stage1-validation`, created from `fix/review-packager-audit` because this log is not on `main` yet. Not committed. No fixes were implemented.
+
+**Method:** a source audit of the installed Paperclip 2026.1023.0, plus this repository's config and scripts. Paperclip was off and was not started. No live or sandbox experiment was run. Details are in [stage1-gap-analysis.md](../architecture/stage1-gap-analysis.md#step-2-validation-2026-11-20).
+
+| Gap | Finding | Status |
+|---|---|---|
+| G-8 | Paperclip allows same-company issue and agent reads; the normal agent API path lacks a usable credential (no variables in commands, no read helper or MCP read tool). The separate `local_trusted` path (G-14) is untested from agent runs | Open, cause verified |
+| G-9 | MCP `create_task` ignores its own `status` field: always `todo`, assigned to the caller, always exposed | Open, cause verified; skill path mitigated |
+| G-11 | Import `replace` still refused; role texts are synced by a script; adapter config, permissions and runtime config have no sync and no drift report | Partially Verified |
+| G-12 | `maxConcurrentRuns` queues wakes (answers OQ-041) and limits simultaneous runs, not `in_progress` issues, so WIP still needs its own check; a native 30-second scheduler sweeps stranded and silent work but not `blocked`; cancelled blockers never resolve. New bypass: `pc.py request-changes` has no WIP check | Partially Verified |
+| G-13 | Conditions unchanged; the OQ-042 evidence stands; not re-run | Open |
+| **G-14 (new)** | `local_trusted` treats any keyless loopback request as the Board and instance admin; Claude profiles allow `Bash(curl *)` (no role uses it). Exploitability from an agent run is untested | **Open (critical)**: source/config verified; exploitability unverified |
+
+**Files:**
+- `docs/architecture/stage1-gap-analysis.md`: statuses, a G-14 row, and a Step 2 section;
+- `docs/roadmap/open-questions.md`: OQ-041 answered from source, OQ-043 new;
+- this log.
+
+**Needs Board decisions:**
+- remove `Bash(curl *)` from the Claude profiles (G-14), and how to treat Cursor agents;
+- whether to run a separate, non-studio Paperclip instance for sandbox checks (G-14 exploitability, OQ-043, OQ-041, G-9 option 2);
+- `maxConcurrentRuns: 1` on non-reviewing agents (G-12);
+- narrowing `mcp__Paperclip_projects` to read tools, and the planning workflow (G-9);
+- a read-only drift-check tool for agents (G-11, Phase 2).
+
+**Blockers:** every live or sandbox check needs Paperclip running and Board approval. Live configuration changes need Board approval and are applied by hand (G-11).
+
+**Next step:** Board review. Phase 2 tooling has not started.
