@@ -180,7 +180,7 @@ Even the "full" seed plan excludes `agent_identity_keys`. The default "minimal" 
 7. **Quarantine** (§9.2), then **start** the restored instance, and check health and startup recovery.
 8. **Compare:**
    - **Field-level:** per-record JSON equality of the snapshot fields, keyed by id; not row counts alone.
-   - **Constraints:** a read-only catalog query (`pg_constraint` count by type) on both clusters, so that a #17854-style constraint loss shows up. This needs a read-only SQL client, and none is installed (§5), so the client is part of the tooling decision (§10).
+   - **Schema objects:** an exact comparison of constraints, indexes, extensions and the migration journal between source and clone, per §9.5. Not a count.
    - **Secrets:** a secret created before can still be resolved (a decrypt test through Paperclip).
    - **Storage:** the attachment can be downloaded.
    - **Auth:** the Board key or a session from the source works (Candidate B), or the expected invalidation is documented (Candidate A with new secrets).
@@ -212,7 +212,10 @@ Even the "full" seed plan excludes `agent_identity_keys`. The default "minimal" 
 
 **All of the following must hold before a copy is made:**
 
-1. **Shutdown method:** the source was stopped by the ordered path (Ctrl+C in its console, or an equivalent signal), not by killing the process. How to send it reliably on Windows from a hidden window is **unverified** and must be settled first.
+1. **Shutdown method:** the source was stopped by the ordered path (Ctrl+C in its console, or an equivalent signal), not by killing the process.
+   - **Sending a signal is not evidence that Paperclip ran its shutdown handler.** Only items 2 to 6 are evidence. A signal can be delivered and still be ignored, or fail to reach the Node process inside a hidden console.
+   - How to deliver the signal reliably on Windows from a hidden window is **unverified**.
+   - **This checklist is therefore not ready to execute.** It becomes executable only after a delivery method has itself been shown, in an isolated instance, to produce items 2 to 6. That demonstration is part of the test authorization (§10).
 2. **Server gone:** no `node` process whose command line contains the source home folder or instance id.
 3. **PostgreSQL gone:** no `postgres` process whose command line contains the source `db` folder, and nothing listening on the source Postgres port.
 4. **PostgreSQL status:** `pg_ctl status -D <source db>` reports "no server running".
@@ -237,6 +240,27 @@ A restored clone holds the source's secrets, users, Board and agent keys, agents
 3. **Backups off:** set `PAPERCLIP_DB_BACKUP_ENABLED=false` (or the config flag), so that the clone writes no backups and prunes none.
 4. **Telemetry and update checks off** in the clone's config. SF-2 shows the CLI still contacts npm despite `updates.checkEnabled: false`. **Outbound network** therefore cannot be ruled out by configuration alone. Either accept that single known call in writing, or block outbound traffic for the clone's process, which is a security change needing approval.
 5. **Loopback only:** the clone binds `127.0.0.1` on its own ports. The test helper asserts the clone's port on every request. No browser, CLI or script uses the source's API base.
+
+**Background work that `HEARTBEAT_SCHEDULER_ENABLED=false` does not stop** (`server/dist/index.js`, Paperclip 2026.1023.0). [source]
+
+| Work | Where | Stopped by the scheduler flag | Control in the clone |
+|---|---|---|---|
+| Heartbeat scheduler: recovery sweeps, queued-run resume, dependency wakes, silent-run scan, lock sweep | `index.js` 675, 953 | Yes | The flag |
+| Execution-control sweeps: `finalization`, `replacement`, `reconciliation_delivery`, `status_delivery`, `automatic_disposition`, `local_ai_login_cleanup` | `index.js` 949 | **No** | Source seeded with no agents or runs, so there is nothing to act on. Verify that the run and activity lists are unchanged |
+| GitHub connection event poll and continuity sweep | `index.js` 1056-1080 | **No** | Source seeded with no GitHub connection. Verify the connection list is empty |
+| Delivery workers: fast response, chat completion, connection, question, tool action | `index.js` 1006-1020 | **No** | No chat, connection or tool-action data in the source. Verify the pending deliveries are empty |
+| Scheduled database backups | `index.js` around 1558 | No; controlled by the backup setting | Backups off (step 3) |
+| Plugin worker manager | `index.js` 674 | **No** | No plugins installed. Verify the plugin list is empty |
+| Telemetry client | `index.js` 1656 | No; controlled by the telemetry setting | Telemetry off (step 4) |
+
+- Not every service was traced. Any background job not in this table is **unverified**.
+- That is why the controls rely on two things: an **empty source** (nothing for a job to act on), and the **outbound check** below. A single flag is not enough.
+
+**Outbound network verification** (read-only observation; no blocking):
+- While the clone runs, take periodic snapshots of the TCP connections owned by the clone's `node` and `postgres` processes (for example `Get-NetTCPConnection -OwningProcess <pid>`).
+- **Pass:** every remote address is loopback, apart from the known npm update check (SF-2) if the Board accepted it.
+- **Stop:** any other remote address.
+- **Blocking** outbound traffic (a firewall rule) is a security change. It needs Board approval and is **not** part of this plan by default.
 
 **Right after start, before any comparison:**
 
@@ -274,6 +298,44 @@ A restored clone holds the source's secrets, users, Board and agent keys, agents
 - **Governance:** [step2-board-decisions.md](../roadmap/step2-board-decisions.md) §3.1 (Board-approved) requires stopping the live instance "before running any sandbox experiment involving local HTTP requests or G-14 validation". This test makes local HTTP requests to the test instances, so the rule applies as written. The rule was set for G-14 experiments, where an agent could reach port 3100.
 - **Proposal:** run the restore test **without live downtime**, with the safeguards of §9.2 step 5 (port asserted on every request, no agents). That needs a Board decision to waive or narrow §3.1 for this test (§10). Without that decision the §3.1 rule stands, and the live instance must be stopped.
 
+### 9.5 Schema comparison method
+
+**Tool:** the `postgres` library (postgres.js 3.4.9) that already ships inside the Paperclip install. Run it with the same Node 24, from a small script kept outside both instance folders.
+- **No new software is installed.** If this is not approved, there is no fallback: the person running the test must **not** install `psql` or other tools on their own (that is §10 item 2).
+- **Connection:** the test instance's own embedded Postgres, role `paperclip`, on that instance's port only. The script refuses any other port.
+- **Read-only:** every query runs inside `BEGIN TRANSACTION READ ONLY … ROLLBACK`.
+
+**Queries** (run on the source before the backup or copy, and on the clone after start):
+
+```sql
+-- constraints (excludes system schemas)
+SELECT n.nspname, c.conrelid::regclass::text AS tbl, c.conname, c.contype,
+       pg_get_constraintdef(c.oid) AS def
+FROM pg_constraint c JOIN pg_namespace n ON n.oid = c.connamespace
+WHERE n.nspname NOT IN ('pg_catalog','information_schema') AND n.nspname NOT LIKE 'pg_toast%'
+ORDER BY 1, 2, 3;
+
+-- indexes
+SELECT schemaname, tablename, indexname, indexdef FROM pg_indexes
+WHERE schemaname NOT IN ('pg_catalog','information_schema') ORDER BY 1, 2, 3;
+
+-- extensions
+SELECT extname, extversion FROM pg_extension ORDER BY 1;
+
+-- migration journal
+SELECT hash, created_at FROM drizzle.__drizzle_migrations ORDER BY created_at, hash;
+```
+
+**Comparison:**
+- Write each result set as sorted JSON lines.
+- Compare source and clone as **sets of complete rows**: name, type and full definition. A count alone does not pass.
+- **Pass:** zero missing rows and zero extra rows in every query.
+- **Fail:** any difference. For example, a missing CHECK constraint is the #17854 signature.
+
+**Limits:**
+- The queries cover schema objects, not data. Data equality is covered by the API comparison (§9 step 8).
+- The `drizzle.__drizzle_migrations` table name is taken from the source review (§4). Confirm it on the source before relying on it.
+
 ## 10. Prerequisites and Board decisions
 
 1. **Method acceptance:** Candidate B and/or Candidate A, knowing both are **unsupported** by Paperclip.
@@ -281,7 +343,13 @@ A restored clone holds the source's secrets, users, Board and agent keys, agents
 3. **Environment:** a new isolated environment (A.4's was torn down).
 3a. **Live downtime:** whether to narrow the §3.1 rule for this test, so that it runs without stopping the live instance (§9.4). Otherwise the live instance must be stopped for the test.
 3b. **Quarantine:** acceptance of the §9.2 controls. That includes accepting the known npm update call (SF-2), or blocking outbound traffic for the clone, which is a separate security change.
-3c. **Tooling for verification:** a read-only SQL client for the constraint comparison (§9 step 8), and optionally `pg_controldata` (§9.1 item 6).
+3c. **Tooling for verification:**
+   - approval to run the §9.5 read-only script with the `postgres` library already shipped in Paperclip (no installation);
+   - optionally, approval to obtain `pg_controldata` (§9.1 item 6).
+
+   No other tool may be installed during the test.
+
+3d. **Shutdown method:** approval to first demonstrate, in an isolated instance, a signal-delivery method that produces §9.1 items 2 to 6. Until then the §9.1 checklist is not executable.
 4. **Version:** test on 2026.1023.0, the live version. Testing on v2026.1117.0 would need an upgrade decision. v2026.1117.0 is also a **rollback floor** and moves skill packages out of the database, which changes the backup scope.
 5. **Clean-shutdown procedure:** how to stop Paperclip without the unclean Postgres stop seen in A.4. This matters for B and for any live cold copy.
 
