@@ -28,6 +28,15 @@ All notable changes to the Game Studio framework are recorded here. The format f
   Recorded the finding that Paperclip accepts a stage decision only from the current participant. Documentation only; nothing implemented, G-13 unresolved.
 
 ### Fixed
+- Review packager audit (2026-11-21), regression tests for each fix:
+  - **D1:** a junction or symlink planted under the Review or Staging Root made the packager write or delete outside its roots (verified on Windows 11). It now refuses any link below its roots and in packages.
+  - **D3:** names shaped like 8.3 short names (for example `LONGFI~1.CS`) could alias another file. They are now refused.
+  - **D2:** `CON .txt`-style device names are now refused as well.
+  - **D4:** manifest paths are re-validated before verification.
+  - **D5:** two builds of the same issue could delete each other's temporary folder. There is now a per-issue build lock, with stale takeover after 60 minutes.
+  - **D6:** filesystem errors surfaced as raw exceptions without an audit entry. They are now logged refusals.
+  - **D7:** a damaged audit line crashed `--status` and `--unstage`. It is now refused with a message.
+  - **D8:** Task text in `REVIEW.md` came before the instructions and could pose as them. It is now quoted after them, inside a safe fence.
 - The Paperclip skill read only the first page (500) of the paginated issue list. `release`, the Write Set guard and `triage` now read every page with the keyset cursor and refuse to act on a partial list.
 - Reviewers editing the author's branch (SOU-2 commit db51e6d, SOU-18 commit e7e3f88, both by `web-engineer` on Cursor): the task-contract rule was not in any role text. All eight role files now forbid a reviewer from editing, committing, rebasing or pushing the author's branch, and the `git` rule in `config/paperclip/agents.json` says only the assignee commits and pushes. Gap G-13.
 

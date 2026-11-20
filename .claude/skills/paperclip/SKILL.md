@@ -62,7 +62,14 @@ Implements Phase 1 of [docs/design/review-package.md](../../../docs/design/revie
   - `--status` shows the lock, its runs and whether it is stale (run finished, or no run for 24 h).
   - `--unstage` refuses while a reviewer run is active. It also refuses while the review has not been relayed, unless `--abandon` is given (logged). Phase 1 has no relay, so `--abandon` is the normal way to clear staging.
 - **`--cleanup`** removes packages of issues `done` or `cancelled` for 14+ days, oldest first. It never touches an open issue's package or the staged one. Deletion is two-step through `store/.trash`, and failures are logged and retried. A build over the 2 GB cap first cleans up, then refuses.
-- **Audit:** `<Review Root>/audit.log`, append-only JSON lines, rotated by size and never deleted.
+- **Audit:** `<Review Root>/audit.log`, append-only JSON lines, rotated by size and never deleted. A damaged line makes `--status` and `--unstage` refuse until it is repaired.
+- **Hardening (audit 2026-11-21):**
+  - links: a symlink or junction under either root is refused, never followed;
+  - one build per issue at a time (`store/<KEY>/.build.lock`; a lock older than 60 minutes is taken over and logged);
+  - names shaped like 8.3 short names are refused;
+  - manifest paths are re-validated;
+  - filesystem errors become logged refusals;
+  - `REVIEW.md` quotes Task text after the fixed instructions.
 - **Not a security boundary:** every agent runs as the same Windows user and can read or change both roots. G-13 stays open.
 
 ## Start gate: only `release` starts a task

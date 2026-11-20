@@ -215,6 +215,8 @@ Option B is the fallback if API limits or completeness become a problem. It need
 |---|---|---|
 | Inputs to `review-pack` | `<KEY>` matches `^[A-Z]+-\d+$`; the issue exists, is `in_review` and has a code project; its PR is found from the Task's branch or the PR link in the issue; the repository is in the token's allowed list | Refuse; nothing written |
 | Paths | Reject: absolute paths, drive letters, `..`, empty segments, NUL or control characters, `:` (alternate data streams), trailing dot or space, Windows reserved names (`CON`, `NUL`, `COM1`…), a component over 255, the total path length limit, case-insensitive collisions. After joining, the resolved real path must stay inside the package folder | **Refuse** the package |
+| Windows short names | A component shaped like an 8.3 name (`LONGFI~1.CS`, `PROGRA~1`) can alias another file when 8.3 names are enabled (added after the Phase 1 audit, 2026-11-21) | **Refuse** the package |
+| Links under the roots | The packager never follows a symlink or junction below `<Review Root>` or `<Staging Root>`, and a package never contains one. Any process of the same user can plant one (Phase 1 audit) | **Refuse**; `--cleanup` logs and skips a linked trash entry |
 | Symlinks (`120000`), submodules (`160000`) | Never created on disk; target or commit recorded as text | `notReviewable` |
 | Binary | A NUL byte in the first 8 KB, or GitHub reports no text diff | `notReviewable` (sizes and blob SHAs listed) |
 | Encoding | Not valid UTF-8 | Included raw, `encoding: unknown`, listed in `REVIEW.md` |
@@ -222,7 +224,7 @@ Option B is the fallback if API limits or completeness become a problem. It need
 | Staleness | PR head changed during the build | Discard the build and refuse |
 | Atomicity | Build in `store/<KEY>/.tmp-<random>/`, rename to `<head-sha>/`, write `READY` last. An existing `<head-sha>/` with `READY` is reused, never overwritten | Leftover `.tmp-*` is removed by the next run of the same key |
 
-Package content is untrusted input for the reviewer, and code comments may carry prompt injection. `REVIEW.md` tells the reviewer to treat it as data. With no write tools, the worst case is a manipulated verdict. The Board's approval and merge (ADR-009) stay the last gate.
+Package content is untrusted input for the reviewer, and code comments may carry prompt injection. `REVIEW.md` puts its fixed instructions first, and quotes everything taken from the Task, the PR or the repository afterwards, inside one fence longer than any backtick run in that text (Phase 1 audit). It tells the reviewer to treat all of it as data. With no write tools, the worst case is a manipulated verdict. The Board's approval and merge (ADR-009) stay the last gate.
 
 ## 6. Packager GitHub token (U6)
 
