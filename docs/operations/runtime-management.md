@@ -19,6 +19,10 @@ How to operate execution day to day. In **Stage 1** "the runtime" is Paperclip p
 
 Execution workspaces persist "until a human closes them" (`VERIFIED`). Close a workspace only after its Task is `done`/`cancelled` and its branch is merged or abandoned.
 
+### 1.0 ComfyUI draft script (D1, 2026-11-22)
+
+`runtime/tools/comfy-draft.py` generates concept drafts with the local ComfyUI (`~/game-studio-workspace/tools/ComfyUI_windows_portable`, cu126 build for driver 572.83). `game-artist` runs the installed copy, so after changing the script run `Copy-Item runtime/tools/comfy-draft.py "$HOME/game-studio-workspace/tools/comfy-draft.py"`. Output goes to `~/game-studio-workspace/staging/art/<asset_id>/`. Test: `python -I runtime/tools/comfy-draft.py --asset smoke_test --model flux --prompt "..." --seed 7` (about 30 s on the RTX 3060).
+
 ### 1.1 Review-wake watchdog (`IMPLEMENTED`, 2026-11-04)
 
 Paperclip 2026.1023.0 does not wake the next review participant when an agent hands an issue to review from inside its own run (OQ-035). [`runtime/tools/review-wake-watchdog.ts`](../../runtime/tools/review-wake-watchdog.ts) fills that gap:
