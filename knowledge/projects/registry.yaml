@@ -50,7 +50,7 @@ projects:
       version: "3"
     paperclip:
       projectId: "5540180e-63fe-48e9-90d2-bc6b21f0a6de"   # company Soucean (SOU)
-    agents: [director, producer, project-manager, game-designer, gameplay-programmer, ui-designer, qa]
+    agents: [director, producer, project-manager, game-designer, gameplay-programmer, game-artist, ui-designer, qa]   # game-artist added 2026-11-21 (Board)
     frameworkVersion: 0.1.0
 
   - id: soucean-game

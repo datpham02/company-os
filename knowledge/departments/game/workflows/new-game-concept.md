@@ -11,10 +11,12 @@ Working title; Project ID; pitch; pillars (three to five); genre; target platfor
 
 ## Steps
 1. **`director`** writes the concept (pitch, pillars, genre, platform, engine, scope, risks) and checks it against [game-rules.md §1](../domain/game-rules.md#1-originality). It is the payload of step 1 of [project-initialization.md](../../../company/workflows/project-initialization.md).
+   - *Optional:* when visual direction, art style or visual feasibility would change the decision, `director` asks the Board or `project-manager` for a small `game-artist` Task (a style sketch or a feasibility note). Otherwise `game-artist` is not involved at this stage.
 2. The company workflow runs: Board approval, repository, Paperclip project, registry entry with `type: game` and `department: game`, seeding Task.
 3. The seeding Task's `AGENTS.md` names the engine, build and test commands, conventions, tuning files and hotspot files ([game-rules.md §3](../domain/game-rules.md#3-default-hotspot-files)).
 4. **`game-designer`** writes `docs/vision.md` (vision and pillars) in the game repository. Review: `director`.
 5. **`producer`** creates the first milestone. It ends with something playable.
+6. When the game will need production art, **`game-artist`** drafts its art references (art bible, palette, render standards, asset specs) in the game repository through a Task, approved as in [game-rules.md §2](../domain/game-rules.md#2-design-authority). Asset work then follows [asset-production.md](asset-production.md).
 
 ## Failure cases
 | Failure | Response |

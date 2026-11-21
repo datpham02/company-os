@@ -101,6 +101,7 @@ Every Agent Instance MUST, on every Run:
 | [`project-manager`](../../knowledge/company/agents/project-manager/AGENTS.md) | `producer` | read-only | No |
 | [`game-designer`](../../knowledge/departments/game/agents/game-designer/AGENTS.md) | `director` | workspace-write (docs/specs only) | No |
 | [`gameplay-programmer`](../../knowledge/departments/game/agents/gameplay-programmer/AGENTS.md) | `project-manager` | workspace-write | Yes |
+| [`game-artist`](../../knowledge/departments/game/agents/game-artist/AGENTS.md) | `project-manager` | workspace-write (asset files only) | No |
 | [`ui-designer`](../../knowledge/company/agents/ui-designer/AGENTS.md) | `project-manager` | workspace-write | Yes (UI) |
 | [`qa`](../../knowledge/company/agents/qa/AGENTS.md) | `project-manager` | workspace-write (tests only) | Tests only |
 | [`web-engineer`](../../knowledge/departments/web/agents/web-engineer/AGENTS.md) | `project-manager` | workspace-write (dev/test environments only) | Yes (platform projects, ADR-014) |
