@@ -13,11 +13,14 @@
  *        notify the Board once per episode;
  *      - `todo`/`in_progress` with an assignee that has had no run for --idle seconds: wake the
  *        assignee once (at most once per --wake-cooldown per issue); if it is idle again after
- *        that, notify the Board.
+ *        that, notify the Board;
+ *      - a run Paperclip still shows as `starting`/`running` whose process is gone, or that has
+ *        shown no output for --dead-silence seconds (a dead run hides every other rule):
+ *        notify the Board once per run.
  *    A notice is a console line starting with "ATTENTION" plus a Windows toast.
  *
  * It only reads issues and calls `POST /api/agents/{id}/wakeup`; it never changes issue state
- * or posts comments. What it already did is kept in memory, so a restart may notify again.
+ * or posts comments; a dead run is reported, not cancelled. What it already did is kept in memory, so a restart may notify again.
  *
  * Run with Node 24+ (native TypeScript type stripping), next to Paperclip:
  *   node runtime/tools/review-wake-watchdog.ts            # loop, every 60 s
@@ -25,12 +28,13 @@
  * Options: --api <url> (default http://127.0.0.1:3100/api), --company <id> (default: all),
  *          --interval <s> (60), --grace <s> (90, review wakes),
  *          --idle <s> (900), --blocked-grace <s> (600), --retry-loop <n> (3), --wake-cooldown <s> (21600),
+ *          --dead-silence <s> (1200, 0 = off),
  *          --no-stuck (review wakes only), --no-toast (console only), --dry-run (log, do not wake or toast).
  * Requires Paperclip in local_trusted mode on loopback (Board context without login).
  */
 
 import { spawn } from "node:child_process";
-import { classifyStuck, decide, type Issue, type Options, type Run } from "./stuck-rules.ts";
+import { classifyDeadRun, classifyStuck, decide, LIVE_RUN, type Finding, type Issue, type Options, type Run, type RunDetail } from "./stuck-rules.ts";
 
 function option(name: string, fallback: string): string {
   const i = process.argv.indexOf(`--${name}`);
@@ -51,6 +55,7 @@ const stuckOpts: Options = {
   blockedGraceSec: Number(option("blocked-grace", "600")),
   retryLoopCount: Number(option("retry-loop", "3")),
   wakeCooldownSec: Number(option("wake-cooldown", "21600")),
+  deadSilenceSec: Number(option("dead-silence", "1200")),
 };
 const REVIEW_ACTIVE = new Set(["queued", "starting", "running"]);
 
@@ -137,13 +142,43 @@ async function reviewWakes(companyId: string, issues: Issue[], runsOf: (id: stri
   }
 }
 
+/** Whether a process with this PID exists on this machine (the watchdog runs next to Paperclip). */
+function pidAlive(pid: number | null | undefined): boolean | null {
+  if (!pid || !Number.isInteger(pid) || pid <= 0) return null;
+  try {
+    process.kill(pid, 0); // signal 0: existence check only, nothing is sent
+    return true;
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    return code === "ESRCH" ? false : code === "EPERM" ? true : null;
+  }
+}
+
+/** First dead run among the issue's live runs, if any (reads each live run's detail). */
+async function findDeadRun(issue: Issue, runs: Run[], now: number): Promise<Finding | null> {
+  for (const run of runs) {
+    if (!run.runId || !LIVE_RUN.has(run.status)) continue;
+    let detail: RunDetail;
+    try {
+      detail = await request<RunDetail>("GET", `/heartbeat-runs/${run.runId}`);
+    } catch (err) {
+      log(`cannot read run ${run.runId} of ${issue.identifier}: ${(err as Error).message}`);
+      continue;
+    }
+    const finding = classifyDeadRun(issue, run.runId, detail, pidAlive(detail.processPid), now, stuckOpts);
+    if (finding) return finding;
+  }
+  return null;
+}
+
 async function stuckSweep(companyId: string, companyName: string, issues: Issue[], runsOf: (id: string) => Promise<Run[]>): Promise<void> {
   const agents = await request<{ id: string; name: string; status: string }[]>("GET", `/companies/${companyId}/agents`);
   const agentById = new Map(agents.map((a) => [a.id, a]));
   const now = Date.now();
   for (const issue of issues) {
     const agentStatus = issue.assigneeAgentId ? agentById.get(issue.assigneeAgentId)?.status ?? null : null;
-    const finding = classifyStuck(issue, await runsOf(issue.id), agentStatus, now, stuckOpts);
+    const runs = await runsOf(issue.id);
+    const finding = (await findDeadRun(issue, runs, now)) ?? classifyStuck(issue, runs, agentStatus, now, stuckOpts);
     if (!finding) continue;
     const action = decide(finding, notifiedKeys.has(finding.key), lastWakeByIssue.get(issue.id), now, stuckOpts);
     if (action.type === "wake") {
@@ -193,7 +228,7 @@ async function sweep(): Promise<void> {
 
 log(
   `studio watchdog: api=${api} interval=${intervalSec}s grace=${graceSec}s` +
-    (stuckEnabled ? ` stuck(idle=${stuckOpts.idleSec}s blocked=${stuckOpts.blockedGraceSec}s retry-loop=${stuckOpts.retryLoopCount} cooldown=${stuckOpts.wakeCooldownSec}s toast=${toastEnabled})` : " stuck=off") +
+    (stuckEnabled ? ` stuck(idle=${stuckOpts.idleSec}s blocked=${stuckOpts.blockedGraceSec}s retry-loop=${stuckOpts.retryLoopCount} cooldown=${stuckOpts.wakeCooldownSec}s dead-silence=${stuckOpts.deadSilenceSec}s toast=${toastEnabled})` : " stuck=off") +
     (dryRun ? " (dry-run)" : "") +
     (once ? " (once)" : ""),
 );

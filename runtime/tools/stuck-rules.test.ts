@@ -1,9 +1,9 @@
 // Tests for stuck-rules.ts. Run: node --test runtime/tools/stuck-rules.test.ts
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { classifyStuck, decide, type Issue, type Run } from "./stuck-rules.ts";
+import { classifyDeadRun, classifyStuck, decide, type Issue, type Run } from "./stuck-rules.ts";
 
-const opts = { idleSec: 900, blockedGraceSec: 600, retryLoopCount: 3, wakeCooldownSec: 21600 };
+const opts = { idleSec: 900, blockedGraceSec: 600, retryLoopCount: 3, wakeCooldownSec: 21600, deadSilenceSec: 1200 };
 const T0 = Date.parse("2026-11-21T10:00:00Z");
 const at = (min: number) => new Date(T0 + min * 60000).toISOString();
 const AGENT = "agent-gp";
@@ -106,4 +106,33 @@ test("decide: a new idle episode within the cooldown goes to the Board, not anot
 test("a recorded notice is never repeated for the same key", () => {
   const f = classifyStuck(issue({ status: "blocked" }), [], "idle", now(11), opts)!;
   assert.deepEqual(decide(f, true, undefined, now(11), opts), { type: "none" });
+});
+
+test("a running run whose process is gone is a dead run, after a short grace", () => {
+  const detail = { status: "running", processPid: 24976, startedAt: at(0), lastOutputAt: at(10) };
+  assert.equal(classifyDeadRun(issue(), "run-1", detail, false, now(11), opts), null);
+  const f = classifyDeadRun(issue(), "run-1", detail, false, now(13), opts);
+  assert.equal(f?.kind, "dead_run");
+  assert.equal(f?.key, "dead_run:run-1");
+  assert.match(f!.message, /process 24976 is gone/);
+  assert.match(f!.message, /cancel-run run-1/);
+  assert.equal(f?.wakeAgentId, undefined);
+  assert.deepEqual(decide(f!, false, undefined, now(13), opts), { type: "notify" });
+  assert.deepEqual(decide(f!, true, undefined, now(14), opts), { type: "none" });
+});
+
+test("a live process is dead only after the silence limit", () => {
+  const detail = { status: "running", processPid: 1, startedAt: at(0), lastOutputAt: at(10), execution: { lastConfirmedActivityAt: at(12) } };
+  assert.equal(classifyDeadRun(issue(), "run-1", detail, true, now(31), opts), null);
+  const f = classifyDeadRun(issue(), "run-1", detail, true, now(32), opts);
+  assert.match(f!.message, /no output for 20 min/);
+  assert.equal(classifyDeadRun(issue(), "run-1", detail, null, now(32), opts)?.kind, "dead_run");
+  assert.equal(classifyDeadRun(issue(), "run-1", detail, true, now(999), { ...opts, deadSilenceSec: 0 }), null);
+});
+
+test("only starting or running runs can be dead", () => {
+  for (const status of ["queued", "scheduled_retry", "succeeded", "cancelled", "failed"]) {
+    assert.equal(classifyDeadRun(issue(), "run-1", { status, processPid: 1, startedAt: at(0) }, false, now(999), opts), null);
+  }
+  assert.equal(classifyDeadRun(issue(), "run-1", { status: "starting" }, false, now(999), opts), null);
 });

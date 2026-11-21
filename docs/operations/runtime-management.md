@@ -36,11 +36,13 @@ Paperclip hands a stuck issue to the Board without telling anyone: its liveness 
 | `retry_loop` | The assignee's last 3 runs all `failed`, `timed_out`, `error` or `scheduled_retry` | Notify the Board |
 | `blocked` | `blocked`, no open blocker issue, no active run, quiet for 10 min | Notify the Board |
 | `idle` | `todo`/`in_progress`, assigned to an agent that is not paused or busy, no active run or scheduled retry, quiet for 15 min | Wake the assignee once; if it is idle again 15 min after that wake, notify the Board. At most one wake per issue per 6 h |
+| `dead_run` | A run Paperclip shows as `starting`/`running` whose `processPid` no longer exists on this machine (2 min grace), or with no output (`lastOutputAt`, last confirmed activity, start) for 20 min. Checked first: a dead run counts as active for every other rule | Notify the Board once per run, with the `pc.py cancel-run` command. The watchdog does not cancel it |
 
 - A notice is a console line starting with `ATTENTION` in the watchdog window and a Windows toast. Each stuck episode is notified once; what was done is kept in memory, so restarting the watchdog may notify again.
 - It reads issues and runs and calls `POST /api/agents/{id}/wakeup` only. It never changes issue state, reassigns or comments: deciding is the Board's job (`pc.py triage`, which also lists Board-owned recoveries under "Needs the Board").
-- Options: `--idle`, `--blocked-grace`, `--retry-loop`, `--wake-cooldown` (seconds or count), `--no-stuck` (review wakes only), `--no-toast`, `--dry-run` (log what it would do).
-- `UNVERIFIED`: the full list of run statuses (the retry-loop set is a best guess), and whether a plain wake helps after a Board-owned recovery (the watchdog only notifies there).
+- Options: `--idle`, `--blocked-grace`, `--retry-loop`, `--wake-cooldown`, `--dead-silence` (seconds or count; `--dead-silence 0` turns the dead-run rule off), `--no-stuck` (review wakes only), `--no-toast`, `--dry-run` (log what it would do).
+- Dead runs (SOU-34, 2026-11-21): the agent's process died while Paperclip kept the run `running` and renewed its controller lease, so the issue looked busy and nothing fired. The PID check works only because the watchdog runs on the same machine as Paperclip; a reused PID would hide it until the silence limit.
+- `UNVERIFIED`: the full list of run statuses (the retry-loop set is a best guess), whether a legitimately busy run can stay silent for 20 min (raise `--dead-silence` if one is reported falsely), and whether a plain wake helps after a Board-owned recovery (the watchdog only notifies there).
 
 ## 2. Stage 2: Game Studio Runtime (`PLANNED`)
 
