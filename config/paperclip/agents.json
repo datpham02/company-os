@@ -142,7 +142,6 @@
     "cursor-workspace-write": {
       "adapter": "cursor",
       "config": {
-        "model": "gpt-5.3-codex",
         "extraArgs": [
           "--trust",
           "--auto-review"
@@ -165,6 +164,8 @@
     "director": {
       "department": "company",
       "profile": "claude-read-only",
+      "model": "claude-fable-5-1",
+      "effort": "high",
       "permissions": {
         "canCreateAgents": true,
         "canCreateSkills": true
@@ -173,6 +174,8 @@
     "producer": {
       "department": "company",
       "profile": "claude-read-only",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
       "permissions": {
         "canCreateAgents": true,
         "canCreateSkills": true
@@ -181,6 +184,8 @@
     "project-manager": {
       "department": "company",
       "profile": "claude-read-only",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
       "permissions": {
         "canCreateAgents": true,
         "canCreateSkills": true
@@ -189,6 +194,8 @@
     "game-designer": {
       "department": "game",
       "profile": "claude-workspace-write",
+      "model": "claude-fable-5-1",
+      "effort": "high",
       "permissions": {
         "canCreateSkills": true
       },
@@ -205,6 +212,8 @@
     "ui-designer": {
       "department": "company",
       "profile": "claude-workspace-write",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
       "permissions": {
         "canCreateSkills": true
       },
@@ -219,6 +228,8 @@
     "qa-engineer": {
       "department": "company",
       "profile": "claude-workspace-write",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
       "permissions": {
         "canCreateSkills": true
       },
@@ -232,6 +243,7 @@
     "gameplay-programmer": {
       "department": "game",
       "profile": "cursor-workspace-write",
+      "model": "gpt-5.3-codex-high",
       "permissions": {
         "canCreateSkills": true
       },
@@ -248,6 +260,8 @@
     "game-artist": {
       "department": "game",
       "profile": "claude-workspace-write",
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
       "permissions": {},
       "secrets": [
         "GH_TOKEN"
@@ -266,6 +280,7 @@
     "web-engineer": {
       "department": "web",
       "profile": "cursor-workspace-write",
+      "model": "gpt-5.3-codex-high",
       "permissions": {},
       "secrets": [
         "GH_TOKEN"

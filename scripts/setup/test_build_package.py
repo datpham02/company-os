@@ -106,6 +106,24 @@ class ReviewerPackage(unittest.TestCase):
                 self.assertIn("refused", str(cm.exception))
         self.assertNotIn("--allowedTools", good["adapter"]["config"]["extraArgs"])  # nothing was rewritten
 
+    def test_agent_model_and_effort_reach_the_adapter_config(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("build_package", SCRIPT)
+        bp = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(bp)
+        conf = json.load(open(os.path.join(REPO, "config", "paperclip", "agents.json"), encoding="utf-8"))
+        profiles, agents = conf["profiles"], conf["agents"]
+        director = bp.adapter_block(profiles["claude-read-only"], agents["director"], conf["rules"], "SOU", "C:/ws",
+                                    "agent")["config"]
+        self.assertEqual((director["model"], director["effort"]), ("claude-fable-5-1", "high"))
+        gp = bp.adapter_block(profiles["cursor-workspace-write"], agents["gameplay-programmer"], conf["rules"], "SOU",
+                              "C:/ws", "agent")["config"]
+        self.assertEqual(gp["model"], "gpt-5.3-codex-high")
+        self.assertNotIn("effort", gp)
+        with self.assertRaises(SystemExit) as cm:
+            bp.model_fields(profiles["cursor-workspace-write"], {"model": "composer-2.5", "effort": "medium"})
+        self.assertIn("only supported for claude_local", str(cm.exception))
+
     def test_settings_file_is_the_strict_one(self):
         with open(os.path.join(REPO, "config", "paperclip", "reviewer-settings.json"), encoding="utf-8") as f:
             perms = json.load(f)["permissions"]

@@ -10,7 +10,7 @@ providers:
     fit: { planning: 3, implementation: 3, review: 3, ui-design: 3, docs: 3, long-context: 2 }
   - id: cursor
     adapter: cursor
-    model: gpt-5.3-codex
+    model: gpt-5.3-codex-high   # Cursor has no effort field; effort is part of the model id
     capacity: 1
     confinement: classifier     # --trust --auto-review; --sandbox is unavailable on Windows
     supportsClaudeSkills: false # UNVERIFIED
