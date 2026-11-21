@@ -9,6 +9,7 @@ import datetime
 import io
 import json
 import os
+import shlex
 import shutil
 import sys
 import tempfile
@@ -704,14 +705,31 @@ class Cli(Env):
             rp.cmd_review_pack(self.args(**kw), now=NOW)
         return out.getvalue()
 
+    def assert_wake_command(self, out):
+        """The suggested wake command stands alone on its line, so it can be copied as is; any explanation is on
+        other lines. Validated by parsing the command line by itself."""
+        lines = out.splitlines()
+        cmds = [ln.strip() for ln in lines if ln.strip().startswith("python ")]
+        self.assertEqual(len(cmds), 1, out)
+        self.assertEqual(shlex.split(cmds[0]), [
+            "python", "-I", ".claude/skills/paperclip/scripts/pc.py", "wake", "code-reviewer",
+            "--reason", f"Review the staged package for SOU-12 at head {SHA_HEAD[:12]}"])
+        self.assertNotIn("--issue", cmds[0])
+        i = next(n for n, ln in enumerate(lines) if ln.strip() == cmds[0])
+        self.assertIn("if the Board decides", lines[i - 1])  # a suggestion, not run automatically
+        self.assertIn("not run automatically", lines[i - 1])
+        notes = [ln for ln in lines if ln.startswith("note:")]
+        self.assertEqual(len(notes), 1, out)
+        self.assertIn("without --issue", notes[0])
+        self.assertNotIn("python", notes[0])
+
     def test_full_flow_writes_only_inside_roots(self):
         sf, stf = self.files()
         before = snapshot(self.outside)
         cwd_before = sorted(os.listdir(os.getcwd()))
         out = self.run_cli(key="SOU-12", source_fixture=sf, state_file=stf, allow_repo=[REPO])
         self.assertIn("staged", out)
-        self.assertIn('wake code-reviewer --reason "Review the staged package for SOU-12 at head', out)
-        self.assertNotIn("--issue", out)
+        self.assert_wake_command(out)
         self.assertIn('"state": "staged"', self.run_cli(status=True, state_file=stf))
         self.assertIn("abandon", self.run_cli(unstage=True, abandon=True, state_file=stf))
         self.assertEqual(self.run_cli(cleanup=True, state_file=stf).strip(), "nothing to clean up")
