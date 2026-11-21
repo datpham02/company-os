@@ -158,7 +158,12 @@ Three independent layers, so that removing one does not open writes.
 
 ## 9. Implementation (PR #50)
 
-- `review_relay.check_tool_surface`: layer 3 in the relay (check 5, before the verdict is parsed).
+- `review_relay.fetch_verified_log`: before any parsing, the relay reads the run record of the lock's run (`GET /api/heartbeat-runs/<id>`, `id` must match), then **every page** of its log (`offset`, `limitBytes`, `nextOffset`).
+  - The joined UTF-8 text must have the recorded `logBytes` and SHA-256 `logSha256`, which Paperclip computes over the stored NDJSON file at finalize (server `services/run-log-store.js` `sha256File`, `finalize`).
+  - It refuses a missing or malformed hash or size, a compressed or non-local log, pages that do not advance, or any mismatch.
+  - Checked read-only against two finalized `OPT` reviewer runs: size and hash matched, with 1 MB and 4 KB pages.
+  - It also fixes a gap: the relay used to read only the first page (256 KB by default), so later events, including tool uses, were invisible to it.
+- `review_relay.check_tool_surface`: layer 3 in the relay (check 5, after the log is verified, before the verdict is parsed). On the same two real `OPT` runs (old profile) it refuses, because they were offered the Paperclip MCP tools.
 - `review_relay.check_reviewer_config`: run by `review-start` (`GET /api/agents/<code-reviewer>`) before anything is created or woken. It also reads the reviewer settings file named by `--settings`.
 - `probe_reviewer_tools.py`: the §2 matrix as an opt-in script (full profile, settings deny only, flag only). Run on 2026-11-21 with Claude Code 2.1.329: **PASS** for the strict settings. A negative control with settings lacking the `mcp__*` deny failed the "settings" variant as expected; even there the write call never reached the server.
 - Tests: allow-list checks in `test_review_relay.py` (`ToolSurface`, `ReviewerConfig`); `test_pc.py` 300 OK.

@@ -15,6 +15,7 @@ echoes the staging's reviewId and challenge (REVIEW-ID.txt, present only in the 
 run to the staging and shows the verdict carries a value only the staged package held. It does not prove the
 reviewer read or understood the package, and a same-user process could still tamper with staging (G-13, G-14).
 """
+import hashlib
 import hmac
 import json
 import os
@@ -81,6 +82,60 @@ def _events(log):
             continue
         if isinstance(ev, dict):
             yield ev
+
+
+LOG_PAGE_BYTES = 1024 * 1024  # Paperclip's maximum page (server routes/agents.js RUN_LOG_MAX_LIMIT_BYTES)
+SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
+
+
+def fetch_verified_log(api, run_id, sleep):
+    """Read the whole run log and prove it is the log Paperclip finalized for this run, before anything parses it.
+
+    Paperclip 2026.1023.0 stores the log as one NDJSON file and, at finalize, records its size (`logBytes`) and
+    SHA-256 (`logSha256`) on the run (server services/run-log-store.js sha256File/finalize). GET
+    /heartbeat-runs/<id>/log serves that file in pages (`offset`, `limitBytes`, `nextOffset`). Every page is read,
+    the UTF-8 text is joined and re-encoded, and its size and SHA-256 must equal the run record's. Fails closed on
+    a missing or malformed hash, a compressed or non-local log, a page loop that does not advance, a size or hash
+    mismatch, or any read failure. A page boundary inside a multi-byte character would also fail (refusal, not
+    acceptance). Returns {"content": text} in the shape the parsers expect."""
+    def get(path):
+        try:
+            return _with_retry(lambda: api("GET", path), sleep)
+        except Transient:
+            raise
+        except Exception as e:
+            raise rp.ReviewPackError(f"run {run_id}: {path} could not be read ({str(e)[:160]})") from None
+    meta = get(f"/heartbeat-runs/{run_id}")
+    if not isinstance(meta, dict) or meta.get("id") != run_id:
+        raise rp.ReviewPackError(f"the run record returned for {run_id} is not that run")
+    want, size = meta.get("logSha256"), meta.get("logBytes")
+    if not isinstance(want, str) or not SHA256_RE.match(want):
+        raise rp.ReviewPackError(f"run {run_id} has no finalized log hash (logSha256); its log cannot be verified")
+    if not isinstance(size, int) or isinstance(size, bool) or size < 0:
+        raise rp.ReviewPackError(f"run {run_id} has no finalized log size (logBytes)")
+    if meta.get("logCompressed") or meta.get("logStore") not in (None, "local_file"):
+        raise rp.ReviewPackError(f"run {run_id}'s log is stored as {meta.get('logStore')} "
+                                 f"(compressed: {meta.get('logCompressed')}); only plain local logs can be verified")
+    parts, offset = [], 0
+    while True:
+        page = get(f"/heartbeat-runs/{run_id}/log?offset={offset}&limitBytes={LOG_PAGE_BYTES}")
+        if not isinstance(page, dict) or not isinstance(page.get("content"), str):
+            raise rp.ReviewPackError(f"run {run_id}: the log page at offset {offset} is malformed")
+        parts.append(page["content"])
+        nxt = page.get("nextOffset")
+        if nxt is None:
+            break
+        # offsets strictly increase and never pass the recorded size, so the loop always ends
+        if not isinstance(nxt, int) or isinstance(nxt, bool) or nxt <= offset or nxt > size:
+            raise rp.ReviewPackError(f"run {run_id}: the log pages do not advance (offset {offset} -> {nxt})")
+        offset = nxt
+    text = "".join(parts)
+    data = text.encode("utf-8")
+    if len(data) != size:
+        raise rp.ReviewPackError(f"run {run_id}: the log read has {len(data)} bytes, the run record says {size}")
+    if not hmac.compare_digest(hashlib.sha256(data).hexdigest(), want):
+        raise rp.ReviewPackError(f"run {run_id}: the log read does not match its recorded SHA-256; it is not accepted")
+    return {"content": text}
 
 
 def check_tool_surface(log):
@@ -358,7 +413,7 @@ def relay(rr, sr, key, run_id, api, head_now, identity, reviewer_agent_id, now, 
     if current != lock["headSha"]:
         raise rp.ReviewPackError(f"the PR head moved to {str(current)[:12]}; the review is stale")
     # Check 5: exactly one valid verdict
-    log = _with_retry(lambda: api("GET", f"/heartbeat-runs/{run_id}/log"), sleep) or {}
+    log = fetch_verified_log(api, run_id, sleep)  # the lock's run (check 2), whole log, size and SHA-256 verified
     check_tool_surface(log)
     v = validate_verdict(parse_verdict(final_message(log)), lock, manifest, pkg)
 

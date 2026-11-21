@@ -140,7 +140,7 @@ The relay accepts a verdict only when all of these hold:
 2. `<run-id>` is the run that `review-start` recorded in the lock; it is in the runs of the lock's review sub-issue, whose parent is `<KEY>`, in the same company, assigned to `code-reviewer`; the run record's `issueId` is that sub-issue; it finished successfully and was created after the current staging time. A company-scoped run is no longer accepted. **What check 2 does not establish:** that the reviewer read the staged package. With check 5's challenge it shows the run was started for this staging and its verdict carries a value only the staged copy held. Details in `review_relay.py` `_review_run`.
 3. The staging lock names this `<KEY>` and `headSha`, and the staged manifest still verifies against the store.
 4. The PR head on GitHub still equals `headSha`. If the author pushed since, the review is stale.
-5. Exactly one verdict block, valid against the schema; `issue` and `headSha` equal the staging lock; `reviewId` and `challenge` equal the staging's (`REVIEW-ID.txt`); every finding points into the manifest.
+5. The run's whole log is read (every page) and its size and SHA-256 equal the `logBytes` and `logSha256` that Paperclip recorded when it finalized the log of the lock's run; only then is it parsed. The log must show exactly the tools Read, Grep and Glob ([reviewer write isolation](review-package-reviewer-write-isolation.md)). Exactly one verdict block, valid against the schema; `issue` and `headSha` equal the staging lock; `reviewId` and `challenge` equal the staging's (`REVIEW-ID.txt`); every finding points into the manifest.
 
 Any failed check stops the relay with a reason, and nothing is recorded.
 

@@ -3,6 +3,7 @@ PR head. No network, no Paperclip, no token. Run: python -I -W error test_review
 (also collected by test_pc.py)"""
 import argparse
 import contextlib
+import hashlib
 import datetime
 import io
 import json
@@ -90,6 +91,9 @@ class FakePaperclip:
         self.create_error = None  # (exception, created_anyway) for POST /companies/<id>/issues
         self.wake_error = None  # (exception, run_created_anyway) for POST /agents/<id>/wakeup
         self.agent = None  # GET /agents/<reviewer>: set by RelayEnv.pc()
+        self.page_size = 1024 * 1024  # bytes per log page served
+        self.log_meta = {}  # run id -> overrides of logSha256 / logBytes / logStore / logCompressed
+        self.next_offset_override = None  # force a nextOffset value on every page
         self.calls = []
         self.fail = {}  # (method, path) -> list of exceptions raised by successive calls
         self.store_despite_error = False  # a POST that fails after the server stored the comment
@@ -119,17 +123,34 @@ class FakePaperclip:
         if (method, path) == ("PATCH", f"/issues/{SUB_ID}") and self.sub is not None:
             self.sub["status"] = body["status"]
             return dict(self.sub)
-        if method == "GET" and path.startswith("/heartbeat-runs/") and path.endswith("/log"):
-            return self.logs.get(path.split("/")[2], {"content": ""})
+        if method == "GET" and path.startswith("/heartbeat-runs/") and "/log" in path:
+            rid = path.split("/")[2]
+            if rid not in self.logs:
+                raise http(method, path, 404, "Run log not found")
+            q = dict(p.split("=") for p in path.split("?", 1)[1].split("&")) if "?" in path else {}
+            off, lim = int(q.get("offset", 0)), min(int(q.get("limitBytes", 256000)), self.page_size)
+            data = self.logs[rid]["content"].encode("utf-8")
+            page = {"runId": rid, "store": "local_file", "content": data[off:off + lim].decode("utf-8", "replace")}
+            if self.next_offset_override is not None:
+                page["nextOffset"] = self.next_offset_override
+            elif off + lim < len(data):
+                page["nextOffset"] = off + lim
+            return page
         if method == "GET" and path.startswith("/heartbeat-runs/"):
             rid = path.split("/")[2]
             if rid in self.details:
                 return dict(self.details[rid])
             r = next((r for r in self.runs if r["runId"] == rid), None)
             if r:
-                return {"id": rid, "companyId": COMPANY, "issueId": r.get("issueId", SUB_ID), "scopeKind": "issue",
-                        "agentId": r["agentId"], "status": r["status"], "createdAt": r["createdAt"],
-                        "contextSnapshot": dict(self.ctx.get(rid, BOARD_CTX))}
+                d = {"id": rid, "companyId": COMPANY, "issueId": r.get("issueId", SUB_ID), "scopeKind": "issue",
+                     "agentId": r["agentId"], "status": r["status"], "createdAt": r["createdAt"],
+                     "contextSnapshot": dict(self.ctx.get(rid, BOARD_CTX))}
+                if rid in self.logs:
+                    data = self.logs[rid]["content"].encode("utf-8")
+                    d.update(logStore="local_file", logCompressed=False, logBytes=len(data),
+                             logSha256=hashlib.sha256(data).hexdigest())
+                d.update(self.log_meta.get(rid, {}))
+                return d
         if (method, path) == ("GET", f"/agents/{REVIEWER}") and self.agent is not None:
             return json.loads(json.dumps(self.agent))
         if (method, path) == ("GET", f"/companies/{COMPANY}/issues?parentId={ISSUE_ID}&limit=200"):
@@ -794,6 +815,87 @@ class ToolSurface(RelayEnv):
     def test_permission_denial_refused(self):
         self.refused_nothing_written("attempted refused tools", self.with_log(
             denials=[{"tool_name": "mcp__Paperclip_projects__set_task_title", "tool_input": {}}]))
+
+
+class LogIntegrity(RelayEnv):
+    """The relay parses only the whole log Paperclip finalized for the lock's run (size and SHA-256 verified)."""
+
+    def test_verified_log_accepted_across_pages(self):
+        api = self.pc()
+        api.page_size = 97  # many pages, boundaries inside JSON lines
+        self.assertIn("relayed approved", self.relay(api))
+        log_reads = [p for m, p, _ in api.calls if p.startswith(f"/heartbeat-runs/{RUN}/log")]
+        self.assertGreater(len(log_reads), 3)
+
+    def test_tool_use_on_a_later_page_is_seen(self):
+        """Regression: the relay used to read only the first page (256 KB default), so later events were invisible."""
+        api = self.pc()
+        filler = [{"type": "assistant", "message": {"content": [{"type": "text", "text": "x" * 400}]}}] * 3
+        use = {"type": "assistant", "message": {"content": [
+            {"type": "tool_use", "name": "mcp__Paperclip_projects__create_task", "input": {}}]}}
+        api.logs[RUN] = run_log(message(verdict()), extra_events=filler + [use])
+        api.page_size = 500
+        self.refused_nothing_written("used tools other than Read, Grep and Glob", api)
+
+    def test_log_changed_after_finalize_refused(self):
+        api = self.pc()
+        good = api.logs[RUN]["content"]
+        api.log_meta[RUN] = {"logSha256": hashlib.sha256(good.encode()).hexdigest(), "logBytes": len(good.encode())}
+        api.logs[RUN] = {"content": good.replace("Reviewed the package.", "Reviewed the PACKAGE.")}
+        self.refused_nothing_written("does not match its recorded SHA-256", api)
+
+    def test_size_mismatch_refused(self):
+        api = self.pc()
+        data = api.logs[RUN]["content"].encode()
+        api.log_meta[RUN] = {"logBytes": len(data) + 1}
+        self.refused_nothing_written("the run record says", api)
+
+    def test_missing_or_malformed_hash_refused(self):
+        for value in (None, "", "abc", "G" * 64, 123):
+            with self.subTest(value=value):
+                api = self.pc()
+                api.log_meta[RUN] = {"logSha256": value}
+                self.refused_nothing_written("no finalized log hash", api)
+
+    def test_missing_size_refused(self):
+        for value in (None, "10", -1, True):
+            with self.subTest(value=value):
+                api = self.pc()
+                api.log_meta[RUN] = {"logBytes": value}
+                self.refused_nothing_written("no finalized log size", api)
+
+    def test_compressed_or_remote_log_refused(self):
+        for over in ({"logCompressed": True}, {"logStore": "s3"}):
+            with self.subTest(over=over):
+                api = self.pc()
+                api.log_meta[RUN] = over
+                self.refused_nothing_written("only plain local logs", api)
+
+    def test_missing_log_refused(self):
+        api = self.pc()
+        del api.logs[RUN]
+        api.log_meta[RUN] = {"logSha256": "0" * 64, "logBytes": 10}
+        self.refused_nothing_written("could not be read", api)
+
+    def test_pages_that_do_not_advance_refused(self):
+        api = self.pc()
+        api.next_offset_override = 0
+        self.refused_nothing_written("do not advance", api)
+
+    def test_metadata_for_another_run_refused(self):
+        api = self.pc()
+        api.log_meta[RUN] = {"id": "run-other"}
+        self.refused_nothing_written("", api)
+
+    def test_hash_checked_before_parsing(self):
+        """A log that would fail parsing is refused on its hash first when it was altered."""
+        api = self.pc()
+        good = api.logs[RUN]["content"]
+        api.log_meta[RUN] = {"logSha256": hashlib.sha256(good.encode()).hexdigest(), "logBytes": len(good.encode())}
+        api.logs[RUN] = {"content": good[: len(good) // 2]}
+        api.next_offset_override = None
+        e = self.refused_nothing_written("", api)
+        self.assertIn("bytes, the run record says", str(e))
 
 
 class ReviewerConfig(RelayEnv):
