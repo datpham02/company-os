@@ -188,6 +188,8 @@ The relay could sign `(reviewId, runId, manifestSha256, headSha, verdict SHA-256
 
 **Recommendation for the Board:** option 2 for review-package sandboxes; decide option 1 for production authors together with a fix for the broad Git Credential Manager access.
 
+**Board decision (2026-11-21, R4):** option 2 for sandboxes and option 1 for production, recorded in [ADR-022](../decisions/ADR-022-author-pull-request-credential.md). Narrowing the Git Credential Manager access is not decided yet.
+
 ### 4.B `--unstage` and real run state
 
 **Why the state file is not enough:**
@@ -281,7 +283,7 @@ Each stage needs its own Board approval and ends with a review. No stage starts 
 2. Approve R1 with Option A, or ask for B directly.
 3. Approve R2 (fail-closed `--unstage` against Paperclip).
 4. Approve R3 (reporting only).
-5. Decide the PR mechanism for authors (4.A), and whether to narrow the Git Credential Manager access agents inherit.
+5. Decide the PR mechanism for authors (4.A), and whether to narrow the Git Credential Manager access agents inherit. **PR mechanism decided** (ADR-022: option 2 for sandboxes, option 1 for production); the Git Credential Manager question stays open.
 6. Approve a throwaway repository for R5 (preferred over `soucean-game`), and the R5 sandbox run.
 7. Decide cleanup of `RPR`, `REV`, the PR #28 branch, the separate clone and its worktree, the private test folders, and the backups.
 8. Decide whether and when to plan V3 (separate authorization).
