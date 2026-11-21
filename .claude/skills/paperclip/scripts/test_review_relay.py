@@ -864,8 +864,10 @@ class LogIntegrity(RelayEnv):
                 api.log_meta[RUN] = {"logBytes": value}
                 self.refused_nothing_written("no finalized log size", api)
 
-    def test_compressed_or_remote_log_refused(self):
-        for over in ({"logCompressed": True}, {"logStore": "s3"}):
+    def test_compressed_remote_or_unstated_log_refused(self):
+        """Only an explicit local, uncompressed log is accepted; missing fields fail closed (schema change)."""
+        for over in ({"logCompressed": True}, {"logStore": "s3"}, {"logStore": None}, {"logCompressed": None},
+                     {"logCompressed": 0}, {"logCompressed": "false"}):
             with self.subTest(over=over):
                 api = self.pc()
                 api.log_meta[RUN] = over
@@ -874,8 +876,10 @@ class LogIntegrity(RelayEnv):
     def test_missing_log_refused(self):
         api = self.pc()
         del api.logs[RUN]
-        api.log_meta[RUN] = {"logSha256": "0" * 64, "logBytes": 10}
+        api.log_meta[RUN] = {"logSha256": "0" * 64, "logBytes": 10, "logStore": "local_file", "logCompressed": False}
         self.refused_nothing_written("could not be read", api)
+        api.log_meta[RUN] = {"logSha256": "0" * 64, "logBytes": 10}  # no store fields at all: refused earlier
+        self.refused_nothing_written("only plain local logs", api)
 
     def test_pages_that_do_not_advance_refused(self):
         api = self.pc()

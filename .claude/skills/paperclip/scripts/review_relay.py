@@ -113,7 +113,7 @@ def fetch_verified_log(api, run_id, sleep):
         raise rp.ReviewPackError(f"run {run_id} has no finalized log hash (logSha256); its log cannot be verified")
     if not isinstance(size, int) or isinstance(size, bool) or size < 0:
         raise rp.ReviewPackError(f"run {run_id} has no finalized log size (logBytes)")
-    if meta.get("logCompressed") or meta.get("logStore") not in (None, "local_file"):
+    if meta.get("logStore") != "local_file" or meta.get("logCompressed") is not False:
         raise rp.ReviewPackError(f"run {run_id}'s log is stored as {meta.get('logStore')} "
                                  f"(compressed: {meta.get('logCompressed')}); only plain local logs can be verified")
     parts, offset = [], 0
