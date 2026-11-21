@@ -3,7 +3,8 @@
 Stdlib only. Run with: python -I runtime/tools/comfy-draft.py --asset <id> --model sdxl|flux --prompt "..." [options]
 
 What it does:
-- Starts the local ComfyUI portable build on 127.0.0.1:8188 if it is not already running (detached, loopback only).
+- Starts the local ComfyUI portable build on 127.0.0.1:8188 if it is not already running (detached, loopback only,
+  --offline: the web frontend gets no internet access and partner/API nodes are disabled).
 - Builds a text-to-image workflow for one of the two Board-approved checkpoints:
     sdxl -> sd_xl_base_1.0.safetensors   (CreativeML Open RAIL++-M)
     flux -> flux1-schnell-fp8.safetensors (Apache-2.0)
@@ -63,7 +64,7 @@ def ensure_server(wait_s=180):
     log = open(os.path.join(STAGING_ROOT, "comfyui-server.log"), "ab")
     flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
     subprocess.Popen([py, "-s", main, "--windows-standalone-build", "--listen", HOST, "--port", str(PORT),
-                      "--disable-auto-launch"], cwd=COMFY_DIR, stdout=log, stderr=log, creationflags=flags)
+                      "--disable-auto-launch", "--offline"], cwd=COMFY_DIR, stdout=log, stderr=log, creationflags=flags)
     deadline = time.time() + wait_s
     while time.time() < deadline:
         if server_up():
