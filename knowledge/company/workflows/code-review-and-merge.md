@@ -17,7 +17,7 @@ PR URL; Task acceptance criteria; Run summary with test results.
 
 ## Steps
 1. **Paperclip** routes the Task to the `review` stage participant (`qa`), per the execution policy (`VERIFIED` mechanism).
-2. **`qa`** checks out the Task Branch in its own Task Workspace, builds, runs tests, verifies each acceptance criterion, and checks [../policies/rules.md](../policies/rules.md) compliance (scope, no secrets, no disabled tests).
+2. **`qa`** checks out the Task Branch in its own Task Workspace, builds, runs tests, verifies each acceptance criterion, and checks [../policies/rules.md](../policies/rules.md) compliance (scope, no secrets, no disabled tests). It also checks the PR's GitHub CI (`gh pr view <n> --json statusCheckRollup`): a failing or errored check blocks approval, and so does one that is still running (added 2026-11-22 after SOU-38 was approved with failing CI). This applies to every agent reviewer, not only `qa`.
 3. **`qa`** records the decision: `approved` or `changes_requested`, with evidence. It also comments on the GitHub PR. `changes_requested` → Task returns to the author ([development-cycle.md](development-cycle.md) step 11).
 4. After review approval, **Paperclip** moves the Task to the `approval` stage with the Board Operator as participant.
 5. **Board Operator** reviews the PR in GitHub (diff, `qa` evidence). Then:
