@@ -571,35 +571,116 @@ class UnstageAndStatus(Env):
         rp.stage(self.rr, self.sr, "SOU-12", SHA_HEAD, os.path.join(self.rr, "store", "SOU-12", SHA_HEAD), NOW)
 
     def run_state(self, status, minutes=10):
+        """Phase 1 state-file runs: still read by --status (R2 left it as a follow-up), not by --unstage."""
         created = rp.iso(NOW + datetime.timedelta(minutes=minutes))
         return state(runs=[{"id": "run-1", "issue": "SOU-12", "agent": "code-reviewer", "status": status,
                             "createdAt": created}])
 
+    @staticmethod
+    def check(state_, runs=(), reason="fake Paperclip"):
+        """A stand-in for review_relay.reviewer_run_state (R2): the reviewer agent's run state from Paperclip."""
+        return lambda lock: {"state": state_, "reason": reason, "runs": [dict(r) for r in runs], "agentId": "agent-cr"}
+
+    def unstage(self, abandon, check=None, now=NOW):
+        return rp.unstage(self.rr, self.sr, state(), abandon, now, check)
+
     def test_active_run_blocks_even_abandon(self):
-        for status in ("queued", "starting", "running", "scheduled_retry"):
-            with self.subTest(status=status):
-                self.refused("still running", rp.unstage, self.rr, self.sr, self.run_state(status), True, NOW)
-        self.assertIsNotNone(rp.read_lock(self.sr))
+        for status in ("queued", "running", "scheduled_retry"):
+            for abandon in (False, True):
+                with self.subTest(status=status, abandon=abandon):
+                    e = self.refused("active run", self.unstage, abandon,
+                                     self.check("active", [{"id": "run-1", "status": status}]))
+                    self.assertIn("cancel-run run-1", str(e))
+                    self.assertIn("does not override", str(e))
+        lock = rp.read_lock(self.sr)
+        self.assertIsNotNone(lock)
+        self.assertNotIn("unstaging", lock)
+        self.assertTrue(os.path.exists(os.path.join(self.sr, "current", "READY")))
 
     def test_not_relayed_needs_abandon(self):
-        self.refused("not been relayed", rp.unstage, self.rr, self.sr, self.run_state("succeeded"), False, NOW)
-        self.assertIn("abandon", rp.unstage(self.rr, self.sr, self.run_state("succeeded"), True, NOW))
+        self.refused("not been relayed", self.unstage, False, self.check("clear"))
+        self.assertIn("abandon", self.unstage(True, self.check("clear", [{"id": "run-1", "status": "succeeded"}])))
         self.assertIsNone(rp.read_lock(self.sr))
         self.assertFalse(os.path.exists(os.path.join(self.sr, "current")))
-        self.assertEqual(self.events()[-1], "abandon")
+        e = rp.read_audit(self.rr)[-1]
+        self.assertEqual((e["event"], e["verified"], e["reviewerRuns"]),
+                         ("abandon", True, [{"id": "run-1", "status": "succeeded"}]))
 
     def test_relayed_review_unstages(self):
         rp.audit(self.rr, "relay", NOW + datetime.timedelta(minutes=20), issue="SOU-12", head=SHA_HEAD, run_id="run-1")
         later = NOW + datetime.timedelta(minutes=30)
-        self.assertIn("unstage", rp.unstage(self.rr, self.sr, self.run_state("succeeded"), False, later))
-        self.assertEqual(self.events()[-1], "unstage")
+        self.assertIn("unstage", self.unstage(False, self.check("clear"), now=later))
+        e = rp.read_audit(self.rr)[-1]
+        self.assertEqual((e["event"], e["verified"], e["reviewerAgentId"]), ("unstage", True, "agent-cr"))
 
-    def test_runs_of_other_agents_or_issues_ignored(self):
-        st = state(runs=[{"id": "x", "issue": "SOU-12", "agent": "web-engineer", "status": "running",
-                          "createdAt": rp.iso(NOW)},
-                         {"id": "y", "issue": "SOU-99", "agent": "code-reviewer", "status": "running",
+    def test_state_file_runs_are_no_longer_consulted(self):
+        """R2: an active run in the Phase 1 state file neither blocks nor allows unstage; Paperclip decides."""
+        st = state(runs=[{"id": "x", "issue": "SOU-12", "agent": "code-reviewer", "status": "running",
                           "createdAt": rp.iso(NOW)}])
-        self.assertIn("abandon", rp.unstage(self.rr, self.sr, st, True, NOW))
+        self.assertIn("abandon", rp.unstage(self.rr, self.sr, st, True, NOW, self.check("clear")))
+
+    def test_unverified_needs_abandon_and_is_logged(self):
+        rp.audit(self.rr, "relay", NOW + datetime.timedelta(minutes=20), issue="SOU-12", head=SHA_HEAD, run_id="run-1")
+        later = NOW + datetime.timedelta(minutes=30)
+        for check in (None, self.check("unverified", reason="Paperclip unreachable"),
+                      lambda lock: (_ for _ in ()).throw(OSError("timed out")),
+                      lambda lock: {"state": "weird"}, lambda lock: None):
+            with self.subTest(check=check):
+                self.refused("could not be verified", self.unstage, False, check, later)
+                self.assertIsNotNone(rp.read_lock(self.sr))
+        self.assertIn("unstage", self.unstage(True, self.check("unverified", reason="Paperclip unreachable"), later))
+        e = rp.read_audit(self.rr)[-1]
+        self.assertEqual((e["event"], e["verified"]), ("unstage", False))
+        self.assertIn("reviewer state unverified: Paperclip unreachable", e["reason"])
+
+    def test_start_in_flight_needs_abandon_and_a_clear_check(self):
+        for flight in ("creating", "waking"):
+            with self.subTest(flight=flight):
+                rp.update_lock(self.sr, reviewStart=flight)
+                self.refused("may be in flight", self.unstage, False, self.check("clear"))
+                self.refused("may be in flight", self.unstage, True, self.check("unverified"))
+                self.assertIsNotNone(rp.read_lock(self.sr))
+        self.assertIn("abandon", self.unstage(True, self.check("clear")))
+
+    def test_second_check_sees_a_new_run_and_restores_the_lock(self):
+        calls = []
+
+        def check(lock):
+            calls.append(lock)
+            return ({"state": "clear", "runs": []} if len(calls) == 1 else
+                    {"state": "active", "runs": [{"id": "run-late", "status": "queued"}]})
+        self.refused("active run (run-late", self.unstage, True, check)
+        lock = rp.read_lock(self.sr)
+        self.assertIsNone(lock.get("unstaging"))
+        self.assertTrue(os.path.exists(os.path.join(self.sr, "current", "READY")))
+        self.assertEqual(len(calls), 2)
+
+    def test_marker_is_set_between_the_two_checks(self):
+        seen = []
+
+        def check(lock):
+            seen.append(rp.read_lock(self.sr).get("unstaging"))
+            return {"state": "clear", "runs": []}
+        self.unstage(True, check)
+        self.assertEqual(seen[0], None)
+        self.assertIsNotNone(seen[1])
+
+    def test_interrupted_unstage_resumes(self):
+        rp.update_lock(self.sr, unstaging=rp.iso(NOW))
+        self.assertIn("abandon", self.unstage(True, self.check("clear")))
+        self.assertIsNone(rp.read_lock(self.sr))
+
+    def test_op_lock_blocks_and_is_always_released(self):
+        op = os.path.join(self.sr, rp.OP_LOCK_FILE)
+        with open(op, "w") as f:
+            f.write("{}")
+        self.refused("another staging operation is in progress", self.unstage, True, self.check("clear"))
+        self.assertIsNotNone(rp.read_lock(self.sr))
+        os.remove(op)
+        self.refused("active run", self.unstage, True, self.check("active", [{"id": "r", "status": "running"}]))
+        self.assertFalse(os.path.exists(op))
+        self.unstage(True, self.check("clear"))
+        self.assertFalse(os.path.exists(op))
 
     def test_nothing_staged_and_orphans(self):
         rp.unstage(self.rr, self.sr, state(), True, NOW)
@@ -971,7 +1052,7 @@ class AuditRegressions(Env):
         with open(os.path.join(self.rr, "audit.log"), "a", encoding="utf-8") as f:
             f.write('{"ts": "2026-11-21T12:00:00Z", "event": "rel')  # crash mid-write
         self.refused("damaged", rp.staging_status, self.rr, self.sr, state(), NOW)
-        self.refused("damaged", rp.unstage, self.rr, self.sr, state(), False, NOW)
+        self.refused("damaged", rp.unstage, self.rr, self.sr, state(), False, NOW, lambda lock: {"state": "clear"})
         self.assertIsNotNone(rp.read_lock(self.sr))
 
     # D8: untrusted task text cannot pose as instructions
