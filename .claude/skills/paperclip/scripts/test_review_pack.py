@@ -698,8 +698,35 @@ class UnstageAndStatus(Env):
         self.assertEqual(old["state"], "stale")
         self.assertEqual(rp.staging_status(self.rr, self.sr, self.run_state("failed"), NOW)["state"], "stale")
         running = rp.staging_status(self.rr, self.sr, self.run_state("running"), NOW + datetime.timedelta(days=3))
-        self.assertEqual((running["state"], running["active"]), ("staged", True))
+        self.assertEqual((running["state"], running["active"], running["source"]), ("staged", True, "state-file"))
         self.assertIsNotNone(rp.read_lock(self.sr))  # status never clears anything
+
+    def test_status_from_paperclip(self):
+        """A1: with the Paperclip check (as pc.py wires it) --status reports the reviewer's runs from Paperclip
+        and ignores the state file."""
+        st_file = self.run_state("running")
+        st = rp.staging_status(self.rr, self.sr, st_file, NOW, self.check("active", [{"id": "r", "status": "running"}]))
+        self.assertEqual((st["state"], st["active"], st["source"], st["verified"]), ("staged", True, "paperclip", True))
+        st = rp.staging_status(self.rr, self.sr, st_file, NOW, self.check("clear", [{"id": "r", "status": "succeeded"}]))
+        self.assertEqual((st["state"], st["active"], st["runs"]), ("stale", False, [{"id": "r", "status": "succeeded"}]))
+        st = rp.staging_status(self.rr, self.sr, state(), NOW + datetime.timedelta(hours=1), self.check("clear"))
+        self.assertEqual(st["state"], "staged")
+        st = rp.staging_status(self.rr, self.sr, state(), NOW + datetime.timedelta(hours=24), self.check("clear"))
+        self.assertEqual(st["state"], "stale")
+        for check in (self.check("unverified", reason="Paperclip unreachable"), lambda lock: 1 / 0):
+            with self.subTest(check=check):
+                st = rp.staging_status(self.rr, self.sr, state(), NOW + datetime.timedelta(days=3), check)
+                self.assertEqual((st["state"], st["verified"], st["active"]), ("staged", False, False))
+        self.assertIsNotNone(rp.read_lock(self.sr))
+
+    def test_status_never_prints_the_challenge(self):
+        lock = rp.read_lock(self.sr)
+        for check in (None, self.check("clear")):
+            with self.subTest(check=check):
+                st = rp.staging_status(self.rr, self.sr, state(), NOW, check)
+                self.assertEqual(st["lock"]["challenge"], "<hidden>")
+                self.assertNotIn(lock["challenge"], json.dumps(st))
+        self.assertEqual(rp.read_lock(self.sr)["challenge"], lock["challenge"])  # the lock itself is untouched
 
 
 # ---------- §8 retention, cap, cleanup ----------
@@ -826,11 +853,37 @@ class Cli(Env):
         base.update(kw)
         return argparse.Namespace(**base)
 
-    def run_cli(self, **kw):
+    def run_cli(self, reviewer_runs=None, **kw):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            rp.cmd_review_pack(self.args(**kw), now=NOW)
+            rp.cmd_review_pack(self.args(**kw), now=NOW, reviewer_runs=reviewer_runs)
         return out.getvalue()
+
+    def test_unstage_refusal_audit_names_the_staged_issue(self):
+        """A2: --unstage and --status take no issue key; their refusals record the staged issue."""
+        sf, stf = self.files()
+        self.run_cli(key="SOU-12", source_fixture=sf, state_file=stf, allow_repo=[REPO])
+        with self.assertRaises(rp.ReviewPackError):
+            self.run_cli(unstage=True, state_file=stf)  # no Paperclip check: unverified, refused
+        e = rp.read_audit(self.rr)[-1]
+        self.assertEqual((e["event"], e["issue"]), ("refuse", "SOU-12"))
+        self.assertIn("could not be verified", e["reason"])
+        self.assertIn("abandon", self.run_cli(unstage=True, abandon=True, state_file=stf))
+
+    def test_refusal_audit_without_a_lock_has_no_issue(self):
+        sf, stf = self.files()
+        with open(rp.lock_path(self.sr), "w") as f:
+            f.write("not json")
+        with self.assertRaises(rp.ReviewPackError):
+            self.run_cli(unstage=True, state_file=stf)
+        self.assertIsNone(rp.read_audit(self.rr)[-1]["issue"])
+
+    def test_status_cli_with_paperclip_check(self):
+        sf, stf = self.files()
+        self.run_cli(key="SOU-12", source_fixture=sf, state_file=stf, allow_repo=[REPO])
+        out = json.loads(self.run_cli(status=True, state_file=stf,
+                                      reviewer_runs=lambda lock: {"state": "active", "runs": [{"id": "r", "status": "queued"}]}))
+        self.assertEqual((out["source"], out["active"], out["lock"]["challenge"]), ("paperclip", True, "<hidden>"))
 
     def assert_wake_command(self, out):
         """The suggested wake command stands alone on its line, so it can be copied as is; any explanation is on

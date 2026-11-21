@@ -130,7 +130,7 @@ To bind this to the staging, `review-start` would additionally record `companyId
 - **`review_relay.reviewer_run_state(api, lock, sleep)`:** the Paperclip queries and the classification (`active`, `clear`, `unverified` with reasons, `mismatch`).
 - **`pc.py`:** wires `review-pack --unstage` through a wrapper that passes the classifier bound to `pc.call`.
 - **`staging.op`:** the helper moves to `review_pack` (file-only) and is shared by both commands.
-- **`staging_status` (`--status`):** a follow-up option is to report the same Paperclip classification. It is not required for R2 acceptance; it stays on the state file until then.
+- **`staging_status` (`--status`):** *done after R2 in a follow-up PR:* through `pc.py` it reports the same Paperclip classification and hides the challenge; outside `pc.py` it falls back to the state file. Originally: a follow-up option is to report the same Paperclip classification. It is not required for R2 acceptance; it stays on the state file until then.
 
 ### 3.6 Audit
 

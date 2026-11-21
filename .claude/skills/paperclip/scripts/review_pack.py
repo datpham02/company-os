@@ -892,20 +892,35 @@ def relayed(rr, lock):
                and e["ts"] >= lock["stagedAt"] for e in read_audit(rr))
 
 
-def staging_status(rr, sr, state, now):
+def staging_status(rr, sr, state, now, reviewer_runs=None):
+    """Read-only view of staging. With `reviewer_runs` (the Paperclip check pc.py injects, as for --unstage) the
+    reviewer's runs come from Paperclip; without it, from the Phase 1 state file (`source: state-file`). The
+    staging challenge is never printed."""
     lock = read_lock(sr)
     current = assert_contained(os.path.join(sr, "current"), sr)
     if not lock:
         if os.path.exists(current) or _staging_leftovers(sr):
             return {"state": "inconsistent", "detail": "files in staging but no lock; inspect, then --unstage --abandon"}
         return {"state": "empty"}
-    runs = lock_runs(state, lock)
-    active = [r for r in runs if r["status"] in ACTIVE_RUN]
     age_h = (now - parse_iso(lock["stagedAt"], "staging.lock stagedAt")).total_seconds() / 3600
-    stale = (bool(runs) and not active) or (not runs and age_h >= STALE_HOURS)
-    return {"state": "stale" if stale else "staged", "lock": lock, "ready": os.path.exists(os.path.join(current, "READY")),
-            "runs": [{"id": r["id"], "status": r["status"]} for r in runs], "active": bool(active),
-            "relayed": relayed(rr, lock), "ageHours": round(age_h, 1)}
+    shown = dict(lock, challenge="<hidden>") if "challenge" in lock else lock
+    base = {"lock": shown, "ready": os.path.exists(os.path.join(current, "READY")), "relayed": relayed(rr, lock),
+            "ageHours": round(age_h, 1)}
+    if reviewer_runs is None:
+        runs = lock_runs(state, lock)
+        active = [r for r in runs if r["status"] in ACTIVE_RUN]
+        stale = (bool(runs) and not active) or (not runs and age_h >= STALE_HOURS)
+        return dict(base, state="stale" if stale else "staged", source="state-file",
+                    runs=[{"id": r["id"], "status": r["status"]} for r in runs], active=bool(active))
+    check = _reviewer_check(reviewer_runs, lock)
+    runs = [{"id": r.get("id"), "status": r.get("status")} for r in (check.get("runs") or [])]
+    active = check["state"] == "active"
+    verified = check["state"] != "unverified"
+    # Stale only when Paperclip confirms nothing is active and a run has ended, or nothing ran for STALE_HOURS.
+    stale = verified and not active and (bool(runs) or age_h >= STALE_HOURS)
+    return dict(base, state="stale" if stale else "staged", source="paperclip", runs=runs, active=active,
+                verified=verified, reviewerState=check["state"], reason=check.get("reason"),
+                reviewerAgentId=check.get("agentId"))
 
 
 def op_lock(sr, what, now):
@@ -1235,6 +1250,8 @@ def cmd_review_pack(a, now=None, reviewer_runs=None):
         return _run(a, rr, sr, now, reviewer_runs)
     except (ReviewPackError, OSError) as e:
         reason = str(e) if isinstance(e, ReviewPackError) else f"filesystem error: {e}"
+        if key is None and (getattr(a, "unstage", False) or getattr(a, "status", False)):
+            key = _staged_issue(sr)  # --unstage/--status take no key: record the staged issue instead
         try:
             audit(rr, "refuse", now, issue=key, reason=reason)
         except OSError:
@@ -1242,6 +1259,15 @@ def cmd_review_pack(a, now=None, reviewer_runs=None):
         if isinstance(e, ReviewPackError):
             raise
         raise ReviewPackError(reason) from e
+
+
+def _staged_issue(sr):
+    """The issue the staging lock names, for audit lines; None when there is no readable lock."""
+    try:
+        lock = read_lock(sr)
+    except ReviewPackError:
+        return None
+    return lock.get("issue") if lock else None
 
 
 def _run(a, rr, sr, now, reviewer_runs=None):
@@ -1252,7 +1278,7 @@ def _run(a, rr, sr, now, reviewer_runs=None):
         if a.key or a.source_fixture:
             raise ReviewPackError("--status, --unstage and --cleanup take no issue key or source fixture")
         if a.status:
-            st = staging_status(rr, sr, state, now)
+            st = staging_status(rr, sr, state, now, reviewer_runs)
             print(json.dumps(st, indent=2, sort_keys=True))
         elif a.unstage:
             print(unstage(rr, sr, state, a.abandon, now, reviewer_runs))

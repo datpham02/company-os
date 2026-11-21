@@ -4,6 +4,9 @@ All notable changes to the Game Studio framework are recorded here. The format f
 
 ## [Unreleased]
 
+### Changed
+- `review-pack --status` through `pc.py` now reports the reviewer's runs from Paperclip (the same check as `--unstage`: `source: paperclip`, `verified`, `active`, runs), never prints the staging challenge, and falls back to the state file only outside `pc.py`. Refusals of `--unstage` and `--status` are audited with the staged issue instead of `issue: null`.
+
 ### Fixed
 - R2 `--unstage` (self-review): `reviewer_run_state` ignored reviewer runs created before the staging time even when they were still active, although such a run can read staging through the agent's fixed `--add-dir`. Any active run now blocks, whenever it started; the staging time still limits which `interrupted` or unknown runs count. Regression test added. The no-lock orphan cleanup now states that the reviewer's runs cannot be checked without a lock.
 
