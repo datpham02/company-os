@@ -1,6 +1,9 @@
 # Review Package R1: reviewer profile validation
 
-- **Date:** 2026-11-21, 04:00–04:03 UTC.
+- **Date:** 2026-11-21. R1 as a whole ran **04:00–04:12 UTC**:
+  - Phases A and B 04:00–04:03 (the live B3 check 04:02:36–04:02:45);
+  - Phase C 04:05–04:08;
+  - Phase D 04:08–04:12.
 - **Code:** `main` at `50ac09b` (PR #50 merged): `review_relay.check_reviewer_config`, run by `review-start`.
 - **Status:**
   - Phase A (inventory) done: [review-package-r1-reviewer-inventory.md](review-package-r1-reviewer-inventory.md);
@@ -184,6 +187,15 @@ After the review, OPT had 7 issues and 13 runs. The changes:
 | Paperclip API and settings file match | **Done**: validator PASS, 18/18, probe PASS for all three |
 | Positive test | **Done** (§5 D1) |
 | Negative tests | **Done**: offline (10 tests) and live (6 cases, §5 D2) |
-| No side effects | **Done** for B3, C and D (§5 D3) |
+| No unintended side effects | **Done** (§2, §4, §5 D3): only the intended changes listed below the table |
 | Evidence and timestamps | **Done** for A–D |
-| Profiles not updated or sandboxes gone | All three exist and are updated; Soucean has no reviewer (not touched) |
+| Sandbox reviewers retained; Soucean untouched | **Done**: the REV, RPR and OPT reviewers are kept (updated, paused); the OPT test agent `code-reviewer-negtest` is kept (paused); Soucean has no reviewer and nothing in it changed |
+
+**Intended changes made by R1** (everything else was checked unchanged):
+- **Phase C (approved):** the three reviewers' `extraArgs` (+ `--disallowedTools mcp__*`), their settings `deny` (+ `mcp__*`), and three new config revisions.
+- **Phase D:**
+  - test agent `code-reviewer-negtest` (paused);
+  - sub-issue `OPT-7`;
+  - reviewer run `021f2cdb`;
+  - Paperclip's cancelled `issue_disposition_repair` run `bd8ff6b9`;
+  - on `OPT-3`: one relay comment and the `changes_requested` decision.

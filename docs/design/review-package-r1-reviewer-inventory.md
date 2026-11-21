@@ -1,6 +1,6 @@
 # Review Package R1: reviewer profile inventory
 
-- **Date:** 2026-11-21, 04:00–04:03 UTC.
+- **Date:** 2026-11-21, 04:00–04:03 UTC (Phase A; R1 as a whole ran 04:00–04:12 UTC, see the validation results).
 - **Scope:** R1 Phase A, read-only: `GET /api/companies`, `GET /api/companies/<id>/agents`, `GET /api/agents/<id>` and each reviewer's local settings file.
 - **Code:** `main` at `50ac09b` (PR #50 merged); `test_pc.py` 311 OK.
 - **No Paperclip configuration was changed.** Environment variables are listed by key name only; none exist. The reviewers' system prompts are shown by length only. No token or credential appears here.
