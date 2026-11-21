@@ -76,7 +76,7 @@ A Phase 6 proposal SHOULD NOT be written until each item is closed, or the Board
 
 | # | Blocker | Closes with | Owner |
 |---|---|---|---|
-| B1 | §12 criteria 1–4 and 6–9 only partly live; merge untested. **After R5:** 1, 3, 4, 7, 8 and the merge live; 2 representative; 6 failed (B7); 9 open until production | R5 in a throwaway repository: tests 1–4, 6–9 and the merge, or each recorded as Failed | Board approves the repository and the run; Claude runs it |
+| B1 | §12 criteria 1–4 and 6–9 only partly live; merge untested. **After R5:** 1, 3, 4, 7, 8 and the merge live; 2 representative; 6: override fixed (B7 closed), malformed verdict offline only; 9 open until production | R5 in a throwaway repository: tests 1–4, 6–9 and the merge, or each recorded as Failed | Board approves the repository and the run; Claude runs it |
 | B2 | `--cleanup` decides closure from the state file. **Closed:** PR #62, live in R5 test 8 | A code change like R2's (closure from Paperclip, fail closed), then the criterion 8 test | Claude (code, PR); Board approves |
 | B3 | V3 untested | A V3 test, with separate authorization; or a written decision to rely on authenticated mode instead | Board |
 | B4 | G-14: local Board access and same-user file tampering | Authenticated mode (A5 implementation), or a named accepted risk in the proposal with its consequences for the relay | Board |
