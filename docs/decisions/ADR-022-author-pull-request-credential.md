@@ -52,7 +52,7 @@ Two cases.
   - this repository (`company-os`), which holds the agents' rules and the review pipeline;
   - the other public personal repositories;
   - every private repository. GitHub Free cannot protect branches of private repositories.
-- **One leaked token exposes every repository of the account.** Log redaction is `UNVERIFIED` (follow-up below).
+- **One leaked token exposes every repository of the account.** A probe on 2026-11-21 showed that Paperclip does **not** redact an `env` secret in run logs: a command that prints `GH_TOKEN` stores it in plain text in the run log and serves it through the API ([gh-token-log-redaction-probe.md](../design/gh-token-log-redaction-probe.md)). Only the adapter-invocation metadata hides it.
 - Mitigations kept:
   - no administration, workflow or delete permission, so the token cannot change protection, settings or Actions, or delete a repository;
   - expiry at most 90 days;
@@ -91,7 +91,7 @@ Two cases.
   - put the new token in the Soucean `GH_TOKEN` secret as a new version (the bindings already use `latest`), then revoke the old token;
   - protect `main` on each new public project repository when creating it;
   - repeat the credential-helper check for each new project clone;
-  - confirm on a sandbox run, with a fake secret value, that Paperclip redacts `GH_TOKEN` in run logs (`UNVERIFIED`).
+  - decide the mitigations listed in gh-token-log-redaction-probe.md §3: deny environment-dumping commands in the Claude profiles, add an explicit instruction for every agent, rotate the token on any log exposure. The log redaction probe was done on 2026-11-21: **not redacted**.
 
 ## Reconsider when
 - An agent pushes to `main`, merges a PR, or writes to a repository outside its Task: switch to a separate machine account or an organization at once.
