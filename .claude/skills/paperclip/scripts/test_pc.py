@@ -41,8 +41,8 @@ class ReviewPackWiring(unittest.TestCase):
     def test_issue_lookup_is_the_paperclip_issue_read(self):
         seen = {}
 
-        def fake(a, now=None, reviewer_runs=None, issue_lookup=None):
-            seen.update(reviewer_runs=reviewer_runs, issue_lookup=issue_lookup)
+        def fake(a, now=None, reviewer_runs=None, issue_lookup=None, issue_reader=None):
+            seen.update(reviewer_runs=reviewer_runs, issue_lookup=issue_lookup, issue_reader=issue_reader)
             return 0
         real = pc.review_pack.cmd_review_pack
         pc.review_pack.cmd_review_pack = fake
@@ -51,7 +51,41 @@ class ReviewPackWiring(unittest.TestCase):
         finally:
             pc.review_pack.cmd_review_pack = real
         self.assertIs(seen["issue_lookup"], pc.issue)
+        self.assertIs(seen["issue_reader"], pc.review_issue)
         self.assertTrue(callable(seen["reviewer_runs"]))
+
+    def test_review_issue_maps_the_project_to_its_configured_repository(self):
+        """W1: the project's repository comes from config/paperclip/agents.json, by project name."""
+        rec = {"identifier": "SOU-41", "companyId": "c-1", "projectId": "p-1"}
+        projects = [{"id": "p-0", "name": "Lamplight Vigil"}, {"id": "p-1", "name": "Soucean Game"}]
+        with mock.patch.object(pc, "issue", return_value=rec), mock.patch.object(pc, "call", return_value=projects):
+            self.assertEqual(pc.review_issue("SOU-41"), {"issue": rec, "projectRepo": "datpham02/soucean-game"})
+        with mock.patch.object(pc, "issue", return_value=dict(rec, projectId="p-x")),                 mock.patch.object(pc, "call", return_value=projects):
+            self.assertIsNone(pc.review_issue("SOU-41")["projectRepo"])
+        with mock.patch.object(pc, "issue", return_value=dict(rec, projectId=None)),                 mock.patch.object(pc, "call", side_effect=AssertionError("no project lookup without a project")):
+            self.assertIsNone(pc.review_issue("SOU-41")["projectRepo"])
+
+
+class ReviewRunWiring(unittest.TestCase):
+    """W4: pc.py review-run resolves the company and the code-reviewer, then hands over to review_relay."""
+
+    def args(self, **kw):
+        return argparse.Namespace(**dict(dict(company=None, key="SOU-12", check=False, timeout_minutes=5,
+                                              identity="local-board", review_root=None, staging_root=None), **kw))
+
+    def test_check_and_run(self):
+        with mock.patch.object(pc, "company", return_value={"id": "c-1"}),                 mock.patch.object(pc, "agent", return_value={"id": "rev-1"}),                 mock.patch.object(pc.review_relay, "review_run_check", return_value="paused") as chk,                 mock.patch.object(pc.review_relay, "review_run", return_value="done") as run,                 mock.patch.object(pc.review_pack, "resolve_roots", return_value=("rr", "sr")),                 contextlib.redirect_stdout(io.StringIO()):
+            pc.cmd_review_run(self.args(check=True, key=None))
+            chk.assert_called_once_with(pc.call, "c-1", "rev-1")
+            pc.cmd_review_run(self.args())
+            ((rr, sr, key, api, cid, rid, ident, _now), kw), = [(c.args, c.kwargs) for c in run.call_args_list]
+            self.assertEqual((rr, sr, key, cid, rid, ident, kw["timeout"]), ("rr", "sr", "SOU-12", "c-1", "rev-1",
+                                                                             "local-board", 300))
+
+    def test_key_required_without_check(self):
+        with mock.patch.object(pc, "company", return_value={"id": "c-1"}),                 mock.patch.object(pc, "agent", return_value={"id": "rev-1"}):
+            with self.assertRaisesRegex(pc.review_pack.ReviewPackError, "staged issue key"):
+                pc.cmd_review_run(self.args(key=None))
 
 
 class RunLabel(unittest.TestCase):
@@ -240,6 +274,8 @@ class FakePaperclip:
             return [{"id": CID, "name": "Soucean", "issuePrefix": "SOU", "status": "active"}]
         if method == "GET" and path == f"/companies/{CID}/agents":
             return self.AGENTS
+        if method == "GET" and path == f"/companies/{CID}/projects":
+            return [{"id": "proj-sg", "name": "Soucean Game"}, {"id": "proj-lv", "name": "Lamplight Vigil"}]
         if method == "POST":
             self.writes.append((method, path, body))
             if self.fail_writes:
@@ -585,7 +621,7 @@ def run_cmd(fake, fn, **kw):
 
 def create_args(**kw):
     base = dict(title="New task", assignee="web-engineer", project=None, desc=ws_desc("src/a.ts"), desc_file=None,
-                review=["qa-engineer"], no_approval=False, status="backlog")
+                review=["qa-engineer"], no_approval=False, status="backlog", review_package=False)
     base.update(kw)
     return base
 
@@ -615,6 +651,60 @@ class CreateGate(unittest.TestCase):
         _, err = run_cmd(fake, pc.cmd_create, **create_args())
         self.assertIsNotNone(err)
         self.assertEqual([w[1] for w in fake.writes], [f"/companies/{CID}/issues"])  # no assign, status or wake
+
+
+class CreateReviewPackage(unittest.TestCase):
+    """Phase 6 W3: create --review-package (QA option a)."""
+
+    BOARD_STAGE = {"type": "review", "participants": [{"type": "user", "userId": "local-board"}]}
+    APPROVAL = {"type": "approval", "participants": [{"type": "user", "userId": "local-board"}]}
+
+    def args(self, **kw):
+        return create_args(**dict(dict(review=[], review_package=True, project="Soucean Game"), **kw))
+
+    def test_stages_are_board_review_then_approval(self):
+        fake = FakePaperclip([])
+        out, err = run_cmd(fake, pc.cmd_create, **self.args())
+        self.assertIsNone(err)
+        (method, path, body), = fake.writes
+        self.assertEqual(body["executionPolicy"], {"stages": [self.BOARD_STAGE, self.APPROVAL]})
+        self.assertEqual(body["status"], "backlog")
+        self.assertEqual(body["projectId"], "proj-sg")
+        self.assertIn("stages: review -> approval", out)
+        # the participant shape Paperclip 2026.1023.0's schema requires for a user: userId, no agentId
+        for stage in body["executionPolicy"]["stages"]:
+            for p in stage["participants"]:
+                self.assertEqual(set(p), {"type", "userId"})
+
+    def test_no_approval_keeps_only_the_board_review(self):
+        fake = FakePaperclip([])
+        _, err = run_cmd(fake, pc.cmd_create, **self.args(no_approval=True))
+        self.assertIsNone(err)
+        self.assertEqual(fake.writes[0][2]["executionPolicy"], {"stages": [self.BOARD_STAGE]})
+
+    def test_refusals_happen_before_any_write(self):
+        bad_desc = "Goal only, no sections."
+        cases = ((dict(review=["qa-engineer"]), "do not combine it with --review"),
+                 (dict(project=None), "needs --project"),
+                 (dict(project="Unknown Project"), "has no repository"),
+                 (dict(project="soucean-game"), "(by name) has no repository"),  # a slug is not a project name
+                 (dict(desc=bad_desc), "no '## Acceptance criteria' section"),
+                 (dict(desc="## Acceptance criteria\n- a\n## Write set\nsome prose\n"), "not a list item"))
+        for kw, want in cases:
+            with self.subTest(want=want):
+                fake = FakePaperclip([])
+                _, err = run_cmd(fake, pc.cmd_create, **self.args(**kw))
+                self.assertIsInstance(err, pc.GateError)
+                self.assertIn(want, str(err))
+                self.assertEqual(fake.writes, [])
+
+    def test_existing_mode_unchanged(self):
+        fake = FakePaperclip([])
+        _, err = run_cmd(fake, pc.cmd_create, **create_args())
+        self.assertIsNone(err)
+        stages = fake.writes[0][2]["executionPolicy"]["stages"]
+        self.assertEqual([s["type"] for s in stages], ["review", "approval"])
+        self.assertEqual(stages[0]["participants"][0]["type"], "agent")
 
 
 class AssignGate(unittest.TestCase):

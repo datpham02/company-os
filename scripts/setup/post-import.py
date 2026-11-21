@@ -39,7 +39,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--company", required=True, help="company name, prefix or id")
     p.add_argument("--workspace", default=os.path.join(os.path.expanduser("~"), "game-studio-workspace"))
-    p.add_argument("--resume", action="store_true", help="resume paused agents")
+    p.add_argument("--resume", action="store_true", help="resume paused agents (never the Review Package reviewer)")
     a = p.parse_args()
 
     conf = json.load(open(os.path.join(REPO, "config", "paperclip", "agents.json"), encoding="utf-8"))
@@ -100,9 +100,16 @@ def main():
         if "git push" in args and f"origin {prefix}-*" not in args and ag["adapterType"] == "claude_local" and "acceptEdits" in args:
             print(f"  WARNING {slug}: allowlist does not use prefix {prefix}; rebuild the package with --prefix {prefix}")
 
-    # 4. resume
+    # 4. resume. The Review Package reviewer (profile kind strict-reviewer) stays paused: the Board resumes it
+    # for one review at a time (Phase 6 W2, W4).
+    strict = {s for s, spec in conf["agents"].items()
+              if conf["profiles"].get(spec.get("profile"), {}).get("kind") == "strict-reviewer"}
     if a.resume:
         for slug, ag in agents.items():
+            if slug in strict:
+                if ag["status"] == "paused":
+                    print(f"  agent {slug}: left paused (the Board resumes it per review)")
+                continue
             if ag["status"] == "paused":
                 try:
                     call("POST", f"/agents/{ag['id']}/resume", {})

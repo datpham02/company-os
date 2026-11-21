@@ -396,6 +396,150 @@ def load_source(path):
     return src
 
 
+# ---------- Phase 6 W1: issue and task from Paperclip (task-contract §2) ----------
+
+TASK_MAX_DESCRIPTION = 64 * 1024
+TASK_MAX_ITEMS = 100
+TASK_MAX_ITEM = 1000
+_HEADING_RE = re.compile(r"^(#{1,6})[ \t]+(.*?)[ \t]*#*[ \t]*$")
+_ITEM_RE = re.compile(r"^([-*+]|\d+[.)])[ \t]+(?:\[[ xX]\][ \t]+)?(.*)$")
+_CONTROL_RE = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
+
+
+def _task_sections(desc):
+    """Level-2 sections of a task description: heading text (lower case) -> list of (heading, lines)."""
+    sections, current = {}, None
+    in_fence = False
+    for raw in desc.replace("\r\n", "\n").split("\n"):
+        if raw.lstrip().startswith(("```", "~~~")):
+            in_fence = not in_fence
+            if current is not None:
+                current[1].append(raw)
+            continue
+        m = None if in_fence else _HEADING_RE.match(raw)
+        if m and len(m.group(1)) <= 2:
+            current = (m.group(2), [])
+            sections.setdefault(m.group(2).strip().lower(), []).append(current)
+            continue
+        if current is not None:
+            current[1].append(raw)
+    return sections
+
+
+def _section_items(heading, lines):
+    """The list items of one section. Anything that is not a plain list item (prose, sub-headings, nested lists,
+    code fences, tables) is refused: requirements are never inferred from free text."""
+    items = []
+    for raw in lines:
+        if not raw.strip():
+            continue
+        if raw.lstrip().startswith(("```", "~~~")):
+            raise ReviewPackError(f"section '## {heading}' contains a code block; give a plain list")
+        if _HEADING_RE.match(raw):
+            raise ReviewPackError(f"section '## {heading}' contains a sub-heading; give a plain list")
+        m = _ITEM_RE.match(raw)
+        if m:
+            items.append(m.group(2).strip())
+            continue
+        indent = len(raw) - len(raw.lstrip(" \t"))
+        if indent >= 2 and items and not _ITEM_RE.match(raw.strip()):
+            items[-1] = (items[-1] + " " + raw.strip()).strip()  # wrapped continuation of the previous item
+            continue
+        if indent >= 2 and _ITEM_RE.match(raw.strip()):
+            raise ReviewPackError(f"section '## {heading}' has a nested list; give a flat list")
+        raise ReviewPackError(f"section '## {heading}' has a line that is not a list item: {raw.strip()[:80]!r}")
+    if not items:
+        raise ReviewPackError(f"section '## {heading}' is empty")
+    if len(items) > TASK_MAX_ITEMS:
+        raise ReviewPackError(f"section '## {heading}' has {len(items)} items, over the limit of {TASK_MAX_ITEMS}")
+    for item in items:
+        if not item:
+            raise ReviewPackError(f"section '## {heading}' has an empty item")
+        if len(item) > TASK_MAX_ITEM:
+            raise ReviewPackError(f"section '## {heading}' has an item over {TASK_MAX_ITEM} characters")
+        if _CONTROL_RE.search(item) or "```" in item:
+            raise ReviewPackError(f"section '## {heading}' has an item with control characters or a code fence")
+    return items
+
+
+def _one_section(sections, names, what, prefix=False):
+    found = [(h, lines) for key, lst in sections.items() for h, lines in lst
+             if key in names or (prefix and any(key.startswith(n) for n in names))]
+    if not found:
+        raise ReviewPackError(f"the task description has no {what} section (task-contract §2)")
+    if len(found) > 1:
+        raise ReviewPackError(f"the task description has {len(found)} {what} sections; exactly one is required")
+    return _section_items(*found[0])
+
+
+def check_task_description(desc):
+    """W3: the checks task_from_issue applies to a description, for `pc.py create --review-package` before the
+    Task exists. Returns (acceptance criteria, write set)."""
+    if not isinstance(desc, str) or not desc.strip():
+        raise ReviewPackError("the description is empty; the task contract sections are missing")
+    if len(desc.encode("utf-8")) > TASK_MAX_DESCRIPTION:
+        raise ReviewPackError(f"the description is over {TASK_MAX_DESCRIPTION} bytes")
+    sections = _task_sections(desc)
+    criteria = _one_section(sections, {"acceptance criteria"}, "'## Acceptance criteria'")
+    write_set = _one_section(sections, {"write set", "files owned"}, "'## Write set' (or '## Files owned')",
+                             prefix=True)
+    return criteria, write_set
+
+
+def task_from_issue(rec, key):
+    """W1: the issue's identity and its task text, from a Paperclip issue record (GET /issues/<key>).
+
+    Returns (issue, task) in the shape the GitHub source needs. Fails closed: another issue's record, a status
+    other than in_review, no project, or a description without exactly one acceptance-criteria section and one
+    write-set section (task-contract §2), each a plain list, is refused. The goal is the issue title. The Read
+    set is not packaged from the description (it may name things outside the repository): readSet is empty.
+    The text stays untrusted data; the reviewer is told so."""
+    if not isinstance(rec, dict) or rec.get("identifier") != key:
+        raise ReviewPackError(f"Paperclip returned a record for another issue, not {key}")
+    if not isinstance(rec.get("id"), str) or not rec["id"]:
+        raise ReviewPackError(f"Paperclip's record for {key} has no id")
+    if rec.get("status") != "in_review":
+        raise ReviewPackError(f"{key} is {rec.get('status')}, not in_review")
+    if not isinstance(rec.get("projectId"), str) or not rec["projectId"]:
+        raise ReviewPackError(f"{key} has no project; only a project's code Task is packaged")
+    title = rec.get("title")
+    if not isinstance(title, str) or not title.strip() or "\n" in title or _CONTROL_RE.search(title) \
+            or len(title) > TASK_MAX_ITEM:
+        raise ReviewPackError(f"{key} has no usable title (the Task's goal)")
+    desc = rec.get("description")
+    if not isinstance(desc, str) or not desc.strip():
+        raise ReviewPackError(f"{key} has no description; the task contract sections are missing")
+    if len(desc.encode("utf-8")) > TASK_MAX_DESCRIPTION:
+        raise ReviewPackError(f"{key}'s description is over {TASK_MAX_DESCRIPTION} bytes")
+    sections = _task_sections(desc)
+    criteria = _one_section(sections, {"acceptance criteria"}, "'## Acceptance criteria'")
+    write_set = _one_section(sections, {"write set", "files owned"}, "'## Write set' (or '## Files owned')",
+                             prefix=True)
+    write_set = [w[1:-1].strip() if len(w) > 2 and w.startswith("`") and w.endswith("`") else w for w in write_set]
+    if any(not w for w in write_set):
+        raise ReviewPackError("the write set has an empty entry")
+    issue = {"key": key, "id": rec["id"], "project": rec["projectId"]}
+    task = {"goal": title.strip(), "acceptanceCriteria": criteria, "writeSet": write_set, "readSet": []}
+    return issue, task
+
+
+def read_task_from_paperclip(reader, key, github_repo):
+    """Call pc.py's Paperclip read (key -> {"issue": record, "projectRepo": owner/name or None}) and check that
+    the issue's project is configured for the repository being packaged."""
+    try:
+        data = reader(key)
+    except Exception as e:  # unreachable, 4xx, anything: nothing is packaged
+        raise ReviewPackError(f"Paperclip did not confirm {key} ({type(e).__name__}: {str(e)[:160]})") from None
+    if not isinstance(data, dict):
+        raise ReviewPackError(f"Paperclip's answer for {key} is malformed")
+    issue, task = task_from_issue(data.get("issue"), key)
+    repo = data.get("projectRepo")
+    if not isinstance(repo, str) or repo.lower() != (github_repo or "").lower():
+        raise ReviewPackError(f"{key}'s project is configured for repository {repo!r}, not {github_repo!r} "
+                              "(config/paperclip/agents.json projects)")
+    return issue, task
+
+
 def load_task(path, key):
     """Phase 3 stand-in for Paperclip's issue data: issue and task fields in the review-task@1 format."""
     t = _load_json(path, "task file")
@@ -407,15 +551,20 @@ def load_task(path, key):
     return issue, _req(t, "task", dict, "task file")
 
 
-def load_github_source(a, key, token=None, transport=None, now=None):
+def load_github_source(a, key, token=None, transport=None, now=None, task_data=None):
     """Phase 3 source (design §4 option A): read the PR over the GitHub API. The token never leaves the
-    Authorization header; every GitHub error is redacted and turned into a refusal."""
+    Authorization header; every GitHub error is redacted and turned into a refusal. With `task_data` (issue, task
+    read from Paperclip, W1) no task file is used; without it, the Phase 3 --task-file is required."""
     import review_github as gh  # local import: the fixture path never needs it
-    if not a.github_repo or not a.task_file:
-        raise ReviewPackError("--github-pr needs --github-repo and --task-file")
+    if not a.github_repo:
+        raise ReviewPackError("--github-pr needs --github-repo")
+    if task_data is not None and getattr(a, "task_file", None):
+        raise ReviewPackError("--task-file is not used through pc.py: the task is read from Paperclip")
+    if task_data is None and not getattr(a, "task_file", None):
+        raise ReviewPackError("--github-pr needs --task-file outside pc.py")
     if a.github_repo.lower() not in {r.lower() for r in a.allow_repo}:
         raise ReviewPackError(f"repository {a.github_repo} is not in the allowed list (--allow-repo)")
-    issue, task = load_task(a.task_file, key)
+    issue, task = task_data if task_data is not None else load_task(a.task_file, key)
     tok = None
     try:
         tok = token if token is not None else gh.read_token()
@@ -1290,9 +1439,10 @@ def add_parser(sub):
     s.add_argument("--github-pr", type=int, help="Phase 3 source: pull request number, read over the GitHub API "
                                                  "with the packager token from Windows Credential Manager")
     s.add_argument("--github-repo", help="with --github-pr: owner/name (must also be an --allow-repo)")
-    s.add_argument("--task-file", help="with --github-pr: issue and task data in the review-task@1 format")
-    s.add_argument("--state-file", required=True, help="issue and run state in the review-state-fixture@1 format "
-                                                       "(Phase 1 stand-in for Paperclip)")
+    s.add_argument("--task-file", help="with --github-pr outside pc.py: issue and task data in the review-task@1 "
+                                       "format (through pc.py the task is read from Paperclip)")
+    s.add_argument("--state-file", help="issue and run state in the review-state-fixture@1 format (Phase 1 "
+                                        "stand-in for Paperclip; not needed through pc.py)")
     s.add_argument("--allow-repo", action="append", default=[], help="repository the packager may read (repeatable)")
     s.add_argument("--review-root", default=os.environ.get("COMPANY_OS_REVIEW_ROOT"))
     s.add_argument("--staging-root", default=os.environ.get("COMPANY_OS_STAGING_ROOT"))
@@ -1300,7 +1450,7 @@ def add_parser(sub):
     return s
 
 
-def cmd_review_pack(a, now=None, reviewer_runs=None, issue_lookup=None):
+def cmd_review_pack(a, now=None, reviewer_runs=None, issue_lookup=None, issue_reader=None):
     """CLI entry. Every refusal, including an unexpected filesystem error, becomes a ReviewPackError with a
     message and, once the Review Root is known, a `refuse` audit entry (audit D6)."""
     now = now or utcnow()
@@ -1310,7 +1460,7 @@ def cmd_review_pack(a, now=None, reviewer_runs=None, issue_lookup=None):
         raise ReviewPackError(f"cannot prepare the roots: {e}")
     key = a.key if a.key and KEY_RE.match(a.key) else None
     try:
-        return _run(a, rr, sr, now, reviewer_runs, issue_lookup)
+        return _run(a, rr, sr, now, reviewer_runs, issue_lookup, issue_reader)
     except (ReviewPackError, OSError) as e:
         reason = str(e) if isinstance(e, ReviewPackError) else f"filesystem error: {e}"
         extra = {}
@@ -1338,8 +1488,13 @@ def _staged_issue(sr):
     return lock.get("issue") if lock else None
 
 
-def _run(a, rr, sr, now, reviewer_runs=None, issue_lookup=None):
-    state = load_state(a.state_file)
+def _run(a, rr, sr, now, reviewer_runs=None, issue_lookup=None, issue_reader=None):
+    if getattr(a, "state_file", None):
+        state = load_state(a.state_file)
+    elif issue_reader is not None:
+        state = {"issues": {}, "runs": []}  # through pc.py every answer comes from Paperclip (R2, B2, W1)
+    else:
+        raise ReviewPackError("--state-file is required outside pc.py (the Phase 1 stand-in for Paperclip)")
     if a.abandon and not a.unstage:
         raise ReviewPackError("--abandon only goes with --unstage")
     if a.status or a.unstage or a.cleanup:
@@ -1358,12 +1513,18 @@ def _run(a, rr, sr, now, reviewer_runs=None, issue_lookup=None):
         raise ReviewPackError("give an issue key, or one of --status, --unstage, --cleanup")
     github = getattr(a, "github_pr", None) is not None
     if bool(a.source_fixture) == github:
-        raise ReviewPackError("give exactly one source: --source-fixture, or --github-pr with --github-repo "
-                              "and --task-file")
+        raise ReviewPackError("give exactly one source: --source-fixture, or --github-pr with --github-repo")
     if not a.allow_repo:
         raise ReviewPackError("give at least one --allow-repo owner/name")
     key = a.key
-    src = load_source(a.source_fixture) if not github else load_github_source(a, key)
+    if github and issue_reader is not None:
+        task_data = read_task_from_paperclip(issue_reader, key, a.github_repo)
+        # the issue's status and project, as Paperclip reported them, stand in for the state file's entry
+        state = {"issues": dict(state["issues"], **{key: {"status": "in_review", "project": task_data[0]["project"],
+                                                          "closedAt": None}}), "runs": state["runs"]}
+        src = load_github_source(a, key, task_data=task_data)
+    else:
+        src = load_source(a.source_fixture) if not github else load_github_source(a, key)
     pkg, how = build(rr, sr, src, key, state, a.allow_repo, now, lookup=issue_lookup)
     head = os.path.basename(pkg)
     result = stage(rr, sr, key, head, pkg, now)

@@ -584,7 +584,10 @@ def check_reviewer_config(agent, sr):
     """Fail closed unless the code-reviewer agent has the strict, write-free profile (P0 layers 1 and 2):
     built-in tools Read, Grep, Glob only; every MCP tool removed (--disallowedTools mcp__* and a settings deny
     rule); dontAsk with an allow list of exactly Read, Grep, Glob; --restricted to one --add-dir, the staging
-    folder; no environment variables (no credential); no flag that adds tools, MCP servers or bypasses checks."""
+    folder; no environment variables (no credential); no flag that adds tools, MCP servers or bypasses checks;
+    --strict-mcp-config and --no-session-persistence; heartbeat off and one run at a time (Phase 6 W2). It
+    refuses; it never corrects a configuration. These are tool-surface limits only: they do not isolate the
+    reviewer's process from the operating system or the network."""
     if not isinstance(agent, dict) or agent.get("adapterType") != "claude_local":
         raise rp.ReviewPackError(f"{rp.REVIEWER_AGENT} is not a claude_local agent")
     ac = agent.get("adapterConfig") or {}
@@ -598,8 +601,15 @@ def check_reviewer_config(agent, sr):
     bad = sorted(FORBIDDEN_FLAGS & set(args))
     if bad:
         raise rp.ReviewPackError(f"the reviewer's extraArgs contain forbidden flags {bad}")
-    if "--restricted" not in args:
-        raise rp.ReviewPackError("the reviewer's extraArgs lack --restricted")
+    for flag in ("--restricted", "--strict-mcp-config", "--no-session-persistence"):
+        if flag not in args:
+            raise rp.ReviewPackError(f"the reviewer's extraArgs lack {flag}")
+    # Phase 6 W2: the reviewer never wakes itself and runs one review at a time.
+    hb = ((agent.get("runtimeConfig") or {}).get("heartbeat")) or {}
+    if hb.get("enabled") is not False:
+        raise rp.ReviewPackError(f"{rp.REVIEWER_AGENT} must have its heartbeat disabled")
+    if hb.get("maxConcurrentRuns") != 1:
+        raise rp.ReviewPackError(f"{rp.REVIEWER_AGENT} must allow exactly one concurrent run (maxConcurrentRuns 1)")
     if set(_flag_value(args, "--tools").split(",")) != REVIEWER_TOOLS:
         raise rp.ReviewPackError("the reviewer's --tools must be exactly Read,Grep,Glob")
     if "mcp__*" not in [x.strip() for x in _flag_value(args, "--disallowedTools").replace(" ", ",").split(",")]:
@@ -854,6 +864,20 @@ def add_start_parser(sub, fn):
     return s
 
 
+def add_run_parser(sub, fn):
+    s = sub.add_parser("review-run", help="Phase 6: resume code-reviewer, review-start, wait for the run, pause it "
+                                          "again (always); --check finds a reviewer left resumed")
+    s.add_argument("key", nargs="?", help="issue key of the staged review, e.g. SOU-12")
+    s.add_argument("--check", action="store_true", help="only report whether code-reviewer is paused")
+    s.add_argument("--timeout-minutes", type=float, default=REVIEW_RUN_TIMEOUT / 60,
+                   help="how long to wait for the run before pausing (default 30)")
+    s.add_argument("--identity", default=rp.BOARD, help="the Paperclip user who must be the review participant")
+    s.add_argument("--review-root", default=os.environ.get("COMPANY_OS_REVIEW_ROOT"))
+    s.add_argument("--staging-root", default=os.environ.get("COMPANY_OS_STAGING_ROOT"))
+    s.set_defaults(fn=fn)
+    return s
+
+
 def cmd_review_start(a, api, company_id, reviewer_agent_id, now=None, sleep=time.sleep):
     now = now or rp.utcnow()
     try:
@@ -873,6 +897,120 @@ def cmd_review_start(a, api, company_id, reviewer_agent_id, now=None, sleep=time
         except OSError:
             pass
         raise rp.ReviewPackError(reason) from None
+
+
+# ---------- Phase 6 W4: reviewer lifecycle (resume, review-start, wait, pause) ----------
+
+REVIEW_RUN_TIMEOUT = 30 * 60  # seconds
+REVIEW_RUN_POLL = 10
+RUN_TERMINAL = {"succeeded", "failed", "cancelled", "timed_out", "interrupted"}
+
+
+class ReviewerNotPaused(rp.ReviewPackError):
+    """The reviewer could not be confirmed paused after a review-run; it may be left resumed."""
+
+
+OPEN_ASSIGNED = "todo,in_progress,in_review,blocked"  # statuses on which a resumed agent can be woken
+
+
+def reviewer_state(api, company_id, reviewer_agent_id, sleep=time.sleep):
+    """The reviewer agent's status, its active runs, and the open issues assigned to it, read from Paperclip.
+    An open assigned issue (for example the sub-issue of an earlier review whose relay was refused) can start a run
+    as soon as the reviewer is resumed (R2: Paperclip's issue_disposition_repair)."""
+    agent = _with_retry(lambda: api("GET", f"/agents/{reviewer_agent_id}"), sleep)
+    runs = _with_retry(lambda: api("GET", f"/companies/{company_id}/heartbeat-runs?agentId={reviewer_agent_id}"),
+                       sleep)
+    assigned = _with_retry(lambda: api("GET", f"/companies/{company_id}/issues?assigneeAgentId={reviewer_agent_id}"
+                                              f"&status={OPEN_ASSIGNED}&limit=50"), sleep)
+    if not isinstance(agent, dict) or not isinstance(runs, list) or not isinstance(assigned, list):
+        raise rp.ReviewPackError("Paperclip returned a malformed agent, run or issue list for the reviewer")
+    active = [r for r in runs if isinstance(r, dict) and r.get("status") in rp.ACTIVE_RUN]
+    wanted = set(OPEN_ASSIGNED.split(","))
+    open_issues = [i for i in assigned if isinstance(i, dict) and i.get("assigneeAgentId") == reviewer_agent_id
+                   and i.get("status") in wanted]
+    return {"status": agent.get("status"), "active": [(r.get("id"), r.get("status")) for r in active],
+            "openIssues": [(i.get("identifier"), i.get("status")) for i in open_issues]}
+
+
+def review_run_check(api, company_id, reviewer_agent_id, sleep=time.sleep):
+    """W4 recovery check: is the reviewer left resumed (for example after a killed review-run)?"""
+    st = reviewer_state(api, company_id, reviewer_agent_id, sleep)
+    note = (f"; open issues assigned to it {st['openIssues']} must be closed or cancelled before the next "
+            "review-run" if st["openIssues"] else "")
+    if st["active"]:
+        return (f"code-reviewer is {st['status']} with active runs {st['active']}: a review is running. Wait, or "
+                f"cancel the run (pc.py cancel-run <id>); then make sure the reviewer is paused{note}")
+    if st["status"] != "paused":
+        return (f"LEFT RESUMED: code-reviewer is {st['status']} with no active run. Pause it now in the Paperclip "
+                f"UI (Agents > code-reviewer > Pause), then run this check again{note}")
+    return f"code-reviewer is paused with no active run{note}"
+
+
+def review_run(rr, sr, key, api, company_id, reviewer_agent_id, identity, now, sleep=time.sleep,
+               clock=time.monotonic, timeout=REVIEW_RUN_TIMEOUT, poll=REVIEW_RUN_POLL, warn=None):
+    """W4: resume code-reviewer, review-start, wait for its run, pause it again (in `finally`).
+
+    Refuses unless the reviewer is paused with no active run, so it never stacks on another review. review-start
+    keeps its own recovery states: an ambiguous start (for example a lost wake response) is refused, never
+    repeated. A timeout pauses the reviewer, which can cancel the run. The pause is confirmed by reading the agent
+    back; when it cannot be confirmed, ReviewerNotPaused is raised (or, while another error propagates, a warning
+    is written). `finally` does not run after a killed process or a crash: review_run_check finds a reviewer left
+    resumed."""
+    warn = warn or (lambda m: print(m, file=sys.stderr))
+    st = reviewer_state(api, company_id, reviewer_agent_id, sleep)
+    if st["status"] != "paused":
+        raise rp.ReviewPackError(f"code-reviewer is {st['status']}, not paused; another review may be running. "
+                                 "Check with: pc.py review-run --check")
+    if st["active"]:
+        raise rp.ReviewPackError(f"code-reviewer has active runs {st['active']}; wait or cancel them first")
+    if st["openIssues"]:
+        raise rp.ReviewPackError(f"code-reviewer has open assigned issues {st['openIssues']}; resuming it could start "
+                                 "runs on them. Close or cancel them first (an earlier review's sub-issue)")
+    lines, attempted, failed = [], False, True
+    try:
+        attempted = True  # set before the call: a lost response may still have resumed it
+        _with_retry(lambda: api("POST", f"/agents/{reviewer_agent_id}/resume", {}), sleep)
+        lines.append(review_start(rr, sr, key, api, company_id, reviewer_agent_id, identity, now, sleep))
+        lock = rp.read_lock(sr)
+        run_id = lock.get("runId") if lock and lock.get("issue") == key else None
+        if not run_id:
+            raise rp.ReviewPackError("review-start recorded no reviewer run, so the start is ambiguous; nothing is "
+                                     "retried. Check pc.py review-pack --status, then run review-start again")
+        deadline = clock() + timeout
+        while True:
+            status = (_with_retry(lambda: api("GET", f"/heartbeat-runs/{run_id}"), sleep) or {}).get("status")
+            if status in RUN_TERMINAL:
+                break
+            if clock() >= deadline:
+                raise rp.ReviewPackError(f"run {run_id} is still {status} after {timeout // 60} minutes; the reviewer "
+                                         "is paused now, which can cancel the run. Check: pc.py review-pack --status")
+            sleep(poll)
+        lines.append(f"run {run_id} {status}")
+        if status == "succeeded":
+            lines.append(f"next: pc.py review-relay {key} --run-id {run_id}")
+        else:
+            lines.append("the run did not succeed: the Board decides by hand (pc.py approve / request-changes), "
+                         "or starts a new review after unstaging")
+        failed = False
+    finally:
+        if attempted:
+            problem = None
+            try:
+                _with_retry(lambda: api("POST", f"/agents/{reviewer_agent_id}/pause", {}), sleep)
+                after = (_with_retry(lambda: api("GET", f"/agents/{reviewer_agent_id}"), sleep) or {}).get("status")
+                if after != "paused":
+                    problem = f"its status is {after!r} after the pause"
+            except BaseException as e:  # noqa: B036 - report, never hide
+                problem = f"{type(e).__name__}: {str(e)[:160]}"
+            if problem:
+                msg = (f"code-reviewer could not be confirmed paused ({problem}). It may be left resumed: pause it "
+                       "in the Paperclip UI now, then run pc.py review-run --check")
+                if failed:
+                    warn(f"WARNING: {msg}")
+                else:
+                    raise ReviewerNotPaused(msg)
+    lines.append("code-reviewer paused")
+    return "\n".join(lines)
 
 
 # ---------- CLI (wired into pc.py as `review-relay`) ----------

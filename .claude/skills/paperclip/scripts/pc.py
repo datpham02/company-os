@@ -701,14 +701,44 @@ def cmd_assign(a):
           + (f" (not started; run: release {a.key})" if res["status"] == "backlog" else ""))
 
 
+def check_review_package_create(a, desc):
+    """W3 refusals, before any Paperclip call: no agent review stage (QA option a), a project whose repository is
+    configured in config/paperclip/agents.json, and a description with the task-contract sections W1 packages."""
+    if a.review:
+        raise GateError("--review-package replaces the agent review stage (QA option a for the pilot); "
+                        "do not combine it with --review")
+    if not a.project:
+        raise GateError("--review-package needs --project: only a project's code Task is reviewed this way")
+    conf = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..",
+                                       "config", "paperclip", "agents.json"), encoding="utf-8"))
+    # by name, as pc.project() and review_issue() look projects up
+    if not any(p.get("repo") and a.project.lower() == p.get("name", "").lower()
+               for p in conf.get("projects", {}).values()):
+        raise GateError(f"--review-package: project {a.project!r} (by name) has no repository in "
+                        "config/paperclip/agents.json")
+    try:
+        review_pack.check_task_description(desc)
+    except review_pack.ReviewPackError as e:
+        raise GateError(f"--review-package: {e}") from None
+
+
 def cmd_create(a):
     if a.status == "todo":
         raise GateError(f"create --status todo is not allowed: {START_ONLY_BY_RELEASE}. "
                         "Create it in backlog, then release it")
     c = company(a.company)
     desc = open(a.desc_file, encoding="utf-8").read() if a.desc_file else (a.desc or "")
+    review_package = getattr(a, "review_package", False)
+    if review_package:
+        check_review_package_create(a, desc)
     ag = agent(c["id"], a.assignee)
-    stages = [{"type": "review", "participants": [{"type": "agent", "agentId": agent(c["id"], r)["id"]}]} for r in a.review]
+    if review_package:
+        # Phase 6 W3 (QA option a): the review stage's participant is the Board identity the Verdict Relay
+        # records as; no agent review stage. Shape per Paperclip 2026.1023.0's issueExecutionStageSchema.
+        stages = [{"type": "review", "participants": [{"type": "user", "userId": BOARD_USER}]}]
+    else:
+        stages = [{"type": "review", "participants": [{"type": "agent", "agentId": agent(c["id"], r)["id"]}]}
+                  for r in a.review]
     if not a.no_approval:
         stages.append({"type": "approval", "participants": [{"type": "user", "userId": BOARD_USER}]})
     # Always backlog: an assigned backlog issue wakes nobody. The Board is not inside a run, so Paperclip does
@@ -748,11 +778,44 @@ def cmd_review_pack(a):
     def resolve(cid):
         return agent(cid, review_pack.REVIEWER_AGENT)["id"]
     return review_pack.cmd_review_pack(
-        a, reviewer_runs=lambda lock: review_relay.reviewer_run_state(call, lock, resolve), issue_lookup=issue)
+        a, reviewer_runs=lambda lock: review_relay.reviewer_run_state(call, lock, resolve), issue_lookup=issue,
+        issue_reader=review_issue)
+
+
+def review_issue(key):
+    """W1: the issue record and the repository its project is configured for in config/paperclip/agents.json
+    (None when the project is unknown there). Read-only."""
+    rec = issue(key)
+    repo = None
+    pid = rec.get("projectId") if isinstance(rec, dict) else None
+    if pid and rec.get("companyId"):
+        proj = next((p for p in call("GET", f"/companies/{rec['companyId']}/projects") if p.get("id") == pid), None)
+        if proj:
+            conf = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..",
+                                               "config", "paperclip", "agents.json"), encoding="utf-8"))
+            repo = next((p.get("repo") for p in conf.get("projects", {}).values()
+                         if p.get("name", "").lower() == str(proj.get("name", "")).lower()), None)
+    return {"issue": rec, "projectRepo": repo}
 
 
 def cmd_review_relay(a):
     review_relay.cmd_review_relay(a, call, lambda: agent(company(a.company)["id"], review_pack.REVIEWER_AGENT)["id"])
+
+
+def cmd_review_run(a):
+    """W4: resume code-reviewer, review-start, wait for the run, pause it again; or --check for a reviewer left
+    resumed. Roots as for review-pack (COMPANY_OS_REVIEW_ROOT / COMPANY_OS_STAGING_ROOT or the flags)."""
+    c = company(a.company)
+    rid = agent(c["id"], review_pack.REVIEWER_AGENT)["id"]
+    if a.check:
+        print(review_relay.review_run_check(call, c["id"], rid))
+        return 0
+    if not a.key or not review_pack.KEY_RE.match(a.key):
+        raise review_pack.ReviewPackError("give the staged issue key, or --check")
+    rr, sr = review_pack.resolve_roots(a.review_root, a.staging_root)
+    print(review_relay.review_run(rr, sr, a.key, call, c["id"], rid, a.identity, review_pack.utcnow(),
+                                  timeout=int(a.timeout_minutes * 60)))
+    return 0
 
 
 def cmd_review_start(a):
@@ -811,6 +874,9 @@ def main():
     s.add_argument("--desc-file")
     s.add_argument("--review", action="append", default=[], help="reviewer agent (repeatable, in order)")
     s.add_argument("--no-approval", action="store_true", help="skip the Board approval stage")
+    s.add_argument("--review-package", action="store_true",
+                   help="Phase 6 pilot: review stage for local-board (filled by review-relay) instead of an agent "
+                        "review; needs --project and a task-contract description")
     s.add_argument("--status", choices=["backlog", "todo"], default="backlog", help="todo is refused (use release)")
     s.set_defaults(fn=cmd_create)
     s = sub.add_parser("wake", help="wake an agent now (refused with --issue on a backlog issue)")
@@ -824,6 +890,7 @@ def main():
     review_pack.add_parser(sub).set_defaults(fn=cmd_review_pack)
     review_relay.add_parser(sub, cmd_review_relay)
     review_relay.add_start_parser(sub, cmd_review_start)
+    review_relay.add_run_parser(sub, cmd_review_run)
     a = p.parse_args()
     try:
         a.fn(a)

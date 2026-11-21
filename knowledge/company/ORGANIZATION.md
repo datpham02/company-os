@@ -27,6 +27,7 @@ Providers are those of the live company **Soucean** (`SOU`, imported 2026-11-05 
 | `project-manager` | Company | `producer` | [AGENTS.md](agents/project-manager/AGENTS.md) | `claude_local` | read-only |
 | `ui-designer` | Company (Game, Web) | `project-manager` | [AGENTS.md](agents/ui-designer/AGENTS.md) | `claude_local` | workspace-write |
 | `qa` (`qa-engineer` in Paperclip) | Company (Game, Web) | `project-manager` | [AGENTS.md](agents/qa/AGENTS.md) | `claude_local` | workspace-write |
+| `code-reviewer` | Company (Review Package pilot, `PROPOSED`) | Board Operator (no agent manages it) | [AGENTS.md](agents/code-reviewer/AGENTS.md) | `claude_local` | reviewer-strict (Read, Grep, Glob only; not in the live company until P6-B) |
 | `game-designer` | Game | `director` | [AGENTS.md](../departments/game/agents/game-designer/AGENTS.md) | `claude_local` | workspace-write |
 | `gameplay-programmer` | Game | `project-manager` | [AGENTS.md](../departments/game/agents/gameplay-programmer/AGENTS.md) | `cursor` | workspace-write |
 | `web-engineer` | Web | `project-manager` | [AGENTS.md](../departments/web/agents/web-engineer/AGENTS.md) | `cursor` | workspace-write (dev/test environments only, ADR-014) |

@@ -165,6 +165,18 @@ class FakePaperclip:
             if err is not None:
                 raise err
             return dict(self.sub)
+        if (method, path) == ("POST", f"/agents/{REVIEWER}/resume") and self.agent is not None:
+            self.agent["status"] = "idle"
+            return dict(self.agent)
+        if (method, path) == ("POST", f"/agents/{REVIEWER}/pause") and self.agent is not None:
+            if not getattr(self, "pause_ignored", False):
+                self.agent["status"] = "paused"
+            return dict(self.agent)
+        if (method, path) == ("GET", f"/companies/{COMPANY}/heartbeat-runs?agentId={REVIEWER}"):
+            return [{"id": r["runId"], "status": r["status"]} for r in self.runs]
+        if (method, path) == ("GET", f"/companies/{COMPANY}/issues?assigneeAgentId={REVIEWER}"
+                                     f"&status=todo,in_progress,in_review,blocked&limit=50"):
+            return [dict(i) for i in getattr(self, "assigned", [])]
         if (method, path) == ("POST", f"/agents/{REVIEWER}/wakeup?companyId={COMPANY}"):
             self.wakes.append(body)
             err, started = self.wake_error or (None, False)
@@ -225,7 +237,8 @@ class RelayEnv(Env):
         args += list(extra or [])
         ac = {"cwd": self.base, "engine": "cli", "model": "sonnet", "dangerouslySkipPermissions": False, "extraArgs": args}
         ac.update(ac_over)
-        return {"id": REVIEWER, "adapterType": "claude_local", "adapterConfig": ac}
+        return {"id": REVIEWER, "adapterType": "claude_local", "adapterConfig": ac,
+                "runtimeConfig": {"heartbeat": {"enabled": False, "maxConcurrentRuns": 1}}}
 
     def pin_review(self, started):
         """Fix the staging's reviewId and challenge (the real ones are random), rewrite REVIEW-ID.txt to match,
@@ -1201,6 +1214,122 @@ class CheckPhaseFailures(RelayEnv):
         self.assertTrue(last["reason"].startswith("review-start: "))
 
 
+class ReviewRun(RelayEnv):
+    """Phase 6 W4: resume, review-start, wait, pause, with the pause in finally and confirmed."""
+
+    def setUp(self):
+        super().setUp()
+        self.pin_review(started=False)
+        self.api = self.pc()
+        self.api.sub, self.api.runs = None, []
+        self.api.agent["status"] = "paused"
+        self.t = [0.0]
+        self.warnings = []
+
+    def run_review(self, key=KEY, on_sleep=None, timeout=60):
+        def sleep(s):
+            self.t[0] += s
+            if on_sleep:
+                on_sleep()
+        return rl.review_run(self.rr, self.sr, key, self.api, COMPANY, REVIEWER, rp.BOARD, NOW, sleep=sleep,
+                             clock=lambda: self.t[0], timeout=timeout, poll=10, warn=self.warnings.append)
+
+    def finish(self, status="succeeded"):
+        def go():
+            if self.api.runs:
+                self.api.runs[-1]["status"] = status
+        return go
+
+    def lifecycle(self):
+        return [p.rsplit("/", 1)[-1].split("?")[0] for m, p, _ in self.api.calls
+                if m == "POST" and p.startswith(f"/agents/{REVIEWER}/")]
+
+    def test_success(self):
+        out = self.run_review(on_sleep=self.finish())
+        self.assertIn(f"run {RUN} succeeded", out)
+        self.assertIn(f"next: pc.py review-relay {KEY} --run-id {RUN}", out)
+        self.assertTrue(out.endswith("code-reviewer paused"))
+        self.assertEqual(self.lifecycle(), ["resume", "wakeup", "pause"])
+        self.assertEqual(self.api.agent["status"], "paused")
+
+    def test_failed_run_names_the_fallback(self):
+        out = self.run_review(on_sleep=self.finish("failed"))
+        self.assertIn("the Board decides by hand", out)
+        self.assertNotIn("next: pc.py review-relay", out)
+        self.assertEqual(self.api.agent["status"], "paused")
+
+    def test_refused_unless_paused_and_idle(self):
+        self.api.agent["status"] = "idle"
+        with self.assertRaisesRegex(rp.ReviewPackError, "not paused"):
+            self.run_review()
+        self.api.agent["status"] = "paused"
+        self.api.runs = [{"runId": "r-other", "agentId": REVIEWER, "status": "running", "createdAt": rp.iso(LATER)}]
+        with self.assertRaisesRegex(rp.ReviewPackError, "active runs"):
+            self.run_review()
+        self.assertEqual(self.lifecycle(), [])  # never resumed
+
+    def test_start_failure_still_pauses(self):
+        with self.assertRaisesRegex(rp.ReviewPackError, "staging holds"):
+            self.run_review(key="SOU-99")
+        self.assertEqual(self.lifecycle(), ["resume", "pause"])
+        self.assertEqual(self.api.agent["status"], "paused")
+
+    def test_timeout_pauses_and_reports(self):
+        with self.assertRaisesRegex(rp.ReviewPackError, "still queued after 1 minutes"):
+            self.run_review(timeout=60)
+        self.assertEqual(self.lifecycle(), ["resume", "wakeup", "pause"])
+        self.assertEqual(self.api.agent["status"], "paused")
+
+    def test_ambiguous_start_is_not_repeated(self):
+        self.api.wake_error = (HttpError("timed out"), True)  # the wake reached Paperclip, the response was lost
+        with self.assertRaises(rp.ReviewPackError):
+            self.run_review()
+        self.assertEqual(len(self.api.wakes), 1)
+        self.assertEqual(self.api.agent["status"], "paused")
+
+    def test_pause_failure_is_raised_after_success(self):
+        self.api.fail[("POST", f"/agents/{REVIEWER}/pause")] = [http("POST", "p", 500)] * 3
+        with self.assertRaisesRegex(rl.ReviewerNotPaused, "could not be confirmed paused"):
+            self.run_review(on_sleep=self.finish())
+
+    def test_pause_not_taking_effect_is_raised(self):
+        self.api.pause_ignored = True
+        with self.assertRaisesRegex(rl.ReviewerNotPaused, "status is 'idle'"):
+            self.run_review(on_sleep=self.finish())
+
+    def test_pause_failure_during_an_error_warns_and_keeps_the_error(self):
+        self.api.fail[("POST", f"/agents/{REVIEWER}/pause")] = [http("POST", "p", 500)] * 3
+        with self.assertRaisesRegex(rp.ReviewPackError, "staging holds"):
+            self.run_review(key="SOU-99")
+        self.assertEqual(len(self.warnings), 1)
+        self.assertIn("left resumed", self.warnings[0])
+
+    def test_interrupt_while_waiting_pauses(self):
+        def interrupt():
+            raise KeyboardInterrupt
+        with self.assertRaises(KeyboardInterrupt):
+            self.run_review(on_sleep=interrupt)
+        self.assertEqual(self.api.agent["status"], "paused")
+
+    def test_open_assigned_issue_blocks_the_run(self):
+        """An earlier review's sub-issue still open could start a run the moment the reviewer is resumed."""
+        self.api.assigned = [{"identifier": "SOU-50", "assigneeAgentId": REVIEWER, "status": "in_progress"}]
+        with self.assertRaisesRegex(rp.ReviewPackError, r"open assigned issues \[\('SOU-50', 'in_progress'\)\]"):
+            self.run_review()
+        self.assertEqual(self.lifecycle(), [])  # never resumed
+        self.assertIn("must be closed or cancelled", rl.review_run_check(self.api, COMPANY, REVIEWER))
+        # an issue assigned to someone else in the answer is not counted (filter checked on our side too)
+        self.api.assigned = [{"identifier": "SOU-51", "assigneeAgentId": "other", "status": "in_progress"}]
+        self.assertNotIn("SOU-51", rl.review_run_check(self.api, COMPANY, REVIEWER))
+
+    def test_check(self):
+        self.assertIn("is paused with no active run", rl.review_run_check(self.api, COMPANY, REVIEWER))
+        self.api.agent["status"] = "idle"
+        self.assertIn("LEFT RESUMED", rl.review_run_check(self.api, COMPANY, REVIEWER))
+        self.api.runs = [{"runId": "r1", "agentId": REVIEWER, "status": "running", "createdAt": rp.iso(LATER)}]
+        self.assertIn("a review is running", rl.review_run_check(self.api, COMPANY, REVIEWER))
+
+
 class ReviewerConfig(RelayEnv):
     """P0 layers 1 and 2, checked by review-start before anything is created or woken."""
 
@@ -1243,6 +1372,27 @@ class ReviewerConfig(RelayEnv):
             with self.subTest(over=over):
                 self.write_settings(**over)
                 self.start_refused(self.reviewer_agent(), "defaultMode dontAsk")
+
+    def test_missing_strict_mcp_or_session_flags_refused(self):
+        """Phase 6 W2: --strict-mcp-config and --no-session-persistence are required, not optional."""
+        for flag in ("--strict-mcp-config", "--no-session-persistence"):
+            with self.subTest(flag=flag):
+                agent = self.reviewer_agent()
+                agent["adapterConfig"]["extraArgs"].remove(flag)
+                self.start_refused(agent, f"lack {flag}")
+
+    def test_heartbeat_or_concurrency_refused(self):
+        """Phase 6 W2: heartbeat off and one run at a time; a missing runtime config is refused, not assumed."""
+        cases = (({"heartbeat": {"enabled": True, "maxConcurrentRuns": 1}}, "heartbeat disabled"),
+                 ({"heartbeat": {"maxConcurrentRuns": 1}}, "heartbeat disabled"),
+                 ({"heartbeat": {"enabled": False, "maxConcurrentRuns": 2}}, "maxConcurrentRuns 1"),
+                 ({}, "heartbeat disabled"),
+                 (None, "heartbeat disabled"))
+        for runtime, fragment in cases:
+            with self.subTest(runtime=runtime):
+                agent = self.reviewer_agent()
+                agent["runtimeConfig"] = runtime
+                self.start_refused(agent, fragment)
 
     def test_unreadable_settings_refused(self):
         os.remove(self.settings_path)

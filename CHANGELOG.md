@@ -5,6 +5,13 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
+- OQ-042 Phase 6, P6-A (W1–W5; implementation only, nothing done in Soucean or Paperclip):
+  - **W1:** `review-pack` through `pc.py` reads the issue and the task from Paperclip. It requires `in_review`, the right identity, and a project configured for the repository. Goal = title; acceptance criteria and write set only from exactly one `## Acceptance criteria` and one `## Write set` plain list (task-contract §2). Anything missing, ambiguous or not a list is refused, never inferred. No state or task file through `pc.py`; `--task-file` is refused there.
+  - **W2:** reviewer profile and role. Profile `claude-reviewer-strict` and role `code-reviewer`; `config/paperclip/reviewer-settings.json`. `build-package.py --with-reviewer --staging-root --reviewer-cwd` builds it only on request and refuses a configuration that fails `check_reviewer_config`. That check now also requires `--strict-mcp-config`, `--no-session-persistence`, heartbeat off and `maxConcurrentRuns` 1. `post-import.py --resume` never resumes the reviewer.
+  - **W3:** `pc.py create --review-package`: a `review` stage then an `approval` stage, both for `local-board`. Refuses `--review` (QA option a), a project without a configured repository, and a description without the task-contract sections.
+  - **W4:** `pc.py review-run <KEY>` resumes the reviewer, runs `review-start`, waits for the run, and pauses it in `finally`, confirming the pause. It is refused while the reviewer has an active run or an open assigned issue (an earlier review's sub-issue could otherwise start a run on resume). `review-run --check` finds a reviewer left resumed.
+  - **W5:** `docs/operations/review-package-runbook.md`; pilot variant in the `code-review-and-merge` and `development-cycle` workflows; SKILL.md; open questions OQ-044 (two consecutive `local-board` stages) and OQ-045 (adding one agent to the running company).
+  - Offline tests: `test_review_github` (W1), `test_pc` (W1, W3, W4), `test_review_relay` (W2 checks, W4), `scripts/setup/test_build_package.py` and `test_post_import.py` (W2). Live behaviour is not verified (P6-B to P6-D).
 - OQ-042 Phase 6 production proposal (`docs/design/review-package-phase6-proposal.md`, `PROPOSED`, authorizes nothing):
   - a strict `code-reviewer` agent in Soucean, profile `claude-reviewer-strict` (as validated in R1, P0 and R5), paused between reviews, no secrets;
   - a pilot on `soucean-game` for five Tasks with a `review` stage for `local-board` filled by the relay;

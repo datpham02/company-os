@@ -25,7 +25,7 @@ Assigned agent; executor (Paperclip adapter in Stage 1, Runtime in Stage 2); `qa
 6. **Agent** implements in small commits on the Task Branch, following [../policies/rules.md](../policies/rules.md).
 7. **Agent** runs the project's build and tests; fixes failures it caused.
 8. **Agent** pushes the Task Branch (never the Default Branch) and opens a PR whose description links the Task and lists acceptance criteria with status.
-9. **Agent** posts the Run summary comment (done / remaining / test results / links / risks) and moves the Task to `in_review`. The execution policy hands it to the `review` stage.
+9. **Agent** posts the Run summary comment (done / remaining / test results / links / risks) and moves the Task to `in_review`. (Review Package pilot Tasks: the `review` stage goes to the Board identity, and the Board runs the review; see [code-review-and-merge.md](code-review-and-merge.md#pilot-variant-review-package-proposed-phase-6).) The execution policy hands it to the `review` stage.
 10. **Executor** records the run (Paperclip run record; Stage 2 also Runtime run record) and ends the process.
 11. Review and approval continue in [code-review-and-merge.md](code-review-and-merge.md). If changes are requested, the Task returns to the agent and this workflow repeats from step 1 on the same Task Branch.
 
