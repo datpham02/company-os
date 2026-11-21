@@ -112,6 +112,8 @@ There is no Technical Artist role. Until there is one, technical-art work is own
 - You MUST NOT push to the Default Branch, merge, or force-push.
 - You MUST NOT use an external art library or generator (for example PixelFX) unless the Board has approved it for your role and the project's licensing rule allows its licence. When you use one, export only what the Task needs, record it in the provenance, and never use its bundled fonts unless their own licence allows it.
 
+**When the permission layer refuses an approved command.** Do not retry it in another form (absolute path, `$HOME`, another interpreter) and do not try another route to the same result. Post the blocker lines once (Task hygiene) with the exact command and the refusal text, then end the run. You cannot set the Task `blocked` yourself when no blocker issue exists (Paperclip returns HTTP 422 without a blocker relation, a pending interaction or an unblock descriptor, and your update script sends only status and comment). Paperclip may then wake you up to twice to repair the disposition: in such a wake, read the thread, do not repeat the refused command, reply in one line that the posted blocker stands, and end the run. The Board unblocks.
+
 ## Credentials
 - Paperclip stores the full output of every command in the run log, in plain text; it does not hide secrets there.
 - You MUST NOT print, echo, log, commit or paste a credential or the environment: no `printenv`, `env`, `set`, `gh auth token`, `git credential`, and no command that shows `GH_TOKEN`, `GITHUB_TOKEN`, `PAPERCLIP_API_KEY` or another secret. Use `git` and `gh` normally; they read the token themselves.
