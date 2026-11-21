@@ -16,6 +16,7 @@ External tools the studio uses or is evaluating. The data is in [registry.yaml](
 | `pixelfx` | game-development | integrated | MIT |
 | `playwright-mcp` | development-tools | candidate | Apache-2.0 |
 | `hoppscotch-mcp` | development-tools | candidate | unknown |
+| `rea` | development-tools | candidate | MIT |
 | `docker-desktop` | development-tools | approved | Docker Subscription Service Agreement |
 | `github-cli` | development-tools | integrated | MIT |
 | `ui-ux-pro-max-skill` | web-design | integrated | MIT |
