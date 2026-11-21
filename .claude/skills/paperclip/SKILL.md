@@ -98,6 +98,14 @@ Code: `scripts/review_github.py`; tests: `scripts/test_review_github.py` (an in-
   - The Board creates and stores it; the skill never asks for it in chat.
 - **Repository:** `--github-repo` must also be an `--allow-repo`.
 
+## Board-pre-approved auto-release (ADR-023)
+
+When the Board approves a batch of Tasks at once (for example a milestone plan), it can pre-approve their start. Make the **first line** of each Task's description:
+`Auto-release: approved by the Board <date> (<reason>)`.
+Add it only on the Board's word in chat. When editing a description, read it from `GET /issues/{id}`, because the issue list truncates descriptions.
+
+The studio watchdog then runs `pc.py release <KEY>` for each marked backlog Task whose blockers are all `done`, so every guard below still applies. It also shows a Windows toast when any issue waits on the Board's review or approval. Remove the marker line to take a Task back to manual release.
+
 ## Start gate: only `release` starts a task
 
 Creating or assigning a task never starts it; only `release` does, after its hard guards. Safe sequence: `create` (backlog, assignee set, nobody woken) → check its description (Write Set, criteria) and stages with `show --description` → `release`. Paperclip 2026.1023.0 wakes an agent when an issue is created or reassigned outside `backlog`, when it leaves `backlog`, and on any comment by someone other than the assignee (unless done or cancelled). So `create` and `assign` keep or put the issue in `backlog`, and `comment` and `wake --issue` refuse an unreleased issue. `--force` does not apply to these refusals.

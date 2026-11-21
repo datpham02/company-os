@@ -35,5 +35,6 @@ ADRs are the highest authority in the documentation hierarchy ([../conventions.m
 | [ADR-020](ADR-020-game-platform-contract.md) | Game platform contract, version 1 (amends ADR-014 §3) | Accepted |
 | [ADR-021](ADR-021-laravel-mysql-backend.md) | Laravel + MySQL backend, no Supabase; Reverb for real-time; local Docker stack; hosting pending (Vietnix candidate) | Accepted |
 | [ADR-022](ADR-022-author-pull-request-credential.md) | Author pull requests: Board-side PR creation in Review Package sandboxes, one shared, scoped fine-grained `GH_TOKEN` for production code-writing agents | Accepted |
+| [ADR-023](ADR-023-watchdog-board-queue-and-auto-release.md) | Watchdog Board-queue toasts, and auto-release of Board-pre-approved (marked) backlog Tasks through `pc.py release` | Accepted |
 
 ADR-001 to ADR-010 record decisions the Board Operator approved before this documentation was written (the "approved architecture decisions" of the v1 brief). ADR-011 and ADR-012 come from the 2026-11-03 research findings and were accepted the same day after the Phase 0 experiments.
