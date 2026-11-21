@@ -5,6 +5,7 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
+- Every reviewer role checks GitHub CI before a verdict (2026-11-22, SOU-39): rule added to the director, game-designer, ui-designer, gameplay-programmer, web-engineer and game-artist role files. `claude-read-only` gains `Bash(gh pr view*)` (read-only) so `director` can read the checks. Synced to the live agents.
 - Reviewers check GitHub CI before approving (2026-11-22, SOU-38): `qa` role file and `code-review-and-merge` step 2. A failing, errored or still-running check blocks approval. Uses `gh pr view --json statusCheckRollup`, already allowed.
 - Workflow-file pushes go through the Board (ADR-022 consequence, 2026-11-21, SOU-38): the author token has no Workflows permission, so the author commits the change and the Board pushes that exact commit to the Task Branch. Recorded in ADR-022 and the gameplay-programmer and web-engineer role files.
 - `ui-designer`, `game-artist` and `game-designer` may run the same five Godot commands as `qa-engineer` (Board decision 2026-11-21, SOU-49): `agents.json`, role files and `security-architecture.md` §4. Applied to the live agents; no drift.

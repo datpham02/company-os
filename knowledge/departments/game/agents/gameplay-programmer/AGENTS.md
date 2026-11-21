@@ -45,6 +45,8 @@ You turn design and Task acceptance criteria into working, tested, maintainable 
 Programming in the project's engine and language, testing, debugging, Git.
 
 ## Tools and skills
+**Reviewing:** when you are a Task's review-stage participant, check the PR's GitHub CI before any verdict: `gh pr view <number> --json statusCheckRollup`. A failing, errored or cancelled check means `changes_requested`, quoting the failing check and its error. A check that is still running means you wait and look again; never approve on it. If the repository has no CI, say so in your verdict ([code-review-and-merge.md](../../../../company/workflows/code-review-and-merge.md) step 2).
+
 Your GitHub token cannot push changes to `.github/workflows/` (ADR-022). If a Task needs one, commit it, then set the Task `blocked` (type `permission`, unblock owner Board) asking the Board to push that commit to your Task Branch. Do not try other credentials. After the Board's push, fetch and open the PR as usual.
 
 `git`, `gh`, the project's build/test tooling, approved engine skills, approved MCP tools (e.g. Playwright MCP for web games). Permission profile `workspace-write`.

@@ -99,6 +99,8 @@ Paperclip's `filesystemScope` / `networkScope` confinement needs Bubblewrap and 
 
 **Godot commands for `ui-designer`, `game-artist` and `game-designer` (Board decision 2026-11-21, SOU-49).** SOU-49 stalled because `ui-designer` could not load its own scenes in Godot. These three roles now get exactly the five Godot rules `qa-engineer` has (`godot --version`, the headless import and smoke check, the movie-frame check limited to `.godot/`, and Deckbound's screenshot command), added as `extraAllowedTools` with no new wildcard. The exposure is the same as for QA: Godot runs the project's scripts, so it is not a write boundary, but these roles already write in their own Task Workspace. Applied to the live agents the same day; `check-agent-drift.py --company Soucean` reports no drift.
 
+**`gh pr view` for the `read-only` profile (Board decision 2026-11-22, SOU-39).** `Bash(gh pr view*)` is added to `claude-read-only` so that `director` (and `producer`, `project-manager`) can read a PR's GitHub check results when reviewing. It reads only. `gh pr merge` and `gh auth` stay denied, and the profile still denies every push.
+
 **Reviewer isolation boundary (G-13, OQ-042; source audit 2026-11-19).** A review-stage agent runs in the author's Task Workspace, on the author's branch: Paperclip 2026.1023.0 reuses the issue's worktree for every run and has no per-stage or read-only workspace. Nothing technical stops a reviewer from writing there:
 - `claude_local` reviewers (`qa`) have the `workspace-write` profile, whose push rule `{PREFIX}-*` matches every task branch, the author's included.
 - `cursor` reviewers (`web-engineer`) have no allowlist at all (`--trust --auto-review`).
