@@ -1,7 +1,7 @@
 # Review Package Phase 4a: Verdict Relay (offline)
 
 - **Status:** Phase 4a (this record) is the offline implementation: code and tests against a fake Paperclip. The live validation is **Phase 4b**, run on 2026-11-21 on the live instance in a throwaway company, recorded separately in [review-package-phase4b-live.md](review-package-phase4b-live.md). §4 says what 4a left open and where 4b answered it.
-- **Phase definition:** [review-package.md](review-package.md) §11, Phase 4 "Paperclip sandbox and relay API"; relay design §3.
+- **Phase definition:** [review-package.md](review-package.md) §11, Phase 4 "Paperclip validation and relay API" (named "Paperclip sandbox and relay API" when 4a was written); relay design §3.
 - **Why split:** Phase 4 needed a Paperclip instance and a real `code-reviewer` agent run. Agent runs and Paperclip experiments need their own Board approval (§3.1 sandbox rules, D-AUTH-12). So the relay was written and tested first against a fake Paperclip (4a); the live validation followed with the Board's approval (4b; the Board chose the live instance with a throwaway company over a separate sandbox).
 - **Code:**
   - `.claude/skills/paperclip/scripts/review_relay.py` (new);
