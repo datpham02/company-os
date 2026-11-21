@@ -53,7 +53,7 @@ No `ask`, no `additionalDirectories`.
 ## 3. Observations
 
 - **At inventory time no reviewer had the P0 profile.** `--disallowedTools mcp__*` was missing from `extraArgs`, and `mcp__*` from the settings' `deny` list. Both were added in Phase C (2026-11-21, 04:06 UTC). Details in [the validation results](review-package-r1-validation-results.md).
-- **`canCreateSkills: true`** is Paperclip's default agent permission. The reviewer has no tool to use it (no MCP, no shell, no network), and the R1 validator does not check it. Recorded for R2; not changed.
+- **`canCreateSkills: true`** is Paperclip's default agent permission. The reviewer has no exposed tool to use it (MCP tools are denied, and shell and web tools are unavailable; this is a Claude Code tool boundary, not OS-level network isolation), and the R1 validator does not check it. Recorded for R2; not changed.
 - **Soucean has no `code-reviewer`.** Nothing to synchronize there; production use is Phase 6.
 - The private test folders (`pc-rp4`, `pc-rp5`, `pc-rp6`) and their settings files still exist.
 
