@@ -29,10 +29,11 @@ Design, build and ship original games of any genre the Board approves, with ever
 ## Workflows
 - Company workflows apply to every game Task ([index](../../company/workflows/README.md)).
 - [new-game-concept.md](workflows/new-game-concept.md): the game part of creating a project.
-- [asset-production.md](workflows/asset-production.md): asset request, art, integration, QA and approval (`PROPOSED`).
+- [asset-production.md](workflows/asset-production.md): asset request, research, exploration, critique and refinement, integration, QA and approval, with complexity lanes (`PROPOSED`, v2 2026-11-22).
 
 ## Domain knowledge
 - [game-rules.md](domain/game-rules.md): originality, design authority, default hotspot files, review gates, art assets and the interim technical-art split.
+- [domain/art/](domain/art/README.md): art complexity lanes, visual procedures, quality rubric, asset Task and handoff templates, and the map of how each role receives them (`PROPOSED`).
 
 ## Review gates
 | Work | Reviewer | Board |

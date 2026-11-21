@@ -28,7 +28,7 @@ PR URL; Task acceptance criteria; Run summary with test results.
 7. Task Workspace cleanup happens per the workspace owner's rules ([runtime-architecture.md §6](../../../docs/architecture/runtime-architecture.md#6-workspace-manager)).
 
 ## Game asset Tasks
-Asset and asset-integration PRs follow the same steps. `qa` checks the asset against the Task's acceptance criteria and the artist's self-check, and routes findings by owner: the look of the asset → `game-artist`; engine-side behaviour, import, shaders, performance → `gameplay-programmer`; an unclear requirement → `game-designer` ([asset-production.md](../../departments/game/workflows/asset-production.md) step 8). `qa`'s role file does not carry this routing, so whoever writes the Task puts it in the description. The creator's self-check never replaces the review.
+Asset and asset-integration PRs follow the same steps. `qa` checks the asset against the Task's acceptance criteria and the artist's self-check, and routes findings by owner: the look of the asset → `game-artist`; engine-side behaviour, import, shaders, performance → `gameplay-programmer`; an unclear requirement → `game-designer` ([asset-production.md](../../departments/game/workflows/asset-production.md) step 9; rubric and finding format: [quality-rubric.md](../../departments/game/domain/art/quality-rubric.md)). `qa`'s role file does not carry this routing, so whoever writes the Task puts it in the description. The creator's self-check never replaces the review.
 
 ## Pilot variant: Review Package (`PROPOSED`, Phase 6)
 For code Tasks of `soucean-game` created with `pc.py create --review-package` (the first five, once the Board approves P6-B and P6-C), steps 1 to 3 change:

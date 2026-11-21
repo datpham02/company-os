@@ -19,9 +19,21 @@ How to operate execution day to day. In **Stage 1** "the runtime" is Paperclip p
 
 Execution workspaces persist "until a human closes them" (`VERIFIED`). Close a workspace only after its Task is `done`/`cancelled` and its branch is merged or abandoned.
 
-### 1.0 ComfyUI draft script (D1, 2026-11-22)
+### 1.0 ComfyUI draft script and art-ops (D1, 2026-11-22)
 
-`runtime/tools/comfy-draft.py` generates concept drafts with the local ComfyUI (`~/game-studio-workspace/tools/ComfyUI_windows_portable`, cu126 build for driver 572.83). `game-artist` runs the installed copy, so after changing the script run `Copy-Item runtime/tools/comfy-draft.py "$HOME/game-studio-workspace/tools/comfy-draft.py"`. Output goes to `~/game-studio-workspace/staging/art/<asset_id>/`. Test: `python -I runtime/tools/comfy-draft.py --asset smoke_test --model flux --prompt "..." --seed 7` (about 30 s on the RTX 3060).
+`runtime/tools/comfy-draft.py` generates concept drafts with the local ComfyUI (`~/game-studio-workspace/tools/ComfyUI_windows_portable`, cu126 build for driver 572.83). `game-artist` runs the installed copy, so after changing the script run `Copy-Item runtime/tools/comfy-draft.py "$HOME/game-studio-workspace/tools/comfy-draft.py"`. Output goes to `~/game-studio-workspace/staging/art/<asset_id>/`. `runtime/tools/art-ops.py` (crop, resize, colour-key, trim, canvas, sprite sheet, grade, contact sheet) is copied the same way to `$HOME/game-studio-workspace/tools/art-ops.py`; it uses ComfyUI's embedded Python (Pillow, NumPy). Test: `python -I runtime/tools/comfy-draft.py --asset smoke_test --model flux --prompt "..." --seed 7` (about 30 s on the RTX 3060).
+
+**Release gates for the Art Production v2 pilot (Board, after merging a change to these tools, `agents.json` or the art role files).** These are gates, not suggestions: **no pilot Task is released (`pc.py release`, or an `Auto-release` line) until G1–G6 and G7(a) have passed in order; then exactly one pilot Task is released for G7(b), and the rest only after G7(b) passes**, and their output is recorded in one Board comment on the pilot planning issue. A failed gate stops the sequence; fix it and restart from that gate.
+
+| Gate | Command or action | Pass condition |
+|---|---|---|
+| G1 Tests | `& "$HOME/game-studio-workspace/tools/ComfyUI_windows_portable/python_embeded/python.exe" -I -s runtime/tools/test_art_ops.py` in the merged checkout | `OK`, no failures (skips listed) |
+| G2 Dependency registration | Entries in [dependencies/registry.yaml](../../dependencies/registry.yaml) for every external tool the pilot uses, through [add-external-dependency.md](../../knowledge/company/workflows/add-external-dependency.md): ComfyUI (portable build), its embedded Python with Pillow and NumPy, the checkpoints `sd_xl_base_1.0` and `flux1-schnell-fp8`, PixelFX (exists). Versions and licences read from the installed copies, not guessed. Then `python -I scripts/maintenance/validate-registries.py` and `check-dependencies.py` | Every tool has an entry with status `approved` or `integrated`; 0 registry findings. **Open today** (OQ-049) |
+| G3 Runtime installation | `Copy-Item runtime/tools/art-ops.py "$HOME/game-studio-workspace/tools/art-ops.py"` and the same for `comfy-draft.py` | Copies in place |
+| G4 Installed-tool hashes | `Get-FileHash` (SHA256) of each repository file and its installed copy | Identical for both tools; the hashes are recorded in the gate comment |
+| G5 Permissions | `python -I scripts/setup/check-agent-drift.py --company Soucean` | No `adapterConfig` drift for `game-artist`, `ui-designer`, `gameplay-programmer`, `qa-engineer`. Drift is fixed by the Board to match `agents.json` exactly (UI or `paperclipai agent update`, [company-bootstrap.md](company-bootstrap.md) §5); never widened beyond it |
+| G6 Instructions and read-back | `sync-instructions.py --company Soucean --dry-run` (only the PR's role files `would update`), then without `--dry-run`, then `--dry-run` again, then `check-agent-drift.py` | Read-back: every role `current`; drift check reports none |
+| G7 Live pilot validation | (a) Smoke run of the installed copy from a scratch folder with `.git`: `info`, `resize --filter nearest` into `art_src/`, `contact --bg …`, one refused path (`..\x.png`); outputs opened with Read. (b) The first pilot Task (L0 or L1, written by the Board from the template) runs end to end | (a) as expected. (b) The plan comment names a lane; evidence is where the Task's evidence rule says; `qa` opens it and records a verdict with the rubric; the Board can read every evidence path. Only then are further pilot Tasks released |
 
 ### 1.1 Review-wake watchdog (`IMPLEMENTED`, 2026-11-04)
 

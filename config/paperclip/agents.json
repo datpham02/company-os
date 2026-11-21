@@ -292,7 +292,8 @@
         "Bash(godot --headless --path . --quit)",
         "Bash(godot --path . --write-movie .godot/* --quit-after *)",
         "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)",
-        "Bash(python -I \"$HOME/game-studio-workspace/tools/comfy-draft.py\"*)"
+        "Bash(python -I \"$HOME/game-studio-workspace/tools/comfy-draft.py\"*)",
+        "Bash(python -I \"$HOME/game-studio-workspace/tools/art-ops.py\"*)"
       ],
       "runtime": {
         "heartbeat": {
