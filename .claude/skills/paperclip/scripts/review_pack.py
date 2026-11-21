@@ -1152,6 +1152,8 @@ def _run(a, rr, sr, now):
     head = os.path.basename(pkg)
     result = stage(rr, sr, key, head, pkg, now)
     print(f"{key}: package {how} ({head[:12]}), {result} at {os.path.join(sr, 'current')}")
-    print(f"next, if the Board decides to start the review: python -I .claude/skills/paperclip/scripts/pc.py "
-          f"wake {REVIEWER_AGENT} --issue {key}")
+    print("next, if the Board decides to start the review (not run automatically):")
+    print(f"  python -I .claude/skills/paperclip/scripts/pc.py wake {REVIEWER_AGENT} "
+          f"--reason \"Review the staged package for {key} at head {head[:12]}\"")
+    print("note: wake the reviewer without --issue; Paperclip cancels an issue run of a non-assignee agent")
     return 0

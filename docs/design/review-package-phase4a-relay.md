@@ -1,12 +1,12 @@
 # Review Package Phase 4a: Verdict Relay (offline)
 
-- **Status:** code and offline tests done. **Not run against any Paperclip instance.** The sandbox part (4b: V1–V3) waits for Board decisions (§4).
-- **Phase definition:** [review-package.md](review-package.md) §11, Phase 4 "Paperclip sandbox and relay API"; relay design §3.
-- **Why split:** Phase 4 needs a separate Paperclip instance and a real `code-reviewer` agent run. Agent runs and Paperclip experiments need their own Board approval (§3.1 sandbox rules, D-AUTH-12). So the relay is written and tested first against a fake Paperclip (4a); the sandbox validation comes after approval (4b).
+- **Status:** Phase 4a (this record) is the offline implementation: code and tests against a fake Paperclip. The live validation is **Phase 4b**, run on 2026-11-21 on the live instance in a throwaway company, recorded separately in [review-package-phase4b-live.md](review-package-phase4b-live.md). §4 says what 4a left open and where 4b answered it.
+- **Phase definition:** [review-package.md](review-package.md) §11, Phase 4 "Paperclip validation and relay API" (named "Paperclip sandbox and relay API" when 4a was written); relay design §3.
+- **Why split:** Phase 4 needed a Paperclip instance and a real `code-reviewer` agent run. Agent runs and Paperclip experiments need their own Board approval (§3.1 sandbox rules, D-AUTH-12). So the relay was written and tested first against a fake Paperclip (4a); the live validation followed with the Board's approval (4b; the Board chose the live instance with a throwaway company over a separate sandbox).
 - **Code:**
   - `.claude/skills/paperclip/scripts/review_relay.py` (new);
   - `pc.py`: the `review-relay` command.
-- **Tests:** `test_review_relay.py`, 55 tests against an in-memory fake Paperclip and a fake PR head. `test_pc.py` runs them with the other 178 (233 OK with `-W error`).
+- **Tests:** `test_review_relay.py`, 55 tests against an in-memory fake Paperclip and a fake PR head at the end of 4a (233 in `test_pc.py`). Phase 4b added the company-scoped run tests (§2, check 2).
 - **G-13 stays open.** Nothing here shows reviewer isolation inside Paperclip.
 
 ## 1. Command
@@ -27,7 +27,7 @@ Every failed check stops the relay with a reason. Nothing is written to Papercli
 | Check | Implementation | Tests |
 |---|---|---|
 | 1 Issue and participant | `in_review`, and `executionState.currentParticipant` is `user` with `userId` = the relay identity | `Check1IssueAndParticipant` |
-| 2 Run | The run is in `GET /issues/<id>/runs`, its `agentId` is `code-reviewer`, its status is `succeeded`, it was created at or after `stagedAt`; and the lock's `runId`, if set, matches | `Check2Run` |
+| 2 Run | The run is in `GET /issues/<id>/runs`, or (added in 4b) a company-scoped run read with `GET /heartbeat-runs/<id>` whose `companyId` is the issue's and whose `issueId` is empty or this issue. In both cases its `agentId` is `code-reviewer`, its status is `succeeded`, it was created at or after `stagedAt`, and the lock's `runId`, if set, matches. For what this does and does not establish, see the `_company_run` docstring and [review-package.md](review-package.md) §3.4 | `Check2Run`, `Check2CompanyScopedRun` |
 | 3 Staging | The lock names `<KEY>`; the staged copy and the store copy both verify against the lock's manifest SHA-256; the manifest head equals the lock head | `Check3Staging` |
 | 4 PR head | GitHub's current PR head equals the lock head | `Check4Head`, `GitHubHead` |
 | 5 Verdict | From the run log: the last stream-json `result` event is the final message. It must hold exactly one fenced `json` block, at the end. Schema `review-verdict@1`; `issue` and `headSha` equal the lock; each finding has a manifest path, `side` head or base, a severity, a title, and a line inside that file at that side (counted in the package); `changes_requested` needs a finding | `Check5Verdict` |
@@ -43,20 +43,17 @@ Every failed check stops the relay with a reason. Nothing is written to Papercli
 - **Transient errors** (network, 5xx): 3 attempts, backoff 1 s and 2 s. After a failed comment `POST`, the comments are read again before a retry, so a comment the server stored despite the error is not posted twice.
 - **Refusal** (4xx, for example 422 "Only the active reviewer…"): no retry. The comment stays, the audit log gets `relay-refused`, and the message names the fallback: `pc.py approve <KEY>` or `pc.py request-changes <KEY>`.
 
-## 4. Not covered offline (Phase 4b, needs the Board)
+## 4. Not covered offline, and what Phase 4b found
 
-The fake Paperclip follows the shapes recorded in §3.2 and in `pc.py`. These remain unverified:
-- **V1:** whether a review stage can name a user (the Board Operator or a relay user) while `code-reviewer` is woken without being a participant, and whether Paperclip then accepts the relay's `PATCH`.
-- **V2:** whether a `code-reviewer` woken for an issue it is not assigned to runs normally, and in which cwd.
-- **V3:** whether an agent's process reaches Board endpoints in `local_trusted` mode.
-- The real run log format of a `claude_local` reviewer run (the stream-json `result` event inside `chunk` records), and the exact 422 text.
+The fake Paperclip follows the shapes recorded in design §3.2 and in `pc.py`. The offline tests could not answer these; Phase 4b ([review-package-phase4b-live.md](review-package-phase4b-live.md)) did, except V3:
+- **V1** (user stage participant, relay `PATCH` accepted): **yes**, for one `changes_requested` decision.
+- **V2** (a `code-reviewer` woken for an issue it is not assigned to): **no**, Paperclip cancels that run. The reviewer is woken without an issue, and check 2 was extended for that run (§2).
+- **V3** (agent processes reaching Board endpoints): **not tested**. G-14 stays open.
+- Run log format: the real `claude_local` log matched the shape assumed here (stream-json `result` event inside `chunk` records). The exact 422 refusal text was not seen live.
 
-**Board decisions needed before 4b:**
-1. Start a separate sandbox Paperclip instance (separate data folder and port, no production secrets, live Paperclip stopped during HTTP experiments, per the §3.1 sandbox rules).
-2. Create a `code-reviewer` agent there with the Phase 2 strict profile (`--restricted --tools Read,Grep,Glob`) and run it on one sandbox issue. This is an agent run, which D-AUTH-12 says needs its own authorization.
-3. Which GitHub source the sandbox review uses: `datpham02/soucean-game` PR #27 again (read-only, the stored token), or another PR.
+The Board decided before 4b: the live instance with a throwaway company instead of a separate sandbox, a `code-reviewer` agent with the Phase 2 strict profile, and `datpham02/soucean-game` PR #27 as the source.
 
 ## 5. Acceptance against §12
 
-- "The relay accepts only a verdict that passes §3.4. A re-run never duplicates a comment or decision. A refusal leaves the human fallback": **met offline**, not yet in a sandbox.
+- "The relay accepts only a verdict that passes §3.4. A re-run never duplicates a comment or decision. A refusal leaves the human fallback": **met offline** in 4a. Phase 4b observed it live for one refusal (check 5), one recorded decision and two duplicate attempts; the 4xx fallback path was not triggered live.
 - No other §12 item changes.

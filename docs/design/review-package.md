@@ -40,10 +40,10 @@ Hard constraints:
    │ ⑤ stage (copy, verify) under the staging lock (§7)
    ▼
  [T] Reviewer Staging  <Staging Root>/current/   (one review at a time)
-   │ ⑥ Board wakes the reviewer for <KEY> (pc.py wake, manual)
+   │ ⑥ Board wakes the reviewer without an issue; the wake reason names <KEY> (pc.py wake, manual)
    ▼
  [U] code-reviewer run: claude --print, Read/Grep/Glob only,
-     --add-dir <Staging Root>/current  (cwd: the author's worktree; Paperclip decides this)
+     --add-dir <Staging Root>/current  (cwd: the agent's configured cwd; company-scoped run, §3.3)
    │ ⑦ final message ends with a JSON verdict
    ▼
  [T] Verdict Relay (pc.py review-relay <KEY> <run-id>, manual)
@@ -61,7 +61,7 @@ Hard constraints:
 |---|---|---|---|---|
 | Review Packager (`pc.py review-pack`) | T | GitHub API (PR, files, blobs) | `<Review Root>/store`, the audit log | Packager token (§6) |
 | Stager (part of `review-pack`) | T | the store, Paperclip run status | `<Staging Root>/current`, the staging lock | Board API session |
-| `code-reviewer` | U | `<Staging Root>/current`; the author's worktree is also readable (its cwd, §9) | nothing | none |
+| `code-reviewer` | U | `<Staging Root>/current`; also its own `cwd`, the agent's configured folder for a company-scoped run (§3.3, §9) | nothing | none |
 | Verdict Relay (`pc.py review-relay`) | T | the Paperclip run, its log, the issue, the staged manifest | an issue comment; the decision only as the active stage participant (§3.3); the audit log | Board API session (not exclusive, V3) |
 
 ## 2. Approved decisions
@@ -99,24 +99,25 @@ Schema rules:
 
 ### 3.2 Paperclip API use
 
-Every endpoint below is already used by `pc.py`. Whether the decision step works for this setup is **unverified**.
+Every endpoint below is already used by `pc.py`. Phase 4b recorded a `changes_requested` decision through this path as `local-board` (§13 V1); `done` was not exercised live.
 
 | Step | Call | Purpose |
 |---|---|---|
 | Issue | `GET /api/issues/<KEY>` | `id`, `status`, `executionState` (current stage, participant) |
-| Runs | `GET /api/issues/<id>/runs` | the run exists on this issue, with its `agentId`, `status` and `createdAt` |
+| Runs | `GET /api/issues/<id>/runs`, else `GET /api/heartbeat-runs/<run-id>` | the run, with its `agentId`, `status` and `createdAt`. The reviewer's run is company-scoped (§3.3), so it is normally not in the issue's runs and is read by id |
 | Run output | `GET /api/heartbeat-runs/<run-id>/log` | the final message, to extract the verdict |
 | Findings | `POST /api/issues/<id>/comments` | the findings as a Board comment, with a relay receipt marker |
 | Decision | `PATCH /api/issues/<id>` with `status` and `comment` | approve (`done`) or request changes (`in_progress`), as `pc.py approve` / `request-changes` do today |
 
-### 3.3 Authority: the main open point
+### 3.3 Authority and the reviewer wake
 
 The installed Paperclip 2026.1023.0 refuses a stage decision from anyone but the current participant (`issue-execution-policy.js`: "Only the active reviewer or approver can advance the current execution stage"). So a relay acting as the Board **cannot** record a decision for a review stage whose participant is the `code-reviewer` agent. Using the agent's own key would break R2.
 
 The design therefore proposes:
-- **Relay identity is the stage participant.** The Task's review stage names the Board Operator user, or a dedicated relay user if Paperclip offers one, as participant. `code-reviewer` is not a stage participant; it is woken for the issue by hand and gives advice.
+- **Relay identity is the stage participant.** The Task's review stage names the Board Operator user, or a dedicated relay user if Paperclip offers one, as participant. `code-reviewer` is not a stage participant and gives advice only. Confirmed live in Phase 4b (V1): a user participant works, and the relay recorded the decision as `local-board`.
 - The relay records the decision as that user, and only while that user is the active participant (§3.4, check 1).
-- Whether an agent woken for an issue it is not assigned to runs normally in the issue's workspace, without a checkout conflict, is **unverified** (V2).
+- **The reviewer is woken without an issue** (`pc.py wake code-reviewer --reason "<names the staged <KEY> and head>"`, no `--issue`). Phase 4b (V2) showed that Paperclip 2026.1023.0 cancels an issue-scoped run of an agent that is neither the issue's assignee nor the agent participant of the current stage (`issue_assignee_changed`, `run-dispatch/domain/policy.js` `decideIssueOwnership`). The company-scoped run starts in the agent's configured `cwd`; Paperclip creates no worktree for it.
+- **The wake reason identifies the staged issue** for the Board's record and for the reviewer. It is not a control: Paperclip does not link a company-scoped run to any issue, so nothing in Paperclip ties the run to this review (§3.4, check 2).
 - **Fallback, always available:** the relay posts the findings comment only, and the Board records the decision with `pc.py approve` or `pc.py request-changes`. These already require the issue to wait on the Board.
 
 **Authentication.** Paperclip runs in `local_trusted` mode, where the Board API is reached on loopback without login. The relay therefore has no credential of its own, and any process of the same Windows user can make the same calls. Whether an agent's run can reach Board-level endpoints this way is **unverified** (V3). Under the current setup this is not an exclusive authority. Stronger options would be a Paperclip deployment mode with authenticated Board sessions, or a separate OS account; both are outside this design.
@@ -125,7 +126,7 @@ The design therefore proposes:
 
 The relay accepts a verdict only when all of these hold:
 1. `<KEY>` resolves to an issue in `in_review`, and its current participant is the relay's identity.
-2. `<run-id>` is in `GET /issues/<id>/runs`, its `agentId` is `code-reviewer`, its status is finished successfully, and it was created after the current staging time.
+2. `<run-id>` is a run of `code-reviewer` that finished successfully and was created after the current staging time. It is either in `GET /issues/<id>/runs`, or (the normal case, §3.3) a company-scoped run read by id whose `companyId` is the issue's and whose `issueId` is empty or this issue. **What check 2 does not establish** for a company-scoped run: that the run was started for this review, or that it read the staged package. It only excludes runs of another agent, another company, another issue, an unfinished run and a run older than the staging. The binding to the review comes from checks 3 and 5 (the verdict names the locked issue and head, and its findings point into the staged manifest), and from the Board having started the run; a reviewer that guessed or copied a matching verdict would still pass. Details in `review_relay.py` `_company_run`.
 3. The staging lock names this `<KEY>` and `headSha`, and the staged manifest still verifies against the store.
 4. The PR head on GitHub still equals `headSha`. If the author pushed since, the review is stale.
 5. Exactly one verdict block, valid against the schema; `issue` and `headSha` equal the staging lock; every finding points into the manifest.
@@ -252,7 +253,7 @@ Staging is one-at-a-time:
 2. Staging requires that no lock exists, or that the lock names the same issue and head (re-staging is a no-op).
 3. To replace another issue's staging, the Board runs `pc.py review-pack --unstage`. That command refuses while the locked review's run is active (`queued`, `starting`, `running`). It also refuses while that review is not yet relayed, unless `--abandon` is given, which is logged.
 4. Staging verifies the copy against the store's manifest (every SHA-256), then writes `current/READY`.
-5. **Serialization:** only one `code-reviewer` review is in flight. The Board wakes `code-reviewer` only for the issue named in the lock; `review-pack` prints the exact `pc.py wake` command. A second review waits.
+5. **Serialization:** only one `code-reviewer` review is in flight. The Board wakes `code-reviewer` only while the lock names the issue under review, without `--issue` (§3.3), with a wake reason naming that issue and head; `review-pack` prints the exact `pc.py wake` command. A second review waits.
 6. **Crash or abandoned staging:**
    - A lock whose run is finished, failed or cancelled, or that has had no run for 24 hours, is reported by `review-pack --status` as stale.
    - The Board clears it with `--unstage --abandon`.
@@ -282,9 +283,10 @@ Staging is one-at-a-time:
 
 **What it does not give:**
 - **No OS boundary.** Native Windows gives no filesystem isolation in the tested setup. Packager, relay, reviewer and every agent run as the same user. Claude Code's tool permissions are not OS isolation.
-- **Paperclip still starts review runs in the author's worktree.** The reviewer can read it, and anything else its tools can reach.
+- **The reviewer's `cwd` is not controlled by this design.** An issue-scoped review run would start in the author's worktree; the company-scoped wake (§3.3) used the agent's configured `cwd` in Phase 4b. Whatever folder that is, the reviewer can read it besides `current/`. This was observed for two runs on one instance, not shown to hold in general, and does not resolve G-13.
 - **Tampering.** A same-user agent process can change staging or stored packages. Checksums in the manifest detect accidental corruption only, because a writer who can change the data can also change the manifest. The relay re-checks the head SHA against GitHub, which limits but does not prevent a manipulated review.
 - **Board authority in `local_trusted` mode** is not exclusive to the relay (§3.3, V3).
+- **A company-scoped reviewer run is not bound to one review.** Check 2 accepts any succeeded `code-reviewer` run of the issue's company created after staging, even one started for other work (§3.4). The verdict must still name the locked issue and head and cite the staged files, but nothing shows the run was made for this review or read the package. The relay's acceptance therefore relies on the Board starting exactly one reviewer run per staging (§7). This is a significant limitation, not a resolution of G-13.
 - **G-13 is not resolved** by this design. Other review paths are unchanged until a strict `code-reviewer` handles every code review.
 - **Cursor must never be used as `code-reviewer`** (OQ-033: no allowlist or permission key).
 
@@ -299,7 +301,7 @@ Staging is one-at-a-time:
 |---|---|---|
 | Review stage | `executionPolicy` review stage. Under U1 the participant is the relay's user identity (§3.3) | Stage set by `pc.py create --review <user>`, needs a small change (V1) |
 | Reviewer agent | `claude_local`, engine `cli`, `extraArgs`: `--restricted --tools Read,Grep,Glob --strict-mcp-config --permission-mode dontAsk --permission-prompts none --settings <reviewer settings> --add-dir <Staging Root>/current` | Agent definition, settings file; no secrets bound |
-| Trigger | Manual wake: `POST /agents/<id>/wakeup` with the issue (`pc.py wake`) | `pc.py review-pack` (build, stage, print the wake command) |
+| Trigger | Manual wake: `POST /agents/<id>/wakeup` **without** an issue, reason naming the staged `<KEY>` (`pc.py wake code-reviewer --reason …`). An issue-scoped wake is cancelled by Paperclip (§3.3, V2) | `pc.py review-pack` (build, stage, print the wake command) |
 | Verdict | Run log and issue APIs (§3.2) | `pc.py review-relay` |
 | Worktrees | Created and cleaned by Paperclip only | Never touched; the packager owns only `<Review Root>` and `<Staging Root>` |
 
@@ -311,7 +313,7 @@ Staging is one-at-a-time:
 
 ## 11. Implementation phases
 
-Progress (2026-11-20): Phase 1 merged (PR #29, audited in PR #30). Phase 2 run outside Paperclip, all acceptance conditions met ([review-package-phase2-results.md](review-package-phase2-results.md)). Phase 3 done, with a first read-only live run on `datpham02/soucean-game` PR #27 ([review-package-phase3-github.md](review-package-phase3-github.md)). Phase 4 split (2026-11-21): 4a, the `review-relay` command with offline tests against a fake Paperclip, is done ([review-package-phase4a-relay.md](review-package-phase4a-relay.md)); 4b, the sandbox validation of V1–V3, waits for Board approval. Phases 5–6 not started. G-13 stays open.
+Progress (2026-11-20): Phase 1 merged (PR #29, audited in PR #30). Phase 2 run outside Paperclip, all acceptance conditions met ([review-package-phase2-results.md](review-package-phase2-results.md)). Phase 3 done, with a first read-only live run on `datpham02/soucean-game` PR #27 ([review-package-phase3-github.md](review-package-phase3-github.md)). Phase 4 split (2026-11-21): 4a, the `review-relay` command with offline tests against a fake Paperclip, is done ([review-package-phase4a-relay.md](review-package-phase4a-relay.md)); 4b was run on the live instance in a throwaway company (2026-11-21, [review-package-phase4b-live.md](review-package-phase4b-live.md)): V1 yes, V2 no (the reviewer must be woken without an issue), V3 not tested; the relay recorded a decision and refused a bad verdict and a duplicate. Phases 5–6 not started. G-13 stays open.
 
 | Phase | Deliverables | Acceptance | Depends on | Stop if |
 |---|---|---|---|---|
@@ -319,7 +321,7 @@ Progress (2026-11-20): Phase 1 merged (PR #29, audited in PR #30). Phase 2 run o
 | 1 Packager CLI | `pc.py review-pack` built from fixture data (recorded GitHub API responses), store, staging, lock, cleanup, audit log; unit tests | Every §5.3 rule and §5.2 limit has a test; atomic build; staging refuses a second issue; no files outside the two roots change | Phase 0 | A rule cannot be enforced without running git on an agent-writable repository |
 | 2 Strict reviewer tests | Repeat the OQ-042 experiment on a staged package | Defects found with correct `files/head` lines; verdict block valid; write, shell and git attempts all fail; the store and other packages are not reachable through the reviewer's tools | Phase 1 | The reviewer can read outside `current/` and the cwd, or write anything |
 | 3 GitHub source | Option A against a throwaway GitHub repository with the dedicated token | Blob SHAs verified; pagination complete; head-moved and missing-patch cases refused; token never logged | Phase 1; a token created by the Board | The token needs more than read permissions |
-| 4 Paperclip sandbox and relay API | A separate sandbox company: review stage with a user participant, a manual wake of `code-reviewer`, `review-relay` | V1–V3 answered; the decision is recorded or refused as §3.5 says; the fallback works | Phases 1–3; Board approval to start Paperclip | The sandbox would touch the production company, or Paperclip refuses every relay identity |
+| 4 Paperclip validation and relay API | `review-relay` (4a, offline tests). Live validation (4b) in a throwaway test company on the live Paperclip instance, chosen by the Board instead of a separate sandbox instance: review stage with a user participant, a manual wake of `code-reviewer` without an issue (§3.3), `review-relay`. **Done 2026-11-21, acceptance partly met:** V1 and V2 answered, V3 not tested; one decision recorded and one verdict refused as §3.5 says; the 4xx fallback path not triggered live ([review-package-phase4b-live.md](review-package-phase4b-live.md)) | V1–V3 answered; the decision is recorded or refused as §3.5 says; the fallback works | Phases 1–3; Board approval to start Paperclip | The test would touch the production company, or Paperclip refuses every relay identity |
 | 5 Sandbox end-to-end | Author Task, PR, package, review, relay, decision, merge, cleanup | All §12 criteria in the sandbox | Phase 4 | Any criterion fails |
 | 6 Production proposal | Written proposal: agent, profile, stages, runbook, token. **Separate approval** | — | Phase 5 | — |
 
@@ -338,8 +340,8 @@ Progress (2026-11-20): Phase 1 merged (PR #29, audited in PR #30). Phase 2 run o
 
 ## 13. Open validation questions
 
-- **V1 Stage participant.** Can a review stage name the Board Operator user, or a dedicated relay user, while `code-reviewer` is woken for the issue without being a participant? Does `pc.py create --review` need a user option?
-- **V2 Non-assignee run.** Does a `code-reviewer` woken for an issue it is not assigned to run without a checkout conflict, and in which cwd?
+- **V1 Stage participant. Answered 2026-11-21: yes** ([review-package-phase4b-live.md](review-package-phase4b-live.md) §2). A review stage with user participant `local-board` started when the Board set `in_review`; Paperclip moved the assignee to `local-board` and kept the previous assignee (in the test, `code-reviewer` itself) as `returnAssignee`. The relay recorded `changes_requested` as `local-board`. Limits: one run, one instance (2026.1023.0), one decision type (`changes_requested`; `done` not exercised live); a dedicated relay user was not tried; `pc.py create --review` still takes agents only (a user option is not built).
+- **V2 Non-assignee run. Answered 2026-11-21: no** (same record, §2). `wake code-reviewer --issue REV-1` was cancelled before start with `issue_assignee_changed`. A wake without an issue ran normally in the agent's configured `cwd`, without a worktree or checkout. Limits: the company-scoped run has no Paperclip link to the issue, so it does not show that the run was made for this review or that it read the package (§3.4, check 2); the reviewer's reads stayed inside `current/` in the observed runs, which is evidence for those runs only.
 - **V3 Board authority.** In `local_trusted` mode, can an agent's own process reach Board-level endpoints? If yes, the relay's authority is not exclusive, and that must be recorded as a risk or fixed by the deployment mode.
 - **V4 Automatic trigger.** Ordering and failure behaviour of the watchdog or `provisionCommand` path (future phase only).
 - **V5 Retention start.** Issue closure (approved default) or confirmed merge?

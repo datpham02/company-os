@@ -61,13 +61,14 @@ def run_log(final, extra_events=()):
 
 class FakePaperclip:
     def __init__(self, final, status="in_review", participant=None, runs=None):
-        self.issue = {"id": ISSUE_ID, "identifier": KEY, "status": status,
+        self.issue = {"id": ISSUE_ID, "companyId": "co-1", "identifier": KEY, "status": status,
                       "executionState": {"currentStageType": "review",
                                          "currentParticipant": participant or {"type": "user", "userId": rp.BOARD}}}
         self.comments = []
         self.runs = runs if runs is not None else [
             {"runId": RUN, "agentId": REVIEWER, "status": "succeeded", "createdAt": rp.iso(LATER)}]
         self.logs = {RUN: run_log(final)}
+        self.details = {}  # run id -> GET /heartbeat-runs/<id> body (company-scoped runs)
         self.calls = []
         self.fail = {}  # (method, path) -> list of exceptions raised by successive calls
         self.store_despite_error = False  # a POST that fails after the server stored the comment
@@ -89,8 +90,10 @@ class FakePaperclip:
             return list(self.comments)
         if (method, path) == ("GET", f"/issues/{ISSUE_ID}/runs"):
             return list(self.runs)
-        if method == "GET" and path.startswith("/heartbeat-runs/"):
+        if method == "GET" and path.startswith("/heartbeat-runs/") and path.endswith("/log"):
             return self.logs.get(path.split("/")[2], {"content": ""})
+        if method == "GET" and path.startswith("/heartbeat-runs/") and path.split("/")[2] in self.details:
+            return dict(self.details[path.split("/")[2]])
         if (method, path) == ("POST", f"/issues/{ISSUE_ID}/comments"):
             self.comments.insert(0, {"body": body["body"]})
             return {"id": f"c{len(self.comments)}"}
@@ -219,6 +222,61 @@ class Check2Run(RelayEnv):
         self.refused_nothing_written("names run run-other", self.pc())
 
 
+class Check2CompanyScopedRun(RelayEnv):
+    """Phase 4b finding (V2): the reviewer is woken without an issue, so its run is not in the issue's runs."""
+
+    def api(self, **over):
+        api = self.pc(runs=[])
+        d = {"id": RUN, "companyId": "co-1", "agentId": REVIEWER, "issueId": None, "scopeKind": "company",
+             "status": "succeeded", "createdAt": rp.iso(LATER)}
+        d.update(over)
+        api.details[RUN] = d
+        return api
+
+    def test_company_scoped_run_accepted(self):
+        api = self.api()
+        self.assertIn("relayed approved", self.relay(api))
+
+    def test_run_of_another_company_refused(self):
+        self.refused_nothing_written("another company", self.api(companyId="co-2"))
+
+    def test_run_scoped_to_another_issue_refused(self):
+        self.refused_nothing_written("scoped to another issue", self.api(issueId="uuid-99"))
+
+    def test_run_scoped_to_this_issue_accepted(self):
+        self.assertIn("relayed approved", self.relay(self.api(issueId=ISSUE_ID)))
+
+    def test_unknown_run_refused(self):
+        api = self.pc(runs=[])  # GET /heartbeat-runs/<id> answers 404
+        self.refused_nothing_written("is not a run of", api)
+
+    def test_run_id_mismatch_in_detail_refused(self):
+        self.refused_nothing_written("is not a run of", self.api(id="run-other"))
+
+    def test_issue_without_company_refused(self):
+        api = self.api()
+        del api.issue["companyId"]
+        self.refused_nothing_written("another company", api)
+
+    def test_documented_limit_any_company_reviewer_run_after_staging_passes_check_2(self):
+        """Documents what check 2 does NOT establish (_company_run docstring): nothing ties a company-scoped
+        run to this review. A run whose wake had nothing to do with the issue still passes check 2; only the
+        verdict (check 5) and the receipt bind it."""
+        api = self.api(scopeKind="company", contextSnapshot={"wakeReason": "unrelated chore"})
+        self.assertIn("relayed approved", self.relay(api))
+
+    def test_company_run_still_bound_by_the_verdict(self):
+        api = self.api(contextSnapshot={"wakeReason": "unrelated chore"})
+        api.logs[RUN] = run_log(message(verdict(issue="SOU-99")))
+        self.refused_nothing_written("does not match the staging lock", api)
+
+    def test_company_run_still_checked_for_agent_status_and_time(self):
+        self.refused_nothing_written("is not a code-reviewer run", self.api(agentId=OTHER_AGENT))
+        self.refused_nothing_written("not succeeded", self.api(status="failed"))
+        self.refused_nothing_written("before the package was staged",
+                                     self.api(createdAt=rp.iso(NOW - datetime.timedelta(seconds=1))))
+
+
 class Check3Staging(RelayEnv):
     def test_nothing_staged(self):
         rp.unstage(self.rr, self.sr, {"issues": {}, "runs": []}, True, NOW)
@@ -250,7 +308,7 @@ class Check4Head(RelayEnv):
 class Check5Verdict(RelayEnv):
     def bad(self, fragment, final):
         api = FakePaperclip(final)
-        self.refused_nothing_written(fragment, api)
+        return self.refused_nothing_written(fragment, api)
 
     def test_no_result_event(self):
         api = self.pc()
@@ -307,6 +365,23 @@ class Check5Verdict(RelayEnv):
         self.bad("side", message(verdict("changes_requested", [finding(side="left")])))
         self.bad("severity", message(verdict("changes_requested", [finding(severity="blocker")])))
         self.bad("title is missing", message(verdict("changes_requested", [finding(title=" ")])))
+
+    def test_malformed_path_and_side_types_refused_without_type_error(self):
+        """Regression (PR #48 review): a list or dict in `path` or `side` raised TypeError (unhashable) before
+        the membership check, escaping the controlled refusal. It must be a ReviewPackError, nothing written."""
+        for field, value, fragment in (("path", [], "is not a file of the package"),
+                                       ("path", {}, "is not a file of the package"),
+                                       ("side", [], "is not head or base"),
+                                       ("side", {}, "is not head or base")):
+            with self.subTest(field=field, value=value):
+                e = self.bad(fragment, message(verdict("changes_requested", [finding(**{field: value})])))
+                self.assertNotIsInstance(e, TypeError)
+
+    def test_malformed_severity_and_verdict_types_refused_without_type_error(self):
+        for value in ([], {}):
+            with self.subTest(value=value):
+                self.bad("severity", message(verdict("changes_requested", [finding(severity=value)])))
+                self.bad("is not one of", message(verdict(value)))
 
 
 # ---------- §3.5 duplicates, retries and refusals ----------
@@ -446,6 +521,21 @@ class Cli(RelayEnv):
             rl.cmd_review_relay(self.args(), self.pc(status="todo"), lambda: REVIEWER, head_now=lambda: SHA_HEAD,
                                 now=LATER)
         self.assertEqual(self.events()[-1], "refuse")
+
+    def test_malformed_finding_refused_and_audited_through_the_cli(self):
+        """A malformed verdict goes through the CLI's controlled refusal: ReviewPackError, a `refuse` audit line,
+        nothing written to Paperclip (no TypeError escapes cmd_review_relay)."""
+        for field, value in (("path", []), ("side", {})):
+            with self.subTest(field=field):
+                api = self.pc(verdict("changes_requested", [finding(**{field: value})]))
+                with self.assertRaises(rp.ReviewPackError) as cm:
+                    rl.cmd_review_relay(self.args(), api, lambda: REVIEWER, head_now=lambda: SHA_HEAD, now=LATER,
+                                        sleep=self.sleeps.append)
+                self.assertIn("Nothing was recorded", str(cm.exception))
+                self.assertEqual(api.writes(), [])
+                e = rp.read_audit(self.rr)[-1]
+                self.assertEqual((e["event"], e["runId"]), ("refuse", RUN))
+                self.assertIn(f"finding #1: {field}", e["reason"])
 
     def test_bad_key(self):
         with self.assertRaises(rp.ReviewPackError) as cm:
