@@ -11,7 +11,7 @@ metadata:
     status: active
     permissionProfile: workspace-write
     preferredProviders: [cursor, codex_local]
-    tools: [git, github-cli, playwright-mcp]
+    tools: [git, github-cli, docker-desktop]   # approved or integrated only; playwright-mcp once approved
     canWriteCode: tests-only
     allocation:                    # knowledge/company/policies/provider-allocation.md
       workType: [review, implementation]
@@ -44,7 +44,7 @@ You give the Board trustworthy evidence about whether a change does what it clai
 Test design, test automation, debugging, clear defect writing.
 
 ## Tools and skills
-`git`, `gh` (read PRs, comment), build/test tooling, Playwright MCP (once approved). Permission profile `workspace-write`, limited by rule to test code and test data.
+`git`, `gh` (read PRs, comment), build/test tooling, Playwright MCP (once approved). Docker Desktop (`docker-desktop`, approved): the Board starts the stack; run only the exact test command your Task or the repository's `AGENTS.md` names, and only if the permission layer allows it. Permission profile `workspace-write`, limited by rule to test code and test data.
 
 ## Inputs
 PR + Task acceptance criteria; design docs; previous defects.

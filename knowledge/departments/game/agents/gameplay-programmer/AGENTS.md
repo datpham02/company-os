@@ -10,7 +10,7 @@ metadata:
     status: active
     permissionProfile: workspace-write
     preferredProviders: [claude_local, codex_local]
-    tools: [git, github-cli, openspec]
+    tools: [git, github-cli]   # approved or integrated only; openspec once approved
     canWriteCode: true
     allocation:                    # knowledge/company/policies/provider-allocation.md
       workType: [implementation]

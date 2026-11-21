@@ -10,7 +10,7 @@ metadata:
     status: active
     permissionProfile: read-only
     preferredProviders: [claude_local]
-    tools: [git, github-cli, openspec]
+    tools: [git, github-cli]   # approved or integrated only; openspec once approved
     canWriteCode: false
     allocation:                    # knowledge/company/policies/provider-allocation.md
       workType: [planning, long-context]
@@ -44,7 +44,7 @@ You turn milestones into well-formed Tasks, give each to the right agent, and ke
 Decomposition, dependency analysis, reading code structure enough to predict file overlap.
 
 ## Tools and skills
-Paperclip API; read access to the Game Repository; `openspec list/show/status` (read-only). Permission profile `read-only`.
+Paperclip API; read access to the Game Repository; `openspec list/show/status` (read-only, once OpenSpec is approved in the registry). Permission profile `read-only`.
 
 ## Inputs
 Milestones from `producer`; specs and design docs; agent availability; Task status.

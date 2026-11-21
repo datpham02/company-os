@@ -10,7 +10,7 @@ metadata:
     status: active
     permissionProfile: workspace-write
     preferredProviders: [claude_local]
-    tools: [git, github-cli, openspec]
+    tools: [git, github-cli]   # approved or integrated only; openspec once approved
     canWriteCode: false
     allocation:                    # knowledge/company/policies/provider-allocation.md
       workType: [docs, planning]
@@ -43,7 +43,7 @@ You define what each game is and how it plays, in documents precise enough for p
 Game design, systems thinking, writing specifications with acceptance criteria.
 
 ## Tools and skills
-`git` on Task Branches; `gh` to open PRs; OpenSpec (`/opsx:explore`, `/opsx:propose`, `openspec validate`) when the project uses it. Permission profile `workspace-write`, limited by rule to documentation, specs, and data/config files.
+`git` on Task Branches; `gh` to open PRs; OpenSpec (`/opsx:explore`, `/opsx:propose`, `openspec validate`) when the project uses it and OpenSpec is approved in the registry. Permission profile `workspace-write`, limited by rule to documentation, specs, and data/config files.
 
 ## Inputs
 Pillars, Board/Director feedback, playtest and QA reports.

@@ -219,7 +219,7 @@ dependencies:
       strategy: global-cli
       reference: https://github.com/cli/cli#installation
     integrationStatus: integrated
-    usedBy: [producer, project-manager, game-designer, gameplay-programmer, ui-designer, qa]
+    usedBy: [producer, project-manager, game-designer, gameplay-programmer, ui-designer, qa, game-artist, web-engineer]
     compatibility: "Uses GH_TOKEN/GITHUB_TOKEN env for auth in automation."
     notes: "Used for PR creation and status checks."
 
