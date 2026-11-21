@@ -188,7 +188,7 @@ The relay could sign `(reviewId, runId, manifestSha256, headSha, verdict SHA-256
 
 **Recommendation for the Board:** option 2 for review-package sandboxes; decide option 1 for production authors together with a fix for the broad Git Credential Manager access.
 
-**Board decision (2026-11-21, R4):** option 2 for sandboxes and option 1 for production, recorded in [ADR-022](../decisions/ADR-022-author-pull-request-credential.md). Production uses one shared fine-grained token for code-writing agents. Git Credential Manager access is addressed by requiring each agent clone to use `gh` with that token; the gap stays open until every clone is checked.
+**Board decision (2026-11-21, R4):** option 2 for sandboxes and option 1 for production, recorded in [ADR-022](../decisions/ADR-022-author-pull-request-credential.md). Production uses one shared fine-grained token for code-writing agents. Git Credential Manager access is addressed by requiring each agent clone to use `gh` with that token (both project clones checked and `soucean-game` fixed on 2026-11-21). The token is on the Board's own account with *All repositories*, an accepted risk recorded in the ADR.
 
 ### 4.B `--unstage` and real run state
 
