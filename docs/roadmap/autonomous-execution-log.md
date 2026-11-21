@@ -219,3 +219,13 @@ No runtime action. Documentation committed in PR #42. Status: READY FOR BOARD RE
 **Results:** V1 yes; V2 no (issue-scoped run of a non-assignee agent cancelled; the reviewer is woken without an issue, and the relay now accepts such a company-scoped run); V3 not tested. Relay: one verdict refused at check 5 (diff line numbers), one recorded (comment, then `changes_requested`), re-runs and a second run for the same head refused. Token found nowhere. Soucean untouched. Record: [review-package-phase4b-live.md](../design/review-package-phase4b-live.md).
 
 **Left in place:** the `REV` company with the `code-reviewer` agent paused; the private test folder; the backup. G-13 stays open.
+
+### Step 3, Review Package Phase 5: sandbox end-to-end (2026-11-21)
+
+**Status:** run on the live instance in the throwaway company `RP5 Review Sandbox` (`RPR`), with the Board Operator's authorization in chat (the Phase 5 brief; "bạn tự bật" for starting Paperclip; soucean-game approved as the test repository). Database backup taken first. Record on branch `docs/review-package-phase5`; committed in the Phase 5 documentation pull request.
+
+**Results:** offline baseline 246 tests OK at `6642f18`. Author Task RPR-1 pushed by the sandbox author; PR soucean-game #28 opened by the Board side (the author had no `gh` credential). Package from the GitHub API, two strict reviews (company-scoped, reads only in `current/`), relay recorded `approved`. Live refusals: identity, other company, run before staging, stale head, staging lock, tampered package, duplicates; the manual fallback was used. Phase 5 Partially Accepted (§12 partly met); V3 not tested. Record: [review-package-phase5-sandbox.md](../design/review-package-phase5-sandbox.md).
+
+**Board decision:** soucean-game PR #28 closed without merge ("Đóng, không merge"); the merge step was not exercised. Phase 6 not started. G-13 stays open.
+
+**Left in place:** `RPR` with both agents paused; the PR #28 branch on GitHub (PR closed); the private test folder; the backup. Soucean untouched.
