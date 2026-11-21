@@ -72,7 +72,7 @@ projects:
     name: Deckbound
     department: game
     type: game
-    status: initializing          # repo created 2026-11-21 (private, seeded with README + docs/art/ART-PIPELINE.md); Paperclip project and branch protection pending
+    status: initializing          # repo created 2026-11-21 (seeded with README + docs/art/ART-PIPELINE.md); made public and main protected 2026-11-21; Paperclip project pending
     repository:
       url: https://github.com/datpham02/deckbound.git
       defaultBranch: main

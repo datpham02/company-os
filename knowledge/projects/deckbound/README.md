@@ -2,7 +2,7 @@
 
 - **Department:** [Game](../../departments/game/README.md)
 - **Type:** game · **Status:** initializing (repository created 2026-11-21)
-- **Repository:** [datpham02/deckbound](https://github.com/datpham02/deckbound) (private)
+- **Repository:** [datpham02/deckbound](https://github.com/datpham02/deckbound) (public, `main` protected)
 - **Stack:** Godot 4.x (exact version to be confirmed)
 
 Single-player deckbuilder. Working title.
