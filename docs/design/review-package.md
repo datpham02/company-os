@@ -311,7 +311,7 @@ Staging is one-at-a-time:
 | Need | Native Paperclip | Company OS (custom, not built) |
 |---|---|---|
 | Review stage | `executionPolicy` review stage. Under U1 the participant is the relay's user identity (§3.3) | Stage set by `pc.py create --review <user>`, needs a small change (V1) |
-| Reviewer agent | `claude_local`, engine `cli`, `extraArgs`: `--restricted --tools Read,Grep,Glob --strict-mcp-config --permission-mode dontAsk --permission-prompts none --settings <reviewer settings> --add-dir <Staging Root>/current` | Agent definition, settings file; no secrets bound |
+| Reviewer agent | `claude_local`, engine `cli`, no `env`, `extraArgs`: `--restricted --tools Read,Grep,Glob --disallowedTools mcp__* --strict-mcp-config --permission-mode dontAsk --permission-prompts none --settings <reviewer settings> --add-dir <Staging Root>/current`; settings allow exactly Read, Grep, Glob and deny `mcp__*` plus Edit, Write, NotebookEdit, Bash, PowerShell, WebFetch, WebSearch. Paperclip adds its own MCP servers to issue-scoped runs; the profile removes every MCP tool ([reviewer write isolation](review-package-reviewer-write-isolation.md)) | Agent definition, settings file; no secrets bound. `review-start` refuses another profile; the relay refuses a run offered other tools |
 | Trigger | A review sub-issue assigned to `code-reviewer` and an on-demand wake for it (§3.3, run-binding Option B) | `pc.py review-pack` (build, stage, print the command), then `pc.py review-start` |
 | Verdict | Run log and issue APIs (§3.2) | `pc.py review-relay` |
 | Worktrees | Created and cleaned by Paperclip only | Never touched; the packager owns only `<Review Root>` and `<Staging Root>` |

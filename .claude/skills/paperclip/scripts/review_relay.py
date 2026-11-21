@@ -27,6 +27,11 @@ VERDICTS = {"approved", "changes_requested"}
 SEVERITIES = {"critical", "high", "medium", "low"}
 SIDES = {"head", "base"}
 RUN_OK = "succeeded"
+# P0 (docs/design/review-package-reviewer-write-isolation.md): the only tools a reviewer run may be offered.
+REVIEWER_TOOLS = frozenset({"Glob", "Grep", "Read"})
+REQUIRED_DENY = {"mcp__*", "Bash", "PowerShell", "WebFetch", "WebSearch", "Edit", "Write", "NotebookEdit"}
+FORBIDDEN_FLAGS = {"--allowedTools", "--allowed-tools", "--dangerously-skip-permissions",
+                   "--allow-dangerously-skip-permissions", "--mcp-config", "--permission-prompt-tool", "--tools-file"}
 RECEIPT_RE = re.compile(r"relay-receipt: (\S+) ([0-9a-f]{40})")
 FENCE_RE = re.compile(r"```json[ \t]*\r?\n(.*?)\r?\n```", re.S)
 STATUS_RE = re.compile(r"-> (\d{3})\b")
@@ -64,11 +69,9 @@ def _with_retry(fn, sleep):
 
 # ---------- verdict parsing (§3.1) ----------
 
-def final_message(log):
-    """The reviewer's final message from GET /heartbeat-runs/<id>/log: the `result` of the stream-json output."""
-    text = "".join(_chunks(log))
-    result = None
-    for line in text.splitlines():
+def _events(log):
+    """The stream-json events of a run log (GET /heartbeat-runs/<id>/log), in order."""
+    for line in "".join(_chunks(log)).splitlines():
         line = line.strip()
         if not line.startswith("{"):
             continue
@@ -76,7 +79,48 @@ def final_message(log):
             ev = json.loads(line)
         except ValueError:
             continue
-        if isinstance(ev, dict) and ev.get("type") == "result" and isinstance(ev.get("result"), str):
+        if isinstance(ev, dict):
+            yield ev
+
+
+def check_tool_surface(log):
+    """Fail closed unless the run was offered exactly Read, Grep and Glob and used nothing else (P0 layer 3).
+
+    An allow list, not a deny list: any other tool in an `init` event, including an MCP tool a future Paperclip
+    version adds under a new name, refuses the verdict; so does a tool_use of another tool, or any permission
+    denial (an attempt counts as tampering, even though it was refused)."""
+    inits, uses, denials = [], [], []
+    for ev in _events(log):
+        if ev.get("type") == "system" and ev.get("subtype") == "init":
+            inits.append(ev)
+        elif ev.get("type") == "assistant":
+            for c in ((ev.get("message") or {}).get("content") or []):
+                if isinstance(c, dict) and c.get("type") == "tool_use":
+                    uses.append(c.get("name"))
+        elif ev.get("type") == "result":
+            denials += [d.get("tool_name") if isinstance(d, dict) else d for d in (ev.get("permission_denials") or [])]
+    if not inits:
+        raise rp.ReviewPackError("the run log has no init event, so the reviewer's tools cannot be checked")
+    for ev in inits:
+        tools = ev.get("tools")
+        if not isinstance(tools, list) or set(tools) != REVIEWER_TOOLS or len(tools) != len(REVIEWER_TOOLS):
+            extra = sorted(set(map(str, tools or [])) - REVIEWER_TOOLS)
+            missing = sorted(REVIEWER_TOOLS - set(map(str, tools or [])))
+            raise rp.ReviewPackError(f"the reviewer run was offered tools other than Read, Grep and Glob "
+                                     f"(extra {extra}, missing {missing}); its verdict is not accepted")
+    other = sorted({str(u) for u in uses} - REVIEWER_TOOLS)
+    if other:
+        raise rp.ReviewPackError(f"the reviewer run used tools other than Read, Grep and Glob ({other})")
+    if denials:
+        raise rp.ReviewPackError(f"the reviewer run attempted refused tools ({sorted(map(str, denials))}); "
+                                 "its verdict is not accepted")
+
+
+def final_message(log):
+    """The reviewer's final message from GET /heartbeat-runs/<id>/log: the `result` of the stream-json output."""
+    result = None
+    for ev in _events(log):
+        if ev.get("type") == "result" and isinstance(ev.get("result"), str):
             result = ev["result"]
     if result is None:
         raise rp.ReviewPackError("the run log has no final message (no result event)")
@@ -315,6 +359,7 @@ def relay(rr, sr, key, run_id, api, head_now, identity, reviewer_agent_id, now, 
         raise rp.ReviewPackError(f"the PR head moved to {str(current)[:12]}; the review is stale")
     # Check 5: exactly one valid verdict
     log = _with_retry(lambda: api("GET", f"/heartbeat-runs/{run_id}/log"), sleep) or {}
+    check_tool_surface(log)
     v = validate_verdict(parse_verdict(final_message(log)), lock, manifest, pkg)
 
     # §3.5: comment first (skipped if its receipt exists), then the decision
@@ -373,6 +418,60 @@ def _is_refusal(err):
     timeout, 5xx) leaves it unknown whether the request took effect."""
     code = _http_status(err)
     return code is not None and 400 <= code < 500
+
+
+def _flag_value(args, flag):
+    """The single value after `flag` in an argument list; refuses a missing, repeated or valueless flag."""
+    idx = [i for i, a in enumerate(args) if a == flag]
+    if len(idx) != 1 or idx[0] + 1 >= len(args):
+        raise rp.ReviewPackError(f"the reviewer's extraArgs must contain {flag} exactly once, with a value")
+    return args[idx[0] + 1]
+
+
+def check_reviewer_config(agent, sr):
+    """Fail closed unless the code-reviewer agent has the strict, write-free profile (P0 layers 1 and 2):
+    built-in tools Read, Grep, Glob only; every MCP tool removed (--disallowedTools mcp__* and a settings deny
+    rule); dontAsk with an allow list of exactly Read, Grep, Glob; --restricted to one --add-dir, the staging
+    folder; no environment variables (no credential); no flag that adds tools, MCP servers or bypasses checks."""
+    if not isinstance(agent, dict) or agent.get("adapterType") != "claude_local":
+        raise rp.ReviewPackError(f"{rp.REVIEWER_AGENT} is not a claude_local agent")
+    ac = agent.get("adapterConfig") or {}
+    if ac.get("env"):
+        raise rp.ReviewPackError(f"{rp.REVIEWER_AGENT} has environment variables configured; it must have none")
+    if ac.get("dangerouslySkipPermissions"):
+        raise rp.ReviewPackError(f"{rp.REVIEWER_AGENT} skips permission checks")
+    args = ac.get("extraArgs")
+    if not isinstance(args, list) or not all(isinstance(a, str) for a in args):
+        raise rp.ReviewPackError(f"{rp.REVIEWER_AGENT} has no extraArgs list")
+    bad = sorted(FORBIDDEN_FLAGS & set(args))
+    if bad:
+        raise rp.ReviewPackError(f"the reviewer's extraArgs contain forbidden flags {bad}")
+    if "--restricted" not in args:
+        raise rp.ReviewPackError("the reviewer's extraArgs lack --restricted")
+    if set(_flag_value(args, "--tools").split(",")) != REVIEWER_TOOLS:
+        raise rp.ReviewPackError("the reviewer's --tools must be exactly Read,Grep,Glob")
+    if "mcp__*" not in [x.strip() for x in _flag_value(args, "--disallowedTools").replace(" ", ",").split(",")]:
+        raise rp.ReviewPackError("the reviewer's extraArgs must remove every MCP tool: --disallowedTools mcp__*")
+    if _flag_value(args, "--permission-mode") != "dontAsk":
+        raise rp.ReviewPackError("the reviewer's --permission-mode must be dontAsk")
+    add_dir = _flag_value(args, "--add-dir")
+    norm = lambda p: os.path.normcase(os.path.abspath(p))  # noqa: E731
+    if norm(add_dir) != norm(os.path.join(sr, "current")):
+        raise rp.ReviewPackError("the reviewer's --add-dir must be the staging folder <Staging Root>/current")
+    settings_path = _flag_value(args, "--settings")
+    try:
+        with open(settings_path, encoding="utf-8") as f:
+            perms = (json.load(f) or {}).get("permissions") or {}
+    except (OSError, ValueError, AttributeError) as e:
+        raise rp.ReviewPackError(f"the reviewer's settings file cannot be read ({e})")
+    if sorted(perms.get("allow") or []) != sorted(REVIEWER_TOOLS):
+        raise rp.ReviewPackError("the reviewer settings must allow exactly Read, Grep and Glob")
+    missing = sorted(REQUIRED_DENY - set(perms.get("deny") or []))
+    if missing:
+        raise rp.ReviewPackError(f"the reviewer settings must deny {missing}")
+    if perms.get("defaultMode") != "dontAsk" or perms.get("ask") or perms.get("additionalDirectories"):
+        raise rp.ReviewPackError("the reviewer settings must use defaultMode dontAsk with no ask rules or "
+                                 "additional directories")
 
 
 def _get_sub(api, sub_id, sleep):
@@ -496,6 +595,13 @@ def _review_start(rr, sr, key, api, company_id, reviewer_agent_id, identity, now
     if issue.get("status") != "in_review" or part.get("type") != "user" or part.get("userId") != identity:
         raise rp.ReviewPackError(f"{key} is not waiting on user:{identity} in review "
                                  f"(status {issue.get('status')}); the relay could not record the decision")
+    try:
+        agent = _with_retry(lambda: api("GET", f"/agents/{reviewer_agent_id}"), sleep)
+    except Transient:
+        raise
+    except Exception as e:
+        raise rp.ReviewPackError(f"the {rp.REVIEWER_AGENT} configuration could not be read ({str(e)[:160]})") from None
+    check_reviewer_config(agent, sr)
 
     # Step 1: the sub-issue
     if not lock.get("reviewIssueId"):

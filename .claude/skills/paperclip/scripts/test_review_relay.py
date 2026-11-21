@@ -53,11 +53,18 @@ def message(v, prefix="Reviewed the package.\n\n", suffix=""):
     return f"{prefix}```json\n{body}\n```{suffix}"
 
 
-def run_log(final, extra_events=()):
+STRICT_TOOLS = ["Glob", "Grep", "Read"]
+PAPERCLIP_WRITE_TOOLS = ["mcp__Paperclip_projects__create_task", "mcp__Paperclip_projects__create_project",
+                         "mcp__Paperclip_projects__set_task_title"]
+
+
+def run_log(final, extra_events=(), tools=None, denials=None, init=True):
     """GET /heartbeat-runs/<id>/log: JSONL records whose chunks carry Claude Code's stream-json output."""
-    events = [{"type": "system", "subtype": "init"}] + list(extra_events)
+    events = ([{"type": "system", "subtype": "init", "tools": list(STRICT_TOOLS if tools is None else tools)}]
+              if init else []) + list(extra_events)
     if final is not None:
-        events.append({"type": "result", "subtype": "success", "result": final})
+        events.append({"type": "result", "subtype": "success", "result": final,
+                       "permission_denials": list(denials or [])})
     stream = "".join(json.dumps(e) + "\n" for e in events)
     half = len(stream) // 2  # a record boundary inside a JSON line, as real chunking does
     recs = [{"ts": "t", "stream": "stdout", "chunk": stream[:half]}, {"ts": "t", "stream": "stdout", "chunk": stream[half:]}]
@@ -82,6 +89,7 @@ class FakePaperclip:
         self.ctx = {}  # run id -> contextSnapshot; default BOARD_CTX
         self.create_error = None  # (exception, created_anyway) for POST /companies/<id>/issues
         self.wake_error = None  # (exception, run_created_anyway) for POST /agents/<id>/wakeup
+        self.agent = None  # GET /agents/<reviewer>: set by RelayEnv.pc()
         self.calls = []
         self.fail = {}  # (method, path) -> list of exceptions raised by successive calls
         self.store_despite_error = False  # a POST that fails after the server stored the comment
@@ -122,6 +130,8 @@ class FakePaperclip:
                 return {"id": rid, "companyId": COMPANY, "issueId": r.get("issueId", SUB_ID), "scopeKind": "issue",
                         "agentId": r["agentId"], "status": r["status"], "createdAt": r["createdAt"],
                         "contextSnapshot": dict(self.ctx.get(rid, BOARD_CTX))}
+        if (method, path) == ("GET", f"/agents/{REVIEWER}") and self.agent is not None:
+            return json.loads(json.dumps(self.agent))
         if (method, path) == ("GET", f"/companies/{COMPANY}/issues?parentId={ISSUE_ID}&limit=200"):
             return [dict(self.sub)] if self.sub else []
         if (method, path) == ("POST", f"/companies/{COMPANY}/issues"):
@@ -169,6 +179,29 @@ class RelayEnv(Env):
         self.pin_review(started=True)
         self.head = SHA_HEAD
         self.sleeps = []
+        self.settings_path = os.path.join(self.base, "reviewer-settings.json")
+        self.write_settings()
+
+    def write_settings(self, **over):
+        perms = {"allow": ["Read", "Grep", "Glob"], "defaultMode": "dontAsk",
+                 "deny": ["Edit", "Write", "NotebookEdit", "Bash", "PowerShell", "WebFetch", "WebSearch", "mcp__*"]}
+        perms.update(over)
+        with open(self.settings_path, "w", encoding="utf-8") as f:
+            json.dump({"permissions": perms}, f)
+
+    def reviewer_agent(self, extra=None, drop=(), **ac_over):
+        """The strict reviewer profile that check_reviewer_config requires."""
+        args = ["--no-session-persistence", "--restricted", "--tools", "Read,Grep,Glob", "--disallowedTools", "mcp__*",
+                "--strict-mcp-config", "--permission-mode", "dontAsk", "--permission-prompts", "none",
+                "--settings", self.settings_path, "--add-dir", os.path.join(self.sr, "current"),
+                "--append-system-prompt", "You are code-reviewer. Use --tools carefully."]
+        for flag in drop:
+            i = args.index(flag)
+            del args[i:i + (1 if flag == "--restricted" else 2)]
+        args += list(extra or [])
+        ac = {"cwd": self.base, "engine": "cli", "model": "sonnet", "dangerouslySkipPermissions": False, "extraArgs": args}
+        ac.update(ac_over)
+        return {"id": REVIEWER, "adapterType": "claude_local", "adapterConfig": ac}
 
     def pin_review(self, started):
         """Fix the staging's reviewId and challenge (the real ones are random), rewrite REVIEW-ID.txt to match,
@@ -183,7 +216,9 @@ class RelayEnv(Env):
 
     def pc(self, v=None, **kw):
         final = message(v if v is not None else verdict()) if not isinstance(v, str) else v
-        return FakePaperclip(final, **kw)
+        api = FakePaperclip(final, **kw)
+        api.agent = self.reviewer_agent()
+        return api
 
     def relay(self, api, run_id=RUN, identity=rp.BOARD):
         return rl.relay(self.rr, self.sr, KEY, run_id, api, lambda: self.head, identity, REVIEWER, LATER,
@@ -706,6 +741,138 @@ class ReviewStart(RelayEnv):
         rl.add_start_parser(sub, pc.cmd_review_start)
         a = p.parse_args(["review-start", KEY])
         self.assertEqual((a.key, a.identity, a.fn), (KEY, rp.BOARD, pc.cmd_review_start))
+
+
+class ToolSurface(RelayEnv):
+    """P0 layer 3: the relay accepts only a run that was offered exactly Read, Grep and Glob and used nothing else."""
+
+    def with_log(self, **kw):
+        api = self.pc()
+        api.logs[RUN] = run_log(message(verdict()), **kw)
+        return api
+
+    def test_strict_run_accepted(self):
+        self.assertIn("relayed approved", self.relay(self.with_log()))
+
+    def test_each_paperclip_write_tool_refused(self):
+        for tool in PAPERCLIP_WRITE_TOOLS + ["mcp__Paperclip_connections__connection_request"]:
+            with self.subTest(tool=tool):
+                self.refused_nothing_written("offered tools other than Read, Grep and Glob",
+                                             self.with_log(tools=STRICT_TOOLS + [tool]))
+
+    def test_unknown_future_tool_refused(self):
+        """An allow list catches tools that do not exist yet, read or write."""
+        for tool in ("mcp__Paperclip_newserver__delete_everything", "mcp__other__list", "Bash", "WebFetch", "Task"):
+            with self.subTest(tool=tool):
+                self.refused_nothing_written("offered tools other than Read, Grep and Glob",
+                                             self.with_log(tools=STRICT_TOOLS + [tool]))
+
+    def test_missing_or_partial_tool_list_refused(self):
+        for tools in ([], ["Read"], ["Read", "Grep", "Glob", "Read"], None):
+            with self.subTest(tools=tools):
+                api = self.pc()
+                ev = {"type": "system", "subtype": "init"}
+                if tools is not None:
+                    ev["tools"] = tools
+                api.logs[RUN] = run_log(message(verdict()), init=False, extra_events=[ev])
+                self.refused_nothing_written("offered tools other than Read, Grep and Glob", api)
+
+    def test_no_init_event_refused(self):
+        self.refused_nothing_written("no init event", self.with_log(init=False))
+
+    def test_any_init_event_with_extra_tools_refused(self):
+        api = self.pc()
+        api.logs[RUN] = run_log(message(verdict()), extra_events=[
+            {"type": "system", "subtype": "init", "tools": STRICT_TOOLS + PAPERCLIP_WRITE_TOOLS[:1]}])
+        self.refused_nothing_written("offered tools other than Read, Grep and Glob", api)
+
+    def test_use_of_another_tool_refused(self):
+        use = {"type": "assistant", "message": {"content": [
+            {"type": "tool_use", "name": "mcp__Paperclip_projects__create_task", "input": {"title": "x"}}]}}
+        self.refused_nothing_written("used tools other than Read, Grep and Glob", self.with_log(extra_events=[use]))
+
+    def test_permission_denial_refused(self):
+        self.refused_nothing_written("attempted refused tools", self.with_log(
+            denials=[{"tool_name": "mcp__Paperclip_projects__set_task_title", "tool_input": {}}]))
+
+
+class ReviewerConfig(RelayEnv):
+    """P0 layers 1 and 2, checked by review-start before anything is created or woken."""
+
+    def setUp(self):
+        super().setUp()
+        self.pin_review(started=False)
+
+    def start_refused(self, agent, fragment):
+        api = self.pc()
+        api.sub, api.runs, api.agent = None, [], agent
+        with self.assertRaises(rp.ReviewPackError) as cm:
+            rl.review_start(self.rr, self.sr, KEY, api, COMPANY, REVIEWER, rp.BOARD, NOW, self.sleeps.append)
+        self.assertIn(fragment, str(cm.exception))
+        self.assertEqual((api.created, api.wakes), ([], []))
+        return cm.exception
+
+    def test_strict_profile_accepted(self):
+        api = self.pc()
+        api.sub, api.runs = None, []
+        self.assertIn("created", rl.review_start(self.rr, self.sr, KEY, api, COMPANY, REVIEWER, rp.BOARD, NOW))
+
+    def test_mcp_not_removed_refused(self):
+        self.start_refused(self.reviewer_agent(drop=["--disallowedTools"]), "--disallowedTools")
+        a = self.reviewer_agent(drop=["--disallowedTools"], extra=["--disallowedTools", "mcp__Paperclip_projects"])
+        self.start_refused(a, "--disallowedTools mcp__*")
+
+    def test_settings_without_mcp_deny_refused(self):
+        self.write_settings(deny=["Edit", "Write", "NotebookEdit", "Bash", "PowerShell", "WebFetch", "WebSearch"])
+        self.start_refused(self.reviewer_agent(), "must deny ['mcp__*']")
+
+    def test_settings_allowing_more_refused(self):
+        for allow in (["Read", "Grep", "Glob", "mcp__Paperclip_projects__create_task"], ["Read", "Grep", "Glob", "Bash"],
+                      ["Read"]):
+            with self.subTest(allow=allow):
+                self.write_settings(allow=allow)
+                self.start_refused(self.reviewer_agent(), "allow exactly Read, Grep and Glob")
+
+    def test_settings_mode_ask_or_extra_dirs_refused(self):
+        for over in ({"defaultMode": "default"}, {"ask": ["Bash"]}, {"additionalDirectories": ["C:/"]}):
+            with self.subTest(over=over):
+                self.write_settings(**over)
+                self.start_refused(self.reviewer_agent(), "defaultMode dontAsk")
+
+    def test_unreadable_settings_refused(self):
+        os.remove(self.settings_path)
+        self.start_refused(self.reviewer_agent(), "settings file cannot be read")
+
+    def test_wrong_tools_mode_restricted_or_add_dir_refused(self):
+        cases = ((self.reviewer_agent(drop=["--tools"], extra=["--tools", "Read,Grep,Glob,Bash"]), "--tools must be exactly"),
+                 (self.reviewer_agent(drop=["--tools"]), "--tools exactly once"),
+                 (self.reviewer_agent(drop=["--permission-mode"], extra=["--permission-mode", "acceptEdits"]), "dontAsk"),
+                 (self.reviewer_agent(drop=["--restricted"]), "lack --restricted"),
+                 (self.reviewer_agent(drop=["--add-dir"], extra=["--add-dir", self.base]), "--add-dir must be"),
+                 (self.reviewer_agent(extra=["--add-dir", self.base]), "--add-dir exactly once"))
+        for agent, fragment in cases:
+            with self.subTest(fragment=fragment):
+                self.start_refused(agent, fragment)
+
+    def test_forbidden_flags_refused(self):
+        for flag in ("--allowedTools", "--dangerously-skip-permissions", "--mcp-config", "--permission-prompt-tool"):
+            with self.subTest(flag=flag):
+                self.start_refused(self.reviewer_agent(extra=[flag, "x"]), "forbidden flags")
+
+    def test_env_or_skip_permissions_or_other_adapter_refused(self):
+        self.start_refused(self.reviewer_agent(env={"GH_TOKEN": {"type": "secret_ref"}}), "environment variables")
+        self.start_refused(self.reviewer_agent(dangerouslySkipPermissions=True), "skips permission checks")
+        a = self.reviewer_agent()
+        a["adapterType"] = "cursor"
+        self.start_refused(a, "not a claude_local agent")
+
+    def test_unreadable_agent_refused(self):
+        api = self.pc()
+        api.sub, api.runs, api.agent = None, [], None
+        with self.assertRaises(rp.ReviewPackError) as cm:
+            rl.review_start(self.rr, self.sr, KEY, api, COMPANY, REVIEWER, rp.BOARD, NOW, self.sleeps.append)
+        self.assertIn("configuration could not be read", str(cm.exception))
+        self.assertEqual(api.created, [])
 
 
 class Check3Staging(RelayEnv):
