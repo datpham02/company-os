@@ -1,6 +1,14 @@
 # Review Package R6: Phase 6 readiness assessment
 
-- **Status:** `PROPOSED`, review only. **Update after R5 (2026-11-21):** B1 mostly closed, B2 closed, B5 confirmed as a risk, new blocker B7 (relay override, finding F1), **since closed by PR #64 and a live re-run**; see §5 and [review-package-r5-results.md](review-package-r5-results.md). Written for the Board Operator on 2026-11-21. It neither writes nor authorizes the Phase 6 production proposal (design §11).
+- **Status:** `PROPOSED`, review only. Written for the Board Operator on 2026-11-21. It neither writes nor authorizes the Phase 6 production proposal (design §11).
+- **Updates (2026-11-21):**
+  - **After R5:** B1 mostly closed, B2 closed, B5 confirmed, new blocker B7 (relay override, finding F1), since closed by PR #64 and a live re-run ([review-package-r5-results.md](review-package-r5-results.md)).
+  - **Board decisions:** B3 answered (V3: yes); B4 and B5 accepted as named risks for now; B6 approved and its re-check list drafted (§8), for the Board's review.
+  - **Now:** B2–B7 are closed, answered or accepted. B1 is mostly closed; still open:
+    - criterion 2 (representative cases only);
+    - the malformed-verdict path of criterion 6 (offline only);
+    - criterion 9 (until a production run).
+  - The Phase 6 proposal must state these, together with the accepted risks B4 and B5. Details in §5.
 - **Question:** what must hold before a Phase 6 production proposal can be written and judged?
 - **Inputs:**
   - [review-package.md](review-package.md) §11–§13;
@@ -78,10 +86,10 @@ A Phase 6 proposal SHOULD NOT be written until each item is closed, or the Board
 |---|---|---|---|
 | B1 | §12 criteria 1–4 and 6–9 only partly live; merge untested. **After R5:** 1, 3, 4, 7, 8 and the merge live; 2 representative; 6: override fixed (B7 closed), malformed verdict offline only; 9 open until production | R5 in a throwaway repository: tests 1–4, 6–9 and the merge, or each recorded as Failed | Board approves the repository and the run; Claude runs it |
 | B2 | `--cleanup` decides closure from the state file. **Closed:** PR #62, live in R5 test 8 | A code change like R2's (closure from Paperclip, fail closed), then the criterion 8 test | Claude (code, PR); Board approves |
-| B3 | V3 untested | A V3 test, with separate authorization; or a written decision to rely on authenticated mode instead | Board |
-| B4 | G-14: local Board access and same-user file tampering | Authenticated mode (A5 implementation), or a named accepted risk in the proposal with its consequences for the relay | Board |
-| B5 | ADR-022 accepted risk: the agent token may bypass branch protection. **R5: the owner's login bypasses it (confirmed); token level untested** | A throwaway-repository test of an owner fine-grained token against a protected `main`. Then either keep the accepted risk with evidence, or move agents to a separate identity | Board approves the test |
-| B6 | Paperclip version coupling | A version pin and a re-check list in the runbook: <ul><li>`decideIssueOwnership`;</li><li>the reassignment cancel;</li><li>run record fields (`logSha256`, `resultJson`);</li><li>MCP tool registration;</li><li>log redaction.</li></ul> | Claude drafts; Board approves |
+| B3 | V3: can an agent reach Board endpoints? **Answered 2026-11-21: yes.** In sandbox `OPT`, a probe agent ran one command, `curl -s http://127.0.0.1:3100/api/companies`, with no credentials (run `b90f14db`, `OPT-19`). It received **every company on the instance**, `SOU` and the archived `REV` included. An agent process with a shell is treated as the Board. Writes were not tried. **This makes B4 a real gap, not a theoretical one** | — (answered) | — |
+| B4 | G-14: local Board access and same-user file tampering. **Accepted by the Board 2026-11-21 as a named risk for now.** V3 showed that an agent process can act as the Board. Mitigations kept: <ul><li>the agents' rules;</li><li>the Claude allow and deny lists, which leave out `curl` (removed by D-STEP2-01) but still allow `npm run *`, so a project script can reach Paperclip;</li><li>the Board reviewing every PR and decision.</li></ul> Cursor agents have no hard guard. The authenticated-mode migration (OQ-043, auth migration A5) stays planned as separate work; the Phase 6 proposal must name this risk | — (accepted) | — |
+| B5 | ADR-022: the agent token may bypass branch protection. R5: the owner's login bypasses it (confirmed); token level untested. **Accepted by the Board 2026-11-21 as a named risk** for the Phase 6 proposal: for agent tokens the merge gate is procedural (the Board reviews every PR) | — (accepted) | — |
+| B6 | Paperclip version coupling. **Drafted 2026-11-21** (B6 approved by the Board): the re-check list in §8, for the Board's review before it goes into the runbook | — (drafted) | — |
 | B7 (new, R5) | The relay could override a decision the Board makes by hand while it runs (F1). **Closed (narrowed) 2026-11-21:** PR #64 re-checks the issue just before the decision PATCH; R5 test 6b re-run passed live (`OPT-17`). The window between the re-check and the PATCH remains, because Paperclip has no conditional status update; state it in the proposal | — | — |
 
 **Not blockers, but the proposal must state them:**
@@ -120,3 +128,24 @@ Design §11 lists: agent, profile, stages, runbook, token. In concrete terms:
 3. **B3 and B4:** Board decisions on V3 and on authenticated mode. They can run in parallel with R5.
 4. **B6:** runbook draft, with the Phase 6 proposal.
 5. **Phase 6 proposal:** written only after 1–4. It needs separate approval.
+
+## 8. B6: Paperclip version re-check list
+
+The pipeline depends on these Paperclip 2026.1023.0 behaviours. After any Paperclip upgrade, and before the first live review on the new version, re-check each item: source reading first, then the sandbox probe where one is listed. Any change stops live reviews until the code or this document is updated.
+
+| # | Behaviour the code relies on | Where it is used | How to re-check |
+|---|---|---|---|
+| 1 | An issue-scoped `claude_local` run gets Paperclip's MCP tools unless removed. `--disallowedTools mcp__*` and `--strict-mcp-config` remove them | Reviewer profile (P0), `check_reviewer_config` | Source `adapter-claude-local`; one reviewer run: init tools exactly Read, Grep, Glob |
+| 2 | Run record fields: `logSha256`, `logBytes`, `logStore`, `logCompressed`, `contextSnapshot.wakeReason`, `scopeKind`, `issueId`, `resultJson` | `fetch_verified_log`, `_review_run`, `run_label` | `GET /heartbeat-runs/<id>` on a recent run |
+| 3 | Run log paging (`GET /heartbeat-runs/<id>/log`, `offset`, `limitBytes`, `nextOffset`) | `fetch_verified_log` | Offline suite plus one live relay |
+| 4 | Run statuses (`queued`, `scheduled_retry`, `running`, `succeeded`, `interrupted`, `failed`, `cancelled`, `timed_out`); `GET /companies/<id>/heartbeat-runs?agentId=` returns every row without `limit` | `reviewer_run_state` (R2), `--status` | Source `routes/agents.js`; `--status` on a staged review |
+| 5 | Reassignment cancel: `errorCode` `issue_reassigned` with `resultJson.reassignmentStopConfirmed` and `cancellation.expected` | `pc.py` `run_label` (R3) | Source `routes/issues.js`; `pc.py show` on a hand-over |
+| 6 | Stage decisions: a `PATCH` of `status` by the active `local-board` participant records the decision. `executionState.currentParticipant`, `currentStageId` and `lastDecisionId` describe the stage | Relay checks and the F1 re-check | Source; R5 test 6b in a sandbox |
+| 7 | **No conditional status update** (only `expectedExecutionPolicy`, for policy-only writes) | F1 residual window | Source `validators/issue.js`, `routes/issues.js`. If a conditional update appears, use it and close the window |
+| 8 | Issue closure time: `completedAt` (done) and `cancelledAt` (cancelled); there is no `closedAt` | `issue_closure` (B2) | `GET /issues/<key>` on a done and a cancelled issue |
+| 9 | After a reviewer run, Paperclip queues an `issue_disposition_repair` run, cancelled while the agent is paused | Pausing the reviewer between reviews | `pc.py show` on a review sub-issue |
+| 10 | `env` secrets are **not** redacted in run logs; only `adapter.invoke` metadata hides them | Credential rule, deny list (PR #59) | Repeat the redaction probe with a fake secret |
+| 11 | `local_trusted`: a request without `Authorization` is the Board (V3: yes) | G-14, B4 | Repeat the V3 probe (one read-only `curl`) |
+| 12 | Secrets: `env.<KEY>` as `secret_ref` with version `latest`; secret versions | `GH_TOKEN` binding (ADR-022) | `GET /companies/<id>/secrets` and an agent's `adapterConfig` |
+
+Also on every upgrade: run the four offline suites (`test_review_pack`, `test_review_github`, `test_review_relay`, `test_pc`) and record the new version here.
