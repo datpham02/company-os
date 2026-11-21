@@ -63,6 +63,8 @@ AUDIT_EVENTS = {"build", "reuse", "refuse", "stage", "unstage", "abandon", "rela
                 "cleanup", "cleanup-failed", "review-start"}
 # Option B (post-Phase 5 assessment §3.5): a staging-only file binds the reviewer's verdict to this staging.
 REVIEW_ID_FILE = "REVIEW-ID.txt"
+# Exclusive lock file of review-start and unstage (review_relay._op_lock); never removed automatically after a crash.
+OP_LOCK_FILE = "staging.op"
 
 KEY_RE = re.compile(r"^[A-Z]+-\d+$")
 SHA1_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -907,6 +909,9 @@ def staging_status(rr, sr, state, now):
 
 
 def unstage(rr, sr, state, abandon, now):
+    if os.path.exists(os.path.join(sr, OP_LOCK_FILE)):
+        raise ReviewPackError(f"a review-start is in progress ({os.path.join(sr, OP_LOCK_FILE)} exists); wait for it, "
+                              "or, after a crash, inspect the staging lock and Paperclip and delete that file by hand")
     lock = read_lock(sr)
     current = assert_contained(os.path.join(sr, "current"), sr)
     if not lock:

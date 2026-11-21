@@ -19,6 +19,8 @@ UTC = datetime.timezone.utc
 KEY, ISSUE_ID, RUN, REVIEWER, OTHER_AGENT = "SOU-12", "uuid-12", "run-1", "agent-cr", "agent-web"
 SUB_ID, SUB_KEY, COMPANY = "uuid-13", "SOU-13", "co-1"
 REVIEW_ID, CHALLENGE = "11111111-2222-4333-8444-555555555555", "c0ffee" * 5 + "ab"
+WAKE_REASON = f"review {REVIEW_ID} {KEY} {SHA_HEAD[:12]}"
+BOARD_CTX = {"wakeReason": WAKE_REASON, "triggeredBy": "board", "actorId": "local-board"}
 LATER = NOW + datetime.timedelta(minutes=5)
 TOKEN = "github_pat_TESTTOKEN0123456789abcdefABCDEF_xyz"
 
@@ -76,6 +78,10 @@ class FakePaperclip:
                     "assigneeAgentId": REVIEWER, "status": "in_progress"}
         self.created = []  # bodies of POST /companies/<id>/issues
         self.wake = {"id": RUN, "status": "queued"}
+        self.wakes = []  # bodies of POST /agents/<id>/wakeup
+        self.ctx = {}  # run id -> contextSnapshot; default BOARD_CTX
+        self.create_error = None  # (exception, created_anyway) for POST /companies/<id>/issues
+        self.wake_error = None  # (exception, run_created_anyway) for POST /agents/<id>/wakeup
         self.calls = []
         self.fail = {}  # (method, path) -> list of exceptions raised by successive calls
         self.store_despite_error = False  # a POST that fails after the server stored the comment
@@ -113,14 +119,31 @@ class FakePaperclip:
                 return dict(self.details[rid])
             r = next((r for r in self.runs if r["runId"] == rid), None)
             if r:
-                return {"id": rid, "companyId": COMPANY, "issueId": SUB_ID, "scopeKind": "issue",
-                        "agentId": r["agentId"], "status": r["status"], "createdAt": r["createdAt"]}
+                return {"id": rid, "companyId": COMPANY, "issueId": r.get("issueId", SUB_ID), "scopeKind": "issue",
+                        "agentId": r["agentId"], "status": r["status"], "createdAt": r["createdAt"],
+                        "contextSnapshot": dict(self.ctx.get(rid, BOARD_CTX))}
+        if (method, path) == ("GET", f"/companies/{COMPANY}/issues?parentId={ISSUE_ID}&limit=200"):
+            return [dict(self.sub)] if self.sub else []
         if (method, path) == ("POST", f"/companies/{COMPANY}/issues"):
-            self.created.append(body)
-            self.sub = dict(body, id=SUB_ID, identifier=SUB_KEY, companyId=COMPANY)
+            err, created = self.create_error or (None, False)
+            self.create_error = None
+            if err is None or created:
+                self.created.append(body)
+                self.sub = dict(body, id=SUB_ID, identifier=SUB_KEY, companyId=COMPANY)
+            if err is not None:
+                raise err
             return dict(self.sub)
         if (method, path) == ("POST", f"/agents/{REVIEWER}/wakeup?companyId={COMPANY}"):
-            return dict(self.wake) if self.wake else {}
+            self.wakes.append(body)
+            err, started = self.wake_error or (None, False)
+            self.wake_error = None
+            if (err is None and self.wake) or started:
+                rid = (self.wake or {}).get("id", RUN)
+                self.runs.append({"runId": rid, "agentId": REVIEWER, "status": "queued", "createdAt": rp.iso(LATER)})
+                self.ctx[rid] = {"wakeReason": body["reason"], "triggeredBy": "board", "actorId": "local-board"}
+            if err is not None:
+                raise err
+            return dict(self.wake) if self.wake else {"status": "skipped"}
         if (method, path) == ("POST", f"/issues/{ISSUE_ID}/comments"):
             self.comments.insert(0, {"body": body["body"]})
             return {"id": f"c{len(self.comments)}"}
@@ -361,99 +384,314 @@ class Check2ReviewSubIssue(RelayEnv):
 
 
 class ReviewStart(RelayEnv):
+    """review-start lock states and recovery (no Paperclip call is repeated when it may have taken effect)."""
+
     def setUp(self):
         super().setUp()
         self.pin_review(started=False)
 
+    def api(self, **kw):
+        api = self.pc(**kw)
+        api.sub, api.runs = None, []
+        return api
+
     def start(self, api, identity=rp.BOARD):
         return rl.review_start(self.rr, self.sr, KEY, api, COMPANY, REVIEWER, identity, NOW, self.sleeps.append)
 
-    def test_creates_sub_issue_and_wakes_the_reviewer_for_it(self):
-        api = self.pc()
-        api.sub = None
+    def refuse(self, api, fragment):
+        with self.assertRaises(rp.ReviewPackError) as cm:
+            self.start(api)
+        self.assertIn(fragment, str(cm.exception))
+        self.assertFalse(os.path.exists(os.path.join(self.sr, rp.OP_LOCK_FILE)))  # op lock always released
+        return cm.exception
+
+    def lock(self):
+        return rp.read_lock(self.sr)
+
+    # 1
+    def test_first_start_creates_one_sub_issue_and_one_run(self):
+        api = self.api()
         out = self.start(api)
         self.assertIn(f"review sub-issue {SUB_KEY} created, reviewer run {RUN}", out)
+        self.assertEqual((len(api.created), len(api.wakes)), (1, 1))
         body = api.created[0]
         self.assertEqual((body["status"], body["parentId"], body["assigneeAgentId"]), ("backlog", ISSUE_ID, REVIEWER))
         self.assertNotIn("projectId", body)
         self.assertNotIn("executionPolicy", body)
-        wake = [b for m, p, b in api.calls if p.startswith(f"/agents/{REVIEWER}/wakeup")][0]
-        self.assertEqual(wake["payload"], {"issueId": SUB_ID})
-        self.assertEqual((wake["source"], wake["triggerDetail"]), ("on_demand", "manual"))
-        self.assertIn(REVIEW_ID, wake["reason"])
+        wake = api.wakes[0]
+        self.assertEqual((wake["payload"], wake["source"], wake["triggerDetail"], wake["reason"]),
+                         ({"issueId": SUB_ID}, "on_demand", "manual", WAKE_REASON))
         self.assertNotEqual(wake["reason"], "issue_assigned")  # no missing-comment re-wake for a tool-less reviewer
-        lock = rp.read_lock(self.sr)
-        self.assertEqual((lock["reviewIssueId"], lock["reviewIssueKey"], lock["runId"]), (SUB_ID, SUB_KEY, RUN))
-        self.assertEqual(self.events()[-1], "review-start")
+        lock = self.lock()
+        self.assertEqual((lock["reviewIssueId"], lock["reviewIssueKey"], lock["runId"], lock["reviewStart"]),
+                         (SUB_ID, SUB_KEY, RUN, "started"))
+        self.assertIn("review-start", self.events())
 
     def test_challenge_never_leaves_staging(self):
-        api = self.pc()
-        api.sub = None
+        api = self.api()
         self.start(api)
         self.assertNotIn(CHALLENGE, json.dumps(api.calls))
         self.assertNotIn(CHALLENGE, json.dumps(rp.read_audit(self.rr)))
 
     def test_start_then_relay(self):
-        api = self.pc()
-        api.sub = None
+        api = self.api()
         self.start(api)
+        api.runs[0]["status"] = "succeeded"
         api.sub["status"] = "in_progress"
         self.assertIn("relayed approved", self.relay(api))
 
-    def test_second_start_refused(self):
-        api = self.pc()
-        api.sub = None
+    # 2
+    def test_wake_refused_then_retry_wakes_without_second_sub_issue(self):
+        api = self.api()
+        api.wake_error = (http("POST", "wakeup", 409, "agent paused"), False)
+        self.refuse(api, "refused the reviewer wake")
+        self.assertEqual((self.lock()["reviewStart"], self.lock()["runId"]), ("wake-refused", None))
         self.start(api)
-        with self.assertRaises(rp.ReviewPackError) as cm:
-            self.start(api)
-        self.assertIn("already started", str(cm.exception))
+        self.assertEqual((len(api.created), len(api.wakes), len(api.runs)), (1, 2, 1))
+        self.assertEqual(self.lock()["runId"], RUN)
+
+    def test_wake_skipped_without_run_id_then_retry(self):
+        api = self.api()
+        api.wake = None
+        self.refuse(api, "did not start a run")
+        self.assertEqual(self.lock()["reviewStart"], "wake-refused")
+        api.wake = {"id": RUN, "status": "queued"}
+        self.start(api)
+        self.assertEqual((len(api.created), len(api.wakes)), (1, 2))
+
+    def test_wake_unknown_outcome_without_run_fails_closed(self):
+        api = self.api()
+        api.wake_error = (HttpError("Paperclip is not reachable (timed out)"), False)
+        self.refuse(api, "gave no answer")
+        self.assertEqual(self.lock()["reviewStart"], "waking")
+        # 5: no run listed -> stop, no second wake
+        e = self.refuse(api, "may have reached Paperclip")
+        self.assertIn(SUB_ID, str(e))
+        self.assertIn("do not wake the reviewer by hand", str(e))
+        self.assertEqual((len(api.created), len(api.wakes)), (1, 1))
+
+    def test_wake_5xx_is_treated_as_unknown(self):
+        api = self.api()
+        api.wake_error = (http("POST", "wakeup", 502, "bad gateway"), False)
+        self.refuse(api, "gave no answer")
+        self.assertEqual(self.lock()["reviewStart"], "waking")
+
+    # 3
+    def test_lost_wake_response_is_recovered_without_waking_again(self):
+        api = self.api()
+        api.wake_error = (HttpError("Paperclip is not reachable (timed out)"), True)
+        self.refuse(api, "gave no answer")
+        out = self.start(api)
+        self.assertIn(f"recovered the reviewer run {RUN}", out)
+        self.assertEqual((len(api.created), len(api.wakes)), (1, 1))
+        self.assertEqual((self.lock()["runId"], self.lock()["reviewStart"]), (RUN, "started"))
+
+    # 11
+    def test_lock_write_failure_after_wake_is_recovered(self):
+        api = self.api()
+        real = rp.update_lock
+
+        def failing(sr, **fields):
+            if "runId" in fields:
+                raise OSError("disk full")
+            return real(sr, **fields)
+        rp.update_lock = failing
+        try:
+            with self.assertRaises(OSError):
+                self.start(api)
+        finally:
+            rp.update_lock = real
+        self.assertFalse(os.path.exists(os.path.join(self.sr, rp.OP_LOCK_FILE)))
+        self.assertEqual((self.lock()["reviewStart"], self.lock()["runId"]), ("waking", None))
+        self.assertIn("recovered the reviewer run", self.start(api))
+        self.assertEqual((len(api.created), len(api.wakes)), (1, 1))
+
+    # 4
+    def test_already_started_verifies_and_never_wakes(self):
+        api = self.api()
+        self.start(api)
+        out = self.start(api)
+        self.assertIn("review already started", out)
+        self.assertEqual((len(api.created), len(api.wakes)), (1, 1))
+
+    def test_already_started_with_foreign_recorded_run_fails_closed(self):
+        api = self.api()
+        self.start(api)
+        rp.update_lock(self.sr, runId="run-other")
+        self.refuse(api, "is not this review's run")
+        self.assertEqual(len(api.wakes), 1)
+
+    # 6
+    def test_sub_issue_gone_fails_closed_and_is_not_recreated(self):
+        api = self.api()
+        api.wake_error = (HttpError("timed out"), False)
+        self.refuse(api, "gave no answer")
+        api.sub = None
+        self.refuse(api, "was not found in Paperclip; it is not recreated")
         self.assertEqual(len(api.created), 1)
 
+    # 7
+    def test_sub_issue_wrong_parent_company_or_assignee_fails_closed(self):
+        for field, value, fragment in (("parentId", "uuid-99", "is not a child of"),
+                                       ("companyId", "co-2", "another company"),
+                                       ("assigneeAgentId", OTHER_AGENT, "is not assigned to code-reviewer")):
+            with self.subTest(field=field):
+                api = self.api()
+                api.wake_error = (HttpError("timed out"), False)
+                rp.update_lock(self.sr, reviewIssueId=None, reviewIssueKey=None, runId=None, reviewStart=None)
+                self.refuse(api, "gave no answer")
+                api.sub[field] = value
+                self.refuse(api, fragment)
+                self.assertEqual(len(api.wakes), 1)
+
+    # 8
+    def test_run_of_another_issue_or_review_is_not_adopted(self):
+        for over, ctx in (({"issueId": "uuid-99"}, None),
+                          ({}, dict(BOARD_CTX, wakeReason="review other-review SOU-12 x")),
+                          ({}, dict(BOARD_CTX, triggeredBy="agent")),
+                          ({}, dict(BOARD_CTX, actorId="someone")),
+                          ({"agentId": OTHER_AGENT}, None)):
+            with self.subTest(over=over, ctx=ctx):
+                api = self.api()
+                api.wake_error = (HttpError("timed out"), False)
+                rp.update_lock(self.sr, reviewIssueId=None, reviewIssueKey=None, runId=None, reviewStart=None)
+                self.refuse(api, "gave no answer")
+                api.runs.append(dict({"runId": "run-x", "agentId": REVIEWER, "status": "running",
+                                      "createdAt": rp.iso(LATER)}, **over))
+                if ctx:
+                    api.ctx["run-x"] = ctx
+                self.refuse(api, "cannot be chosen safely")
+                self.assertIsNone(self.lock()["runId"])
+                self.assertEqual(len(api.wakes), 1)
+
+    def test_run_created_before_staging_is_not_adopted(self):
+        api = self.api()
+        api.wake_error = (HttpError("timed out"), False)
+        self.refuse(api, "gave no answer")
+        api.runs.append({"runId": "run-old", "agentId": REVIEWER, "status": "succeeded",
+                         "createdAt": rp.iso(NOW - datetime.timedelta(minutes=1))})
+        self.refuse(api, "cannot be chosen safely")
+
+    # 9
+    def test_several_matching_runs_fail_closed(self):
+        api = self.api()
+        api.wake_error = (HttpError("timed out"), True)
+        self.refuse(api, "gave no answer")
+        api.runs.append({"runId": "run-2", "agentId": REVIEWER, "status": "queued", "createdAt": rp.iso(LATER)})
+        api.ctx["run-2"] = dict(BOARD_CTX)
+        self.refuse(api, "2 run(s) of this review")
+        self.assertIsNone(self.lock()["runId"])
+
+    def test_existing_unrelated_run_blocks_a_first_wake(self):
+        """Even before any wake was sent, a run already on the sub-issue stops review-start instead of adding one."""
+        api = self.api()
+        api.wake_error = (http("POST", "wakeup", 422, "no"), False)
+        self.refuse(api, "refused the reviewer wake")
+        api.runs.append({"runId": "run-x", "agentId": REVIEWER, "status": "running", "createdAt": rp.iso(LATER)})
+        api.ctx["run-x"] = dict(BOARD_CTX, wakeReason="something else")
+        self.refuse(api, "cannot be chosen safely")
+        self.assertEqual(len(api.wakes), 1)
+
+    # sub-issue creation outcomes
+    def test_create_refused_allows_retry(self):
+        api = self.api()
+        api.create_error = (http("POST", "issues", 422, "bad"), False)
+        self.refuse(api, "refused to create the review sub-issue")
+        self.assertEqual(self.lock()["reviewStart"], "create-refused")
+        self.start(api)
+        self.assertEqual((len(api.created), len(api.wakes)), (1, 1))
+
+    def test_lost_create_response_adopts_the_sub_issue(self):
+        api = self.api()
+        api.create_error = (HttpError("timed out"), True)
+        self.refuse(api, "creating the review sub-issue gave no answer")
+        self.assertEqual(self.lock()["reviewStart"], "creating")
+        self.start(api)
+        self.assertEqual((len(api.created), len(api.wakes)), (1, 1))
+        self.assertEqual(self.lock()["reviewIssueId"], SUB_ID)
+
+    def test_unknown_create_without_sub_issue_fails_closed(self):
+        api = self.api()
+        api.create_error = (HttpError("timed out"), False)
+        self.refuse(api, "gave no answer")
+        e = self.refuse(api, "0 child issue(s)")
+        self.assertIn(REVIEW_ID, str(e))
+        self.assertEqual(api.created, [])
+
+    # 10
+    def test_concurrent_start_is_refused_while_one_runs(self):
+        import threading
+        api = self.api()
+        entered, release, results = threading.Event(), threading.Event(), []
+        inner = api.__call__
+
+        def slow(method, path, body=None):
+            if method == "POST" and path.endswith("/issues"):
+                entered.set()
+                release.wait(5)
+            return inner(method, path, body)
+
+        def first():
+            try:
+                results.append(rl.review_start(self.rr, self.sr, KEY, slow, COMPANY, REVIEWER, rp.BOARD, NOW))
+            except Exception as e:  # pragma: no cover - surfaced below
+                results.append(e)
+        t = threading.Thread(target=first)
+        t.start()
+        self.assertTrue(entered.wait(5))
+        try:
+            with self.assertRaises(rp.ReviewPackError) as cm:
+                rl.review_start(self.rr, self.sr, KEY, api, COMPANY, REVIEWER, rp.BOARD, NOW)
+            self.assertIn("another staging operation is in progress", str(cm.exception))
+            with self.assertRaises(rp.ReviewPackError):
+                rp.unstage(self.rr, self.sr, {"issues": {}, "runs": []}, True, NOW)
+        finally:
+            release.set()
+            t.join(5)
+        self.assertIn("created", results[0])
+        self.assertEqual((len(api.created), len(api.wakes)), (1, 1))
+
+    def test_leftover_op_lock_is_not_taken_over(self):
+        with open(os.path.join(self.sr, rp.OP_LOCK_FILE), "w") as f:
+            f.write("{}")
+        api = self.api()
+        with self.assertRaises(rp.ReviewPackError) as cm:
+            self.start(api)
+        self.assertIn("delete that file by hand", str(cm.exception))
+        self.assertTrue(os.path.exists(os.path.join(self.sr, rp.OP_LOCK_FILE)))
+        self.assertEqual(api.calls, [])
+
+    # refusals before anything is created
     def test_refusals_create_nothing(self):
-        cases = (
-            (dict(status="in_progress"), "not waiting on user:local-board"),
-            (dict(participant={"type": "agent", "agentId": REVIEWER}), "not waiting on user:local-board"),
-            (dict(participant={"type": "user", "userId": "someone"}), "not waiting on user:local-board"),
-        )
-        for kw, fragment in cases:
+        for kw in (dict(status="in_progress"), dict(participant={"type": "agent", "agentId": REVIEWER}),
+                   dict(participant={"type": "user", "userId": "someone"})):
             with self.subTest(kw=kw):
-                api = self.pc(**kw)
-                api.sub = None
-                with self.assertRaises(rp.ReviewPackError) as cm:
-                    self.start(api)
-                self.assertIn(fragment, str(cm.exception))
-                self.assertEqual(api.created, [])
-                self.assertIsNone(rp.read_lock(self.sr)["reviewIssueId"])
+                api = self.api(**kw)
+                self.refuse(api, "not waiting on user:local-board")
+                self.assertEqual((api.created, api.wakes), ([], []))
+                self.assertIsNone(self.lock()["reviewIssueId"])
 
     def test_tampered_staging_refused(self):
         with open(os.path.join(self.sr, "current", rp.REVIEW_ID_FILE), "ab") as f:
             f.write(b"x")
-        api = self.pc()
-        with self.assertRaises(rp.ReviewPackError):
-            self.start(api)
+        api = self.api()
+        self.refuse(api, "REVIEW-ID.txt fails")
         self.assertEqual(api.created, [])
 
+    def test_unknown_state_refused(self):
+        rp.update_lock(self.sr, reviewStart="weird")
+        self.refuse(self.api(), "unknown reviewStart state")
+
     def test_other_issue_staged_or_nothing_staged(self):
-        api = self.pc()
+        api = self.api()
         with self.assertRaises(rp.ReviewPackError) as cm:
             rl.review_start(self.rr, self.sr, "SOU-99", api, COMPANY, REVIEWER, rp.BOARD, NOW)
         self.assertIn("staging holds SOU-12", str(cm.exception))
         rp.unstage(self.rr, self.sr, {"issues": {}, "runs": []}, True, NOW)
-        with self.assertRaises(rp.ReviewPackError) as cm:
-            self.start(api)
-        self.assertIn("nothing is staged", str(cm.exception))
-
-    def test_wake_without_run_id_reported(self):
-        api = self.pc()
-        api.sub = None
-        api.wake = None
-        with self.assertRaises(rp.ReviewPackError) as cm:
-            self.start(api)
-        self.assertIn("did not return a run", str(cm.exception))
-        self.assertEqual(rp.read_lock(self.sr)["reviewIssueId"], SUB_ID)  # recorded, so a restart is refused
+        self.refuse(api, "nothing is staged")
 
     def test_cli_refusal_is_audited(self):
-        api = self.pc(status="todo")
+        api = self.api(status="todo")
         a = argparse.Namespace(key=KEY, identity=rp.BOARD, review_root=self.rr, staging_root=self.sr)
         with self.assertRaises(rp.ReviewPackError):
             rl.cmd_review_start(a, api, lambda: COMPANY, lambda: REVIEWER, now=NOW, sleep=self.sleeps.append)

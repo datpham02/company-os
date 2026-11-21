@@ -348,14 +348,123 @@ def _close_review_issue(api, sub_id, sleep):
 
 # ---------- review-start (Option B) ----------
 
-def review_start(rr, sr, key, api, company_id, reviewer_agent_id, identity, now, sleep=time.sleep):
-    """Create the review sub-issue for the staged review and wake code-reviewer for it. Returns a summary.
+START_STATES = (None, "creating", "create-refused", "sub-issue-created", "waking", "wake-refused", "started")
+OP_LOCK = rp.OP_LOCK_FILE
 
-    The sub-issue is created in backlog (no assignment wake) without a project (no worktree), then the reviewer
-    is woken on demand for it with a reason naming the review. That wake reason is not one that makes Paperclip
-    require an issue comment (server services/heartbeat/queue.js shouldRequireIssueCommentForWake), so the
-    tool-less reviewer is not re-woken for a missing comment. Whether Paperclip runs an on-demand wake for a
-    backlog issue as issue-scoped, in the agent's configured cwd, is to be verified in a sandbox."""
+
+def _op_lock(sr, what, now):
+    """Exclusive short lock for state-changing staging operations (review-start, unstage), so two runs cannot
+    both create a sub-issue or wake the reviewer. Never taken over automatically: a leftover file after a crash
+    must be inspected and removed by the Board."""
+    path = os.path.join(sr, OP_LOCK)
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        raise rp.ReviewPackError(f"another staging operation is in progress ({path} exists). If none is running "
+                                 "(for example after a crash), check the staging lock and Paperclip, then delete "
+                                 "that file by hand") from None
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(json.dumps({"op": what, "pid": os.getpid(), "at": rp.iso(now)}) + "\n")
+    return path
+
+
+def _is_refusal(err):
+    """A 4xx answer means Paperclip refused the request, so it had no effect. Anything else (network error,
+    timeout, 5xx) leaves it unknown whether the request took effect."""
+    code = _http_status(err)
+    return code is not None and 400 <= code < 500
+
+
+def _get_sub(api, sub_id, sleep):
+    """GET a review sub-issue; a refusal (for example 404) reads as missing, a transient error propagates."""
+    try:
+        return _with_retry(lambda: api("GET", f"/issues/{sub_id}"), sleep)
+    except Transient:
+        raise
+    except Exception:
+        return None
+
+
+def _wake_reason(lock):
+    return f"review {lock['reviewId']} {lock['issue']} {lock['headSha'][:12]}"
+
+
+def _sub_title(lock):
+    return f"Review {lock['issue']} @ {lock['headSha'][:12]} (review {lock['reviewId'][:8]})"
+
+
+def _check_sub(sub, sub_id, issue, reviewer_agent_id):
+    if not isinstance(sub, dict) or sub.get("id") != sub_id:
+        raise rp.ReviewPackError(f"review sub-issue {sub_id} was not found in Paperclip; it is not recreated "
+                                 "automatically. Unstage with --abandon and stage again for a new review")
+    label = sub.get("identifier") or sub_id
+    if sub.get("parentId") != issue["id"]:
+        raise rp.ReviewPackError(f"review sub-issue {label} is not a child of {issue.get('identifier')}")
+    if issue.get("companyId") is None or sub.get("companyId") != issue.get("companyId"):
+        raise rp.ReviewPackError(f"review sub-issue {label} belongs to another company")
+    if sub.get("assigneeAgentId") != reviewer_agent_id:
+        raise rp.ReviewPackError(f"review sub-issue {label} is not assigned to {rp.REVIEWER_AGENT}")
+
+
+def _matching_runs(api, lock, sub_id, reviewer_agent_id, identity, sleep):
+    """Runs of the sub-issue that this review-start's wake created: same agent, scoped to the sub-issue (run
+    record), started by the Board identity with this review's exact wake reason, not older than the staging.
+    Returns (matches, other_runs)."""
+    try:
+        runs = _with_retry(lambda: api("GET", f"/issues/{sub_id}/runs"), sleep) or []
+    except Transient:
+        raise
+    except Exception as e:
+        raise rp.ReviewPackError(f"the runs of review sub-issue {sub_id} could not be read ({str(e)[:160]}); "
+                                 "nothing was woken") from None
+    since = rp.parse_iso(lock["stagedAt"], "staging.lock stagedAt")
+    matches, others = [], []
+    for r in runs:
+        rid = r.get("runId") if isinstance(r, dict) else None
+        if not rid:
+            continue
+        try:
+            d = _with_retry(lambda: api("GET", f"/heartbeat-runs/{rid}"), sleep)
+        except Transient:
+            raise
+        except Exception:
+            d = None  # unreadable run record: counted as another run, so nothing is woken
+        ctx = (d or {}).get("contextSnapshot") or {}
+        ok = (isinstance(d, dict) and d.get("id") == rid and d.get("issueId") == sub_id
+              and d.get("agentId") == reviewer_agent_id and ctx.get("wakeReason") == _wake_reason(lock)
+              and ctx.get("triggeredBy") == "board" and ctx.get("actorId") == identity
+              and rp.parse_iso(d.get("createdAt") or "", f"run {rid} createdAt") >= since)
+        (matches if ok else others).append(rid)
+    return matches, others
+
+
+def review_start(rr, sr, key, api, company_id, reviewer_agent_id, identity, now, sleep=time.sleep):
+    """Create the review sub-issue for the staged review and wake code-reviewer for it, or recover a start that
+    was interrupted. Returns a summary. Fails closed whenever it cannot tell what an earlier attempt did.
+
+    Lock field `reviewStart` records progress, so an interrupted run never repeats a step that may have
+    taken effect:
+      None / create-refused   -> create the sub-issue (state "creating" is written first)
+      creating                -> the create may have happened: look for the sub-issue among the issue's
+                                 children (by review id); exactly one -> adopt it; otherwise stop
+      sub-issue-created / wake-refused -> no wake took effect: wake (state "waking" is written first)
+      waking                  -> the wake may have happened: look for this review's run on the sub-issue;
+                                 exactly one -> record it; none or several -> stop, no new wake
+      started (runId set)     -> verify sub-issue and run; never wake again
+    POSTs that create or wake are sent once, without automatic retry. Paperclip's wakeup idempotencyKey is not
+    used: in 2026.1023.0 it deduplicates only execution-recovery wakes (server services/heartbeat/queue.js).
+    The sub-issue is created in backlog (no assignment wake) without a project (no worktree); the wake reason
+    does not make Paperclip require an issue comment (queue.js shouldRequireIssueCommentForWake). Whether
+    Paperclip runs an on-demand wake for a backlog issue as issue-scoped, in the agent's cwd, is to be verified
+    in a sandbox."""
+    op = _op_lock(sr, "review-start", now)
+    try:
+        return _review_start(rr, sr, key, api, company_id, reviewer_agent_id, identity, now, sleep)
+    finally:
+        os.remove(op)
+
+
+def _review_start(rr, sr, key, api, company_id, reviewer_agent_id, identity, now, sleep):
     lock = rp.read_lock(sr)
     if lock is None:
         raise rp.ReviewPackError("nothing is staged; run review-pack first")
@@ -363,36 +472,114 @@ def review_start(rr, sr, key, api, company_id, reviewer_agent_id, identity, now,
         raise rp.ReviewPackError(f"staging holds {lock['issue']}, not {key}")
     if not lock.get("reviewId"):
         raise rp.ReviewPackError("this staging predates Option B (no reviewId); unstage and stage it again")
-    if lock.get("reviewIssueId"):
-        raise rp.ReviewPackError(f"the review was already started (sub-issue {lock.get('reviewIssueKey') or lock['reviewIssueId']}, "
-                                 f"run {lock.get('runId')}); one review per staging")
+    state = lock.get("reviewStart")
+    if state not in START_STATES:
+        raise rp.ReviewPackError(f"staging.lock has an unknown reviewStart state {state!r}; inspect it")
     rp.verify_package(os.path.join(sr, "current"), True, lock["manifestSha256"], rp.staged_extra(lock))
     issue = _with_retry(lambda: api("GET", f"/issues/{key}"), sleep)
+    head12, rid8 = lock["headSha"][:12], lock["reviewId"][:8]
+
+    # Started: verify, never wake again
+    if lock.get("runId"):
+        if not lock.get("reviewIssueId"):
+            raise rp.ReviewPackError("staging.lock names a run but no review sub-issue; inspect it")
+        sub = _get_sub(api, lock["reviewIssueId"], sleep)
+        _check_sub(sub, lock["reviewIssueId"], issue, reviewer_agent_id)
+        matches, _ = _matching_runs(api, lock, lock["reviewIssueId"], reviewer_agent_id, identity, sleep)
+        if lock["runId"] not in matches:
+            raise rp.ReviewPackError(f"the recorded run {lock['runId']} is not this review's run on "
+                                     f"{sub.get('identifier')}; inspect it before relaying")
+        return (f"{key}: review already started (sub-issue {sub.get('identifier')}, run {lock['runId']}); "
+                f"nothing woken. When it has succeeded: pc.py review-relay {key} --run-id {lock['runId']}")
+
     part = (issue.get("executionState") or {}).get("currentParticipant") or {}
     if issue.get("status") != "in_review" or part.get("type") != "user" or part.get("userId") != identity:
         raise rp.ReviewPackError(f"{key} is not waiting on user:{identity} in review "
                                  f"(status {issue.get('status')}); the relay could not record the decision")
-    head12 = lock["headSha"][:12]
-    desc = (f"Review sub-issue for {key} at head {lock['headSha']} (review {lock['reviewId']}).\n\n"
-            "You are code-reviewer. Read REVIEW.md and REVIEW-ID.txt in the staged package folder given to you "
-            "with --add-dir, review the package as REVIEW.md says, and end your final message with exactly one "
-            "fenced json verdict block. Do not try to change anything.")
-    sub = _with_retry(lambda: api("POST", f"/companies/{company_id}/issues", {
-        "title": f"Review {key} @ {head12} (review {lock['reviewId'][:8]})", "description": desc,
-        "assigneeAgentId": reviewer_agent_id, "status": "backlog", "parentId": issue["id"]}), sleep)
-    rp.update_lock(sr, reviewIssueId=sub["id"], reviewIssueKey=sub.get("identifier"))
-    rp.audit(rr, "review-start", now, issue=key, head=lock["headSha"], reason=f"sub-issue {sub.get('identifier')}",
-             reviewId=lock["reviewId"], reviewIssueId=sub["id"])
-    run = _with_retry(lambda: api("POST", f"/agents/{reviewer_agent_id}/wakeup?companyId={company_id}", {
-        "source": "on_demand", "triggerDetail": "manual",
-        "reason": f"review {lock['reviewId']} {key} {head12}", "payload": {"issueId": sub["id"]}}), sleep)
+
+    # Step 1: the sub-issue
+    if not lock.get("reviewIssueId"):
+        if state == "creating":
+            found = _with_retry(lambda: api("GET", f"/companies/{company_id}/issues?parentId={issue['id']}"
+                                                   f"&limit=200"), sleep) or []
+            mine = [c for c in found if isinstance(c, dict) and f"(review {lock['reviewId']})" in
+                    str(c.get("description") or "") and c.get("parentId") == issue["id"]]
+            if len(mine) != 1:
+                raise rp.ReviewPackError(
+                    f"an earlier review-start may have created the review sub-issue and was interrupted; "
+                    f"{len(mine)} child issue(s) of {key} carry review {lock['reviewId']}. Nothing was created now. "
+                    f"Look for \"{_sub_title(lock)}\" among {key}'s sub-issues: if exactly one exists it will be "
+                    "adopted on the next review-start once Paperclip lists it; if none exists after a few "
+                    "minutes, or several do, cancel them (pc.py cancel) and unstage with --abandon, then stage again")
+            sub = mine[0]
+            _check_sub(sub, sub["id"], issue, reviewer_agent_id)
+        else:
+            rp.update_lock(sr, reviewStart="creating")
+            desc = (f"Review sub-issue for {key} at head {lock['headSha']} (review {lock['reviewId']}).\n\n"
+                    "You are code-reviewer. Read REVIEW.md and REVIEW-ID.txt in the staged package folder given "
+                    "to you with --add-dir, review the package as REVIEW.md says, and end your final message with "
+                    "exactly one fenced json verdict block. Do not try to change anything.")
+            try:
+                sub = api("POST", f"/companies/{company_id}/issues", {
+                    "title": _sub_title(lock), "description": desc, "assigneeAgentId": reviewer_agent_id,
+                    "status": "backlog", "parentId": issue["id"]})
+            except Exception as e:
+                if _is_refusal(e):
+                    rp.update_lock(sr, reviewStart="create-refused")
+                    raise rp.ReviewPackError(f"Paperclip refused to create the review sub-issue ({str(e)[:200]}); "
+                                             "nothing was created, review-start can be run again") from None
+                raise rp.ReviewPackError(
+                    f"creating the review sub-issue gave no answer ({str(e)[:200]}); it may exist. Run "
+                    "review-start again: it looks for it and does not create a second one") from None
+            _check_sub(sub, (sub or {}).get("id"), issue, reviewer_agent_id)
+        lock = rp.update_lock(sr, reviewIssueId=sub["id"], reviewIssueKey=sub.get("identifier"),
+                              reviewStart="sub-issue-created")
+        rp.audit(rr, "review-start", now, issue=key, head=lock["headSha"], reason=f"sub-issue {sub.get('identifier')}",
+                 reviewId=lock["reviewId"], reviewIssueId=sub["id"])
+    sub_id = lock["reviewIssueId"]
+    sub = _get_sub(api, sub_id, sleep)
+    _check_sub(sub, sub_id, issue, reviewer_agent_id)
+    label = sub.get("identifier") or sub_id
+
+    # Step 2: the run. Any existing run of the sub-issue blocks a new wake.
+    matches, others = _matching_runs(api, lock, sub_id, reviewer_agent_id, identity, sleep)
+    if len(matches) == 1:
+        rp.update_lock(sr, runId=matches[0], reviewStart="started")
+        return (f"{key}: recovered the reviewer run {matches[0]} of sub-issue {label}; nothing new woken. "
+                f"When it has succeeded: pc.py review-relay {key} --run-id {matches[0]}")
+    if matches or others:
+        raise rp.ReviewPackError(
+            f"sub-issue {label} has {len(matches)} run(s) of this review and {len(others)} other run(s); the run "
+            "cannot be chosen safely and nothing was woken. Inspect them in Paperclip; to start over, cancel the "
+            "sub-issue (pc.py cancel) and unstage with --abandon, then stage again")
+    if lock.get("reviewStart") == "waking":
+        raise rp.ReviewPackError(
+            f"an earlier wake for sub-issue {label} ({sub_id}) may have reached Paperclip, but no run of it is "
+            "listed yet. Nothing was woken now. Run review-start again in a few minutes: it records the run once "
+            f"Paperclip lists it. If none appears, cancel {label} (pc.py cancel) and unstage with --abandon, then "
+            "stage again; do not wake the reviewer by hand")
+    rp.update_lock(sr, reviewStart="waking")
+    try:
+        run = api("POST", f"/agents/{reviewer_agent_id}/wakeup?companyId={company_id}", {
+            "source": "on_demand", "triggerDetail": "manual", "reason": _wake_reason(lock),
+            "payload": {"issueId": sub_id}})
+    except Exception as e:
+        if _is_refusal(e):
+            rp.update_lock(sr, reviewStart="wake-refused")
+            raise rp.ReviewPackError(f"Paperclip refused the reviewer wake ({str(e)[:200]}); no run was started. "
+                                     f"Fix the cause, then run review-start again (sub-issue {label} is kept)") from None
+        raise rp.ReviewPackError(
+            f"the reviewer wake for sub-issue {label} gave no answer ({str(e)[:200]}); a run may exist. Run "
+            "review-start again: it looks for the run and does not wake twice") from None
     run_id = (run or {}).get("id")
     if not run_id:
-        raise rp.ReviewPackError(f"Paperclip did not return a run for the reviewer wake (sub-issue "
-                                 f"{sub.get('identifier')} exists); check it, then unstage --abandon and restart")
-    rp.update_lock(sr, runId=run_id)
-    return (f"{key}: review sub-issue {sub.get('identifier')} created, reviewer run {run_id} "
-            f"{(run or {}).get('status')}. When it has succeeded: pc.py review-relay {key} --run-id {run_id}")
+        rp.update_lock(sr, reviewStart="wake-refused")
+        raise rp.ReviewPackError(f"Paperclip did not start a run for the reviewer wake (status "
+                                 f"{(run or {}).get('status')}; for example the agent is paused). Sub-issue {label} "
+                                 "is kept; fix the cause, then run review-start again")
+    rp.update_lock(sr, runId=run_id, reviewStart="started")
+    return (f"{key}: review sub-issue {label} created, reviewer run {run_id} {(run or {}).get('status')}. "
+            f"When it has succeeded: pc.py review-relay {key} --run-id {run_id}")
 
 
 def add_start_parser(sub, fn):

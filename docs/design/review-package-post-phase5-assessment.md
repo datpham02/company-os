@@ -1,6 +1,6 @@
 # Review Package: post-Phase 5 technical assessment and remediation plan
 
-- **Status:** PROPOSED; read-only assessment, 2026-11-21. **Update (same day):** the Board Operator chose **Option B** ("làm phương án B"). It is implemented with offline tests on branch `feat/review-package-option-b` (§3.5): review sub-issue, staging challenge (Option A's challenge included), `review-start`, relay checks; the company-scoped path is removed. Not yet run live. Everything else here is still a proposal.
+- **Status:** PROPOSED; read-only assessment, 2026-11-21. **Update (same day):** the Board Operator chose **Option B** ("làm phương án B"). It is implemented with offline tests on branch `feat/review-package-option-b` (§3.5): review sub-issue, staging challenge (Option A's challenge included), `review-start` with recovery of interrupted starts, relay checks; the company-scoped path is removed. Not yet run live. Everything else here is still a proposal.
 - **Inputs:**
   - [review-package.md](review-package.md) (design);
   - Phase 4a, 4b and 5 records: [4a](review-package-phase4a-relay.md), [4b](review-package-phase4b-live.md), and `review-package-phase5-sandbox.md`. The Phase 5 record is in documentation PR #49, not yet merged; this assessment uses its content as written there;
