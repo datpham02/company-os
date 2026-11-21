@@ -1,6 +1,6 @@
 # Review Package Phase 4a: Verdict Relay (offline)
 
-- **Status:** code and offline tests done. **Not run against any Paperclip instance.** The sandbox part (4b: V1–V3) waits for Board decisions (§4).
+- **Status:** code and offline tests done. **Phase 4b ran on 2026-11-21** on the live instance in a throwaway company: see [review-package-phase4b-live.md](review-package-phase4b-live.md). §4 below is kept as written before that run.
 - **Phase definition:** [review-package.md](review-package.md) §11, Phase 4 "Paperclip sandbox and relay API"; relay design §3.
 - **Why split:** Phase 4 needs a separate Paperclip instance and a real `code-reviewer` agent run. Agent runs and Paperclip experiments need their own Board approval (§3.1 sandbox rules, D-AUTH-12). So the relay is written and tested first against a fake Paperclip (4a); the sandbox validation comes after approval (4b).
 - **Code:**

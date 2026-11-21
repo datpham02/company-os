@@ -201,6 +201,22 @@ def _post_comment(api, issue_id, body, run_id, head, sleep):
     raise Transient(f"gave up after {ATTEMPTS} attempts: {last}")
 
 
+def _company_run(api, run_id, issue, key, sleep):
+    try:
+        r = _with_retry(lambda: api("GET", f"/heartbeat-runs/{run_id}"), sleep)
+    except Transient:
+        raise
+    except Exception:
+        r = None
+    if not isinstance(r, dict) or r.get("id") != run_id:
+        raise rp.ReviewPackError(f"run {run_id} is not a run of {key}")
+    if issue.get("companyId") is None or r.get("companyId") != issue.get("companyId"):
+        raise rp.ReviewPackError(f"run {run_id} belongs to another company than {key}")
+    if r.get("issueId") not in (None, issue["id"]):
+        raise rp.ReviewPackError(f"run {run_id} was scoped to another issue")
+    return {"runId": r["id"], "agentId": r.get("agentId"), "status": r.get("status"), "createdAt": r.get("createdAt")}
+
+
 # ---------- the relay ----------
 
 def relay(rr, sr, key, run_id, api, head_now, identity, reviewer_agent_id, now, sleep=time.sleep):
@@ -243,7 +259,11 @@ def relay(rr, sr, key, run_id, api, head_now, identity, reviewer_agent_id, now, 
     runs = _with_retry(lambda: api("GET", f"/issues/{issue['id']}/runs"), sleep) or []
     run = next((r for r in runs if r.get("runId") == run_id), None)
     if run is None:
-        raise rp.ReviewPackError(f"run {run_id} is not a run of {key}")
+        # Phase 4b (V2): Paperclip 2026.1023.0 cancels an issue-scoped run of an agent that is neither the
+        # assignee nor the agent participant of the current stage, so the reviewer is woken without an issue.
+        # Such a run is accepted only if it belongs to the issue's company and is not scoped to another issue;
+        # the staging lock and the verdict's issue and headSha bind it to this review.
+        run = _company_run(api, run_id, issue, key, sleep)
     if run.get("agentId") != reviewer_agent_id:
         raise rp.ReviewPackError(f"run {run_id} is not a {rp.REVIEWER_AGENT} run")
     if run.get("status") != RUN_OK:

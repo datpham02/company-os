@@ -61,13 +61,14 @@ def run_log(final, extra_events=()):
 
 class FakePaperclip:
     def __init__(self, final, status="in_review", participant=None, runs=None):
-        self.issue = {"id": ISSUE_ID, "identifier": KEY, "status": status,
+        self.issue = {"id": ISSUE_ID, "companyId": "co-1", "identifier": KEY, "status": status,
                       "executionState": {"currentStageType": "review",
                                          "currentParticipant": participant or {"type": "user", "userId": rp.BOARD}}}
         self.comments = []
         self.runs = runs if runs is not None else [
             {"runId": RUN, "agentId": REVIEWER, "status": "succeeded", "createdAt": rp.iso(LATER)}]
         self.logs = {RUN: run_log(final)}
+        self.details = {}  # run id -> GET /heartbeat-runs/<id> body (company-scoped runs)
         self.calls = []
         self.fail = {}  # (method, path) -> list of exceptions raised by successive calls
         self.store_despite_error = False  # a POST that fails after the server stored the comment
@@ -89,8 +90,10 @@ class FakePaperclip:
             return list(self.comments)
         if (method, path) == ("GET", f"/issues/{ISSUE_ID}/runs"):
             return list(self.runs)
-        if method == "GET" and path.startswith("/heartbeat-runs/"):
+        if method == "GET" and path.startswith("/heartbeat-runs/") and path.endswith("/log"):
             return self.logs.get(path.split("/")[2], {"content": ""})
+        if method == "GET" and path.startswith("/heartbeat-runs/") and path.split("/")[2] in self.details:
+            return dict(self.details[path.split("/")[2]])
         if (method, path) == ("POST", f"/issues/{ISSUE_ID}/comments"):
             self.comments.insert(0, {"body": body["body"]})
             return {"id": f"c{len(self.comments)}"}
@@ -217,6 +220,34 @@ class Check2Run(RelayEnv):
         with open(rp.lock_path(self.sr), "w", encoding="utf-8") as f:
             json.dump(lock, f)
         self.refused_nothing_written("names run run-other", self.pc())
+
+
+class Check2CompanyScopedRun(RelayEnv):
+    """Phase 4b finding (V2): the reviewer is woken without an issue, so its run is not in the issue's runs."""
+
+    def api(self, **over):
+        api = self.pc(runs=[])
+        d = {"id": RUN, "companyId": "co-1", "agentId": REVIEWER, "issueId": None, "scopeKind": "company",
+             "status": "succeeded", "createdAt": rp.iso(LATER)}
+        d.update(over)
+        api.details[RUN] = d
+        return api
+
+    def test_company_scoped_run_accepted(self):
+        api = self.api()
+        self.assertIn("relayed approved", self.relay(api))
+
+    def test_run_of_another_company_refused(self):
+        self.refused_nothing_written("another company", self.api(companyId="co-2"))
+
+    def test_run_scoped_to_another_issue_refused(self):
+        self.refused_nothing_written("scoped to another issue", self.api(issueId="uuid-99"))
+
+    def test_company_run_still_checked_for_agent_status_and_time(self):
+        self.refused_nothing_written("is not a code-reviewer run", self.api(agentId=OTHER_AGENT))
+        self.refused_nothing_written("not succeeded", self.api(status="failed"))
+        self.refused_nothing_written("before the package was staged",
+                                     self.api(createdAt=rp.iso(NOW - datetime.timedelta(seconds=1))))
 
 
 class Check3Staging(RelayEnv):

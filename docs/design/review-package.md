@@ -311,7 +311,7 @@ Staging is one-at-a-time:
 
 ## 11. Implementation phases
 
-Progress (2026-11-20): Phase 1 merged (PR #29, audited in PR #30). Phase 2 run outside Paperclip, all acceptance conditions met ([review-package-phase2-results.md](review-package-phase2-results.md)). Phase 3 done, with a first read-only live run on `datpham02/soucean-game` PR #27 ([review-package-phase3-github.md](review-package-phase3-github.md)). Phase 4 split (2026-11-21): 4a, the `review-relay` command with offline tests against a fake Paperclip, is done ([review-package-phase4a-relay.md](review-package-phase4a-relay.md)); 4b, the sandbox validation of V1–V3, waits for Board approval. Phases 5–6 not started. G-13 stays open.
+Progress (2026-11-20): Phase 1 merged (PR #29, audited in PR #30). Phase 2 run outside Paperclip, all acceptance conditions met ([review-package-phase2-results.md](review-package-phase2-results.md)). Phase 3 done, with a first read-only live run on `datpham02/soucean-game` PR #27 ([review-package-phase3-github.md](review-package-phase3-github.md)). Phase 4 split (2026-11-21): 4a, the `review-relay` command with offline tests against a fake Paperclip, is done ([review-package-phase4a-relay.md](review-package-phase4a-relay.md)); 4b was run on the live instance in a throwaway company (2026-11-21, [review-package-phase4b-live.md](review-package-phase4b-live.md)): V1 yes, V2 no (the reviewer must be woken without an issue), V3 not tested; the relay recorded a decision and refused a bad verdict and a duplicate. Phases 5–6 not started. G-13 stays open.
 
 | Phase | Deliverables | Acceptance | Depends on | Stop if |
 |---|---|---|---|---|
@@ -339,6 +339,7 @@ Progress (2026-11-20): Phase 1 merged (PR #29, audited in PR #30). Phase 2 run o
 ## 13. Open validation questions
 
 - **V1 Stage participant.** Can a review stage name the Board Operator user, or a dedicated relay user, while `code-reviewer` is woken for the issue without being a participant? Does `pc.py create --review` need a user option?
+- **Answered 2026-11-21** ([review-package-phase4b-live.md](review-package-phase4b-live.md)): V1 yes; V2 no, Paperclip cancels an issue-scoped run of a non-assignee, non-participant agent, so the reviewer is woken without an issue; V3 not tested (the strict reviewer has no network tool).
 - **V2 Non-assignee run.** Does a `code-reviewer` woken for an issue it is not assigned to run without a checkout conflict, and in which cwd?
 - **V3 Board authority.** In `local_trusted` mode, can an agent's own process reach Board-level endpoints? If yes, the relay's authority is not exclusive, and that must be recorded as a risk or fixed by the deployment mode.
 - **V4 Automatic trigger.** Ordering and failure behaviour of the watchdog or `provisionCommand` path (future phase only).
