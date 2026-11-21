@@ -788,6 +788,67 @@ class Cleanup(Env):
         self.assertEqual(how, "built")
         self.assertEqual(os.listdir(os.path.join(self.rr, "store", "SOU-1")), [])
 
+    def paperclip(self, records):
+        """A fake Paperclip issue read (as pc.py injects): key -> record, or an exception to raise."""
+        def lookup(key):
+            r = records[key]
+            if isinstance(r, Exception):
+                raise r
+            return r
+        return lookup
+
+    def pc_issue(self, key, status, days_ago=None, identifier=None):
+        rec = {"identifier": identifier or key, "status": status}
+        if days_ago is not None:
+            rec["closedAt"] = rp.iso(NOW - datetime.timedelta(days=days_ago))
+        return rec
+
+    def test_cleanup_reads_closure_from_paperclip(self):
+        """B2: with the Paperclip read, closure comes from Paperclip, not the state file, and fails closed."""
+        pkgs = {k: self.build_for(k, str(i) * 40) for i, k in enumerate(
+            ["SOU-1", "SOU-2", "SOU-3", "SOU-4", "SOU-5", "SOU-6", "SOU-7"], start=1)}
+        st = state(issues={"SOU-2": self.closed("SOU-2", 40)})  # the state file says closed; Paperclip disagrees
+        lookup = self.paperclip({
+            "SOU-1": self.pc_issue("SOU-1", "done", 20),          # closed long ago: removed
+            "SOU-2": self.pc_issue("SOU-2", "in_review"),         # open in Paperclip: kept
+            "SOU-3": OSError("Paperclip is not reachable"),       # unknown: kept, audited
+            "SOU-4": self.pc_issue("SOU-4", "done", 20, identifier="SOU-40"),  # another issue's record: kept
+            "SOU-5": self.pc_issue("SOU-5", "done"),              # closed without closedAt: kept
+            "SOU-6": self.pc_issue("SOU-6", "cancelled", 30),     # removed
+            "SOU-7": self.pc_issue("SOU-7", "done", 13),          # within retention: kept
+        })
+        lines = rp.cleanup(self.rr, self.sr, st, NOW, lookup)
+        for gone in ("SOU-1", "SOU-6"):
+            self.assertFalse(os.path.exists(pkgs[gone]), gone)
+        for kept in ("SOU-2", "SOU-3", "SOU-4", "SOU-5", "SOU-7"):
+            self.assertTrue(os.path.exists(os.path.join(pkgs[kept], "READY")), kept)
+        kept_lines = [ln for ln in lines if ln.startswith("kept")]
+        self.assertEqual([ln.split()[1] for ln in kept_lines], ["SOU-3", "SOU-4", "SOU-5"])
+        self.assertEqual(self.events().count("cleanup-skipped"), 3)
+        self.assertEqual(self.events().count("cleanup"), 2)
+
+    def test_cleanup_asks_paperclip_once_per_issue(self):
+        self.build_for("SOU-1", "1" * 40)
+        self.build_for("SOU-1", "2" * 40)
+        calls = []
+
+        def lookup(key):
+            calls.append(key)
+            return self.pc_issue(key, "done", 20)
+        rp.cleanup(self.rr, self.sr, state(), NOW, lookup)
+        self.assertEqual(calls, ["SOU-1"])
+        self.assertEqual(os.listdir(os.path.join(self.rr, "store", "SOU-1")), [])
+
+    def test_cap_with_paperclip_keeps_unverified_packages(self):
+        self.build_for("SOU-1", "1" * 40)
+        size = rp.tree_size(self.rr)
+        st = state(issues={"SOU-1": self.closed("SOU-1", 40), "SOU-2": {"status": "in_review", "project": "p"}})
+        lookup = self.paperclip({"SOU-1": OSError("timed out")})
+        e = self.refused("over the cap", rp.build, self.rr, self.sr, source(key="SOU-2", head="2" * 40), "SOU-2",
+                         st, [REPO], NOW, {"maxRootBytes": size + 200}, lookup)
+        self.assertIn("SOU-1", str(e))  # listed as open, because its closure is not confirmed
+        self.assertTrue(os.path.exists(os.path.join(self.rr, "store", "SOU-1", "1" * 40, "READY")))
+
     def test_cap_refuses_when_only_open_packages(self):
         self.build_for("SOU-1", "1" * 40)
         size = rp.tree_size(self.rr)
@@ -858,6 +919,17 @@ class Cli(Env):
         with contextlib.redirect_stdout(out):
             rp.cmd_review_pack(self.args(**kw), now=NOW, reviewer_runs=reviewer_runs)
         return out.getvalue()
+
+    def test_cleanup_cli_uses_the_paperclip_read(self):
+        sf, stf = self.files(st=state(issues={"SOU-12": {"status": "in_review", "project": "p"}}))
+        self.run_cli(key="SOU-12", source_fixture=sf, state_file=stf, allow_repo=[REPO])
+        rp.unstage(self.rr, self.sr, state(), True, NOW)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            rp.cmd_review_pack(self.args(cleanup=True, state_file=stf), now=NOW,
+                               issue_lookup=lambda key: {"identifier": key, "status": "done",
+                                                         "closedAt": rp.iso(NOW - datetime.timedelta(days=15))})
+        self.assertIn("removed SOU-12", out.getvalue())
 
     def test_unstage_refusal_audit_names_the_staged_issue(self):
         """A2: --unstage and --status take no issue key; their refusals record the staged issue."""

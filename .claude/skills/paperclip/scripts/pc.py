@@ -744,11 +744,11 @@ def cmd_cancel_run(a):
 
 def cmd_review_pack(a):
     """review-pack through pc.py: --unstage and --status ask Paperclip whether the reviewer agent still runs
-    (R2); other modes ignore the check."""
+    (R2); --cleanup and the cap cleanup during a build ask Paperclip whether each package's issue is closed (B2)."""
     def resolve(cid):
         return agent(cid, review_pack.REVIEWER_AGENT)["id"]
     return review_pack.cmd_review_pack(
-        a, reviewer_runs=lambda lock: review_relay.reviewer_run_state(call, lock, resolve))
+        a, reviewer_runs=lambda lock: review_relay.reviewer_run_state(call, lock, resolve), issue_lookup=issue)
 
 
 def cmd_review_relay(a):
