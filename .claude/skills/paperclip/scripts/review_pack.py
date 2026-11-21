@@ -60,7 +60,7 @@ MODE_FILE = {"100644", "100755"}
 MODE_SYMLINK = "120000"
 MODE_SUBMODULE = "160000"
 AUDIT_EVENTS = {"build", "reuse", "refuse", "stage", "unstage", "abandon", "relay", "relay-refused",
-                "cleanup", "cleanup-failed", "review-start"}
+                "cleanup", "cleanup-failed", "cleanup-skipped", "review-start"}
 # Option B (post-Phase 5 assessment §3.5): a staging-only file binds the reviewer's verdict to this staging.
 REVIEW_ID_FILE = "REVIEW-ID.txt"
 # Exclusive lock file of review-start and unstage (review_relay._op_lock); never removed automatically after a crash.
@@ -1080,7 +1080,63 @@ def _delete_package(rr, key, head, pkg, now, reason):
     return True
 
 
-def cleanup(rr, sr, state, now):
+# Paperclip 2026.1023.0 issue records have no closedAt: a done issue carries completedAt, a cancelled one
+# cancelledAt (db schema issues.js). Only the field that matches the status counts.
+PAPERCLIP_CLOSED_AT = {"done": "completedAt", "cancelled": "cancelledAt"}
+
+
+def memo_lookup(lookup):
+    """One Paperclip read per issue key for the whole command (cleanup and the cap message share it)."""
+    if lookup is None:
+        return None
+    seen = {}
+
+    def read(key):
+        if key not in seen:
+            try:
+                seen[key] = (True, lookup(key))
+            except Exception as e:
+                seen[key] = (False, e)
+        ok, value = seen[key]
+        if not ok:
+            raise value
+        return value
+    return read
+
+
+def issue_closure(state, key, lookup=None):
+    """B2 (R6): is `key` closed, and since when? Returns (status, closed time or None, problem or None).
+
+    With `lookup` (the Paperclip read pc.py injects, key -> issue record) the answer comes from Paperclip and fails
+    closed: an error, a record for another issue, an unknown status, or a closed issue without a readable
+    completedAt (done) or cancelledAt (cancelled) is a problem, and the package is kept. Without `lookup`, the
+    Phase 1 state file and its closedAt are used."""
+    if lookup is None:
+        issue = state["issues"].get(key)
+        if not issue:
+            return None, None, None
+        closed = issue.get("closedAt")
+        return issue["status"], (parse_iso(closed, f"{key} closedAt") if closed else None), None
+    try:
+        issue = lookup(key)
+    except Exception as e:  # unreachable, 4xx, anything: keep the package
+        return None, None, f"Paperclip did not confirm the issue ({type(e).__name__}: {str(e)[:120]})"
+    if not isinstance(issue, dict) or issue.get("identifier") != key:
+        return None, None, "Paperclip returned a record for another issue"
+    status = issue.get("status")
+    if not isinstance(status, str):
+        return None, None, "Paperclip returned no issue status"
+    if status not in CLOSED_ISSUE:
+        return status, None, None
+    field = PAPERCLIP_CLOSED_AT[status]
+    try:
+        closed = parse_iso(issue.get(field) or "", f"{key} {field}")
+    except ReviewPackError:
+        return status, None, f"Paperclip shows {status} without a readable {field}"
+    return status, closed, None
+
+
+def cleanup(rr, sr, state, now, lookup=None):
     """Remove packages of issues closed for at least 14 days, oldest first. Never an open issue's package, never
     the staged one. Also retries leftovers in store/.trash. Returns a list of report lines."""
     lines = []
@@ -1101,27 +1157,33 @@ def cleanup(rr, sr, state, now):
     lock = read_lock(sr)
     staged = os.path.normcase(os.path.realpath(lock["packagePath"])) if lock else None
     eligible = []
+    known = {}
     for key, head, pkg in store_packages(rr):
         if staged and os.path.normcase(os.path.realpath(pkg)) == staged:
             continue
-        issue = state["issues"].get(key)
-        if not issue or issue["status"] not in CLOSED_ISSUE or not issue.get("closedAt"):
+        if key not in known:
+            known[key] = issue_closure(state, key, lookup)
+        status, closed, problem = known[key]
+        if problem:
+            audit(rr, "cleanup-skipped", now, issue=key, head=head, reason=f"kept: {problem}")
+            lines.append(f"kept {key} {head[:12]}: {problem}")
             continue
-        closed = parse_iso(issue["closedAt"], f"{key} closedAt")
+        if status not in CLOSED_ISSUE or closed is None:
+            continue
         if now - closed >= datetime.timedelta(days=RETENTION_DAYS):
-            eligible.append((closed, key, head, pkg))
-    for closed, key, head, pkg in sorted(eligible):
+            eligible.append((closed, key, head, pkg, status))
+    for closed, key, head, pkg, status in sorted(eligible):
         ok = _delete_package(rr, key, head, pkg, now,
-                             f"issue {state['issues'][key]['status']} since {iso(closed)}, past {RETENTION_DAYS} days")
+                             f"issue {status} since {iso(closed)}, past {RETENTION_DAYS} days")
         lines.append(("removed" if ok else "FAILED to remove") + f" {key} {head[:12]}")
     return lines
 
 
-def largest_open_packages(rr, state, n=5):
+def largest_open_packages(rr, state, n=5, lookup=None):
     sizes = []
     for key, head, pkg in store_packages(rr):
-        issue = state["issues"].get(key)
-        if not issue or issue["status"] not in CLOSED_ISSUE:
+        status, _, problem = issue_closure(state, key, lookup)
+        if problem or status not in CLOSED_ISSUE:
             sizes.append((tree_size(pkg), key, head))
     return [f"{key} {head[:12]} {size} bytes" for size, key, head in sorted(sizes, reverse=True)[:n]]
 
@@ -1156,7 +1218,8 @@ def _take_build_lock(rr, kdir, key, now):
     raise AssertionError("unreachable")
 
 
-def build(rr, sr, src, key, state, allowed_repos, now, limits=None):
+def build(rr, sr, src, key, state, allowed_repos, now, limits=None, lookup=None):
+    lookup = memo_lookup(lookup)
     """Build or reuse the package for key at the source's head. Returns (package path, 'built' | 'reused')."""
     limits = dict(DEFAULT_LIMITS, **(limits or {}))
     plan = plan_package(src, key, state, allowed_repos, limits)
@@ -1192,12 +1255,12 @@ def build(rr, sr, src, key, state, allowed_repos, now, limits=None):
                                       "the build; run review-pack again")
             new_bytes = tree_size(tmp)
             if tree_size(rr) > limits["maxRootBytes"]:
-                cleanup(rr, sr, state, now)  # the new package sits in .tmp-, which cleanup never touches
+                cleanup(rr, sr, state, now, lookup)  # the new package sits in .tmp-, which cleanup never touches
                 if tree_size(rr) > limits["maxRootBytes"]:
                     raise ReviewPackError(
                         f"the Review Root would hold {tree_size(rr)} bytes (with this {new_bytes}-byte package), "
                         f"over the cap of {limits['maxRootBytes']}; nothing open was deleted. Largest open "
-                        "packages: " + "; ".join(largest_open_packages(rr, state)))
+                        "packages: " + "; ".join(largest_open_packages(rr, state, lookup=lookup)))
             os.rename(tmp, final)
         except BaseException:
             if os.path.lexists(tmp) and not _is_link(tmp):
@@ -1237,7 +1300,7 @@ def add_parser(sub):
     return s
 
 
-def cmd_review_pack(a, now=None, reviewer_runs=None):
+def cmd_review_pack(a, now=None, reviewer_runs=None, issue_lookup=None):
     """CLI entry. Every refusal, including an unexpected filesystem error, becomes a ReviewPackError with a
     message and, once the Review Root is known, a `refuse` audit entry (audit D6)."""
     now = now or utcnow()
@@ -1247,7 +1310,7 @@ def cmd_review_pack(a, now=None, reviewer_runs=None):
         raise ReviewPackError(f"cannot prepare the roots: {e}")
     key = a.key if a.key and KEY_RE.match(a.key) else None
     try:
-        return _run(a, rr, sr, now, reviewer_runs)
+        return _run(a, rr, sr, now, reviewer_runs, issue_lookup)
     except (ReviewPackError, OSError) as e:
         reason = str(e) if isinstance(e, ReviewPackError) else f"filesystem error: {e}"
         extra = {}
@@ -1275,7 +1338,7 @@ def _staged_issue(sr):
     return lock.get("issue") if lock else None
 
 
-def _run(a, rr, sr, now, reviewer_runs=None):
+def _run(a, rr, sr, now, reviewer_runs=None, issue_lookup=None):
     state = load_state(a.state_file)
     if a.abandon and not a.unstage:
         raise ReviewPackError("--abandon only goes with --unstage")
@@ -1288,7 +1351,7 @@ def _run(a, rr, sr, now, reviewer_runs=None):
         elif a.unstage:
             print(unstage(rr, sr, state, a.abandon, now, reviewer_runs))
         else:
-            lines = cleanup(rr, sr, state, now)
+            lines = cleanup(rr, sr, state, now, memo_lookup(issue_lookup))
             print("\n".join(lines) if lines else "nothing to clean up")
         return 0
     if not a.key:
@@ -1301,7 +1364,7 @@ def _run(a, rr, sr, now, reviewer_runs=None):
         raise ReviewPackError("give at least one --allow-repo owner/name")
     key = a.key
     src = load_source(a.source_fixture) if not github else load_github_source(a, key)
-    pkg, how = build(rr, sr, src, key, state, a.allow_repo, now)
+    pkg, how = build(rr, sr, src, key, state, a.allow_repo, now, lookup=issue_lookup)
     head = os.path.basename(pkg)
     result = stage(rr, sr, key, head, pkg, now)
     print(f"{key}: package {how} ({head[:12]}), {result} at {os.path.join(sr, 'current')}")

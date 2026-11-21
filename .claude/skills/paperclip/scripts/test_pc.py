@@ -35,6 +35,25 @@ def P(path):
     return pc.normalize_path(path)
 
 
+class ReviewPackWiring(unittest.TestCase):
+    """B2: pc.py hands review-pack the Paperclip issue read for cleanup, next to the R2 reviewer check."""
+
+    def test_issue_lookup_is_the_paperclip_issue_read(self):
+        seen = {}
+
+        def fake(a, now=None, reviewer_runs=None, issue_lookup=None):
+            seen.update(reviewer_runs=reviewer_runs, issue_lookup=issue_lookup)
+            return 0
+        real = pc.review_pack.cmd_review_pack
+        pc.review_pack.cmd_review_pack = fake
+        try:
+            pc.cmd_review_pack(argparse.Namespace())
+        finally:
+            pc.review_pack.cmd_review_pack = real
+        self.assertIs(seen["issue_lookup"], pc.issue)
+        self.assertTrue(callable(seen["reviewer_runs"]))
+
+
 class RunLabel(unittest.TestCase):
     """R3: a run cancelled because its agent handed the issue over is shown as "handed over", only when the run
     record confirms it."""
