@@ -338,17 +338,17 @@ Progress (2026-11-20): Phase 1 merged (PR #29, audited in PR #30). Phase 2 run o
 
 ## 12. Acceptance criteria (for the finished work, not met by this document)
 
-Status after Phase 5 (2026-11-21), per criterion in [review-package-phase5-sandbox.md](review-package-phase5-sandbox.md) §5. A box is ticked only when the whole criterion was verified live; otherwise the note says what is live, offline or untested.
+Status after Phase 5 (2026-11-21), per criterion in [review-package-phase5-sandbox.md](review-package-phase5-sandbox.md) §5, updated after R5 ([review-package-r5-results.md](review-package-r5-results.md)). The merge step after an approved relay is live (R5). A box is ticked only when the whole criterion was verified live; otherwise the note says what is live, offline or untested.
 
-- [ ] The packager reads only the GitHub API (or an object-only repository after its own review). No git runs on a Task Workspace, the Primary Checkout or any repository an agent can write. *Phase 5: API source live; "no git" source and offline only.*
-- [ ] Every §5.3 rule refuses as specified. Every §5.2 limit refuses with "split the Task". Nothing is dropped silently. *Offline only.*
-- [ ] Packages are immutable per head SHA, `READY` is written last, and stale heads are refused. *Phase 5: per-head packages and stale-head refusal live; `READY` ordering offline.*
-- [ ] The reviewer's tools are `Read`, `Grep` and `Glob`. It reaches only `<Staging Root>/current` besides its cwd. Write, shell and git attempts fail. *Phase 5: tools and observed reads live (two runs); write, shell and git attempts not tried in Paperclip (Phase 2, outside it).*
+- [x] The packager reads only the GitHub API (or an object-only repository after its own review). No git runs on a Task Workspace, the Primary Checkout or any repository an agent can write. *Phase 5: API source live; "no git" source and offline only.* *R5 (2026-11-21): live, no process started, `git` shim never called.*
+- [ ] Every §5.3 rule refuses as specified. Every §5.2 limit refuses with "split the Task". Nothing is dropped silently. *Offline only.* *R5: four representative refusals live, symlink as `notReviewable` live; not every rule tried live.*
+- [x] Packages are immutable per head SHA, `READY` is written last, and stale heads are refused. *Phase 5: per-head packages and stale-head refusal live; `READY` ordering offline.* *R5: `READY` ordering live (fault injection).*
+- [x] The reviewer's tools are `Read`, `Grep` and `Glob`. It reaches only `<Staging Root>/current` besides its cwd. Write, shell and git attempts fail. *Phase 5: tools and observed reads live (two runs); write, shell and git attempts not tried in Paperclip (Phase 2, outside it).* *R5: live; init tools exactly Read, Grep, Glob; injected instructions ignored and reported; write and shell tools absent from the run.*
 - [x] Only one review is staged at a time. Another issue's active staging cannot be replaced. *Phase 5, live.*
-- [ ] The relay accepts only a verdict that passes §3.4. A re-run never duplicates a comment or decision. A refusal leaves the human fallback. *Phase 5: checks 1–4, duplicates and the fallback live; malformed verdicts and the 4xx path offline; a company-scoped run is not bound to one review (§9).*
-- [ ] The packager token is read-only, limited to selected repositories, and never in an agent environment or a log. *Phase 5: not found in any test file or log, no agent `env` binding (live); scope set by the Board when the token was created.*
-- [ ] Retention, the 2 GB cap and cleanup behave as §8 says, and are logged. *Phase 5: cleanup and audit live (nothing eligible); retention deletion and the cap offline.*
-- [ ] No worktree or branch is created, moved or deleted (ADR-006). *Phase 5: none by the packager or relay (live); Paperclip created the author's worktree normally. Kept open until a production run.*
+- [ ] The relay accepts only a verdict that passes §3.4. A re-run never duplicates a comment or decision. A refusal leaves the human fallback. *Phase 5: checks 1–4, duplicates and the fallback live; malformed verdicts and the 4xx path offline; a company-scoped run is not bound to one review (§9).* *R5: **Failed**, the relay overrode a decision the Board had just made by hand (finding F1); malformed verdict not provoked live.*
+- [x] The packager token is read-only, limited to selected repositories, and never in an agent environment or a log. *Phase 5: not found in any test file or log, no agent `env` binding (live); scope set by the Board when the token was created.* *R5: writes refused with 403 live; value in no Paperclip file or backup.*
+- [x] Retention, the 2 GB cap and cleanup behave as §8 says, and are logged. *Phase 5: cleanup and audit live (nothing eligible); retention deletion and the cap offline.* *R5: live with real Paperclip closure (B2), retention lowered in a test wrapper.*
+- [ ] No worktree or branch is created, moved or deleted (ADR-006). *Phase 5: none by the packager or relay (live); Paperclip created the author's worktree normally. Kept open until a production run.* *R5: unchanged in the sandbox (snapshots); kept open until a production run.*
 - [x] G-13 is not marked resolved by this work alone. *Holds.*
 
 ## 13. Open validation questions
