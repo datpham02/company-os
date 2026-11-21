@@ -5,6 +5,7 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
+- OQ-042 R6, Phase 6 readiness assessment (`docs/design/review-package-r6-phase6-readiness.md`, review only): **not ready**. Blockers B1–B6: R5 live evidence and the untested merge; `--cleanup` closure from Paperclip; V3; G-14; the ADR-022 branch-protection question; Paperclip version re-check list. Also lists what the Phase 6 proposal must contain and the recommended order.
 - Credential log mitigations (after the GH_TOKEN log redaction probe):
   - a credential rule for every agent: `rules.secrets` appended to both Claude profiles, a `## Credentials` section in all 8 role files, and Studio Rules R4.1 extended;
   - an environment-dump deny list in both Claude profiles' `disallowedTools` (`printenv`, `env`, `set`, `gh auth`, `git credential`, commands expanding `GH_TOKEN`/`GITHUB_TOKEN`/`PAPERCLIP_API_KEY`, and others).
