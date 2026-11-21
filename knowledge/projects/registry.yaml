@@ -72,7 +72,7 @@ projects:
     name: Deckbound
     department: game
     type: game
-    status: initializing          # repo created 2026-11-21 (private, seeded with README + docs/art/ART-PIPELINE.md); Paperclip project and branch protection pending
+    status: initializing          # repo created 2026-11-21 (private); Paperclip project exists (M1 Tasks such as SOU-41 to SOU-69); branch protection not checked here
     repository:
       url: https://github.com/datpham02/deckbound.git
       defaultBranch: main
@@ -80,3 +80,4 @@ projects:
       name: godot
       version: "4"                # exact 4.x version to be confirmed in Art Phase 0
     frameworkVersion: 0.1.0
+    agents: [director, producer, project-manager, game-designer, gameplay-programmer, game-artist, ui-designer, qa]   # proposed 2026-11-22 for the Art Production v2 pilot (docs/roadmap/art-production-v2-pilot.md R2); Board confirms on merge

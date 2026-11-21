@@ -92,6 +92,8 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 ### Roadmap (`roadmap/`)
 - [phases.md](roadmap/phases.md): what to build, in what order, and what must be verified first.
 - [implementation-plan.md](roadmap/implementation-plan.md): evidence-based plan for Phases 1–4 (`PROPOSED`, Stage A, 2026-11-21).
+- [art-production-v2-pilot.md](roadmap/art-production-v2-pilot.md): Art Production v2 Phase 1 pilot on Deckbound, readiness items and the exit gate G8 (`PROPOSED`).
+- [art-production-v2-phase2.md](roadmap/art-production-v2-phase2.md): Art Production v2 Phase 2 roadmap, workstreams 2A–2E (`PROPOSED`, after G8).
 - [open-questions.md](roadmap/open-questions.md): unverified assumptions (`OQ-NNN`) and conflicts (`C-NNN`).
 
 ### Company knowledge (`../knowledge/`, ADR-019)
