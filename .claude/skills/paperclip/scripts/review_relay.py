@@ -6,8 +6,16 @@ GitHub call goes through injected functions, so the whole flow is tested offline
 
 Authority (§3.3): the relay acts as the identity that the CLI uses for Paperclip. It records a decision only
 while that identity is the issue's active stage participant. Otherwise Paperclip refuses, and the Board decides
-by hand (fallback). Whether this works on a real instance is Phase 4b (V1-V3), not tested here.
+by hand (fallback).
+
+Run binding (Option B, docs/design/review-package-post-phase5-assessment.md §3.5): `review-start` creates one
+review sub-issue per staging (child of the reviewed issue, assigned to code-reviewer, no project) and wakes the
+reviewer for it. The relay accepts only that sub-issue's run, named in the staging lock, and a verdict that
+echoes the staging's reviewId and challenge (REVIEW-ID.txt, present only in the staged copy). This binds the
+run to the staging and shows the verdict carries a value only the staged package held. It does not prove the
+reviewer read or understood the package, and a same-user process could still tamper with staging (G-13, G-14).
 """
+import hmac
 import json
 import os
 import re
@@ -118,6 +126,12 @@ def validate_verdict(v, lock, manifest, pkg):
         raise rp.ReviewPackError(f"verdict {v.get('verdict')!r} is not one of {sorted(VERDICTS)}")
     if v.get("issue") != lock["issue"] or v.get("headSha") != lock["headSha"]:
         raise rp.ReviewPackError("the verdict's issue or headSha does not match the staging lock")
+    if lock.get("challenge"):
+        rid, ch = v.get("reviewId"), v.get("challenge")
+        if not isinstance(rid, str) or rid != lock["reviewId"]:
+            raise rp.ReviewPackError("the verdict's reviewId does not match this staging")
+        if not isinstance(ch, str) or not hmac.compare_digest(ch.encode("utf-8"), lock["challenge"].encode("utf-8")):
+            raise rp.ReviewPackError(f"the verdict's challenge does not match {rp.REVIEW_ID_FILE} of this staging")
     findings = v.get("findings")
     if not isinstance(findings, list):
         raise rp.ReviewPackError("verdict findings must be a list")
@@ -153,7 +167,8 @@ def receipt(run_id, head):
 
 def render_comment(v, run_id):
     head = v["headSha"]
-    lines = [f"**Code review relayed: {v['verdict']}** (reviewer run `{run_id}`, head `{head[:12]}`)", ""]
+    rid = f", review `{v['reviewId']}`" if isinstance(v.get("reviewId"), str) else ""
+    lines = [f"**Code review relayed: {v['verdict']}** (reviewer run `{run_id}`, head `{head[:12]}`{rid})", ""]
     if v["findings"]:
         lines.append("Findings:")
         for i, f in enumerate(v["findings"], 1):
@@ -201,40 +216,50 @@ def _post_comment(api, issue_id, body, run_id, head, sleep):
     raise Transient(f"gave up after {ATTEMPTS} attempts: {last}")
 
 
-def _company_run(api, run_id, issue, key, sleep):
-    """Check 2 for a run that is not in the issue's runs: the reviewer woken without an issue (Phase 4b, V2).
+def _review_run(api, run_id, issue, lock, reviewer_agent_id, sleep):
+    """Check 2 (Option B): the run belongs to this staging's review sub-issue.
 
-    Establishes, from GET /heartbeat-runs/<id> (Board API):
-    - the run exists and is the run named by --run-id (`id`);
-    - it belongs to the issue's company (`companyId`), so a run of another company cannot be relayed;
-    - it is not scoped to another issue (`issueId` empty or this issue's id).
-    The caller then requires, as for an issue-scoped run: `agentId` is code-reviewer, `status` is succeeded,
-    `createdAt` is at or after the staging lock's `stagedAt`, and the lock's `runId`, if set, matches.
-    Checks 3 and 5 add: the staged package is the locked one, and the verdict names the locked issue and head
-    and cites only files and lines of the staged manifest.
+    Establishes, from Paperclip's records:
+    - the lock names a review sub-issue and the run (`review-start` wrote both), and --run-id is that run;
+    - the sub-issue is a child of the reviewed issue, in the same company, assigned to code-reviewer;
+    - the run is in the sub-issue's runs, and the run record's `issueId` is the sub-issue (issue-scoped).
+    The caller then checks agent, `succeeded` and `createdAt >= stagedAt`, and check 5 the reviewId and challenge.
 
-    Does NOT establish:
-    - that the run was started for this review. Paperclip links a company-scoped run to no issue; the wake
-      reason naming the issue is free text, not checked here. Any succeeded code-reviewer run of the company
-      started after staging passes this check;
-    - that the run read the staged package. A verdict with the right issue, head and valid lines passes
-      check 5 whether it came from reading `current/` or from anything else the reviewer saw or guessed.
-    The binding to the review therefore rests on the Board starting exactly one reviewer run per staging
-    (design §7, serialization) and on the relay receipt refusing a second run for the same head.
-    Any read failure other than a transient one is a refusal (fail closed)."""
-    try:
-        r = _with_retry(lambda: api("GET", f"/heartbeat-runs/{run_id}"), sleep)
-    except Transient:
-        raise
-    except Exception:
-        r = None
-    if not isinstance(r, dict) or r.get("id") != run_id:
-        raise rp.ReviewPackError(f"run {run_id} is not a run of {key}")
-    if issue.get("companyId") is None or r.get("companyId") != issue.get("companyId"):
-        raise rp.ReviewPackError(f"run {run_id} belongs to another company than {key}")
-    if r.get("issueId") not in (None, issue["id"]):
-        raise rp.ReviewPackError(f"run {run_id} was scoped to another issue")
-    return {"runId": r["id"], "agentId": r.get("agentId"), "status": r.get("status"), "createdAt": r.get("createdAt")}
+    Does NOT establish that the reviewer read or understood the package: only that Paperclip ran it for this
+    sub-issue and that its verdict carries the staging's challenge. Any read failure other than a transient one
+    is a refusal (fail closed)."""
+    sub_id = lock.get("reviewIssueId")
+    if not lock.get("reviewId") or not sub_id:
+        raise rp.ReviewPackError(f"this staging has no review sub-issue; start the review with "
+                                 f"pc.py review-start {lock['issue']} (Option B)")
+    if lock.get("runId") != run_id:
+        raise rp.ReviewPackError(f"the staging lock names run {lock.get('runId')}, not {run_id}")
+
+    def get(path):
+        try:
+            return _with_retry(lambda: api("GET", path), sleep)
+        except Transient:
+            raise
+        except Exception:
+            return None
+    sub = get(f"/issues/{sub_id}")
+    if not isinstance(sub, dict) or sub.get("id") != sub_id:
+        raise rp.ReviewPackError(f"review sub-issue {sub_id} was not found")
+    if sub.get("parentId") != issue["id"]:
+        raise rp.ReviewPackError(f"review sub-issue {sub.get('identifier') or sub_id} is not a child of {lock['issue']}")
+    if issue.get("companyId") is None or sub.get("companyId") != issue.get("companyId"):
+        raise rp.ReviewPackError("the review sub-issue belongs to another company")
+    if sub.get("assigneeAgentId") != reviewer_agent_id:
+        raise rp.ReviewPackError(f"review sub-issue {sub.get('identifier') or sub_id} is not assigned to "
+                                 f"{rp.REVIEWER_AGENT}")
+    runs = get(f"/issues/{sub_id}/runs") or []
+    run = next((r for r in runs if isinstance(r, dict) and r.get("runId") == run_id), None)
+    if run is None:
+        raise rp.ReviewPackError(f"run {run_id} is not a run of the review sub-issue")
+    detail = get(f"/heartbeat-runs/{run_id}")
+    if not isinstance(detail, dict) or detail.get("id") != run_id or detail.get("issueId") != sub_id:
+        raise rp.ReviewPackError(f"run {run_id} is not scoped to the review sub-issue")
+    return run
 
 
 # ---------- the relay ----------
@@ -248,13 +273,13 @@ def relay(rr, sr, key, run_id, api, head_now, identity, reviewer_agent_id, now, 
     if lock["issue"] != key:
         raise rp.ReviewPackError(f"staging holds {lock['issue']}, not {key}")
     pkg = os.path.join(sr, "current")
-    manifest, _ = rp.verify_package(pkg, True, lock["manifestSha256"])
+    manifest, _ = rp.verify_package(pkg, True, lock["manifestSha256"], rp.staged_extra(lock))
     rp.verify_package(lock["packagePath"], True, lock["manifestSha256"])
     if manifest["headSha"] != lock["headSha"]:
         raise rp.ReviewPackError("the staged manifest head differs from the staging lock")
-
-    if lock.get("runId") not in (None, run_id):
-        raise rp.ReviewPackError(f"the staging lock names run {lock['runId']}, not {run_id}")
+    if not lock.get("reviewId") or not lock.get("reviewIssueId"):
+        raise rp.ReviewPackError(f"this staging has no review sub-issue; start the review with "
+                                 f"pc.py review-start {key} (Option B)")
 
     issue = _with_retry(lambda: api("GET", f"/issues/{key}"), sleep)
     receipts = _receipts(_with_retry(lambda: api("GET", f"/issues/{issue['id']}/comments"), sleep))
@@ -275,15 +300,8 @@ def relay(rr, sr, key, run_id, api, head_now, identity, reviewer_agent_id, now, 
     if part.get("type") != "user" or part.get("userId") != identity:
         raise rp.ReviewPackError(f"{key}'s active participant is {part.get('type')}:{part.get('userId') or part.get('agentId')}, "
                                  f"not the relay identity user:{identity}; the Board decides by hand")
-    # Check 2: the run
-    runs = _with_retry(lambda: api("GET", f"/issues/{issue['id']}/runs"), sleep) or []
-    run = next((r for r in runs if r.get("runId") == run_id), None)
-    if run is None:
-        # Phase 4b (V2): Paperclip 2026.1023.0 cancels an issue-scoped run of an agent that is neither the
-        # assignee nor the agent participant of the current stage, so the reviewer is woken without an issue.
-        # Such a run is accepted only if it belongs to the issue's company and is not scoped to another issue;
-        # the staging lock and the verdict's issue and headSha bind it to this review.
-        run = _company_run(api, run_id, issue, key, sleep)
+    # Check 2: the run is the review sub-issue's run named in the lock (Option B)
+    run = _review_run(api, run_id, issue, lock, reviewer_agent_id, sleep)
     if run.get("agentId") != reviewer_agent_id:
         raise rp.ReviewPackError(f"run {run_id} is not a {rp.REVIEWER_AGENT} run")
     if run.get("status") != RUN_OK:
@@ -312,8 +330,101 @@ def relay(rr, sr, key, run_id, api, head_now, identity, reviewer_agent_id, now, 
         rp.audit(rr, "relay-refused", now, issue=key, head=lock["headSha"], run_id=run_id, reason=str(e)[:300])
         raise RelayRefused(f"Paperclip refused the relay ({str(e)[:200]}). The findings comment stays; "
                                  f"the Board decides by hand: pc.py approve {key} or pc.py request-changes {key}")
-    rp.audit(rr, "relay", now, issue=key, head=lock["headSha"], run_id=run_id, reason=v["verdict"])
-    return f"{key}: relayed {v['verdict']} from run {run_id} ({len(v['findings'])} findings)"
+    rp.audit(rr, "relay", now, issue=key, head=lock["headSha"], run_id=run_id, reason=v["verdict"],
+             reviewId=lock["reviewId"], reviewIssueId=lock["reviewIssueId"])
+    note = _close_review_issue(api, lock["reviewIssueId"], sleep)
+    return f"{key}: relayed {v['verdict']} from run {run_id} ({len(v['findings'])} findings){note}"
+
+
+def _close_review_issue(api, sub_id, sleep):
+    """After a recorded decision the review sub-issue has served its purpose. Closing it is best effort: the
+    decision stands either way, and a failure is reported for the Board to close it by hand."""
+    try:
+        _with_retry(lambda: api("PATCH", f"/issues/{sub_id}", {"status": "done"}), sleep)
+        return "; review sub-issue closed"
+    except Exception as e:
+        return f"; the review sub-issue could not be closed ({str(e)[:120]}), close it by hand"
+
+
+# ---------- review-start (Option B) ----------
+
+def review_start(rr, sr, key, api, company_id, reviewer_agent_id, identity, now, sleep=time.sleep):
+    """Create the review sub-issue for the staged review and wake code-reviewer for it. Returns a summary.
+
+    The sub-issue is created in backlog (no assignment wake) without a project (no worktree), then the reviewer
+    is woken on demand for it with a reason naming the review. That wake reason is not one that makes Paperclip
+    require an issue comment (server services/heartbeat/queue.js shouldRequireIssueCommentForWake), so the
+    tool-less reviewer is not re-woken for a missing comment. Whether Paperclip runs an on-demand wake for a
+    backlog issue as issue-scoped, in the agent's configured cwd, is to be verified in a sandbox."""
+    lock = rp.read_lock(sr)
+    if lock is None:
+        raise rp.ReviewPackError("nothing is staged; run review-pack first")
+    if lock["issue"] != key:
+        raise rp.ReviewPackError(f"staging holds {lock['issue']}, not {key}")
+    if not lock.get("reviewId"):
+        raise rp.ReviewPackError("this staging predates Option B (no reviewId); unstage and stage it again")
+    if lock.get("reviewIssueId"):
+        raise rp.ReviewPackError(f"the review was already started (sub-issue {lock.get('reviewIssueKey') or lock['reviewIssueId']}, "
+                                 f"run {lock.get('runId')}); one review per staging")
+    rp.verify_package(os.path.join(sr, "current"), True, lock["manifestSha256"], rp.staged_extra(lock))
+    issue = _with_retry(lambda: api("GET", f"/issues/{key}"), sleep)
+    part = (issue.get("executionState") or {}).get("currentParticipant") or {}
+    if issue.get("status") != "in_review" or part.get("type") != "user" or part.get("userId") != identity:
+        raise rp.ReviewPackError(f"{key} is not waiting on user:{identity} in review "
+                                 f"(status {issue.get('status')}); the relay could not record the decision")
+    head12 = lock["headSha"][:12]
+    desc = (f"Review sub-issue for {key} at head {lock['headSha']} (review {lock['reviewId']}).\n\n"
+            "You are code-reviewer. Read REVIEW.md and REVIEW-ID.txt in the staged package folder given to you "
+            "with --add-dir, review the package as REVIEW.md says, and end your final message with exactly one "
+            "fenced json verdict block. Do not try to change anything.")
+    sub = _with_retry(lambda: api("POST", f"/companies/{company_id}/issues", {
+        "title": f"Review {key} @ {head12} (review {lock['reviewId'][:8]})", "description": desc,
+        "assigneeAgentId": reviewer_agent_id, "status": "backlog", "parentId": issue["id"]}), sleep)
+    rp.update_lock(sr, reviewIssueId=sub["id"], reviewIssueKey=sub.get("identifier"))
+    rp.audit(rr, "review-start", now, issue=key, head=lock["headSha"], reason=f"sub-issue {sub.get('identifier')}",
+             reviewId=lock["reviewId"], reviewIssueId=sub["id"])
+    run = _with_retry(lambda: api("POST", f"/agents/{reviewer_agent_id}/wakeup?companyId={company_id}", {
+        "source": "on_demand", "triggerDetail": "manual",
+        "reason": f"review {lock['reviewId']} {key} {head12}", "payload": {"issueId": sub["id"]}}), sleep)
+    run_id = (run or {}).get("id")
+    if not run_id:
+        raise rp.ReviewPackError(f"Paperclip did not return a run for the reviewer wake (sub-issue "
+                                 f"{sub.get('identifier')} exists); check it, then unstage --abandon and restart")
+    rp.update_lock(sr, runId=run_id)
+    return (f"{key}: review sub-issue {sub.get('identifier')} created, reviewer run {run_id} "
+            f"{(run or {}).get('status')}. When it has succeeded: pc.py review-relay {key} --run-id {run_id}")
+
+
+def add_start_parser(sub, fn):
+    s = sub.add_parser("review-start", help="OQ-042 Option B: create the review sub-issue for the staged review "
+                                            "and wake code-reviewer for it")
+    s.add_argument("key", help="issue key of the staged review, e.g. SOU-12")
+    s.add_argument("--identity", default=rp.BOARD, help="the Paperclip user who must be the review participant")
+    s.add_argument("--review-root", default=os.environ.get("COMPANY_OS_REVIEW_ROOT"))
+    s.add_argument("--staging-root", default=os.environ.get("COMPANY_OS_STAGING_ROOT"))
+    s.set_defaults(fn=fn)
+    return s
+
+
+def cmd_review_start(a, api, company_id, reviewer_agent_id, now=None, sleep=time.sleep):
+    now = now or rp.utcnow()
+    try:
+        rr, sr = rp.resolve_roots(a.review_root, a.staging_root)
+    except OSError as e:
+        raise rp.ReviewPackError(f"cannot prepare the roots: {e}")
+    key = a.key if rp.KEY_RE.match(a.key or "") else None
+    try:
+        if key is None:
+            raise rp.ReviewPackError(f"{a.key!r} is not an issue key")
+        print(review_start(rr, sr, key, api, company_id(), reviewer_agent_id(), a.identity, now, sleep))
+        return 0
+    except (rp.ReviewPackError, OSError, Transient) as e:
+        reason = str(e) if isinstance(e, rp.ReviewPackError) else f"error: {e}"
+        try:
+            rp.audit(rr, "refuse", now, issue=key, reason=f"review-start: {reason}")
+        except OSError:
+            pass
+        raise rp.ReviewPackError(reason) from None
 
 
 # ---------- CLI (wired into pc.py as `review-relay`) ----------
@@ -367,7 +478,8 @@ def cmd_review_relay(a, api, reviewer_agent_id, head_now=None, now=None, sleep=t
             lock = rp.read_lock(sr)
             if lock is None:
                 raise rp.ReviewPackError("nothing is staged; the relay needs the staged package of the review")
-            manifest, _ = rp.verify_package(os.path.join(sr, "current"), True, lock["manifestSha256"])
+            manifest, _ = rp.verify_package(os.path.join(sr, "current"), True, lock["manifestSha256"],
+                                            rp.staged_extra(lock))
             head_now = github_head(manifest)
         print(relay(rr, sr, key, a.run_id, api, head_now, a.identity, reviewer_agent_id(), now, sleep))
         return 0

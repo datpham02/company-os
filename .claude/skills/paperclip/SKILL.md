@@ -34,7 +34,8 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 | `wake qa-engineer [--issue SOU-8]` | Start an agent run now. Refused with `--issue` on a `backlog` issue |
 | `cancel-run <run-id>` | Stop a queued or running run |
 | `review-pack <KEY> --source-fixture F --state-file S --allow-repo o/r` · `review-pack <KEY> --github-pr N --github-repo o/r --task-file T --state-file S --allow-repo o/r` · `review-pack --status\|--unstage [--abandon]\|--cleanup --state-file S` | **OQ-042 review packager.** Builds and stages a review package from fixture files (Phase 1) or from a PR over the GitHub API with the packager token (Phase 3, below). Never calls Paperclip or git |
-| `review-relay <KEY> --run-id R [--identity local-board]` | **OQ-042 Verdict Relay (Phase 4a).** Checks a finished `code-reviewer` run against the staged package, the issue's stage participant and the live PR head, then posts the findings with a relay receipt and records the decision. Refusals leave the Board fallback (`approve` / `request-changes`). Wake the reviewer **without** `--issue` (Paperclip cancels an issue run of a non-assignee agent). Live-tested once in a throwaway company (Phase 4b); run it only when the Board asks |
+| `review-relay <KEY> --run-id R [--identity local-board]` | **OQ-042 Verdict Relay (Phase 4a).** Checks a finished `code-reviewer` run against the staged package, the issue's stage participant and the live PR head, then posts the findings with a relay receipt and records the decision. Refusals leave the Board fallback (`approve` / `request-changes`). Accepts only the run `review-start` recorded for the staging's review sub-issue, and a verdict carrying the staging's `reviewId` and `challenge` (Option B). Run it only when the Board asks |
+| `review-start <KEY> [--identity local-board]` | **OQ-042 Option B.** For the staged review: creates the review sub-issue (child of `<KEY>`, assigned to `code-reviewer`, backlog, no project) and wakes the reviewer on demand for it; records both in the staging lock. Refuses a second start, a non-staged issue, or an issue not waiting on the relay identity. Not yet run live; run it only when the Board asks |
 
 ## Rules
 
@@ -58,7 +59,8 @@ Implements Phase 1 of [docs/design/review-package.md](../../../docs/design/revie
 - **`review-pack <KEY>`** validates everything first (design §5.2 and §5.3) and fails closed:
   - it builds `store/<KEY>/<head>/` atomically, with `READY` last, or reuses an intact one;
   - it then stages a verified copy in `<Staging Root>/current/` under an exclusive `staging.lock`;
-  - it prints the `pc.py wake code-reviewer --reason "Review the staged package for <KEY> at head <sha>"` command, without `--issue` (Paperclip cancels an issue run of a non-assignee agent, Phase 4b); it never runs it.
+  - each staging gets a random `reviewId` and `challenge`, written only to `current/REVIEW-ID.txt` (checked by SHA-256 from the lock);
+  - it prints the `pc.py review-start <KEY>` command; it never runs it.
 - **One review at a time.** Another issue, or another head, is refused while staging is held.
   - `--status` shows the lock, its runs and whether it is stale (run finished, or no run for 24 h).
   - `--unstage` refuses while a reviewer run is active. It also refuses while the review has not been relayed, unless `--abandon` is given (logged). Phase 1 has no relay, so `--abandon` is the normal way to clear staging.

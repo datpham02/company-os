@@ -720,6 +720,11 @@ def cmd_review_relay(a):
     review_relay.cmd_review_relay(a, call, lambda: agent(company(a.company)["id"], review_pack.REVIEWER_AGENT)["id"])
 
 
+def cmd_review_start(a):
+    review_relay.cmd_review_start(a, call, lambda: company(a.company)["id"],
+                                  lambda: agent(company(a.company)["id"], review_pack.REVIEWER_AGENT)["id"])
+
+
 def main():
     p = argparse.ArgumentParser(prog="pc.py", description="Paperclip control for the Game Studio Board Operator")
     p.add_argument("--company", help="company name, issue prefix or id (default: the only active company)")
@@ -783,6 +788,7 @@ def main():
     s.set_defaults(fn=cmd_cancel_run)
     review_pack.add_parser(sub)
     review_relay.add_parser(sub, cmd_review_relay)
+    review_relay.add_start_parser(sub, cmd_review_start)
     a = p.parse_args()
     try:
         a.fn(a)

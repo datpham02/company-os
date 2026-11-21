@@ -455,13 +455,57 @@ class Staging(Env):
         self.build()
         self.assertEqual(self.stage(), "staged")
         current = os.path.join(self.sr, "current")
-        rp.verify_package(current, require_ready=True)
         lock = rp.read_lock(self.sr)
+        rp.verify_package(current, require_ready=True, extra_files=rp.staged_extra(lock))
         self.assertEqual((lock["issue"], lock["headSha"], lock["stagedBy"], lock["runId"]),
                          ("SOU-12", SHA_HEAD, "local-board", None))
         self.assertFalse(any(os.path.islink(os.path.join(d, f)) for d, _, fs in os.walk(current) for f in fs))
         self.assertFalse(rp._inside(current, self.rr))
         self.assertEqual(self.stage(), "already staged")
+
+    def test_review_id_file_only_in_staging(self):
+        """Option B: each staging gets a fresh reviewId and challenge, written only to current/REVIEW-ID.txt
+        (not to the immutable store copy) and checked against the lock's challengeSha256."""
+        self.build()
+        self.stage()
+        lock = rp.read_lock(self.sr)
+        self.assertRegex(lock["reviewId"], r"^[0-9a-f-]{36}$")
+        self.assertRegex(lock["challenge"], r"^[0-9a-f]{32}$")
+        self.assertIsNone(lock["reviewIssueId"])
+        staged = os.path.join(self.sr, "current", rp.REVIEW_ID_FILE)
+        with open(staged, "rb") as f:
+            data = f.read()
+        self.assertIn(lock["challenge"].encode(), data)
+        self.assertEqual(rp.sha256_bytes(data), lock["challengeSha256"])
+        self.assertFalse(os.path.exists(os.path.join(lock["packagePath"], rp.REVIEW_ID_FILE)))
+        with open(os.path.join(self.sr, "current", "REVIEW.md"), encoding="utf-8") as f:
+            self.assertIn(rp.REVIEW_ID_FILE, f.read())
+        with open(staged, "ab") as f:
+            f.write(b"x")
+        self.refused("REVIEW-ID.txt fails", rp.verify_package, os.path.join(self.sr, "current"), True,
+                     lock["manifestSha256"], rp.staged_extra(lock))
+        os.remove(staged)
+        self.refused("missing ['REVIEW-ID.txt']", rp.verify_package, os.path.join(self.sr, "current"), True,
+                     lock["manifestSha256"], rp.staged_extra(lock))
+
+    def test_restaging_gets_a_new_challenge(self):
+        self.build()
+        self.stage()
+        first = rp.read_lock(self.sr)
+        self.assertIn("abandon", rp.unstage(self.rr, self.sr, state(), True, NOW))
+        self.stage()
+        second = rp.read_lock(self.sr)
+        self.assertNotEqual((first["reviewId"], first["challenge"]), (second["reviewId"], second["challenge"]))
+
+    def test_update_lock_is_atomic_and_keeps_fields(self):
+        self.build()
+        self.stage()
+        before = rp.read_lock(self.sr)
+        after = rp.update_lock(self.sr, reviewIssueId="sub-1")
+        self.assertEqual(rp.read_lock(self.sr), after)
+        self.assertEqual({k: v for k, v in after.items() if k != "reviewIssueId"},
+                         {k: v for k, v in before.items() if k != "reviewIssueId"})
+        self.assertEqual([n for n in os.listdir(self.sr) if n.startswith("staging.lock.tmp")], [])
 
     def test_second_issue_refused_while_staged(self):
         self.build()
@@ -510,7 +554,8 @@ class Staging(Env):
         os.remove(os.path.join(self.sr, "current", "READY"))
         os.makedirs(os.path.join(self.sr, ".current-tmp-abc"))
         self.assertEqual(self.stage(), "staged")
-        rp.verify_package(os.path.join(self.sr, "current"), require_ready=True)
+        rp.verify_package(os.path.join(self.sr, "current"), require_ready=True,
+                          extra_files=rp.staged_extra(rp.read_lock(self.sr)))
 
     def test_malformed_lock_fails_closed(self):
         with open(rp.lock_path(self.sr), "w") as f:
@@ -712,15 +757,13 @@ class Cli(Env):
         cmds = [ln.strip() for ln in lines if ln.strip().startswith("python ")]
         self.assertEqual(len(cmds), 1, out)
         self.assertEqual(shlex.split(cmds[0]), [
-            "python", "-I", ".claude/skills/paperclip/scripts/pc.py", "wake", "code-reviewer",
-            "--reason", f"Review the staged package for SOU-12 at head {SHA_HEAD[:12]}"])
-        self.assertNotIn("--issue", cmds[0])
+            "python", "-I", ".claude/skills/paperclip/scripts/pc.py", "review-start", "SOU-12"])
         i = next(n for n, ln in enumerate(lines) if ln.strip() == cmds[0])
         self.assertIn("if the Board decides", lines[i - 1])  # a suggestion, not run automatically
         self.assertIn("not run automatically", lines[i - 1])
         notes = [ln for ln in lines if ln.startswith("note:")]
         self.assertEqual(len(notes), 1, out)
-        self.assertIn("without --issue", notes[0])
+        self.assertIn("review sub-issue", notes[0])
         self.assertNotIn("python", notes[0])
 
     def test_full_flow_writes_only_inside_roots(self):

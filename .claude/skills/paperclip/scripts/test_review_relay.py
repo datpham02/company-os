@@ -17,6 +17,8 @@ from test_review_pack import Env, NOW, REPO, SHA_HEAD, fadd, fmod, source  # noq
 
 UTC = datetime.timezone.utc
 KEY, ISSUE_ID, RUN, REVIEWER, OTHER_AGENT = "SOU-12", "uuid-12", "run-1", "agent-cr", "agent-web"
+SUB_ID, SUB_KEY, COMPANY = "uuid-13", "SOU-13", "co-1"
+REVIEW_ID, CHALLENGE = "11111111-2222-4333-8444-555555555555", "c0ffee" * 5 + "ab"
 LATER = NOW + datetime.timedelta(minutes=5)
 TOKEN = "github_pat_TESTTOKEN0123456789abcdefABCDEF_xyz"
 
@@ -31,6 +33,7 @@ def http(method, path, code, body="error"):
 
 def verdict(verdict="approved", findings=None, issue=KEY, head=SHA_HEAD, **over):
     v = {"schema": rp.VERDICT_SCHEMA, "verdict": verdict, "issue": issue, "headSha": head,
+         "reviewId": REVIEW_ID, "challenge": CHALLENGE,
          "findings": findings if findings is not None else [], "notReviewable": []}
     v.update(over)
     return v
@@ -61,20 +64,25 @@ def run_log(final, extra_events=()):
 
 class FakePaperclip:
     def __init__(self, final, status="in_review", participant=None, runs=None):
-        self.issue = {"id": ISSUE_ID, "companyId": "co-1", "identifier": KEY, "status": status,
+        self.issue = {"id": ISSUE_ID, "companyId": COMPANY, "identifier": KEY, "status": status,
                       "executionState": {"currentStageType": "review",
                                          "currentParticipant": participant or {"type": "user", "userId": rp.BOARD}}}
         self.comments = []
         self.runs = runs if runs is not None else [
             {"runId": RUN, "agentId": REVIEWER, "status": "succeeded", "createdAt": rp.iso(LATER)}]
         self.logs = {RUN: run_log(final)}
-        self.details = {}  # run id -> GET /heartbeat-runs/<id> body (company-scoped runs)
+        self.details = {}  # run id -> GET /heartbeat-runs/<id> body overriding the default
+        self.sub = {"id": SUB_ID, "identifier": SUB_KEY, "parentId": ISSUE_ID, "companyId": COMPANY,
+                    "assigneeAgentId": REVIEWER, "status": "in_progress"}
+        self.created = []  # bodies of POST /companies/<id>/issues
+        self.wake = {"id": RUN, "status": "queued"}
         self.calls = []
         self.fail = {}  # (method, path) -> list of exceptions raised by successive calls
         self.store_despite_error = False  # a POST that fails after the server stored the comment
 
     def writes(self):
-        return [(m, p) for m, p, _ in self.calls if m in ("POST", "PATCH")]
+        """Writes to the reviewed issue (and anything else), except closing the review sub-issue."""
+        return [(m, p) for m, p, _ in self.calls if m in ("POST", "PATCH") and p != f"/issues/{SUB_ID}"]
 
     def __call__(self, method, path, body=None):
         self.calls.append((method, path, body))
@@ -89,11 +97,30 @@ class FakePaperclip:
         if (method, path) == ("GET", f"/issues/{ISSUE_ID}/comments"):
             return list(self.comments)
         if (method, path) == ("GET", f"/issues/{ISSUE_ID}/runs"):
+            return []  # the reviewer runs on its review sub-issue (Option B)
+        if (method, path) == ("GET", f"/issues/{SUB_ID}") and self.sub is not None:
+            return dict(self.sub)
+        if (method, path) == ("GET", f"/issues/{SUB_ID}/runs") and self.sub is not None:
             return list(self.runs)
+        if (method, path) == ("PATCH", f"/issues/{SUB_ID}") and self.sub is not None:
+            self.sub["status"] = body["status"]
+            return dict(self.sub)
         if method == "GET" and path.startswith("/heartbeat-runs/") and path.endswith("/log"):
             return self.logs.get(path.split("/")[2], {"content": ""})
-        if method == "GET" and path.startswith("/heartbeat-runs/") and path.split("/")[2] in self.details:
-            return dict(self.details[path.split("/")[2]])
+        if method == "GET" and path.startswith("/heartbeat-runs/"):
+            rid = path.split("/")[2]
+            if rid in self.details:
+                return dict(self.details[rid])
+            r = next((r for r in self.runs if r["runId"] == rid), None)
+            if r:
+                return {"id": rid, "companyId": COMPANY, "issueId": SUB_ID, "scopeKind": "issue",
+                        "agentId": r["agentId"], "status": r["status"], "createdAt": r["createdAt"]}
+        if (method, path) == ("POST", f"/companies/{COMPANY}/issues"):
+            self.created.append(body)
+            self.sub = dict(body, id=SUB_ID, identifier=SUB_KEY, companyId=COMPANY)
+            return dict(self.sub)
+        if (method, path) == ("POST", f"/agents/{REVIEWER}/wakeup?companyId={COMPANY}"):
+            return dict(self.wake) if self.wake else {}
         if (method, path) == ("POST", f"/issues/{ISSUE_ID}/comments"):
             self.comments.insert(0, {"body": body["body"]})
             return {"id": f"c{len(self.comments)}"}
@@ -116,8 +143,20 @@ class RelayEnv(Env):
         pkg, _ = rp.build(self.rr, self.sr, src_two_files(), KEY, {"issues": {KEY: {"status": "in_review",
                           "project": "proj-1", "closedAt": None}}, "runs": []}, [REPO], NOW)
         rp.stage(self.rr, self.sr, KEY, SHA_HEAD, pkg, NOW)
+        self.pin_review(started=True)
         self.head = SHA_HEAD
         self.sleeps = []
+
+    def pin_review(self, started):
+        """Fix the staging's reviewId and challenge (the real ones are random), rewrite REVIEW-ID.txt to match,
+        and, when started, record the review sub-issue and run as review-start would."""
+        lock = rp.update_lock(self.sr, reviewId=REVIEW_ID, challenge=CHALLENGE,
+                              reviewIssueId=SUB_ID if started else None,
+                              reviewIssueKey=SUB_KEY if started else None, runId=RUN if started else None)
+        data = rp.review_id_text(lock)
+        with open(os.path.join(self.sr, "current", rp.REVIEW_ID_FILE), "wb") as f:
+            f.write(data)
+        rp.update_lock(self.sr, challengeSha256=rp.sha256_bytes(data))
 
     def pc(self, v=None, **kw):
         final = message(v if v is not None else verdict()) if not isinstance(v, str) else v
@@ -222,59 +261,213 @@ class Check2Run(RelayEnv):
         self.refused_nothing_written("names run run-other", self.pc())
 
 
-class Check2CompanyScopedRun(RelayEnv):
-    """Phase 4b finding (V2): the reviewer is woken without an issue, so its run is not in the issue's runs."""
+class Check2ReviewSubIssue(RelayEnv):
+    """Option B: only the run of this staging's review sub-issue, named in the lock, is accepted."""
 
-    def api(self, **over):
-        api = self.pc(runs=[])
-        d = {"id": RUN, "companyId": "co-1", "agentId": REVIEWER, "issueId": None, "scopeKind": "company",
-             "status": "succeeded", "createdAt": rp.iso(LATER)}
-        d.update(over)
-        api.details[RUN] = d
-        return api
+    def test_happy_path_closes_the_sub_issue(self):
+        api = self.pc()
+        out = self.relay(api)
+        self.assertIn("relayed approved", out)
+        self.assertIn("review sub-issue closed", out)
+        self.assertEqual(api.sub["status"], "done")
+        e = rp.read_audit(self.rr)[-1]
+        self.assertEqual((e["event"], e["reviewId"], e["reviewIssueId"]), ("relay", REVIEW_ID, SUB_ID))
+        self.assertIn(REVIEW_ID, api.comments[1]["body"])
 
-    def test_company_scoped_run_accepted(self):
-        api = self.api()
-        self.assertIn("relayed approved", self.relay(api))
+    def test_sub_issue_close_failure_does_not_undo_the_decision(self):
+        api = self.pc()
+        api.fail[("PATCH", f"/issues/{SUB_ID}")] = [http("PATCH", "p", 422, "no")]
+        out = self.relay(api)
+        self.assertIn("close it by hand", out)
+        self.assertEqual(api.issue["status"], "done")
 
-    def test_run_of_another_company_refused(self):
-        self.refused_nothing_written("another company", self.api(companyId="co-2"))
+    def test_staging_without_review_start_refused(self):
+        self.pin_review(started=False)
+        self.refused_nothing_written("start the review with pc.py review-start", self.pc())
 
-    def test_run_scoped_to_another_issue_refused(self):
-        self.refused_nothing_written("scoped to another issue", self.api(issueId="uuid-99"))
+    def test_pre_option_b_lock_refused(self):
+        lock = rp.read_lock(self.sr)
+        for k in ("reviewId", "challenge", "challengeSha256", "reviewIssueId", "reviewIssueKey"):
+            lock.pop(k, None)
+        with open(rp.lock_path(self.sr), "w", encoding="utf-8") as f:
+            json.dump(lock, f)
+        os.remove(os.path.join(self.sr, "current", rp.REVIEW_ID_FILE))
+        self.refused_nothing_written("start the review with pc.py review-start", self.pc())
 
-    def test_run_scoped_to_this_issue_accepted(self):
-        self.assertIn("relayed approved", self.relay(self.api(issueId=ISSUE_ID)))
+    def test_run_not_named_in_lock_refused(self):
+        rp.update_lock(self.sr, runId="run-other")
+        self.refused_nothing_written("names run run-other", self.pc())
 
-    def test_unknown_run_refused(self):
-        api = self.pc(runs=[])  # GET /heartbeat-runs/<id> answers 404
-        self.refused_nothing_written("is not a run of", api)
+    def test_sub_issue_missing_refused(self):
+        api = self.pc()
+        api.sub = None
+        self.refused_nothing_written("was not found", api)
 
-    def test_run_id_mismatch_in_detail_refused(self):
-        self.refused_nothing_written("is not a run of", self.api(id="run-other"))
+    def test_sub_issue_of_another_parent_refused(self):
+        api = self.pc()
+        api.sub["parentId"] = "uuid-99"
+        self.refused_nothing_written("is not a child of", api)
 
-    def test_issue_without_company_refused(self):
-        api = self.api()
-        del api.issue["companyId"]
+    def test_sub_issue_of_another_company_refused(self):
+        api = self.pc()
+        api.sub["companyId"] = "co-2"
         self.refused_nothing_written("another company", api)
 
-    def test_documented_limit_any_company_reviewer_run_after_staging_passes_check_2(self):
-        """Documents what check 2 does NOT establish (_company_run docstring): nothing ties a company-scoped
-        run to this review. A run whose wake had nothing to do with the issue still passes check 2; only the
-        verdict (check 5) and the receipt bind it."""
-        api = self.api(scopeKind="company", contextSnapshot={"wakeReason": "unrelated chore"})
+    def test_sub_issue_not_assigned_to_reviewer_refused(self):
+        api = self.pc()
+        api.sub["assigneeAgentId"] = OTHER_AGENT
+        self.refused_nothing_written("not assigned to code-reviewer", api)
+
+    def test_run_not_on_sub_issue_refused(self):
+        self.refused_nothing_written("not a run of the review sub-issue", self.pc(runs=[]))
+
+    def test_run_record_scoped_elsewhere_refused(self):
+        for over in ({"issueId": None}, {"issueId": ISSUE_ID}, {"issueId": "uuid-99"}, {"id": "run-x"}):
+            with self.subTest(over=over):
+                api = self.pc()
+                d = {"id": RUN, "companyId": COMPANY, "issueId": SUB_ID, "agentId": REVIEWER, "status": "succeeded",
+                     "createdAt": rp.iso(LATER)}
+                d.update(over)
+                api.details[RUN] = d
+                self.refused_nothing_written("not scoped to the review sub-issue", api)
+
+    def test_company_scoped_run_no_longer_accepted(self):
+        """The Phase 4b company-scoped path is gone: a run without the sub-issue binding is refused."""
+        api = self.pc(runs=[])
+        api.details[RUN] = {"id": RUN, "companyId": COMPANY, "issueId": None, "agentId": REVIEWER,
+                            "status": "succeeded", "createdAt": rp.iso(LATER)}
+        self.refused_nothing_written("not a run of the review sub-issue", api)
+
+    def test_verdict_review_id_and_challenge_must_match(self):
+        for over, fragment in (({"reviewId": "other"}, "reviewId does not match"),
+                               ({"reviewId": None}, "reviewId does not match"),
+                               ({"challenge": "0" * 32}, "challenge does not match"),
+                               ({"challenge": None}, "challenge does not match"),
+                               ({"challenge": ["x"]}, "challenge does not match")):
+            with self.subTest(over=over):
+                v = verdict()
+                v.update(over)
+                self.refused_nothing_written(fragment, self.pc(v))
+
+    def test_verdict_without_the_new_fields_refused(self):
+        v = verdict()
+        del v["reviewId"], v["challenge"]
+        self.refused_nothing_written("reviewId does not match", self.pc(v))
+
+    def test_tampered_review_id_file_refused(self):
+        with open(os.path.join(self.sr, "current", rp.REVIEW_ID_FILE), "ab") as f:
+            f.write(b"x")
+        self.refused_nothing_written("REVIEW-ID.txt fails", self.pc())
+
+
+class ReviewStart(RelayEnv):
+    def setUp(self):
+        super().setUp()
+        self.pin_review(started=False)
+
+    def start(self, api, identity=rp.BOARD):
+        return rl.review_start(self.rr, self.sr, KEY, api, COMPANY, REVIEWER, identity, NOW, self.sleeps.append)
+
+    def test_creates_sub_issue_and_wakes_the_reviewer_for_it(self):
+        api = self.pc()
+        api.sub = None
+        out = self.start(api)
+        self.assertIn(f"review sub-issue {SUB_KEY} created, reviewer run {RUN}", out)
+        body = api.created[0]
+        self.assertEqual((body["status"], body["parentId"], body["assigneeAgentId"]), ("backlog", ISSUE_ID, REVIEWER))
+        self.assertNotIn("projectId", body)
+        self.assertNotIn("executionPolicy", body)
+        wake = [b for m, p, b in api.calls if p.startswith(f"/agents/{REVIEWER}/wakeup")][0]
+        self.assertEqual(wake["payload"], {"issueId": SUB_ID})
+        self.assertEqual((wake["source"], wake["triggerDetail"]), ("on_demand", "manual"))
+        self.assertIn(REVIEW_ID, wake["reason"])
+        self.assertNotEqual(wake["reason"], "issue_assigned")  # no missing-comment re-wake for a tool-less reviewer
+        lock = rp.read_lock(self.sr)
+        self.assertEqual((lock["reviewIssueId"], lock["reviewIssueKey"], lock["runId"]), (SUB_ID, SUB_KEY, RUN))
+        self.assertEqual(self.events()[-1], "review-start")
+
+    def test_challenge_never_leaves_staging(self):
+        api = self.pc()
+        api.sub = None
+        self.start(api)
+        self.assertNotIn(CHALLENGE, json.dumps(api.calls))
+        self.assertNotIn(CHALLENGE, json.dumps(rp.read_audit(self.rr)))
+
+    def test_start_then_relay(self):
+        api = self.pc()
+        api.sub = None
+        self.start(api)
+        api.sub["status"] = "in_progress"
         self.assertIn("relayed approved", self.relay(api))
 
-    def test_company_run_still_bound_by_the_verdict(self):
-        api = self.api(contextSnapshot={"wakeReason": "unrelated chore"})
-        api.logs[RUN] = run_log(message(verdict(issue="SOU-99")))
-        self.refused_nothing_written("does not match the staging lock", api)
+    def test_second_start_refused(self):
+        api = self.pc()
+        api.sub = None
+        self.start(api)
+        with self.assertRaises(rp.ReviewPackError) as cm:
+            self.start(api)
+        self.assertIn("already started", str(cm.exception))
+        self.assertEqual(len(api.created), 1)
 
-    def test_company_run_still_checked_for_agent_status_and_time(self):
-        self.refused_nothing_written("is not a code-reviewer run", self.api(agentId=OTHER_AGENT))
-        self.refused_nothing_written("not succeeded", self.api(status="failed"))
-        self.refused_nothing_written("before the package was staged",
-                                     self.api(createdAt=rp.iso(NOW - datetime.timedelta(seconds=1))))
+    def test_refusals_create_nothing(self):
+        cases = (
+            (dict(status="in_progress"), "not waiting on user:local-board"),
+            (dict(participant={"type": "agent", "agentId": REVIEWER}), "not waiting on user:local-board"),
+            (dict(participant={"type": "user", "userId": "someone"}), "not waiting on user:local-board"),
+        )
+        for kw, fragment in cases:
+            with self.subTest(kw=kw):
+                api = self.pc(**kw)
+                api.sub = None
+                with self.assertRaises(rp.ReviewPackError) as cm:
+                    self.start(api)
+                self.assertIn(fragment, str(cm.exception))
+                self.assertEqual(api.created, [])
+                self.assertIsNone(rp.read_lock(self.sr)["reviewIssueId"])
+
+    def test_tampered_staging_refused(self):
+        with open(os.path.join(self.sr, "current", rp.REVIEW_ID_FILE), "ab") as f:
+            f.write(b"x")
+        api = self.pc()
+        with self.assertRaises(rp.ReviewPackError):
+            self.start(api)
+        self.assertEqual(api.created, [])
+
+    def test_other_issue_staged_or_nothing_staged(self):
+        api = self.pc()
+        with self.assertRaises(rp.ReviewPackError) as cm:
+            rl.review_start(self.rr, self.sr, "SOU-99", api, COMPANY, REVIEWER, rp.BOARD, NOW)
+        self.assertIn("staging holds SOU-12", str(cm.exception))
+        rp.unstage(self.rr, self.sr, {"issues": {}, "runs": []}, True, NOW)
+        with self.assertRaises(rp.ReviewPackError) as cm:
+            self.start(api)
+        self.assertIn("nothing is staged", str(cm.exception))
+
+    def test_wake_without_run_id_reported(self):
+        api = self.pc()
+        api.sub = None
+        api.wake = None
+        with self.assertRaises(rp.ReviewPackError) as cm:
+            self.start(api)
+        self.assertIn("did not return a run", str(cm.exception))
+        self.assertEqual(rp.read_lock(self.sr)["reviewIssueId"], SUB_ID)  # recorded, so a restart is refused
+
+    def test_cli_refusal_is_audited(self):
+        api = self.pc(status="todo")
+        a = argparse.Namespace(key=KEY, identity=rp.BOARD, review_root=self.rr, staging_root=self.sr)
+        with self.assertRaises(rp.ReviewPackError):
+            rl.cmd_review_start(a, api, lambda: COMPANY, lambda: REVIEWER, now=NOW, sleep=self.sleeps.append)
+        e = rp.read_audit(self.rr)[-1]
+        self.assertEqual(e["event"], "refuse")
+        self.assertTrue(e["reason"].startswith("review-start: "))
+
+    def test_parser_wired_into_pc(self):
+        import pc
+        p = argparse.ArgumentParser()
+        sub = p.add_subparsers(dest="cmd")
+        rl.add_start_parser(sub, pc.cmd_review_start)
+        a = p.parse_args(["review-start", KEY])
+        self.assertEqual((a.key, a.identity, a.fn), (KEY, rp.BOARD, pc.cmd_review_start))
 
 
 class Check3Staging(RelayEnv):
