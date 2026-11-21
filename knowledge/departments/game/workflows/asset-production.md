@@ -67,7 +67,7 @@ The asset request (step 1); the project's art references named in its `AGENTS.md
 9. **Approval and closeout.** The Board Operator approves and merges each PR (ADR-009). Nobody approves their own asset or integration. `project-manager` closes the request when both Tasks are `done`.
 
 ## Using PixelFX (optional source library)
-[PixelFX](https://github.com/patch-gg/pixelfx) is `approved` in [dependencies/registry.yaml](../../../../dependencies/registry.yaml) (Board, 2026-11-21, after a security review at commit 5294518). `game-artist`'s allowlist allows only its `list.mjs` and `render.mjs` from `$HOME/tools/pixelfx`. It is used only once the Board has installed that checkout (registry entry `integrated`). Then:
+[PixelFX](https://github.com/patch-gg/pixelfx) is `approved` in [dependencies/registry.yaml](../../../../dependencies/registry.yaml) (Board, 2026-11-21, after a security review at commit 5294518). Installed by the Board at `$HOME/tools/pixelfx` (registry entry `integrated`). `game-artist`'s allowlist allows only its `list.mjs` and `render.mjs` from there. Rules:
 - `game-artist` may search and preview effects during visual planning (step 3), and decides to use, adapt or reject each one against the request and the project's references;
 - it exports only the effects the Task needs, as sprite sheets, never the whole library, and never adds PixelFX as a package of the game;
 - each exported effect gets a provenance record: PixelFX, the reviewed commit, the effect path, the licence (MIT; some effects carry the Sprite Fusion notice in `NOTICE.md`), and the changes made;

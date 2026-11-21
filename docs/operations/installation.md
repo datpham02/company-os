@@ -55,6 +55,16 @@ openspec --version
 
 Currently registered in Claude Code (`claude mcp list`, 2026-11-03): `playwright` (`npx -y @playwright/mcp@latest --headless --isolated`) and `hoppscotch` (`npx -y @hoppscotch/mcp-server`). For Codex, Playwright MCP documents `codex mcp add playwright npx "@playwright/mcp@latest"`. Install/keep only after the dependency is approved.
 
+### PixelFX (optional; integrated for `game-artist`)
+
+Installed by the Board on 2026-11-21 at the reviewed commit, outside every agent workspace. No `npm install`; the export tools use only Node:
+```bash
+git clone https://github.com/patch-gg/pixelfx "$HOME/tools/pixelfx"
+git -C "$HOME/tools/pixelfx" checkout 5294518
+node "$HOME/tools/pixelfx/tools/render.mjs" ice/frost-nova --sheet --out <scratch folder>
+```
+`game-artist` may run only `list.mjs` and `render.mjs` from that folder ([dependencies/registry.yaml](../../dependencies/registry.yaml) `pixelfx`). Upgrading means a new review and a new commit in all three places.
+
 ## 6. Studio setup in Paperclip
 
 Import the company and agents instead of creating them in the UI: [company-bootstrap.md](company-bootstrap.md). The manual route below remains for reference. Follow [../integrations/paperclip-integration.md §9](../integrations/paperclip-integration.md#9-setup-procedure-summary):
