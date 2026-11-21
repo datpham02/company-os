@@ -26,6 +26,22 @@ Paperclip 2026.1023.0 does not wake the next review participant when an agent ha
 - One wake per stage entry, through an idempotency key. It never changes issue state.
 - Run it with `node runtime/tools/review-wake-watchdog.ts`; `--once` does a single sweep. It needs Node 24+ for native TypeScript, and Paperclip in `local_trusted` mode on loopback.
 
+### 1.2 Stuck-issue alerts (`IMPLEMENTED`, 2026-11-21; OQ-048)
+
+Paperclip hands a stuck issue to the Board without telling anyone: its liveness recovery can end with "Recovery owner: board", and a reviewer that cannot act leaves the issue `blocked`. Company heartbeats are off and agents cannot read other issues (G-8), so no role notices. The same watchdog process now also sweeps every open issue (`todo`, `in_progress`, `in_review`, `blocked`) of each active company, using the rules in [`runtime/tools/stuck-rules.ts`](../../runtime/tools/stuck-rules.ts):
+
+| Finding | Condition | Action |
+|---|---|---|
+| `board_recovery` | The issue's active recovery action has `ownerType` `board` | Notify the Board |
+| `retry_loop` | The assignee's last 3 runs all `failed`, `timed_out`, `error` or `scheduled_retry` | Notify the Board |
+| `blocked` | `blocked`, no open blocker issue, no active run, quiet for 10 min | Notify the Board |
+| `idle` | `todo`/`in_progress`, assigned to an agent that is not paused or busy, no active run or scheduled retry, quiet for 15 min | Wake the assignee once; if it is idle again 15 min after that wake, notify the Board. At most one wake per issue per 6 h |
+
+- A notice is a console line starting with `ATTENTION` in the watchdog window and a Windows toast. Each stuck episode is notified once; what was done is kept in memory, so restarting the watchdog may notify again.
+- It reads issues and runs and calls `POST /api/agents/{id}/wakeup` only. It never changes issue state, reassigns or comments: deciding is the Board's job (`pc.py triage`, which also lists Board-owned recoveries under "Needs the Board").
+- Options: `--idle`, `--blocked-grace`, `--retry-loop`, `--wake-cooldown` (seconds or count), `--no-stuck` (review wakes only), `--no-toast`, `--dry-run` (log what it would do).
+- `UNVERIFIED`: the full list of run statuses (the retry-loop set is a best guess), and whether a plain wake helps after a Board-owned recovery (the watchdog only notifies there).
+
 ## 2. Stage 2: Game Studio Runtime (`PLANNED`)
 
 No command below exists. They describe the intended interface for implementers.

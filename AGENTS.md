@@ -16,7 +16,7 @@ The fastest orientation for an AI agent is [docs/guides/ai-agent-onboarding.md](
 
 ## 2. Current implementation status
 
-- The framework is mostly documentation (version in [VERSION](VERSION)). Implemented code: the Paperclip skill (`.claude/skills/paperclip/`, including the Board-credential helper `board_auth.py`), `scripts/setup/` (package build, post-import, role-text sync, read-only agent drift check), `scripts/maintenance/` (`move-files.py`; read-only `validate-registries.py`, `check-dependencies.py` and `merge-audit.py`; the authentication-migration tools `migrate-participants.py` and `auth-sandbox.py`), and the Stage 2 gap filler `runtime/tools/review-wake-watchdog.ts`.
+- The framework is mostly documentation (version in [VERSION](VERSION)). Implemented code: the Paperclip skill (`.claude/skills/paperclip/`, including the Board-credential helper `board_auth.py`), `scripts/setup/` (package build, post-import, role-text sync, read-only agent drift check), `scripts/maintenance/` (`move-files.py`; read-only `validate-registries.py`, `check-dependencies.py` and `merge-audit.py`; the authentication-migration tools `migrate-participants.py` and `auth-sandbox.py`), and the Stage 2 gap filler `runtime/tools/review-wake-watchdog.ts` (review wakes and stuck-issue alerts, rules in `stuck-rules.ts`).
 - The Agent Runtime is **PLANNED**. Do not describe any other Runtime command as working.
 - Paperclip 2026.1023.0 runs on the company machine in `local_trusted` mode. The live company is **Soucean** (`SOU`), imported from this repository on 2026-11-05 ([company-bootstrap.md](docs/operations/company-bootstrap.md)).
 

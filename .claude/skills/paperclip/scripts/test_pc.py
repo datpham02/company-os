@@ -607,6 +607,21 @@ class TriageWip(unittest.TestCase):
         self.assertIn("COULD NOT CHECK WIP", wip)
         self.assertNotIn("(none)", wip)
 
+    def test_board_recovery_needs_the_board(self):
+        rec = {"id": "r1", "status": "active", "ownerType": "board", "cause": "unchanged_source_state_exhausted",
+               "nextAction": "repair the liveness disposition"}
+        fake = FakePaperclip([{**make(1), "activeRecoveryAction": rec},
+                              {**make(2, assignee="ag-2"), "activeRecoveryAction": {**rec, "ownerType": "agent"}},
+                              {**make(3, status="todo"), "activeRecoveryAction": {**rec, "status": "resolved"}}])
+        out = io.StringIO()
+        with mock.patch.object(pc, "call", fake.call), mock.patch.object(pc, "issue", fake.issue),                 mock.patch.object(pc, "company", return_value={"id": CID, "name": "Soucean"}),                 mock.patch.object(pc, "names", return_value={"ag-1": "web-engineer", "ag-2": "qa"}),                 contextlib.redirect_stdout(out):
+            pc.cmd_triage(argparse.Namespace(company=None, quiet_hours=1e9))
+        text = out.getvalue()
+        board = text[text.index("Needs the Board:"):text.index("Blocked:")]
+        self.assertIn("SOU-1 in_progress, Paperclip recovery waiting on the Board (unchanged_source_state_exhausted)", board)
+        self.assertNotIn("SOU-2", board)
+        self.assertNotIn("SOU-3", board)
+
 
 # ---------- P0.3: only `release` starts a task ----------
 

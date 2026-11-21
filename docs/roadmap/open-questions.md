@@ -57,6 +57,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-045 | How is one agent added to the running Soucean company with an exact configuration (the `code-reviewer`, then `game-artist`), given that the package import creates a company? | Open | Review Package Phase 6, P6-B; `game-artist` instance |
 | OQ-046 | Where is the REA MCP server registered so that only `gameplay-programmer` gets it, given that it runs on cursor-cli and Cursor's user config is shared with `web-engineer`? | Open | `rea` dependency, provider allocation |
 | OQ-047 | Can the account run each agent's configured model (`claude-fable-5-1`, `claude-sonnet-5-5`, `gpt-5.3-codex-high`) at its configured effort? | Open (stored config verified read-only; no run yet) | Provider allocation, agent model baseline 2026-11-21 |
+| OQ-048 | Stuck issues reach no one: Paperclip hands them to the Board silently and no role sweeps | Worked around (watchdog alerts) | Stage 1 operations |
 
 ## Entries
 
@@ -575,3 +576,10 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Verification method:** the first normal Task run of each agent after the change; check its run log for the model actually used and for model or quota errors. No test run is started for this question alone.
 - **On failure:** stop that agent's work and ask the Board; no automatic fallback model (the Board's fixed-runtime rule). The pre-change snapshot is outside the repository; each change is also a Paperclip config revision.
 - **Status:** Open.
+
+### OQ-048 — Stuck issues reach no one
+- **Found (SOU-31, 2026-11-21):** QA could not run Godot (permission profile) and left the issue `blocked` with a "Blocked, owner Board" comment. After changes were requested, the `cursor` implementer spent two runs moving the issue between statuses instead of fixing it, and Paperclip then wrote "exhausted the bounded original-owner disposition repair … Recovery owner: board" and stopped. Nobody was told; the issue sat until a recovery restore about 13 minutes later. Company heartbeats are off (`agents.json`), and agents cannot read other issues (G-8), so no role would notice even with a heartbeat.
+- **Paperclip source (2026.1023.0, read only):** the issue read model carries `activeRecoveryAction` (`ownerType` `agent` or `board`, `cause`, `nextAction`); `GET /issues/{id}/recovery-actions` lists it. Paperclip also has per-issue watchdog agents (`PUT /issues/{id}/watchdog`, table `issue_watchdogs`); not evaluated (`UNVERIFIED`), and a watchdog agent would face G-8.
+- **Workaround (`IMPLEMENTED`):** the studio watchdog's stuck-issue sweep ([runtime-management.md §1.2](../operations/runtime-management.md#12-stuck-issue-alerts-implemented-2026-11-21-oq-048)) notifies the Board (console and Windows toast) and wakes an idle assignee once; `pc.py triage` lists Board-owned recoveries. Verified: unit tests, a live `--dry-run` sweep and a test toast. Not yet observed on a real stuck episode.
+- **Still open:** the causes seen on SOU-31 (QA cannot run the engine; the implementer's handling of `changes_requested`) are separate fixes for the Board.
+- **Status:** Worked around.

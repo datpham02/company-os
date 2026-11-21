@@ -13,7 +13,7 @@ Run every command from the repository root:
 python -I .claude/skills/paperclip/scripts/pc.py <command> [args]
 ```
 
-If Paperclip is not reachable, tell the user to double-click **Start Game Studio** (`runtime/tools/start-studio.cmd`). It also starts the review-wake watchdog.
+If Paperclip is not reachable, tell the user to double-click **Start Game Studio** (`runtime/tools/start-studio.cmd`). It also starts the watchdog (review wakes and stuck-issue alerts).
 
 ## Commands
 
@@ -23,7 +23,7 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 | `overview` | Company, projects, agents and every open issue (review first, then in progress, blocked, todo, backlog) |
 | `show SOU-8 [--comments N] [--description]` | One issue: status, assignee, current stage, blockers, branch, latest comments, runs. A run Paperclip cancelled because its agent handed the issue over (confirmed by the run record) shows as `handed over`; other cancellations show their reason, such as `cancelled (agent_paused)` |
 | `log <run-id> [--tail N]` | Output of one run; take run ids from `show` |
-| `triage` | Read-only daily sweep (knowledge/company/workflows/daily-triage.md): what needs the Board, blocked issues and whether they name an unblock owner, stalled reviews, quiet tasks, ready backlog, and agents with more than one `in_progress` issue across all projects (or "COULD NOT CHECK WIP" when that cannot be read) |
+| `triage` | Read-only daily sweep (knowledge/company/workflows/daily-triage.md): what needs the Board (including Paperclip recoveries handed to the Board), blocked issues and whether they name an unblock owner, stalled reviews, quiet tasks, ready backlog, and agents with more than one `in_progress` issue across all projects (or "COULD NOT CHECK WIP" when that cannot be read) |
 | `release SOU-8 [SOU-9 …] [--force]` | `backlog` → `todo`. **The assignee starts working immediately and spends usage.** First runs two hard guards (below): the WIP limit and the Write Set conflict guard. Then refuses an issue with no review/approval stage or with open blockers. `--force` skips only those last checks, and only on the user's explicit word |
 | `approve SOU-8 "comment"` | Board approval: sets `done` with the comment. Only works while the issue waits on the Board |
 | `request-changes SOU-8 "comment"` | Board sends the work back to the implementer with the comment |
@@ -127,6 +127,7 @@ Every `release` compares the issue's `## Write set` with the Write Set of every 
 
 ## Known behaviour (see docs/architecture/stage1-gap-analysis.md)
 
+- **OQ-048: stuck issues reach no one.** Paperclip can end its own recovery with "Recovery owner: board" (a recovery action with `ownerType` `board`) and tell nobody; heartbeats are off, so no role notices. The watchdog prints `ATTENTION` and shows a toast for that, for `blocked` issues with no open blocker, and for run retry loops; it wakes an idle `todo`/`in_progress` assignee once before telling the Board. `triage` lists Board-owned recoveries under "Needs the Board". The watchdog never decides: read the issue with `show`, then fix the cause, hand it back or record a manual resolution on the user's word.
 - **G-1 / OQ-035:** a reviewer is not woken after an in-run hand-off. The watchdog (`runtime/tools/review-wake-watchdog.ts`) wakes it after about 90 s. If an issue sits `in_review` on an agent with no run, check the watchdog is running, or `wake` the reviewer.
 - **G-8:** agents cannot read other issues or the agent list. Put source-of-truth text in the game repository (`docs/concept.md`, `docs/vision.md`), or paste it into the issue description or a Board comment.
 - **G-9:** issues created by agents through the MCP `create_task` tool start as `todo` and run at once. After an agent plans tasks, check them with `overview` and move any of them back with `assign <KEY> <agent> --status backlog`.
