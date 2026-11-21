@@ -224,6 +224,57 @@ dependencies:
     compatibility: "Windows engine uses the WSL2 backend. Only for platform projects' local stack (ADR-021); not used by Paperclip or agents' host processes (ADR-013)."
     notes: "Board starts the stack; agents only run the listed test command. Docker access can mount host paths, so allowlists name exact commands."
 
+  - id: comfyui
+    name: ComfyUI (Windows portable build)
+    category: game-development
+    source:
+      repository: https://github.com/comfyanonymous/ComfyUI
+    license: GPL-3.0   # LICENSE file of the installed copy
+    required: false
+    versionConstraint: "pinned:0.46.0 (commit a277b5b); update only through the Board"
+    verifiedVersion: "0.46.0, commit a277b5bf213e8a44fa34817b7770b54f86ef4cea (2026-11-18), Windows portable build with CUDA 12.6 at $HOME/game-studio-workspace/tools/ComfyUI_windows_portable (read 2026-11-22). Embedded Python 3.12.10 with Pillow 13.0.0 and NumPy 2.5.4, used by art-ops.py. No custom nodes installed"
+    install:
+      strategy: external-service
+      reference: docs/operations/runtime-management.md#10-comfyui-draft-script-and-art-ops-d1-2026-11-22
+    integrationStatus: integrated   # Board decision D1 2026-11-22: installed and used through comfy-draft.py and art-ops.py
+    usedBy: [game-artist]
+    compatibility: "Local image generation server, started by runtime/tools/comfy-draft.py on loopback only. Agents never call it directly: game-artist runs only the installed copies of comfy-draft.py (text-to-image, the two approved checkpoints, no input images) and art-ops.py (Pillow image operations through the embedded Python), by exact allowlist rules (security-architecture.md section 4). Outputs go to ~/game-studio-workspace/staging/art/<asset_id>/."
+    notes: "Recorded 2026-11-22 for Art Production v2 release gate G2 (it was used under D1 without an entry, OQ-049). Its GPL-3.0 licence covers the ComfyUI software, not generated images; the licence of an output follows the checkpoint (see sd-xl-base-1-0, flux1-schnell-fp8) and the project's own licensing rule. No custom nodes: a custom node runs arbitrary code in the ComfyUI process and needs its own review and Board approval (Phase 2 plan, docs/roadmap/art-production-v2-phase2.md). Model downloads and updates are Board actions; agents install nothing."
+
+  - id: sd-xl-base-1-0
+    name: Stable Diffusion XL 1.0 Base (checkpoint)
+    category: game-development
+    source:
+      repository: https://github.com/Stability-AI/generative-models   # modelspec.implementation in the file
+    license: "CreativeML Open RAIL++-M License"   # modelspec.license in the installed file
+    required: false
+    versionConstraint: "pinned: sd_xl_base_1.0.safetensors, SHA256 31e35c80fc4829d14f90153f4c74cd59c90b779f6afe05a74cd6120b893f7e5b"
+    verifiedVersion: "sd_xl_base_1.0.safetensors, 6,938,078,334 bytes, SHA256 31e35c80fc4829d14f90153f4c74cd59c90b779f6afe05a74cd6120b893f7e5b (modelspec: StabilityAI, 2023-07-26, stable-diffusion-xl-v1-base), in ComfyUI/models/checkpoints (read 2026-11-22)"
+    install:
+      strategy: external-service
+      reference: "Model file loaded by comfyui (models/checkpoints)"
+    integrationStatus: integrated   # Board decision D1 2026-11-22
+    usedBy: [game-artist]
+    compatibility: "Selected with comfy-draft.py --model sdxl. Text-to-image only under D1."
+    notes: "Recorded 2026-11-22 for release gate G2. The RAIL++-M licence carries use restrictions (its attachment A); each project's licensing rule decides whether output made with it may ship. Not reviewed by a lawyer."
+
+  - id: flux1-schnell-fp8
+    name: FLUX.1 [schnell] fp8 (checkpoint)
+    category: game-development
+    source:
+      repository: https://huggingface.co/black-forest-labs/FLUX.1-schnell
+    license: Apache-2.0   # modelspec.license "Apache License 2.0" in the installed file
+    required: false
+    versionConstraint: "pinned: flux1-schnell-fp8.safetensors, SHA256 ead426278b49030e9da5df862994f25ce94ab2ee4df38b556ddddb3db093bf72"
+    verifiedVersion: "flux1-schnell-fp8.safetensors, 17,236,328,572 bytes, SHA256 ead426278b49030e9da5df862994f25ce94ab2ee4df38b556ddddb3db093bf72 (modelspec: Black Forest Labs, Flux.1-schnell, 2024-08-01), single-file fp8 checkpoint in ComfyUI/models/checkpoints (read 2026-11-22)"
+    install:
+      strategy: external-service
+      reference: "Model file loaded by comfyui (models/checkpoints)"
+    integrationStatus: integrated   # Board decision D1 2026-11-22
+    usedBy: [game-artist]
+    compatibility: "Selected with comfy-draft.py --model flux. Text-to-image only under D1."
+    notes: "Recorded 2026-11-22 for release gate G2. The file is a single-file fp8 repackage of the original release; where it was downloaded from was not recorded (UNVERIFIED), so the SHA256 above is the pin. Only the schnell variant is approved; other FLUX.1 variants (for example dev, fill, redux) carry different, partly non-commercial licences and are not approved (Phase 2 plan)."
+
   - id: github-cli
     name: GitHub CLI
     category: development-tools
