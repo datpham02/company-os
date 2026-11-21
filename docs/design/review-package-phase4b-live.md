@@ -54,11 +54,11 @@
 
 ## 4. Code change from this test
 
-`review_relay.py` check 2: when the run is not in `GET /issues/<id>/runs`, the relay reads `GET /heartbeat-runs/<id>` and accepts the run only if its `companyId` equals the issue's and its `issueId` is empty or this issue; agent, status and creation time are checked as before. Four tests added (`Check2CompanyScopedRun`); `test_pc.py` 237 OK with `-W error`.
+`review_relay.py` check 2: when the run is not in `GET /issues/<id>/runs`, the relay reads `GET /heartbeat-runs/<id>` and accepts the run only if its `companyId` equals the issue's and its `issueId` is empty or this issue; agent, status and creation time are checked as before. What this does and does not establish is in the `_company_run` docstring and design §3.4: it does **not** show that the run was started for this review or that it read the staged package. Tests: `Check2CompanyScopedRun` (10, including one that documents that limit); `review-pack` now prints the wake command without `--issue`. `test_pc.py` 243 OK with `-W error`.
 
 ## 5. Design consequences (for the Board)
 
-- §3.3 must change: the reviewer is woken **without an issue**, not "for the issue". `pc.py wake code-reviewer` (no `--issue`) with a reason naming the issue.
+- The reviewer is woken **without an issue**, with a wake reason naming the staged issue and head. Design §1, §3.2–§3.4, §7, §9, §10 and §13 now say so (PR #48 review).
 - The reviewer quoted `patch.diff` lines in its first run. `REVIEW.md` should say explicitly that lines are counted in `files/head/<path>` and never in `patch.diff`. The relay already refuses the wrong form.
 - After request changes, the issue returns to the stage's return assignee. In this test that was `code-reviewer` (paused, so it was not woken). In production the author is the assignee, so the author is woken, which is the intended behaviour.
 

@@ -202,6 +202,26 @@ def _post_comment(api, issue_id, body, run_id, head, sleep):
 
 
 def _company_run(api, run_id, issue, key, sleep):
+    """Check 2 for a run that is not in the issue's runs: the reviewer woken without an issue (Phase 4b, V2).
+
+    Establishes, from GET /heartbeat-runs/<id> (Board API):
+    - the run exists and is the run named by --run-id (`id`);
+    - it belongs to the issue's company (`companyId`), so a run of another company cannot be relayed;
+    - it is not scoped to another issue (`issueId` empty or this issue's id).
+    The caller then requires, as for an issue-scoped run: `agentId` is code-reviewer, `status` is succeeded,
+    `createdAt` is at or after the staging lock's `stagedAt`, and the lock's `runId`, if set, matches.
+    Checks 3 and 5 add: the staged package is the locked one, and the verdict names the locked issue and head
+    and cites only files and lines of the staged manifest.
+
+    Does NOT establish:
+    - that the run was started for this review. Paperclip links a company-scoped run to no issue; the wake
+      reason naming the issue is free text, not checked here. Any succeeded code-reviewer run of the company
+      started after staging passes this check;
+    - that the run read the staged package. A verdict with the right issue, head and valid lines passes
+      check 5 whether it came from reading `current/` or from anything else the reviewer saw or guessed.
+    The binding to the review therefore rests on the Board starting exactly one reviewer run per staging
+    (design §7, serialization) and on the relay receipt refusing a second run for the same head.
+    Any read failure other than a transient one is a refusal (fail closed)."""
     try:
         r = _with_retry(lambda: api("GET", f"/heartbeat-runs/{run_id}"), sleep)
     except Transient:

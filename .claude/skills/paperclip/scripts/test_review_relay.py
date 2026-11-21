@@ -243,6 +243,33 @@ class Check2CompanyScopedRun(RelayEnv):
     def test_run_scoped_to_another_issue_refused(self):
         self.refused_nothing_written("scoped to another issue", self.api(issueId="uuid-99"))
 
+    def test_run_scoped_to_this_issue_accepted(self):
+        self.assertIn("relayed approved", self.relay(self.api(issueId=ISSUE_ID)))
+
+    def test_unknown_run_refused(self):
+        api = self.pc(runs=[])  # GET /heartbeat-runs/<id> answers 404
+        self.refused_nothing_written("is not a run of", api)
+
+    def test_run_id_mismatch_in_detail_refused(self):
+        self.refused_nothing_written("is not a run of", self.api(id="run-other"))
+
+    def test_issue_without_company_refused(self):
+        api = self.api()
+        del api.issue["companyId"]
+        self.refused_nothing_written("another company", api)
+
+    def test_documented_limit_any_company_reviewer_run_after_staging_passes_check_2(self):
+        """Documents what check 2 does NOT establish (_company_run docstring): nothing ties a company-scoped
+        run to this review. A run whose wake had nothing to do with the issue still passes check 2; only the
+        verdict (check 5) and the receipt bind it."""
+        api = self.api(scopeKind="company", contextSnapshot={"wakeReason": "unrelated chore"})
+        self.assertIn("relayed approved", self.relay(api))
+
+    def test_company_run_still_bound_by_the_verdict(self):
+        api = self.api(contextSnapshot={"wakeReason": "unrelated chore"})
+        api.logs[RUN] = run_log(message(verdict(issue="SOU-99")))
+        self.refused_nothing_written("does not match the staging lock", api)
+
     def test_company_run_still_checked_for_agent_status_and_time(self):
         self.refused_nothing_written("is not a code-reviewer run", self.api(agentId=OTHER_AGENT))
         self.refused_nothing_written("not succeeded", self.api(status="failed"))

@@ -58,7 +58,7 @@ Implements Phase 1 of [docs/design/review-package.md](../../../docs/design/revie
 - **`review-pack <KEY>`** validates everything first (design §5.2 and §5.3) and fails closed:
   - it builds `store/<KEY>/<head>/` atomically, with `READY` last, or reuses an intact one;
   - it then stages a verified copy in `<Staging Root>/current/` under an exclusive `staging.lock`;
-  - it prints the `pc.py wake code-reviewer --issue <KEY>` command; it never runs it.
+  - it prints the `pc.py wake code-reviewer --reason "Review the staged package for <KEY> at head <sha>"` command, without `--issue` (Paperclip cancels an issue run of a non-assignee agent, Phase 4b); it never runs it.
 - **One review at a time.** Another issue, or another head, is refused while staging is held.
   - `--status` shows the lock, its runs and whether it is stale (run finished, or no run for 24 h).
   - `--unstage` refuses while a reviewer run is active. It also refuses while the review has not been relayed, unless `--abandon` is given (logged). Phase 1 has no relay, so `--abandon` is the normal way to clear staging.
