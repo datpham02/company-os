@@ -10,7 +10,7 @@ metadata:
     status: active
     permissionProfile: workspace-write
     preferredProviders: [claude_local, codex_local]
-    tools: [git, github-cli, openspec]
+    tools: [git, github-cli, rea]   # approved or integrated only; openspec once approved; rea not installed yet (OQ-046)
     canWriteCode: true
     allocation:                    # knowledge/company/policies/provider-allocation.md
       workType: [implementation]
@@ -46,6 +46,12 @@ Programming in the project's engine and language, testing, debugging, Git.
 
 ## Tools and skills
 `git`, `gh`, the project's build/test tooling, approved engine skills, approved MCP tools (e.g. Playwright MCP for web games). Permission profile `workspace-write`.
+
+**REA** (`rea`, reverse-engineering MCP tools; Board-approved with conditions 2026-11-21, [registry](../../../../../dependencies/registry.yaml)). Not installed yet: if its `mcp__rea__*` tools are not available to you, do without them. When they are:
+- Use REA only when your Task explicitly asks for it and names the target. Allowed targets: the studio's own builds, open-source games, or software the Board has confirmed in the Task that we may analyse. Anything else: set the Task `blocked` (type `permission`, owner Board).
+- Static analysis only. Do not run, attach to, instrument or capture a target, even if a tool for it appears.
+- Record what you learn as a written description of the technique in your Task comment or a design note. Never copy code, assets, data or text from a target into a game repository, and never reproduce a commercial game's content.
+- Never use REA to bypass DRM, licence checks, anti-cheat or online services.
 
 ## Inputs
 Task (description, acceptance criteria, affected areas), design docs/specs, repository `AGENTS.md`.

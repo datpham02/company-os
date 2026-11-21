@@ -55,6 +55,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-043 | Can the studio run Paperclip in `authenticated` mode on Windows, so that no local process is the Board by default (G-14)? | Partially verified (sandbox, no agent runs): works on Windows and closes keyless Board access; migration and script auth needed | Security, Runtime prerequisites |
 | OQ-044 | Does Paperclip run two consecutive stages (`review`, then `approval`) whose only participant is the same user (`local-board`) as intended? | Open (source reading suggests yes; not run live) | Review Package Phase 6, P6-B |
 | OQ-045 | How is one agent added to the running Soucean company with an exact configuration (the `code-reviewer`, then `game-artist`), given that the package import creates a company? | Open | Review Package Phase 6, P6-B; `game-artist` instance |
+| OQ-046 | Where is the REA MCP server registered so that only `gameplay-programmer` gets it, given that it runs on cursor-cli and Cursor's user config is shared with `web-engineer`? | Open | `rea` dependency, provider allocation |
 
 ## Entries
 
@@ -557,4 +558,12 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Current assumption:** an agent can be created through the Paperclip UI or API (`POST /companies/<id>/agents`, used for sandbox agents in R5) with that configuration; `review-start`'s `check_reviewer_config` then confirms it.
 - **Verification method:** P6-B, with the Board's approval; record the exact procedure in the runbook.
 - **Verified for a normal agent (2026-11-21, `game-artist`):** the agents-only import with `--collision skip` into Soucean (dry run "1 create, 8 skip", then `--yes`) created the agent with the package's adapter config, allowlist and runtime (heartbeat off, `maxConcurrentRuns: 1`), status `idle`, `reportsTo` kept; `post-import.py` bound `GH_TOKEN`. The import ignores an empty `permissions` block: the agent got `canCreateAgents: true` and `canCreateSkills: true`, like every Soucean agent; `agent update` refuses `permissions` (only `PATCH /api/agents/{id}/permissions`, not in the public docs checked). Still open for the `code-reviewer` (paused start, strict profile).
+- **Status:** Open.
+
+### OQ-046 — Scope of the REA MCP server for a Cursor agent
+- **Why it matters:** the Board approved REA for `gameplay-programmer` only (2026-11-21, registry `rea`). `gameplay-programmer` runs on cursor-cli, whose user-wide `~/.cursor/mcp.json` is shared with `web-engineer`, which is not approved to use REA.
+- **Options:** (a) register REA in a project-level `.cursor/mcp.json` in each game repository that needs it (committed by a Task, visible to every Cursor agent in that repository only); (b) user-wide registration plus a `web-engineer` rule not to use it (weak: rules only); (c) run REA Tasks on a `claude_local` `gameplay-programmer` with the MCP server passed only to that agent.
+- **Unknowns:** whether Paperclip's Cursor adapter loads `~/.cursor/mcp.json` or a project `.cursor/mcp.json` at all, and whether it lets an agent call MCP tools without an approval prompt in non-interactive runs.
+- **Verification method:** in an isolated sandbox company, register a harmless stdio MCP server each way and check which agents' runs list it.
+- **Current assumption:** none; REA stays uninstalled for agents until this is answered.
 - **Status:** Open.

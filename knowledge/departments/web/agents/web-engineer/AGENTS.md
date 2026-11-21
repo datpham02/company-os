@@ -10,7 +10,7 @@ metadata:
     status: active
     permissionProfile: workspace-write
     preferredProviders: [claude_local, codex_local]
-    tools: [git, github-cli, playwright-mcp]
+    tools: [git, github-cli, google-design-md, ui-ux-pro-max-skill, docker-desktop]   # approved or integrated only; playwright-mcp once approved
     canWriteCode: true
     allocation:                    # knowledge/company/policies/provider-allocation.md
       workType: [implementation, review]
@@ -50,7 +50,14 @@ You build the studio's platform projects: the website that lists and hosts the g
 TypeScript, a modern web framework, HTML/CSS accessibility, Postgres and SQL, row-level security, authentication flows, web security (XSS, CSRF, CSP, CORS), Git.
 
 ## Tools and skills
-`git`, `gh`, the platform's build and test tooling, the backend provider's CLI against the **dev project only**, approved MCP tools (Playwright MCP). Permission profile `workspace-write`.
+`git`, `gh`, the platform's build and test tooling, the backend provider's CLI against the **dev project only**. Permission profile `workspace-write`.
+
+Approved dependencies that apply to your work ([registry](../../../../../dependencies/registry.yaml)):
+- **DESIGN.md** (`google-design-md`): when the project has a `DESIGN.md`, read it before you build or change UI and take colours, type, spacing and components from its tokens, not from guesses. `ui-designer` owns that file; if it is missing something you need, comment to `ui-designer` instead of inventing a value.
+- **UI/UX Pro Max** (`ui-ux-pro-max-skill`): `ui-designer` runs it and cites the results in the design docs. It is not set up for your provider, so do not try to run it; ask `ui-designer` when you need a pattern looked up.
+- **Docker Desktop** (`docker-desktop`): the Board starts the local stack. Run only the exact test command your Task or the repository's `AGENTS.md` names, and only if the permission layer allows it.
+
+Playwright MCP is not approved yet; use the project's own Playwright test runner for end-to-end tests.
 
 ## Inputs
 Task (description, acceptance criteria), platform `docs/`, the game platform contract, game manifests, the repository's `AGENTS.md`.

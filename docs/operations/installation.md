@@ -65,6 +65,20 @@ node "$HOME/tools/pixelfx/tools/render.mjs" ice/frost-nova --sheet --out <scratc
 ```
 `game-artist` may run only `list.mjs` and `render.mjs` from that folder ([dependencies/registry.yaml](../../dependencies/registry.yaml) `pixelfx`). Upgrading means a new review and a new commit in all three places.
 
+### REA (optional; approved for `gameplay-programmer`, `PLANNED`, not installed)
+
+Approved by the Board on 2026-11-21 with conditions ([registry](../../dependencies/registry.yaml) `rea`). Do not install for agents until OQ-046 (which Cursor MCP config) is answered. The Board runs, in a terminal with no secrets exported:
+```bash
+npm install -g rea-agents@6.10.1 --omit=optional        # pinned; skips Frida and its install script
+rea --version                                            # expect 6.10.1
+rea setup --client <client> --no-skill --tool-families direct,artifact,managed,native --dry-run --json
+# read the plan: only one MCP entry, no skill, no Hopper, the four tool families; then:
+rea setup --client <client> --no-skill --tool-families direct,artifact,managed,native --yes
+```
+`<client>` follows the OQ-046 answer. Never use interactive setup (it pre-selects a Hopper install), `--all-detected`, `--install-hopper`, the HTTP MCP transport, or `rea update`. Afterwards check that the client's MCP entry runs the global 6.10.1 install and sets `REA_MCP_TOOL_FAMILIES`, record the date here, and set the registry entry to `integrated`. Upgrading means a new review of the diff.
+
+The Board's own Claude Code already has an older REA MCP entry (`npx -y rea-agents@6.7.0 mcp`) and the `reverse-engineer-anything` skill at user scope. They are the Board's personal tools, not this approval; agents' runs do not list that MCP server.
+
 ## 6. Studio setup in Paperclip
 
 Import the company and agents instead of creating them in the UI: [company-bootstrap.md](company-bootstrap.md). The manual route below remains for reference. Follow [../integrations/paperclip-integration.md §9](../integrations/paperclip-integration.md#9-setup-procedure-summary):
