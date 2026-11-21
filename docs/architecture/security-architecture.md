@@ -20,7 +20,7 @@
 |---|---|---|---|
 | Claude Code auth | `~/.claude/` (subscription login) or `ANTHROPIC_API_KEY` | Provider reads its own store | MUST NOT be copied into repos or prompts. |
 | Codex auth | `~/.codex/auth.json` (Codex reads credentials from `auth.json`; `VERIFIED`, Paperclip codex-local docs) | Provider reads its own store | Same. |
-| GitHub token for agents | Paperclip company secret bound to the agent/project (`VERIFIED` mechanism: `GH_TOKEN`/`GITHUB_TOKEN` bindings), or local Runtime secret file mode `0600` | Environment variable `GH_TOKEN` | MUST be a **fine-grained token scoped to the specific Game Repositories**, permission *Contents: read/write* and *Pull requests: read/write* only. MUST NOT have admin, delete, or workflow-secrets scope (OQ-017). |
+| GitHub token for agents | Paperclip company secret bound to the agent/project (`VERIFIED` mechanism: `GH_TOKEN`/`GITHUB_TOKEN` bindings), or local Runtime secret file mode `0600` | Environment variable `GH_TOKEN` | MUST be a **fine-grained token**, permission *Contents: read/write* and *Pull requests: read/write* (and *Metadata: read*) only. MUST NOT have admin, delete, or workflow-secrets scope (OQ-017). Repository access is *All repositories* of the Board's account, an accepted risk recorded in [ADR-022](../decisions/ADR-022-author-pull-request-credential.md): the token acts as the repository owner, so branch protection does not bind it. |
 | Paperclip run JWT | Injected by Paperclip per heartbeat (`PAPERCLIP_API_KEY`) | Env | Short-lived, agent-scoped. Never logged. |
 | Paperclip long-lived agent API keys | Paperclip (hashed at rest, `VERIFIED`) | Only if the Runtime needs one outside heartbeats | Avoid in v1. |
 
