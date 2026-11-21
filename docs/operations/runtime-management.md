@@ -19,9 +19,18 @@ How to operate execution day to day. In **Stage 1** "the runtime" is Paperclip p
 
 Execution workspaces persist "until a human closes them" (`VERIFIED`). Close a workspace only after its Task is `done`/`cancelled` and its branch is merged or abandoned.
 
-### 1.0 ComfyUI draft script (D1, 2026-11-22)
+### 1.0 ComfyUI draft script and art-ops (D1, 2026-11-22)
 
 `runtime/tools/comfy-draft.py` generates concept drafts with the local ComfyUI (`~/game-studio-workspace/tools/ComfyUI_windows_portable`, cu126 build for driver 572.83). `game-artist` runs the installed copy, so after changing the script run `Copy-Item runtime/tools/comfy-draft.py "$HOME/game-studio-workspace/tools/comfy-draft.py"`. Output goes to `~/game-studio-workspace/staging/art/<asset_id>/`. `runtime/tools/art-ops.py` (crop, resize, colour-key, trim, canvas, sprite sheet, grade, contact sheet) is copied the same way to `$HOME/game-studio-workspace/tools/art-ops.py`; it uses ComfyUI's embedded Python (Pillow, NumPy). Test: `python -I runtime/tools/comfy-draft.py --asset smoke_test --model flux --prompt "..." --seed 7` (about 30 s on the RTX 3060).
+
+**Deployment checklist (Board, after merging a change to these tools, `agents.json` or the art role files; Art Production v2).** Each step is done and its output kept in the PR or the pilot Task before the next:
+1. **Tests from the repository:** `& "$HOME/game-studio-workspace/tools/ComfyUI_windows_portable/python_embeded/python.exe" -I -s runtime/tools/test_art_ops.py` → `OK`.
+2. **Install the runtime tools:** `Copy-Item runtime/tools/art-ops.py "$HOME/game-studio-workspace/tools/art-ops.py"` and the same for `comfy-draft.py`; then `Get-FileHash` of each repository file and its installed copy must match.
+3. **Permissions:** `python -I scripts/setup/check-agent-drift.py --company Soucean`. Drift in `adapterConfig` (allowlist, model) is applied by the Board in the UI or with `paperclipai agent update` ([company-bootstrap.md](company-bootstrap.md) §5, a sync for it is `PLANNED`), then the check is run again until it reports none. Never widen an allowlist that `agents.json` does not already contain.
+4. **Dependencies:** every external tool the change relies on has an entry in [dependencies/registry.yaml](../../dependencies/registry.yaml) ([add-external-dependency.md](../../knowledge/company/workflows/add-external-dependency.md)); ComfyUI, its embedded Python packages and the two checkpoints are still missing (OQ-049). Then `python -I scripts/maintenance/validate-registries.py` (0 findings) and `check-dependencies.py`.
+5. **Instructions:** `python -I scripts/setup/sync-instructions.py --company Soucean --dry-run` (expect `would update` only for the role files the PR changed), then without `--dry-run`, then **read back** with `--dry-run` again: every role must report `current`.
+6. **Drift:** `check-agent-drift.py --company Soucean` reports no drift.
+7. **Smoke test:** in a scratch Git checkout (a folder with `.git`), run the installed copy: `info` on a staging image, `resize --filter nearest` into `art_src/`, `contact --bg …`, and one refused path (for example `..\x.png`); open the outputs with Read. Then the first pilot Task, written by the Board from the template, checks that `game-artist`'s plan comment names a lane and that its evidence is committed under `art_src/review/<KEY>/` and opened by the `qa` review.
 
 ### 1.1 Review-wake watchdog (`IMPLEMENTED`, 2026-11-04)
 

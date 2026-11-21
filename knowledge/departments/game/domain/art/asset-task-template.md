@@ -1,7 +1,7 @@
 # Asset Task Templates
 
 - **Status:** `PROPOSED` (2026-11-22).
-- **Who uses it:** whoever writes an art, integration or game-UI Task: today the Board Operator through `pc.py create --desc-file <file>`; `game-designer` or `project-manager` when they have a copy (see [README.md](README.md#how-agents-get-this-text-delivery-map)).
+- **Who uses it:** in the Phase 1 pilot, only the Board Operator, through `pc.py create --desc-file <file>` ([scope](README.md)). `game-designer` and `project-manager` cannot read it yet ([delivery map](README.md#how-agents-get-this-text-delivery-map)).
 
 Why the text is long: `game-designer`, `project-manager` and `qa` do not carry the asset steps in their role files (Board decision 2026-11-21), and no agent can read this repository. The Task description is the only place they find the brief, the rubric and the routing. Keep the blocks below whole; delete only lines that do not apply.
 
@@ -32,6 +32,7 @@ Reviewers (Paperclip review stages): qa<, game-designer when readability is at s
 ## Write set
 - `<asset folder or files>`
 - `<provenance record or asset spec entry, only where the project has one>`
+- `art_src/review/<TASK-KEY>/` (review evidence; or the folder the project's `AGENTS.md` names)
 
 ## Asset brief
 - Lane: <L0 fix or variant | L1 new asset | L2 new direction>, because <reason>.
@@ -49,7 +50,7 @@ Reviewers (Paperclip review stages): qa<, game-designer when readability is at s
 
 ## Procedure (game-artist)
 1. Post the plan comment: lane, reference traits, constraints, deliverables, tools.
-2. Research the references, then (L1, L2) compare 2–3 distinct candidates at the target size and record why the others fail. L2: the direction is decided by the design authority before production.
+2. Research the references. L1: compare 2–3 distinct candidates at the target size and record why the others fail. L2: compare 3–4 directions at the target size and in a representative scene; the design authority decides before production (see the L2 decision rule in the workflow).
 3. Produce, then critique the actual image: located issues, targeted fixes, before/after at target size, within the iteration budget.
 4. Preflight and hand off with the evidence below. The self-check is not an approval.
 
@@ -61,11 +62,11 @@ Reviewers (Paperclip review stages): qa<, game-designer when readability is at s
 - [ ] Evidence attached as listed below; limitations and unverified checks stated explicitly.
 
 ## Evidence required in the handoff
-<L0: before/after at target size. L1: candidate contact sheet at target size and why others fail; selected asset; before/after of each refinement round. L2: as L1, plus the representative scene and the decision record.> Always: preflight results with command output, provenance, pivot and timing for animated assets, known limitations, `ready for integration` or `art only`.
+<L0: before/after at target size. L1: candidate contact sheet at target size and why others fail; selected asset; before/after of each refinement round. L2: as L1, plus the representative scene and the decision record.> Always: preflight results with command output, provenance, pivot and timing for animated assets, known limitations, `ready for integration` or `art only`. Every image is committed under `art_src/review/<TASK-KEY>/` and cited by repository-relative path; target-background previews use `art-ops.py contact --bg <R G B>`. Staging paths, uncommitted files and descriptions are not evidence (reviewers mark them UNVERIFIED).
 
 ## Review rubric (for every reviewer)
 Hard gates (any failure or missing evidence = changes requested): licence and provenance · originality · technical contract · critical readability at target size · required evidence · write set only.
-Score each that applies 0 (fails), 1 (partly), 2 (meets, with evidence) and write the observation: readability · art direction · craft · coherence · production · evidence. Scores never override a hard gate. Taste questions without a named reference trait go to the design authority.
+Score each that applies 0 (fails), 1 (partly), 2 (meets, with evidence) and write the observation: readability · art direction · craft · coherence · production · evidence. Scores never override a hard gate. A 0 in art direction, craft or coherence = changes requested even when every hard gate passes, unless game-designer (director for vision or pillars) records an explicit exception in this Task naming the category, what is accepted and why; a 1 there is a finding, approvable only as minor with a follow-up Task or that exception. Taste questions without a named reference trait go to the design authority.
 Findings: location (file, frame, region), expected, actual, severity (blocker / major / minor), evidence, owner. Routing: look, size, frames, palette, provenance → this Task, game-artist · in-game behaviour, import, timing logic, shader, performance → the integration Task, gameplay-programmer · unclear or wrong requirement → game-designer.
 Reviewers never edit, commit or push this branch; record approve or changes requested in Paperclip.
 ```

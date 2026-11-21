@@ -1,6 +1,7 @@
 # Game Art Production Knowledge
 
 - **Status:** `PROPOSED` (2026-11-22, Art Production v2, Phase 1). Process guidance only: no new role, status, permission, tool or review bypass.
+- **Scope: Board-assisted pilot.** Phase 1 is not ready for autonomous production. Every art, integration and game-UI Task of the pilot is written by the Board Operator from [asset-task-template.md](asset-task-template.md), because no Board-approved way yet puts the template where `project-manager` and `game-designer` can read it. Autonomous planning of asset Tasks waits for that mechanism ([OQ-049](../../../../../docs/roadmap/open-questions.md#oq-049--art-production-v2-delivery-and-tooling)).
 - **Applies to:** every art, art-integration and game-UI Task in a project with `type: game`.
 - **Owner:** `project-manager` (process); content of each procedure: `game-artist`. Authority for art direction stays in [game-rules.md §2](../game-rules.md#2-design-authority).
 
@@ -27,9 +28,9 @@ Agents cannot read Company OS at run time. Paperclip receives exactly one file p
 | `game-designer`, `project-manager`, `qa` | Brief fields, lane, rubric, routing | **The Task description**, written from [asset-task-template.md](asset-task-template.md). Their role files stay unchanged (Board decision 2026-11-21) |
 | Any role | Project art references, art bible, asset specs, licence rule | The project repository, named in the Task's `## Read set` |
 
-Who writes the Task description today: the Board Operator through the Paperclip skill (`pc.py create --desc-file <filled template>`), which can read this folder. A `project-manager` or `game-designer` that writes an asset Task cannot read this folder; until a project keeps its own copy of the template (see [OQ-049](../../../../../docs/roadmap/open-questions.md#oq-049--art-production-v2-delivery-and-tooling)), the Board fills the template or pastes it into the planning issue.
+Who writes the Task description in Phase 1: **only** the Board Operator, through the Paperclip skill (`pc.py create --desc-file <filled template>`), which can read this folder. `project-manager` and `game-designer` cannot read this folder; in the pilot they propose asset work in a comment or a design document, and the Board turns it into Tasks. An asset Task that reaches `game-artist` without the brief fields (lane, target size and background, reference traits, acceptance criteria, rubric) is set `blocked` (type `context`, owner `project-manager`) instead of guessed. A project-local copy of the template is a later, Board-approved step ([OQ-049](../../../../../docs/roadmap/open-questions.md#oq-049--art-production-v2-delivery-and-tooling)).
 
-After a merge that changes a role file, the Board runs `python -I scripts/setup/sync-instructions.py --company Soucean --dry-run`, then without `--dry-run`, then `check-agent-drift.py` ([company-bootstrap.md](../../../../../docs/operations/company-bootstrap.md)).
+Deployment after a merge (tools, permissions, dependencies, instructions, drift, smoke test): the checklist in [runtime-management.md §1.0](../../../../../docs/operations/runtime-management.md#10-comfyui-draft-script-and-art-ops-d1-2026-11-22).
 
 ## What this folder does not change
 - Review and approval: `qa` review, extra review stages the Task names, Board approval and merge (ADR-009). Nobody approves their own work.

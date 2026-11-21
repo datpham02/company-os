@@ -3,6 +3,13 @@
 - **Status:** `PROPOSED` (2026-11-22).
 - **Copied into:** the `game-artist` role file (plan and handoff headings), the `gameplay-programmer` role file (integration evidence), and the art Task template (review format).
 
+## Review evidence: where it lives and how reviewers open it
+Reviewers run in the Task Workspace and can open only what is on the Task Branch; they cannot rely on the staging folder, another machine or a description.
+1. Every image a reviewer must see (candidate contact sheet, target-background preview, before/after, representative scene, direction sheet) is written with `art-ops.py` to `art_src/review/<TASK-KEY>/` (or the review-evidence folder the project's `AGENTS.md` names), which is in the Task's write set, then committed and pushed.
+2. The handoff cites each image by its repository-relative path. Raw generator candidates stay in the staging folder; only the review sheets built from them are committed.
+3. Target-background preview: `art-ops.py contact --bg R G B --cell W H` with the background colour the brief names, at target size (`--filter nearest` for pixel art). A textured or in-scene background needs an in-engine screenshot (the integration Task, or a Godot frame where the asset can already be loaded); until compositing exists it is `UNVERIFIED`.
+4. A path in the staging folder, an uncommitted file, a path the reviewer cannot open, or a written description is **not evidence**: the reviewer marks the claim `UNVERIFIED`, which fails the evidence hard gate.
+
 ## 1. Plan comment (`game-artist`, before any file is written)
 ```md
 Plan — <asset family>
@@ -23,7 +30,7 @@ Handoff — <asset family> — <ready for integration | art only>
 PR: <link> · Branch: <name>
 Files: <path — dimensions — what it shows>
 Selected: <file> — why: <reason>. Rejected: <candidate — why it fails>
-Evidence: <contact sheet at target size: path> · <before/after: path> · <representative scene (L2): path>
+Evidence (committed, repository-relative): <art_src/review/KEY/candidates.png> · <art_src/review/KEY/on-target-bg.png> · <art_src/review/KEY/before-after-r1.png> · <representative scene (L2)>
 Refinement rounds: <n of budget> — issues fixed: <list>
 Preflight: dimensions <ok>, frames and order <ok>, alpha and edges <ok>, naming and directory <ok>, variants <ok>, provenance <ok>, write set (`git status --short`) <ok>
 UNVERIFIED: <check — why>, or none

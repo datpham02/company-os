@@ -17,7 +17,7 @@ These are the internal phases of one art Task (steps 3–6 of [asset-production.
 1. Make candidates that differ in a way that matters: silhouette, proportion, shape language, value structure, or layout. Two colour swaps of one drawing are one candidate.
 2. Judge every candidate **at target display size, on the target background**, and, for L2, in a representative composition (next to the player character, on the real tile set, in the HUD). Enlarged views find craft defects; they do not prove readability.
 3. Quick checks at target size: is the silhouette identifiable as a flat dark shape? Is the focal point where the gameplay purpose needs the eye? Do the values separate it from the background? Does it read as the same family as its neighbours?
-4. Keep candidates in the staging folder, outside the repository and the write set.
+4. Keep raw candidates in the staging folder, outside the repository; commit only the review sheets built from them ([where evidence lives](handoff-templates.md#review-evidence-where-it-lives-and-how-reviewers-open-it)).
 
 ## 3. Selection
 1. Choose by, in order: gameplay purpose and readability, consistency with the traits from §1, craft, technical feasibility (frames, size, budget).
@@ -74,9 +74,9 @@ Each line is the order of decisions; do not polish a later step before the earli
 | Step | Available to `game-artist` today | Gap (proposal only, [OQ-049](../../../../../docs/roadmap/open-questions.md#oq-049--art-production-v2-delivery-and-tooling)) |
 |---|---|---|
 | Candidates | `comfy-draft.py`: text-to-image, two approved models, 1–8 candidates, no input image | No reference image, img2img or inpainting: a targeted edit of one region is not possible with an approved tool |
-| Operations | `art-ops.py`: `info`, `crop`, `resize`, `key`, `trim`, `canvas`, `sheet`, `grade`, `contact` | No compositing of two images, no palette quantise or palette report |
-| Target-size review | `art-ops.py resize` to the display size, then `contact --cell W H` with the cell at least that size (contact only shrinks, never enlarges) | — |
-| Enlarged review | `resize` (Lanczos) | No nearest-neighbour upscale: enlarged pixel art is blurred; inspect pixel art at native size and say so |
+| Operations | `art-ops.py`: `info`, `crop`, `resize` (`--filter lanczos\|nearest`), `key`, `trim`, `canvas`, `sheet`, `grade`, `contact` (`--bg`) | No compositing of two images, no palette quantise or palette report |
+| Target-size review | `art-ops.py resize` to the display size, then `contact --cell W H` with the cell at least that size (contact only shrinks, never enlarges); `--bg R G B` for a flat target background | No compositing over a textured or in-scene background: needs an engine frame, else `UNVERIFIED` |
+| Enlarged review | `resize --filter nearest` (pixel art) or the default Lanczos (painted art) | — |
 | Before/after | `contact` with both versions side by side | No pixel diff |
 | In-engine | The five Godot commands of the role file; Deckbound's screenshot runner | Other resolutions and states need a project fixture or Board evidence |
 | Effects | PixelFX `list.mjs`, `render.mjs`, where the project licence allows MIT with attribution | — |
