@@ -16,7 +16,7 @@ Checked 2026-11-22 against the live company, the Deckbound repository (`main` 1c
 
 | # | Item | State | Unblocks with | Owner |
 |---|---|---|---|---|
-| R1 | Release gates G1–G7(a) | **Done**: passed on c998f32 (§8) | — | Board |
+| R1 | Release gates G1–G7(a) | **Reopened 2026-11-22.** The first pass (passed on c998f32, kept in §8 as history) did not exercise the agents' permission layer; SOU-66 then showed the art allowlist rules never matched. PR #91 changes the allowlists, the role text and `comfy-draft.py`, so after its merge and the live `adapterConfig` update, G3–G7(a) are run again, with the agent-level permission smoke for all five rules | Merge PR #91, apply it live, revalidate G3–G7(a) | Board |
 | R2 | `game-artist` registered for Deckbound | **Done 2026-11-22**: the `agents` list (with `game-artist`) merged in Company OS PR #89 (d0c4ddd) | — | Board |
 | R3 | Pipeline matches the 2026-11-22 decision | **Done 2026-11-22**: deckbound PR #20 merged (d78f35a, Board approval "Approve; you merge"); the Krita paintover is optional; the local Deckbound clone fast-forwarded so new Task worktrees include it | — | Board |
 | R4 | Explicit asset licensing rule | **Done 2026-11-22**: the Board's rule (answer: "Proposed text, in PR #20") is in Deckbound `AGENTS.md` "Assets and licensing" via PR #20 | — | Board |
@@ -51,8 +51,8 @@ Classified 2026-11-22 from the Deckbound specs. "Static" means provable with the
 | SOU-66 | Editable source `art_src/cards/*.kra` | Not producible by agents (no Krita); PR #20 made Krita optional | Spec line replaced: source = generated, reproducible from provenance and the staged workflow JSON (SOU-66 description) |
 | SOU-64, SOU-65, SOU-68 | Readability over the real background; scale against the other slice assets; animation timing in context | No | **SOU-61** |
 | SOU-67 | Greyscale distinguishability; dimensions, alpha, frame order | Yes (`grade --saturation 0`, `info`) | — |
-| SOU-67 | Colour-blind simulation; glyph at about 83 px on a phone; fray VFX over the slot and not hiding the telegraph | No (no colour-blind filter; device and in-scene checks) | **None yet.** Before SOU-67 is released the Board names an integration or device Task for them, or SOU-67 can reach art-ready only with these listed as open, never verified |
-| SOU-69 | Layout, safe-area shift, 48 dp targets, text 4.5:1 | No: layout and implementation checks, not art | **None yet** (the M1 UI implementation). Same rule as SOU-67 before its release |
+| SOU-67 | Colour-blind simulation; glyph at about 83 px on a phone; fray VFX over the slot and not hiding the telegraph | No (no colour-blind filter; device and in-scene checks) | **A named integration Task is mandatory before SOU-67 is released.** None exists yet; until the Board names one, SOU-67 is not released |
+| SOU-69 | Layout, safe-area shift, 48 dp targets, text 4.5:1 | No: layout and implementation checks, not art | **A named integration Task is mandatory before SOU-69 is released** (the M1 UI implementation). None exists yet; until the Board names one, SOU-69 is not released |
 
 ## 4. Pilot set
 ### 4.1 Tasks
@@ -67,7 +67,7 @@ Classified 2026-11-22 from the Deckbound specs. "Static" means provable with the
 | SOU-69 | Combat UI composition (decorative UI art; layout in existing M1 UI work) | L1 | `game-artist` (R7) | `qa`, `director`, `ui-designer`, Board |
 | **SOU-72** (L0, §4.4) | `enemy_attacker` hit state, 2 frames | L0 | `game-artist` | `qa`, `game-designer`, Board |
 | SOU-61 | Swap-in to the game: integration and every check deferred by SOU-64, SOU-65, SOU-68 | Integration | `gameplay-programmer` (R7) | `qa`, `game-artist` (visual result), Board |
-| **SOU-73** | Card integration for `card_art_sample`: text-overlay readability and 4.5:1 (checks deferred by SOU-66) | Integration (UI) | `ui-designer` | `qa`, `game-artist`, Board |
+| **SOU-73** | Card integration for `card_art_sample`: text-overlay readability and 4.5:1 (checks deferred by SOU-66). Evidence by the existing UI rule (handoff-templates, evidence table): engine frames from the allowed Godot commands stay in the Task Workspace (`.godot/`), listed by path, recaptured by `qa`; not committed, no new permission | Integration (UI) | `ui-designer` | `qa`, `game-artist`, Board |
 
 ### 4.2 Blocker relations (Paperclip, not prose)
 | Task | Blocked by |
@@ -80,7 +80,7 @@ Classified 2026-11-22 from the Deckbound specs. "Static" means provable with the
 | SOU-73 | SOU-66, SOU-50, SOU-61 |
 SOU-66, SOU-67 and SOU-68 have no art blockers. A cancelled Task has its relations moved to its replacement first (task-contract §6). **Schedule note:** SOU-61 also waits for the M1 gameplay chain (SOU-52, SOU-54), so the integrated slice that G8 PASS requires depends on M1 progress; the Board may split a smaller pilot integration Task that is not blocked by SOU-54, if it wants G8 earlier.
 
-Release order (WIP 1 per agent): SOU-66 (G7(b)) → SOU-71 → SOU-68 → SOU-64 → SOU-65 → SOU-67 → SOU-69 → SOU-72 → SOU-61 → SOU-73.
+SOU-67 and SOU-69 are released only after the Board names their integration Task (§3.1). Release order (WIP 1 per agent): SOU-66 (G7(b)) → SOU-71 → SOU-68 → SOU-64 → SOU-65 → SOU-67 → SOU-69 → SOU-72 → SOU-61 → SOU-73.
 
 ### 4.3 Budgets and stop conditions
 Written into each Task description (R6). Defaults; the Board may set others per Task.
@@ -129,7 +129,7 @@ All collected by the **Board** (with `pc.py show`, `pc.py log`, GitHub PRs and l
 | Generated images | Count of PNGs in `~/game-studio-workspace/staging/art/<asset_id>/` and its provenance files | — |
 | Agent run time | Paperclip run records of the Task (`pc.py show`, run start and end) | — |
 | GPU time | `Prompt executed in N seconds` lines in `staging/art/comfyui-server.log`, attributed to the Task by time; comfy-draft's provenance has no duration | `UNAVAILABLE` when attribution is ambiguous (overlapping runs) |
-| Model spend | Paperclip cost data if it reports it for the run | `UNAVAILABLE` (expected for now) |
+| Model spend | Paperclip run record `usageJson.costUsd` (with `costStatus`, `billingType`) for each run of the Task, read with the Paperclip API | `UNAVAILABLE` only when a run has no reported cost |
 | Human intervention | The Board's own log of actions beyond release and approval: description fixes, manual art edits, decisions, unblocks | — |
 | Integration rework | SOU-61 comments and its L0 fix Tasks (§4.4) | — |
 | Tool capability failures | Art handoffs, `qa` findings and stop condition 2, classified by the Board by Phase 2 workstream | — |
@@ -171,6 +171,8 @@ The rules are exhaustive and exclusive: every evaluated pilot ends in exactly on
 **Report to the Board:** the §6 table per Task, the direction result, totals and medians, every failed, stopped, cancelled or human-assisted Task with its reason, the tally of tool capability failures by Phase 2 workstream ([art-production-v2-phase2.md](art-production-v2-phase2.md)), and the outcome these rules give. The Board confirms the outcome.
 
 ## 8. Gate evidence log
+**Status 2026-11-22: revalidation pending (R1 reopened).** The rows G1–G7(a) below are the **first pass, kept as history**. They passed but did not exercise the agents' permission layer. After PR #91 is merged and applied live, G3–G7(a) are run again and recorded in a new table under this one; G1 and G2 stay valid unless PR #91 changes what they check.
+
 Recorded by Claude Code for the Board on 2026-11-22 (times UTC+7). Repository under test: Company OS `main` **c998f32** (merge of PR #88), checked out clean.
 
 | Gate | Result | Evidence |
@@ -184,3 +186,19 @@ Recorded by Claude Code for the Board on 2026-11-22 (times UTC+7). Repository un
 | G7(a) | **Passed** | art-ops (installed copy, scratch folder with `.git`): `info`, `resize --filter nearest` 64x64, `contact --bg 40 90 40` succeeded; refused with exit 1 and nothing written: `../x.png`, a junction under `art_src/`, `.git/x.png`. comfy-draft rejected before ComfyUI started: unknown model (exit 2), `--count 9`, `--width 4096`, `--width 500`, `--asset ../g7`. Generation (server started by the wrapper): SDXL seed 7, 512x512, 25 steps, 56 s including start; FLUX seed 7, 512x512, 4 steps, 26 s. Both PNGs: PNG signature, 512x512 RGB, inspected visually (a brass lantern as prompted); workflow and provenance JSON written (model file, licence, seed, steps, size, prompt). Runtime configuration from `/system_stats`: `argv` = `main.py --windows-standalone-build --listen 127.0.0.1 --port 8188 --disable-auto-launch --offline`; ComfyUI 0.46.0, embedded Python 3.12.10. Startup log: custom nodes imported = `websocket_image_save.py` only. Outputs kept in `~/game-studio-workspace/staging/art/g7_smoke/` |
 | G7(b) | **Started, stopped, not passed** | §5 checklist read back live before release (2026-11-22 20:48): SOU-66 `backlog`, Game Artist; one `## Acceptance criteria`, one `## Write set` (`assets/slice/cards/`, `assets/slice/review/card_art_sample/`, `design/assets/specs/card_art_sample.md`); no blockers; stages QA Engineer → Director → Board; no agent `in_progress`; ComfyUI `argv` with `--listen 127.0.0.1` and `--offline`; installed wrappers = G4 hashes (art-ops 93d317ea…, comfy-draft 135b81e9…). First `pc.py release` refused (a Tools block inside `## Write set`; moved under its own heading in all six art Tasks); second release succeeded 20:49. Runs f625e065, dcd4e9dc, c6ef17b4: the permission layer refused `comfy-draft.py` ("This command requires approval", both `$HOME` and absolute forms) and Read of the staging folder; 0 images, nothing committed; the agent could not set `blocked` (HTTP 422: Paperclip needs a blocker relation, interaction or unblock descriptor). Root cause reproduced: quoted `"$HOME/…"` allow rules never match in Claude Code 2.1.329; fix in PR #91 (unquoted `~/` rules, provenance printed, agent-level permission smoke added to G7(a)). SOU-66 parked in `backlog` by the Board. G7(b) restarts after PR #91 is merged and applied and G3–G7(a) pass again; it passes only after independent `qa`, Director review and Board approval |
 | G8 | Not started | After the pilot set (§4) |
+
+### Incident 2026-11-22: SOU-66 first release
+- **Classification:** runtime permission and lifecycle failure, **not an artistic capability failure**. No image was generated, so it says nothing about art quality, and it is not counted in G8's tool-capability tally. It is counted in the pilot's cost and human-intervention records.
+- **What happened:** the permission layer refused `comfy-draft.py` (quoted `$HOME` allow rule never matches in Claude Code 2.1.329) and Read of the staging folder; the agent could not enter `blocked` (HTTP 422); Paperclip ran two disposition-repair wakes and escalated to `blocked`; the Board parked SOU-66 in `backlog`.
+- **Runs and cost (Paperclip run records):**
+
+| Run | Trigger | Duration | Reported cost (`costUsd`, subscription-included) |
+|---|---|---|---|
+| f625e065 | release (`issue_status_changed`) | 58.4 s | $0.472 |
+| dcd4e9dc | `issue_disposition_repair` | 17.5 s | $0.149 |
+| c6ef17b4 | `issue_disposition_repair` | 31.2 s | $0.378 |
+| **Total** | | **107.0 s** | **$1.00** (the two repair runs: 48.7 s, $0.53) |
+
+- **Human intervention (Board):** diagnosis, parking SOU-66, PR #91 (allowlist fix, provenance printout, safe-stop rule), SOU-73, scratch lifecycle test SOU-74.
+- **Lifecycle finding:** entering `blocked` needs a blocker relation, a pending interaction or approval, or an `unblockDescriptor` owned by the agent itself; verified on scratch issue SOU-74 (422 without, accepted with). Agents cannot send it with their tools (OQ-048).
+- **Resume:** after PR #91 is merged and applied and G3–G7(a) pass again, SOU-66 is re-released through `pc.py release` after the §5 checklist; these three runs stay in its cost record.
