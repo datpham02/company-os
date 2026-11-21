@@ -210,7 +210,7 @@ No runtime action. Documentation committed in PR #42. Status: READY FOR BOARD RE
 - 55 new tests (`test_review_relay.py`). `test_pc.py`: 233 tests OK with `-W error`.
 - Record: [review-package-phase4a-relay.md](../design/review-package-phase4a-relay.md).
 
-**Not done:** Phase 4b (V1–V3 in a sandbox). It needs the Board decisions listed in that record, §4. No Paperclip instance or agent was started. G-13 stays open.
+**Not done at the end of Phase 4a:** Phase 4a ran offline tests only; no Paperclip instance or agent was started, and V1–V3 were left for Phase 4b, which needed Board decisions (that record, §4). Phase 4b later ran as a live test; see the next section and [review-package-phase4b-live.md](../design/review-package-phase4b-live.md). G-13 stays open.
 
 ### Step 3, Review Package Phase 4b: live relay test (2026-11-21)
 
