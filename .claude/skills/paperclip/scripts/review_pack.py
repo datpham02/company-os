@@ -1080,12 +1080,37 @@ def _delete_package(rr, key, head, pkg, now, reason):
     return True
 
 
+# Paperclip 2026.1023.0 issue records have no closedAt: a done issue carries completedAt, a cancelled one
+# cancelledAt (db schema issues.js). Only the field that matches the status counts.
+PAPERCLIP_CLOSED_AT = {"done": "completedAt", "cancelled": "cancelledAt"}
+
+
+def memo_lookup(lookup):
+    """One Paperclip read per issue key for the whole command (cleanup and the cap message share it)."""
+    if lookup is None:
+        return None
+    seen = {}
+
+    def read(key):
+        if key not in seen:
+            try:
+                seen[key] = (True, lookup(key))
+            except Exception as e:
+                seen[key] = (False, e)
+        ok, value = seen[key]
+        if not ok:
+            raise value
+        return value
+    return read
+
+
 def issue_closure(state, key, lookup=None):
-    """B2 (R6): is `key` closed, and since when? Returns (status, closedAt or None, problem or None).
+    """B2 (R6): is `key` closed, and since when? Returns (status, closed time or None, problem or None).
 
     With `lookup` (the Paperclip read pc.py injects, key -> issue record) the answer comes from Paperclip and fails
-    closed: an error, a record for another issue, an unknown status or a closed issue without a readable closedAt
-    is a problem, and the package is kept. Without `lookup`, the Phase 1 state file is used."""
+    closed: an error, a record for another issue, an unknown status, or a closed issue without a readable
+    completedAt (done) or cancelledAt (cancelled) is a problem, and the package is kept. Without `lookup`, the
+    Phase 1 state file and its closedAt are used."""
     if lookup is None:
         issue = state["issues"].get(key)
         if not issue:
@@ -1103,10 +1128,11 @@ def issue_closure(state, key, lookup=None):
         return None, None, "Paperclip returned no issue status"
     if status not in CLOSED_ISSUE:
         return status, None, None
+    field = PAPERCLIP_CLOSED_AT[status]
     try:
-        closed = parse_iso(issue.get("closedAt") or "", f"{key} closedAt")
+        closed = parse_iso(issue.get(field) or "", f"{key} {field}")
     except ReviewPackError:
-        return status, None, f"Paperclip shows {status} without a readable closedAt"
+        return status, None, f"Paperclip shows {status} without a readable {field}"
     return status, closed, None
 
 
@@ -1193,6 +1219,7 @@ def _take_build_lock(rr, kdir, key, now):
 
 
 def build(rr, sr, src, key, state, allowed_repos, now, limits=None, lookup=None):
+    lookup = memo_lookup(lookup)
     """Build or reuse the package for key at the source's head. Returns (package path, 'built' | 'reused')."""
     limits = dict(DEFAULT_LIMITS, **(limits or {}))
     plan = plan_package(src, key, state, allowed_repos, limits)
@@ -1324,7 +1351,7 @@ def _run(a, rr, sr, now, reviewer_runs=None, issue_lookup=None):
         elif a.unstage:
             print(unstage(rr, sr, state, a.abandon, now, reviewer_runs))
         else:
-            lines = cleanup(rr, sr, state, now, issue_lookup)
+            lines = cleanup(rr, sr, state, now, memo_lookup(issue_lookup))
             print("\n".join(lines) if lines else "nothing to clean up")
         return 0
     if not a.key:

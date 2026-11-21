@@ -797,34 +797,37 @@ class Cleanup(Env):
             return r
         return lookup
 
-    def pc_issue(self, key, status, days_ago=None, identifier=None):
-        rec = {"identifier": identifier or key, "status": status}
+    def pc_issue(self, key, status, days_ago=None, identifier=None, field=None):
+        """A record shaped like Paperclip 2026.1023.0: no closedAt; completedAt (done) or cancelledAt (cancelled)."""
+        rec = {"identifier": identifier or key, "status": status, "completedAt": None, "cancelledAt": None}
         if days_ago is not None:
-            rec["closedAt"] = rp.iso(NOW - datetime.timedelta(days=days_ago))
+            rec[field or rp.PAPERCLIP_CLOSED_AT[status]] = rp.iso(NOW - datetime.timedelta(days=days_ago))
         return rec
 
     def test_cleanup_reads_closure_from_paperclip(self):
         """B2: with the Paperclip read, closure comes from Paperclip, not the state file, and fails closed."""
         pkgs = {k: self.build_for(k, str(i) * 40) for i, k in enumerate(
-            ["SOU-1", "SOU-2", "SOU-3", "SOU-4", "SOU-5", "SOU-6", "SOU-7"], start=1)}
+            ["SOU-1", "SOU-2", "SOU-3", "SOU-4", "SOU-5", "SOU-6", "SOU-7", "SOU-8", "SOU-9"], start=1)}
         st = state(issues={"SOU-2": self.closed("SOU-2", 40)})  # the state file says closed; Paperclip disagrees
         lookup = self.paperclip({
             "SOU-1": self.pc_issue("SOU-1", "done", 20),          # closed long ago: removed
             "SOU-2": self.pc_issue("SOU-2", "in_review"),         # open in Paperclip: kept
             "SOU-3": OSError("Paperclip is not reachable"),       # unknown: kept, audited
             "SOU-4": self.pc_issue("SOU-4", "done", 20, identifier="SOU-40"),  # another issue's record: kept
-            "SOU-5": self.pc_issue("SOU-5", "done"),              # closed without closedAt: kept
-            "SOU-6": self.pc_issue("SOU-6", "cancelled", 30),     # removed
+            "SOU-5": self.pc_issue("SOU-5", "done"),              # done without completedAt: kept
+            "SOU-6": self.pc_issue("SOU-6", "cancelled", 30),     # removed (cancelledAt)
             "SOU-7": self.pc_issue("SOU-7", "done", 13),          # within retention: kept
+            "SOU-8": self.pc_issue("SOU-8", "done", 20, field="cancelledAt"),  # wrong field for done: kept
+            "SOU-9": self.pc_issue("SOU-9", "done", 20, field="closedAt"),     # Paperclip has no closedAt: kept
         })
         lines = rp.cleanup(self.rr, self.sr, st, NOW, lookup)
         for gone in ("SOU-1", "SOU-6"):
             self.assertFalse(os.path.exists(pkgs[gone]), gone)
-        for kept in ("SOU-2", "SOU-3", "SOU-4", "SOU-5", "SOU-7"):
+        for kept in ("SOU-2", "SOU-3", "SOU-4", "SOU-5", "SOU-7", "SOU-8", "SOU-9"):
             self.assertTrue(os.path.exists(os.path.join(pkgs[kept], "READY")), kept)
         kept_lines = [ln for ln in lines if ln.startswith("kept")]
-        self.assertEqual([ln.split()[1] for ln in kept_lines], ["SOU-3", "SOU-4", "SOU-5"])
-        self.assertEqual(self.events().count("cleanup-skipped"), 3)
+        self.assertEqual([ln.split()[1] for ln in kept_lines], ["SOU-3", "SOU-4", "SOU-5", "SOU-8", "SOU-9"])
+        self.assertEqual(self.events().count("cleanup-skipped"), 5)
         self.assertEqual(self.events().count("cleanup"), 2)
 
     def test_cleanup_asks_paperclip_once_per_issue(self):
@@ -843,10 +846,15 @@ class Cleanup(Env):
         self.build_for("SOU-1", "1" * 40)
         size = rp.tree_size(self.rr)
         st = state(issues={"SOU-1": self.closed("SOU-1", 40), "SOU-2": {"status": "in_review", "project": "p"}})
-        lookup = self.paperclip({"SOU-1": OSError("timed out")})
+        calls = []
+
+        def lookup(key):
+            calls.append(key)
+            raise OSError("timed out")
         e = self.refused("over the cap", rp.build, self.rr, self.sr, source(key="SOU-2", head="2" * 40), "SOU-2",
                          st, [REPO], NOW, {"maxRootBytes": size + 200}, lookup)
         self.assertIn("SOU-1", str(e))  # listed as open, because its closure is not confirmed
+        self.assertEqual(calls, ["SOU-1"])  # one read shared by the cleanup and the cap message
         self.assertTrue(os.path.exists(os.path.join(self.rr, "store", "SOU-1", "1" * 40, "READY")))
 
     def test_cap_refuses_when_only_open_packages(self):
@@ -927,8 +935,8 @@ class Cli(Env):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             rp.cmd_review_pack(self.args(cleanup=True, state_file=stf), now=NOW,
-                               issue_lookup=lambda key: {"identifier": key, "status": "done",
-                                                         "closedAt": rp.iso(NOW - datetime.timedelta(days=15))})
+                               issue_lookup=lambda key: {"identifier": key, "status": "done", "cancelledAt": None,
+                                                         "completedAt": rp.iso(NOW - datetime.timedelta(days=15))})
         self.assertIn("removed SOU-12", out.getvalue())
 
     def test_unstage_refusal_audit_names_the_staged_issue(self):
