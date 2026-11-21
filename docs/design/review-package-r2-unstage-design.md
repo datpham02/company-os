@@ -51,8 +51,10 @@ A lock written before Option B has none of the last four groups.
 
 **The reviewer agent, not one run.** Unstage asks Paperclip for **all runs of the `code-reviewer` agent** of the reviewed issue's company:
 - `GET /companies/<company>/heartbeat-runs?agentId=<reviewer>`, without `limit`;
-- keep those created at or after `stagedAt`;
-- refuse if any has an **active** status.
+- refuse if **any** run has an **active** status, whenever it was created. A run that started before this staging still has the agent's fixed `--add-dir` and can read it;
+- for `interrupted` and unknown statuses, only runs created at or after `stagedAt` count.
+
+*Corrected after the R2 self-review (2026-11-21).* The first version of this design, and the code merged in PR #53, kept only runs created at or after `stagedAt`, so a still-active older run was ignored. Fixed in the follow-up PR, with a regression test.
 
 This covers:
 - the lock's run;

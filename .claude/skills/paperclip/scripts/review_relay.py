@@ -462,9 +462,10 @@ def reviewer_run_state(api, lock, resolve_reviewer, sleep=time.sleep):
     - company: the lock's companyId (recorded by review-start) or the reviewed issue's; they must agree;
     - reviewer: resolve_reviewer(companyId) (the company's code-reviewer by name); it must agree with the lock's
       reviewerAgentId when recorded;
-    - every run of that agent in the company (GET /companies/<id>/heartbeat-runs?agentId=, no limit: all rows)
-      created at or after stagedAt: queued / scheduled_retry / running -> active; interrupted or an unknown
-      status -> unverified; succeeded / failed / cancelled / timed_out -> fine;
+    - every run of that agent in the company (GET /companies/<id>/heartbeat-runs?agentId=, no limit: all rows):
+      queued / scheduled_retry / running -> active, **whenever it was created** (a run that started before this
+      staging still has the agent's fixed --add-dir and can read it); among runs created at or after stagedAt,
+      interrupted or an unknown status -> unverified; succeeded / failed / cancelled / timed_out -> fine;
     - the lock's runId, when set, read by id: same id, agent, company and review sub-issue, else unverified.
     Any read failure raises; review_pack turns that into "unverified"."""
     issue = _with_retry(lambda: api("GET", f"/issues/{lock['issue']}"), sleep)
@@ -483,18 +484,19 @@ def reviewer_run_state(api, lock, resolve_reviewer, sleep=time.sleep):
     if not isinstance(rows, list):
         return {"state": "unverified", "reason": "the run list is not a list", "companyId": cid, "agentId": aid}
     since = rp.parse_iso(lock["stagedAt"], "staging.lock stagedAt")
-    runs, odd = [], []
+    runs, active = [], []
     for r in rows:
         if not isinstance(r, dict) or not all(isinstance(r.get(k), str) for k in ("id", "status", "createdAt")):
             return {"state": "unverified", "reason": "a run in the list is malformed", "companyId": cid, "agentId": aid}
         if r.get("agentId") not in (None, aid):
             return {"state": "unverified", "reason": "the run list contains another agent's run",
                     "companyId": cid, "agentId": aid}
+        if r["status"] in rp.REVIEWER_ACTIVE:  # active at any age: it can still read staging
+            active.append({"id": r["id"], "status": r["status"]})
         if rp.parse_iso(r["createdAt"], f"run {r['id']} createdAt") < since:
             continue
         runs.append({"id": r["id"], "status": r["status"]})
     base = {"companyId": cid, "agentId": aid}
-    active = [r for r in runs if r["status"] in rp.REVIEWER_ACTIVE]
     if active:
         return dict(base, state="active", reason="a reviewer run is active", runs=active)
     odd = [r for r in runs if r["status"] not in rp.REVIEWER_TERMINAL]
@@ -514,7 +516,7 @@ def reviewer_run_state(api, lock, resolve_reviewer, sleep=time.sleep):
         if d.get("status") not in rp.REVIEWER_TERMINAL:
             return dict(base, state="unverified", runs=runs,
                         reason=f"the recorded run is {d.get('status')}")
-    return dict(base, state="clear", reason="no active reviewer run since staging", runs=runs)
+    return dict(base, state="clear", reason="no active reviewer run; none interrupted since staging", runs=runs)
 
 
 def _is_refusal(err):

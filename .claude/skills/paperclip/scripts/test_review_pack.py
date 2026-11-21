@@ -686,7 +686,8 @@ class UnstageAndStatus(Env):
         rp.unstage(self.rr, self.sr, state(), True, NOW)
         self.assertEqual(rp.unstage(self.rr, self.sr, state(), False, NOW), "nothing staged")
         os.makedirs(os.path.join(self.sr, "current"))
-        self.refused("--abandon", rp.unstage, self.rr, self.sr, state(), False, NOW)
+        e = self.refused("--abandon", rp.unstage, self.rr, self.sr, state(), False, NOW)
+        self.assertIn("cannot be checked without a lock", str(e))
         self.assertIn("orphaned", rp.unstage(self.rr, self.sr, state(), True, NOW))
 
     def test_status_staleness(self):

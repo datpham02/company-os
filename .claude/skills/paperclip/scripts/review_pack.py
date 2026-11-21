@@ -978,10 +978,15 @@ def _unstage(rr, sr, abandon, now, reviewer_runs):
     lock = read_lock(sr)
     current = assert_contained(os.path.join(sr, "current"), sr)
     if not lock:
+        # Without a lock there is no issue or company to ask Paperclip about, so the reviewer's run state cannot
+        # be checked here; clearing orphaned files is a deliberate --abandon (check `pc.py show` / the reviewer's
+        # runs by hand first).
         if not (os.path.exists(current) or _staging_leftovers(sr)):
             return "nothing staged"
         if not abandon:
-            raise ReviewPackError("staging has files but no lock; clear them with --unstage --abandon")
+            raise ReviewPackError("staging has files but no lock; the reviewer's runs cannot be checked without a "
+                                  "lock. Check that no code-reviewer run is active, then clear them with "
+                                  "--unstage --abandon")
         _clear_staging(sr)
         audit(rr, "abandon", now, reason="cleared staging files without a lock")
         return "cleared orphaned staging files"

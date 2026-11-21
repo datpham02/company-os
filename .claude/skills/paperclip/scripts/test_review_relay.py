@@ -953,9 +953,18 @@ class ReviewerRunState(RelayEnv):
             with self.subTest(s=s):
                 self.assertEqual(self.state(self.api([self.row(s)]))["state"], "unverified")
 
-    def test_runs_before_staging_ignored(self):
-        res = self.state(self.api([self.row("running", minutes=-5)]))
-        self.assertEqual(res["state"], "clear")
+    def test_active_run_from_before_staging_still_blocks(self):
+        """Regression (R2 self-review): a reviewer run that started before this staging and is still active can
+        read staging through the agent's fixed --add-dir, so it blocks unstage like any other active run."""
+        for s in ("queued", "scheduled_retry", "running"):
+            with self.subTest(s=s):
+                res = self.state(self.api([self.row(s, minutes=-60)]))
+                self.assertEqual((res["state"], res["runs"][0]["status"]), ("active", s))
+
+    def test_finished_or_interrupted_runs_before_staging_ignored(self):
+        for s in ("succeeded", "failed", "cancelled", "timed_out", "interrupted", "unknown-status"):
+            with self.subTest(s=s):
+                self.assertEqual(self.state(self.api([self.row(s, minutes=-5)]))["state"], "clear")
 
     def test_malformed_or_foreign_rows_unverified(self):
         for rows in ({"runs": []}, [None], [{"id": "x", "status": "running"}], [self.row("succeeded", agentId="other")]):
