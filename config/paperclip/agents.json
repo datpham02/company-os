@@ -237,7 +237,11 @@
         "GH_TOKEN"
       ],
       "extraAllowedTools": [
-        "Bash(docker compose run --rm test*)"
+        "Bash(docker compose run --rm test*)",
+        "Bash(godot --version)",
+        "Bash(godot --headless --path . --import)",
+        "Bash(godot --headless --path . --quit)",
+        "Bash(godot --path . --write-movie .godot/* --quit-after *)"
       ]
     },
     "gameplay-programmer": {
