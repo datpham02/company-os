@@ -218,3 +218,17 @@ Repository under test: Company OS `main` **3807715** (PR #91 merged as d42cf1b, 
 - **Human intervention (Board):** diagnosis, parking SOU-66, PR #91 (allowlist fix, provenance printout, safe-stop rule), SOU-73, scratch lifecycle test SOU-74.
 - **Lifecycle finding:** entering `blocked` needs a blocker relation, a pending interaction or approval, or an `unblockDescriptor` owned by the agent itself; verified on scratch issue SOU-74 (422 without, accepted with). Agents cannot send it with their tools (OQ-048).
 - **Resume:** after PR #91 is merged and applied and G3–G7(a) pass again, SOU-66 is re-released through `pc.py release` after the §5 checklist; these three runs stay in its cost record.
+
+### Pilot findings: SOU-66 (card illustration, first art deliverable)
+Recorded 2026-11-22 from the Board's independent inspection of deckbound PR #22 at 82593fe and the review loop (QA: changes requested, then approved; Director pending). They feed G8's tally by Phase 2 workstream; they approve nothing.
+
+| # | Finding | Kind | Workstream |
+|---|---|---|---|
+| F1 | No approved way to meet a PNG byte budget: art-ops has no lossless PNG optimisation beyond Pillow's default, no opaque RGB export (outputs are RGBA), no controlled quantisation. The author met the 900 KB budget by downscaling to 420x540 and upscaling back to 700x900, which visibly softened rope and parchment detail. Saving the original as RGB alone would still be 1.02 MB (Board test) | Tool capability failure | **2B**: production export optimisation (lossless PNG optimisation, opaque RGB export, controlled quantisation, byte budgets with a visual comparison against the master) |
+| F2 | Destructive workaround: the resize round-trip replaced the master; no untouched master is kept alongside the export | Tool and procedure gap | **2B**: preserve the original master; no destructive resize-upscale workarounds |
+| F3 | The candidate contact sheet repeats one label for different files (art-ops cuts labels at 40 characters), so reviewers cannot tell candidates apart by label | Tool defect (evidence) | **2B**: unique candidate-sheet labels |
+| F4 | The first 7 of 11 images showed a lantern or an open book instead of a torn page, because the prompt said "lantern light" | **Prompt-related waste, not a model capability failure** | **2C**: prompt composition (separate subject, composition, lighting, palette and exclusions); validate one generation before a batch |
+| F5 | QA could not run `art-ops.py info` (no permission) and verified the file size with `ls`; image metadata was taken from the author's handoff | Review-evidence gap | **2D**: evaluate a narrowly scoped, read-only image inspection tool for QA (dimensions, mode, alpha bounds, byte size; no generation or editing permission) — a Board permission decision |
+| F6 | Art direction for the Director: teal fills the background although the spec wants the Bind teal as a small motif; the copper motif is weak; the warm upper-left light is not clearly established; the subject is cropped at the edges; detail was lost in F1 | Art-direction review items (Director stage, in SOU-66's description) | — (judged in the review loop, not a tool finding) |
+
+Cost so far for SOU-66: the three runs of the first release (107 s, $1.00) plus the runs of the second release and the review loop, read from the run records at G8. Refine budget: 2 of 2 rounds used; another round needs a Board decision on a new budget.
