@@ -230,7 +230,7 @@ Repository work only, on branch `docs/roadmap-stage-a`. **No live Paperclip, Git
 | P2-T03 agent drift check (D-10) | Done; live read: 0 drifts before P4-T01, 2 after (expected, see P4-T01) | `scripts/setup/check-agent-drift.py`, `test_check_agent_drift.py` (5 tests) |
 | Phase 3 | Not built (D-11 confirmed) | §5 |
 | P4-T01 resource limits | Repository part done: `maxConcurrentRuns: 1` and heartbeat off for `gameplay-programmer` and `game-designer` in `agents.json`. **Live apply pending** authorization | `check-agent-drift.py` reports the 2 differences |
-| P4-T02 isolation | Repository part done: Board-token support in every Board script, participant migration tool, sandbox tool. Isolated runs and the live migration **not done** | [auth-migration-phase-b.md](../architecture/auth-migration-phase-b.md) |
+| P4-T02 isolation | Repository part done: Board-token support in every Board script, participant migration tool, sandbox tool. WS-1 restore **passed** in isolation on 2026-11-21 (method acceptance pending); WS-2, WS-5 and the live migration **not done** | [auth-migration-phase-b.md](../architecture/auth-migration-phase-b.md) |
 | P4-T03 merge audit | Done as `scripts/maintenance/merge-audit.py` (not a `pc.py` subcommand: it needs `gh` and reads several companies). Live read: 5 findings, the expected GAM-20 and GAM-44 plus GAM-22 (no approval stage) and two unlinked lamplight PRs (#11, #19); no false positive on the full-chain Tasks | `test_merge_audit.py` (4 tests) |
 | P4-T04 provider comparison | Protocol written; no run (needs authorization) | `provider-allocation.md` §6 |
 
@@ -238,4 +238,4 @@ Repository work only, on branch `docs/roadmap-stage-a`. **No live Paperclip, Git
 1. P4-T01: apply `maxConcurrentRuns: 1` to the two agents (`post-import.py` path or a targeted PATCH, after a database backup).
 2. Decisions D-04, D-06, D-07, D-08 and the P1-T02 Test Environment runs.
 3. The cursor-cli version in `dependencies/registry.yaml` (R3.1).
-4. Authentication: the isolated runs WS-1, WS-2, WS-5 (authorized; need the live instance stopped and, for WS-2 and WS-5, the Board Operator in a browser); the WS-3 run authorization; the WS-6 ACL option; Phase D.
+4. Authentication: accept the WS-1 cold-copy restore method (E8); the isolated runs WS-2 and WS-5 (authorized; need the live instance stopped and the Board Operator in a browser); the WS-3 run authorization; the WS-6 ACL option; Phase D.

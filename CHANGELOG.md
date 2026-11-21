@@ -5,6 +5,7 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
+- Authentication migration WS-1 isolated restore test (2026-11-21): a cold copy of a stopped sandbox instance started healthy with identical data and accepted writes; crash-consistent on Windows; E8 waits for the Board to accept the unsupported method. `auth-sandbox.py` fixes found during the run: the doctor-valid `$meta`, a direct `node` start, a stop that never kills Postgres directly, and stale-`postmaster.pid` handling. The live Paperclip was stopped and restarted only.
 - Authentication migration Phase B, repository part (`docs/architecture/auth-migration-phase-b.md`; no live change):
   - `board_auth.py`, a shared Board-credential helper (D-AUTH-04): the mode from `/api/health`; nothing read or sent in `local_trusted`; in `authenticated` mode `PAPERCLIP_BOARD_TOKEN` or a Windows Credential Manager entry, fail closed, never `PAPERCLIP_API_KEY`, refused inside an agent run, 401 and 403 told apart, keys redacted. Wired into `pc.py`, `post-import.py`, `sync-instructions.py`, `check-agent-drift.py` and `merge-audit.py`. `pc.py` reads the Board identity from `/api/cli-auth/me`.
   - `scripts/maintenance/migrate-participants.py` (D-AUTH-02): the A.4-verified guarded participant update, with the VA-4c and VA-5 skips, verification after each change and rollback by swapping `--from`/`--to`. Dry-run inventory today: SOU-17 and SOU-30 to change, SOU-28 to be decided first.

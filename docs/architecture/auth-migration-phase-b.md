@@ -1,6 +1,6 @@
 # Authentication migration, Phase B: repository work and A.5 documents
 
-- **Status:** `IN PROGRESS`. Repository code done and tested offline. The isolated runs are **not done** (§7). No live change was made.
+- **Status:** `IN PROGRESS`. Repository code done and tested offline. Isolated run WS-1 **passed** on 2026-11-21 (§7.1); WS-2 and WS-5 not done. No live configuration, data, credential or ACL change was made; the live Paperclip was only stopped and restarted for WS-1 (§7.1).
 - **Date:** 2026-11-21. Paperclip 2026.1023.0.
 - **Authorization:** Board Operator, 2026-11-21: "Authentication Migration: làm các phần còn lại" (do the remaining parts), with the decisions in §1.
 - **Builds on:**
@@ -80,7 +80,11 @@ That matches D-AUTH-02. The inventory must be read again just before the switch.
 - `clone` makes the WS-1 candidate B cold copy, only from a stopped instance;
 - `mode` switches `deploymentMode`, only while stopped.
 
-`init` and `teardown` were exercised on 2026-11-21. `start` correctly refused because the live instance was listening on 3100.
+Exercised on 2026-11-21 for WS-1 (§7.1). `start` also refused correctly while the live instance was listening on 3100. Fixed during the run:
+- `config.json` needs `$meta.updatedAt` and `$meta.source: onboard`, or Paperclip's doctor refuses to start;
+- Paperclip is started as `node <paperclipai>/dist/index.js` (a detached `cmd /c paperclipai` died at once);
+- `stop` kills only the Paperclip node process, never Postgres, then runs `pg_ctl stop` if the postmaster is still alive. The embedded postmaster goes down with Paperclip anyway, so a stop is **crash-consistent**, not a clean Postgres shutdown; `stop` says which it was;
+- a stale `postmaster.pid` whose process is gone counts as stopped (`clone` and `stop`).
 
 ### 2.4 Tests
 
@@ -179,11 +183,55 @@ Read-only. Nothing here changes an ACL. The ACL change itself needs its own appr
 
 | Run | Status | Needs |
 |---|---|---|
-| WS-1 restore, candidate B (cold copy of the stopped instance folder) | **Not run** | The live Paperclip stopped for the session (step2 §3.1). The assistant's attempt to stop it was blocked by the session's permission check on 2026-11-21, so the Board Operator stops it, or allows the assistant to |
-| WS-2 demotion sequence (migrate → rollback → demote → re-migrate) | **Not run** | As WS-1, plus the Board Operator in a browser for the sandbox sign-up and claim |
+| WS-1 restore, candidate B (cold copy of the stopped instance folder) | **Passed** (§7.1). E8 still needs the Board's acceptance of this unsupported method | — |
+| WS-2 demotion sequence (migrate → rollback → demote → re-migrate) | **Not run** | The live Paperclip stopped (as for WS-1), plus the Board Operator in a browser for the sandbox sign-up and claim |
 | WS-5 invite path | **Not run** | As WS-2, plus a second sandbox account |
 
-**Procedure prepared:**
+### 7.1 WS-1 result (2026-11-21)
+
+**Authorization:** the Board's yes to isolated runs (§1), and "Yes, run WS-1" on 2026-11-21, which included stopping the live instance.
+
+**Live handling:**
+- Before the stop, all 8 agents were idle.
+- The live Paperclip process tree was stopped, and ports 3100 and 54329 were confirmed free. Its Postgres went down uncleanly, as in A.4.
+- After teardown, the studio was restarted with the unchanged `start-studio.cmd`. Checked:
+  - health `ok` in `local_trusted`;
+  - the same 8 agents, all idle;
+  - the same open issues (SOU-17, SOU-20, SOU-28, SOU-30);
+  - the same 2 known drift findings (P4-T01, not applied);
+  - the review watchdog running.
+- No live configuration, data or credential was touched.
+- The old Paperclip console window stays open with its process ended; `start-studio.cmd` opened a new one. The old one can be closed.
+
+**Steps and results:**
+
+| Step | Result |
+|---|---|
+| Source `ws1src` (ports 3300 and 54349, `local_trusted`, fresh secrets) | Started; ports 3100 and 54329 stayed closed |
+| Seed | Company `WSR`: WSR-1 `backlog` with an approval stage for `local-board` (AVE-1); WSR-2 `in_review`, approval pending (AVE-2); WSR-3 approved by `local-board`, now `done` with the stage `completed` (AVE-3); 4 comments; 1 dummy secret; 13 activity rows |
+| Snapshot S1 | Companies; full issues (policy, state, assignees, timestamps); comments; memberships; secret metadata; activity rows (id, action, entity, time); `/cli-auth/me`; master-key hash |
+| Unclean stop, restart, snapshot S2 | **Identical to S1**: data survived a crash-stop with WAL recovery |
+| Stop (crash-consistent), cold copy to `ws1dst` (ports 3301 and 54350; paths and ports rewritten in `config.json`), start | Healthy start, `local_trusted`, 2026.1023.0 |
+| Snapshot S3 on the copy | **Identical to S1**: 1 company, 3 issues (WSR-3 still `done`, stage `completed`), 4 comments, 1 membership, 1 secret, all 13 activity rows, the same instance-admin identity, the same master key |
+| Write test on the copy | WSR-2 approved (`done`, stage `completed`) and a comment added: the copy is fully writable |
+| Teardown | Both instances stopped and deleted; no sandbox port or Postgres process left |
+
+**What this shows:** a cold copy of a stopped instance folder brings back a working instance with identical data. The copy is crash-consistent; the live studio is also always stopped that way. It meets the E8 test condition, "a restore into the test environment succeeds".
+
+**Limits:**
+- the method is **not Paperclip-supported**;
+- Postgres was never shut down cleanly from outside on Windows (it goes down with Paperclip), so recovery relies on WAL replay;
+- secret values were not decrypted after the copy: only the metadata and the master key file were compared;
+- decision rows were not read directly (2026.1023.0 has no decision-history endpoint). The approval shows only as WSR-3's state and its `issue.updated` activity; the copy is byte for byte, so the rows travel with it, but that was not observed through the API;
+- the test was small (one company, three issues). Object storage was copied with the folder but held no files.
+
+**Board decision needed:** accept candidate B as the restore method, which turns E8 to met. Proposed procedure for the live instance, for the Phase D runbook:
+1. Stop Paperclip.
+2. Copy `%USERPROFILE%\.paperclip\instances\default` to a dated folder in the profile.
+3. Start Paperclip again.
+4. To roll back: stop Paperclip, move the damaged folder aside, put the copy back, and start Paperclip.
+
+### 7.2 Procedure (as run for WS-1; reused for WS-2 and WS-5)
 1. Stop the live Paperclip and confirm ports 3100 and 54329 are free.
 2. Build the sandbox: `auth-sandbox.py init ws1src --port 3300 --pg-port 54349`, then `start`.
 3. Seed and snapshot through the API:
@@ -204,7 +252,7 @@ Read-only. Nothing here changes an ACL. The ACL change itself needs its own appr
 | Scripts send `Authorization` (A2 blocker "Phase B work") | **Done in code**, tested offline; exercised live only in `local_trusted` |
 | Credential storage | Implemented as A2 recommended; issuing and storing the real key is the Board Operator's step at the switch |
 | Participant migration | Tool ready; the method was verified in A.4; SOU-28 must be decided first |
-| E8 (restore) | **Not met.** WS-1 not run |
+| E8 (restore) | **Test passed** (WS-1, §7.1). Counts as met once the Board accepts candidate B |
 | E11 (agents in `authenticated` mode) | **Not met.** WS-3 plan awaits approval |
 | E12 (R8, G-14) | **Not met.** WS-6 inventory method written; G-14 open; Cursor risk accepted for now |
 | VA-8 (dual admin) | WS-2 not run |
