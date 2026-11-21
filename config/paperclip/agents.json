@@ -207,7 +207,14 @@
           "enabled": false,
           "maxConcurrentRuns": 1
         }
-      }
+      },
+      "extraAllowedTools": [
+        "Bash(godot --version)",
+        "Bash(godot --headless --path . --import)",
+        "Bash(godot --headless --path . --quit)",
+        "Bash(godot --path . --write-movie .godot/* --quit-after *)",
+        "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)"
+      ]
     },
     "ui-designer": {
       "department": "company",
@@ -222,7 +229,12 @@
       ],
       "extraAllowedTools": [
         "Bash(python \"$HOME/.claude/skills/ui-ux-pro-max/scripts/search.py\"*)",
-        "Bash(design.md *)"
+        "Bash(design.md *)",
+        "Bash(godot --version)",
+        "Bash(godot --headless --path . --import)",
+        "Bash(godot --headless --path . --quit)",
+        "Bash(godot --path . --write-movie .godot/* --quit-after *)",
+        "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)"
       ]
     },
     "qa-engineer": {
@@ -273,7 +285,12 @@
       ],
       "extraAllowedTools": [
         "Bash(node \"$HOME/tools/pixelfx/tools/list.mjs\"*)",
-        "Bash(node \"$HOME/tools/pixelfx/tools/render.mjs\"*)"
+        "Bash(node \"$HOME/tools/pixelfx/tools/render.mjs\"*)",
+        "Bash(godot --version)",
+        "Bash(godot --headless --path . --import)",
+        "Bash(godot --headless --path . --quit)",
+        "Bash(godot --path . --write-movie .godot/* --quit-after *)",
+        "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)"
       ],
       "runtime": {
         "heartbeat": {

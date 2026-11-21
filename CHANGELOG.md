@@ -5,6 +5,7 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
+- `ui-designer`, `game-artist` and `game-designer` may run the same five Godot commands as `qa-engineer` (Board decision 2026-11-21, SOU-49): `agents.json`, role files and `security-architecture.md` §4. Applied to the live agents; no drift.
 - Board queue and auto-release in the studio watchdog (ADR-023, 2026-11-21). An issue whose review or approval stage waits on the Board now gets a `BOARD` console line and one Windows toast per waiting episode. A backlog Task whose description starts with `Auto-release: approved by the Board <date>` is released through `pc.py release` once all its blockers are done, with every release guard kept. Replaces a session-only check-in loop. Off switches: `--no-board-queue`, `--no-auto-release`. Tests: `node --test runtime/tools/board-queue-rules.test.ts` (7).
 - `pc.py` read-only assignee guard (PR #80, 2026-11-21): `create`, `assign` and `release` refuse a Task with a Write set for an agent whose profile is not `*-workspace-write`.
 - `qa-engineer` may run Deckbound's QA screenshot tool (SOU-34, merged as deckbound PR #4; Board decision 2026-11-21): exact rule `Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)` in `agents.json`, QA role file and `security-architecture.md` §4. Applied to the live QA agent.
