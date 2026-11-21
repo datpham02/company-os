@@ -7,6 +7,7 @@
   - `review-start` records `companyId` and `reviewerAgentId`;
   - `--status` is a follow-up.
 - **Code under test:** branch `feat/review-package-r2-unstage` at `6e3dca9`; `test_pc.py` 330 OK before the live run.
+- **After this record:** a self-review found that `reviewer_run_state` ignored active reviewer runs created before the staging time. It was fixed in PR #54: any active run now blocks, whatever its age; `test_pc.py` 331 OK. The live R2-E result is unaffected, because the blocking run there was created after staging.
 - **Where:** sandbox `OPT` only. Database backup first (`paperclip-20261121-113805.sql.gz`; not proof of a restore). Soucean not touched.
 
 ## 1. Offline (R2-D)
