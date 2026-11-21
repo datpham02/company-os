@@ -30,9 +30,17 @@ export type Issue = {
   scheduledRetry?: unknown;
   blockedBy?: { status?: string | null }[] | null;
 };
-export type Run = { agentId: string; status: string; createdAt: string; finishedAt?: string | null };
+export type Run = { runId?: string; agentId: string; status: string; createdAt: string; finishedAt?: string | null };
+/** Fields of `GET /heartbeat-runs/{id}` used to tell a live run from a dead one. */
+export type RunDetail = {
+  status: string;
+  processPid?: number | null;
+  startedAt?: string | null;
+  lastOutputAt?: string | null;
+  execution?: { lastConfirmedActivityAt?: string | null } | null;
+};
 
-export type StuckKind = "board_recovery" | "retry_loop" | "blocked" | "idle";
+export type StuckKind = "board_recovery" | "retry_loop" | "blocked" | "idle" | "dead_run";
 export type Finding = {
   kind: StuckKind;
   /** Stable for one stuck episode; the watchdog acts once per key. */
@@ -41,10 +49,14 @@ export type Finding = {
   /** Set only for `idle`: the agent to wake once before the Board is told. */
   wakeAgentId?: string;
 };
-export type Options = { idleSec: number; blockedGraceSec: number; retryLoopCount: number; wakeCooldownSec: number };
+export type Options = { idleSec: number; blockedGraceSec: number; retryLoopCount: number; wakeCooldownSec: number; deadSilenceSec: number };
 
 /** Run statuses that mean the issue is being worked on or will be retried by Paperclip. */
 export const ACTIVE_RUN = new Set(["queued", "starting", "running", "scheduled_retry"]);
+/** Run statuses in which the agent process should be alive. */
+export const LIVE_RUN = new Set(["starting", "running"]);
+/** A run whose process is gone gets this long to be finalised by Paperclip before it counts as dead. */
+const DEAD_PID_GRACE_MS = 120_000;
 /** Run statuses that count towards a retry loop (UNVERIFIED: the full status list is not documented). */
 const FAILED_RUN = new Set(["failed", "timed_out", "error", "scheduled_retry"]);
 const OPEN_RECOVERY = new Set(["active", "escalated"]);
@@ -116,6 +128,32 @@ export function classifyStuck(issue: Issue, runs: Run[], agentStatus: string | n
     };
   }
   return null;
+}
+
+/**
+ * A run Paperclip still shows as live although nothing is working on it (SOU-34, 2026-11-21:
+ * the process died, the run stayed `running` and its controller lease kept renewing, so every
+ * other rule saw an active run and stayed silent).
+ * - `pidAlive`: whether `processPid` is alive on this machine (null when unknown or no PID).
+ * Dead when the process is gone (after a short grace), or when the run has shown no output
+ * for `deadSilenceSec`. Returns null for a run that is not `starting`/`running`.
+ */
+export function classifyDeadRun(issue: Issue, runId: string, detail: RunDetail, pidAlive: boolean | null, nowMs: number, opts: Options): Finding | null {
+  if (!LIVE_RUN.has(detail.status) || opts.deadSilenceSec <= 0) return null;
+  const label = `${issue.identifier}${issue.title ? ` "${issue.title}"` : ""}`;
+  const last = Math.max(ms(detail.lastOutputAt), ms(detail.execution?.lastConfirmedActivityAt), ms(detail.startedAt));
+  if (!last) return null;
+  const quietMs = nowMs - last;
+  const quietMin = Math.round(quietMs / 60000);
+  let why: string;
+  if (pidAlive === false && quietMs >= DEAD_PID_GRACE_MS) why = `its process ${detail.processPid} is gone (last output ${quietMin} min ago)`;
+  else if (quietMs >= opts.deadSilenceSec * 1000) why = `no output for ${quietMin} min`;
+  else return null;
+  return {
+    kind: "dead_run",
+    key: `dead_run:${runId}`,
+    message: `${label}: run ${runId.slice(0, 8)} is still "${detail.status}" but ${why}. Check it, then cancel it (pc.py cancel-run ${runId}) and wake the assignee`,
+  };
 }
 
 export type Action = { type: "wake"; agentId: string } | { type: "notify" } | { type: "none" };
