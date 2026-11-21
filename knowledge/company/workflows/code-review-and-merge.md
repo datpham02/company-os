@@ -27,6 +27,14 @@ PR URL; Task acceptance criteria; Run summary with test results.
 6. **Board Operator** (or the author on its next heartbeat) moves the Task to `done` after the merge. The Task Branch MAY be deleted by GitHub's auto-delete setting.
 7. Task Workspace cleanup happens per the workspace owner's rules ([runtime-architecture.md §6](../../../docs/architecture/runtime-architecture.md#6-workspace-manager)).
 
+## Pilot variant: Review Package (`PROPOSED`, Phase 6)
+For code Tasks of `soucean-game` created with `pc.py create --review-package` (the first five, once the Board approves P6-B and P6-C), steps 1 to 3 change:
+- the `review` stage's participant is the Board identity `local-board`, not `qa` (QA option a);
+- the Board packages the PR, runs the strict read-only `code-reviewer` on its own sub-issue, and relays its verdict to the stage;
+- steps 4 to 7 (approval stage, merge by the Board) stay as above.
+
+Commands, refusals, incidents and rollback: [review-package-runbook.md](../../../docs/operations/review-package-runbook.md). Not yet run in production.
+
 ## Expected outputs
 Merged PR; Paperclip decision records for review and approval; Task `done`.
 

@@ -5,6 +5,13 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
+- OQ-042 Phase 6, P6-A (W1–W5; implementation only, nothing done in Soucean or Paperclip):
+  - **W1:** `review-pack` through `pc.py` reads the issue and the task from Paperclip. It requires `in_review`, the right identity, and a project configured for the repository. Goal = title; acceptance criteria and write set only from exactly one `## Acceptance criteria` and one `## Write set` plain list (task-contract §2). Anything missing, ambiguous or not a list is refused, never inferred. No state or task file through `pc.py`; `--task-file` is refused there.
+  - **W2:** reviewer profile and role. Profile `claude-reviewer-strict` and role `code-reviewer`; `config/paperclip/reviewer-settings.json`. `build-package.py --with-reviewer --staging-root --reviewer-cwd` builds it only on request and refuses a configuration that fails `check_reviewer_config`. That check now also requires `--strict-mcp-config`, `--no-session-persistence`, heartbeat off and `maxConcurrentRuns` 1. `post-import.py --resume` never resumes the reviewer.
+  - **W3:** `pc.py create --review-package`: a `review` stage then an `approval` stage, both for `local-board`. Refuses `--review` (QA option a), a project without a configured repository, and a description without the task-contract sections.
+  - **W4:** `pc.py review-run <KEY>` resumes the reviewer, runs `review-start`, waits for the run, and pauses it in `finally`, confirming the pause. `review-run --check` finds a reviewer left resumed.
+  - **W5:** `docs/operations/review-package-runbook.md`; pilot variant in the `code-review-and-merge` and `development-cycle` workflows; SKILL.md.
+  - Offline tests: `test_review_github` (W1), `test_pc` (W1, W3, W4), `test_review_relay` (W2 checks, W4), `scripts/setup/test_build_package.py` and `test_post_import.py` (W2). Live behaviour is not verified (P6-B to P6-D).
 - OQ-042 R6 Board decisions (2026-11-21):
   - **B3 / V3 answered: yes.** A sandbox agent's own process read every company on the instance, `SOU` included, with one `curl` and no credentials (`local_trusted`), so G-14 is a real gap.
   - **B4 (G-14)** is accepted as a named risk for now; the authenticated-mode migration (OQ-043, A5) stays planned.
