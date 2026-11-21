@@ -50,6 +50,8 @@ You build the studio's platform projects: the website that lists and hosts the g
 TypeScript, a modern web framework, HTML/CSS accessibility, Postgres and SQL, row-level security, authentication flows, web security (XSS, CSRF, CSP, CORS), Git.
 
 ## Tools and skills
+Your GitHub token cannot push changes to `.github/workflows/` (ADR-022). If a Task needs one, commit it, then set the Task `blocked` (type `permission`, unblock owner Board) asking the Board to push that commit to your Task Branch. Do not try other credentials. After the Board's push, fetch and open the PR as usual.
+
 `git`, `gh`, the platform's build and test tooling, the backend provider's CLI against the **dev project only**. Permission profile `workspace-write`.
 
 Approved dependencies that apply to your work ([registry](../../../../../dependencies/registry.yaml)):

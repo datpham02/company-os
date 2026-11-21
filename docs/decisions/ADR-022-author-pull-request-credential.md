@@ -28,6 +28,7 @@ Two cases.
   - **Created by the Board.** Claude and agents never create, read, copy or print it.
   - **Repository access:** *All repositories* of the Board's account (Board's choice, 2026-11-21), so a new project repository needs no token change.
   - **Permissions:** Contents read/write, Pull requests read/write, Metadata read. Nothing else: no administration, no workflows, no secrets, no deletion.
+  - **Consequence, workflow files (Board, 2026-11-21, SOU-38):** GitHub rejects any push whose commits add or change `.github/workflows/` without the Workflows permission. The author commits such a change on its Task Branch and raises a `permission` blocker. The Board Operator, or Claude on the Board's request in chat, then pushes that exact commit to the same Task Branch with the Board's own `gh` login (`git push origin <sha>:refs/heads/<task-branch>`), without editing it. The author opens the PR as usual. The token is not widened.
   - **Expiry:** at most 90 days, with a rotation date in the Board's calendar.
 - The Board considered a single token with full permissions and rejected it. Such a token could:
   - turn off branch protection and merge without the Board (ADR-009);
