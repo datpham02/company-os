@@ -5,8 +5,8 @@
 - **Status:**
   - Phase A (inventory) done: [review-package-r1-reviewer-inventory.md](review-package-r1-reviewer-inventory.md);
   - Phase B (validation) done;
-  - **Phase C (apply) done 2026-11-21, 04:05–04:08 UTC, after the Board Operator's approval ("Duyệt Phase C")**, see §5;
-  - Phase D (live verification) not started.
+  - **Phase C (apply) done 2026-11-21, 04:05–04:08 UTC, after the Board Operator's approval ("Duyệt Phase C")**, see §4;
+  - **Phase D (live verification) done 2026-11-21, 04:08–04:12 UTC, after the Board Operator's approval ("duyệt DF", read as Phase D)**, see §5.
 
 ## 1. Phase B1–B2: requirement by requirement
 
@@ -93,7 +93,7 @@ They were not repeated live in Phase B: that needs separate test profiles (R1 Ph
 - D2: negative test profiles, preferably on a separate test agent so the three reviewers stay valid;
 - D3: side-effect checks as in §2.
 
-## 5. Phase C: applied
+## 4. Phase C: applied
 
 **Before any change:**
 - database backup `paperclip-20261121-110545.sql.gz`, `gzip -t` OK (not proof of a restore);
@@ -126,16 +126,64 @@ The change was a `PATCH /api/agents/<id>` with only `adapterConfig.extraArgs` (P
 
 The pre-change state is kept without secrets in the private `pc-r1/inventory-before.json`, rebuilt from the revisions' `beforeConfig` and the `.bak-r1` files after the first `inventory.json` was overwritten by the post-change inventory run.
 
-## 4. Acceptance status (R1 §7)
+## 5. Phase D: live verification (OPT)
+
+**Baseline:**
+- OPT 6 issues / 11 runs (newest 03:32:01Z);
+- REV 1 / 3; RPR 1 / 5;
+- Soucean 30 / 152 (newest 2026-11-06);
+- every sandbox agent paused.
+
+`OPT-3` was staged again (package reused, soucean-game PR #27, read-only) and was `in_review` with participant `local-board`.
+
+### D2: invalid profiles refused before any side effect
+
+A separate test agent `code-reviewer-negtest` (`4ac03856…`) was created in OPT and **paused**, never assigned, released or woken. For each case its `extraArgs` (and its own copy of the settings file) were set, then `review-start` was called for `OPT-3` with that agent as reviewer.
+
+| Case | Result | OPT issues / runs, lock sub-issue / run |
+|---|---|---|
+| Settings without `mcp__*` deny | refused: "settings must deny ['mcp__*']" | 6 / 11, none / none → unchanged |
+| `Bash` in allow | refused: "allow exactly Read, Grep and Glob" | unchanged |
+| Missing `--restricted` | refused: "lack --restricted" | unchanged |
+| Missing `--disallowedTools mcp__*` | refused: "--disallowedTools exactly once" | unchanged |
+| `--dangerously-skip-permissions` | refused: "forbidden flags" | unchanged |
+| Wrong staging directory | refused: "--add-dir must be the staging folder" | unchanged |
+
+The test agent stayed `paused` throughout.
+
+### D1: positive review with the updated reviewer
+
+The OPT `code-reviewer` was resumed for this review only and paused right after its run.
+
+| Step | Result |
+|---|---|
+| `review-start OPT-3` | Passed the configuration check; created sub-issue `OPT-7` (one) and run `021f2cdb` (one) |
+| Run | `succeeded`; `scopeKind: issue`, `issueId` = `OPT-7`; wake reason `review 373bc218-… OPT-3 7f22f059666b`, `triggeredBy: board`, `actorId: local-board`; about US$0.055 |
+| **Tool inventory** | `init.tools` = **exactly `Glob`, `Grep`, `Read`**, although Paperclip's "Paperclip projects" and "Paperclip connections" MCP servers were **connected**: the profile removed every MCP tool on a real Paperclip run. Tool uses: Glob and Read only (10); no permission denial |
+| Log | `fetch_verified_log`: whole log read, size and SHA-256 match `logBytes`/`logSha256`; `check_tool_surface` PASS |
+| Verdict | `changes_requested`, 2 findings; `reviewId` and `challenge` correct |
+| Relay | Recorded `changes_requested` (one comment with receipt) and closed `OPT-7`; a second relay: "already relayed", nothing written |
+
+### D3: side effects
+
+After the review, OPT had 7 issues and 13 runs. The changes:
+- **+1 issue:** sub-issue `OPT-7`, expected.
+- **+2 runs:**
+  - the reviewer run `021f2cdb`;
+  - `bd8ff6b9`, Paperclip's `issue_disposition_repair` on `OPT-7`, cancelled with `agent_paused`. This is the known follow-up from the Option B check, held off by pausing the reviewer.
+- **No author run.** `OPT-3` went back to the paused placeholder author (`in_progress`, `changes_requested`).
+- **No other changes:** REV 1 / 3, RPR 1 / 5 and Soucean 30 / 152 unchanged; all agents paused (Soucean idle). Staging unstaged afterwards. No credential in any report.
+
+## 6. Acceptance status (R1 §7)
 
 | Criterion | Status |
 |---|---|
 | Inventory for REV, RPR, OPT | Done |
 | No secrets in the reports | Done (env key names only, none present; prompts by length) |
-| Reviewer profiles updated after approval | **Done** (§5) |
+| Reviewer profiles updated after approval | **Done** (§4) |
 | Paperclip API and settings file match | **Done**: validator PASS, 18/18, probe PASS for all three |
-| Positive test | Pending (D1) |
-| Negative tests | Offline done; live pending (D2) |
-| No side effects | Done for B3 and C; pending for D |
-| Evidence and timestamps | Done for A and B |
+| Positive test | **Done** (§5 D1) |
+| Negative tests | **Done**: offline (10 tests) and live (6 cases, §5 D2) |
+| No side effects | **Done** for B3, C and D (§5 D3) |
+| Evidence and timestamps | **Done** for A–D |
 | Profiles not updated or sandboxes gone | All three exist and are updated; Soucean has no reviewer (not touched) |
