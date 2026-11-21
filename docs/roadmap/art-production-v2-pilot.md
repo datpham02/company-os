@@ -17,16 +17,16 @@ Checked 2026-11-22 against the live company, the Deckbound repository (`main` 1c
 | # | Item | State | Unblocks with | Owner |
 |---|---|---|---|---|
 | R1 | Release gates G1–G7(a) | **Done**: passed on c998f32 (§8) | — | Board |
-| R2 | `game-artist` registered for Deckbound | The project registry entry had no `agents` list | This PR adds it (same roles as Lamplight Vigil); the Board confirms it by merging | Board |
-| R3 | Pipeline matches the 2026-11-22 decision | Deckbound `ART-PIPELINE.md` on `main` still requires a human Krita paintover; deckbound **PR #20** fixes that and is open | Review and merge deckbound PR #20 | Board |
-| R4 | Explicit asset licensing rule | Deckbound's `AGENTS.md` states none; without one, production art does not start (asset-production precondition) | **Decided by the Board 2026-11-22** (answer: "Proposed text, in PR #20"): the rule below is added to Deckbound `AGENTS.md` on deckbound PR #20. Text: "Allowed: original work; output of the registered checkpoints `sd-xl-base-1-0` (CreativeML Open RAIL++-M, use restrictions apply) and `flux1-schnell-fp8` (Apache-2.0) made through comfy-draft; PixelFX only with Board approval for this project. Not allowed: third-party art, fonts or references fed to a generator. Provenance recorded per asset in its spec." Done when PR #20 is merged | Board |
-| R5 | Evidence folder and direction record | Deckbound uses `assets/slice/review/`; it names no direction-record file | Same change on deckbound PR #20: `assets/slice/review/` as the review-evidence folder and `docs/art/directions/` as the direction-record folder in its `AGENTS.md`. Done when PR #20 is merged | Board |
-| R6 | Pilot Task descriptions in v2 form | SOU-64 to SOU-69 predate v2 (no lane, target size and background, reference traits, rubric, budgets or `qa` stage) | The Board rewrites each from [asset-task-template.md](../../knowledge/departments/game/domain/art/asset-task-template.md) with the budgets of §4.3 (read with `GET /issues/{id}`, then PATCH) | Board |
+| R2 | `game-artist` registered for Deckbound | **Done 2026-11-22**: the `agents` list (with `game-artist`) merged in Company OS PR #89 (d0c4ddd) | — | Board |
+| R3 | Pipeline matches the 2026-11-22 decision | **Done 2026-11-22**: deckbound PR #20 merged (d78f35a, Board approval "Approve; you merge"); the Krita paintover is optional; the local Deckbound clone fast-forwarded so new Task worktrees include it | — | Board |
+| R4 | Explicit asset licensing rule | **Done 2026-11-22**: the Board's rule (answer: "Proposed text, in PR #20") is in Deckbound `AGENTS.md` "Assets and licensing" via PR #20 | — | Board |
+| R5 | Evidence folder and direction record | **Done 2026-11-22** via PR #20: `assets/slice/review/` (each Task uses its own subfolder, so write sets do not overlap) and `docs/art/directions/` | — | Board |
+| R6 | Pilot Task descriptions in v2 form | **Done 2026-11-22**: SOU-61, SOU-64 to SOU-69 rewritten to the v2 contract (lane, brief, budgets, stop conditions, stage-specific acceptance, review rules); review stages set: art Tasks `qa-engineer` → `director` (SOU-69 also `ui-designer`) → Board; SOU-61 `qa-engineer` → `game-artist` → Board. SOU-66, SOU-67, SOU-69 have no integration Task (SOU-61 covers only the Scrivener, the commons and the background), so nothing may be deferred for them | — | Board |
 | R7 | Ownership conflicts | **SOU-61** writes `scenes/combat/` and `scenes/card/` but is assigned to `game-artist`, who must not change scenes | **Decided by the Board 2026-11-22** (answer: "Keep as UI art"): SOU-61 is reassigned to `gameplay-programmer`; SOU-69 stays `game-artist` decorative UI art (L1), its layout is left to the existing M1 UI work, so the pilot's game-UI coverage is art-side only | Board |
-| R8 | Direction authority | Deckbound's art bible names `director` as art-direction approver (pipeline §6); the company default is `game-designer`; a project rule wins (game-rules §6) | **Decided by the Board 2026-11-22** (answer: "Director"): `director` is Deckbound's art-direction authority for L2 decisions and the deciding review stage on SOU-64a. Recorded in SOU-64a's description when it is created (R10) | Board |
+| R8 | Direction authority | Deckbound's art bible names `director` as art-direction approver (pipeline §6); the company default is `game-designer`; a project rule wins (game-rules §6) | **Decided by the Board 2026-11-22** (answer: "Director"): `director` is Deckbound's art-direction authority for L2 decisions and the deciding review stage on SOU-71. Recorded in SOU-71's description (R10) | Board |
 | R9 | Preview before art approval | No approved way to see a new asset in the engine before integration: `game-artist`'s Godot rules render only the project's main scene, scenes are outside its write set, and art-ops cannot composite onto a background image yet (2B) | Default: the two-stage acceptance of §3 (in-context checks deferred to integration, never waived). Optional, separate Board decision outside this PR: a Deckbound preview fixture (a `gameplay-programmer` Task) plus one exact allowlist rule | Board |
-| R10 | L2 split and blocker graph | SOU-64 mixes the L2 direction decision with production; blocker relations do not match §4.2 | Create SOU-64a (direction Task) and set the relations of §4.2 in Paperclip | Board |
-| R11 | Planned L0 sample | None exists | Create the L0 Task of §4.4 in `backlog` | Board |
+| R10 | L2 split and blocker graph | **Done 2026-11-22**: SOU-71 created (L2 direction for the Scrivener, `director` deciding stage, R8 recorded in its description); Paperclip relations SOU-64 ← SOU-71, SOU-65 ← SOU-71, SOU-69 ← SOU-68; SOU-61 keeps SOU-52, SOU-54, SOU-56, SOU-64, SOU-65, SOU-68 | — | Board |
+| R11 | Planned L0 sample | **Done 2026-11-22**: SOU-72 (Board answer: "Attacker hit state"): a 2-frame `hit` reaction in cells 11–12 of `enemy_attacker`'s sheet; `backlog`, blocked by SOU-65; stages `qa-engineer` → `game-designer` → Board | — | Board |
 
 The first pilot Task is released only when R1–R11 are done and the checklist of §5 passes; that release is G7(b).
 
@@ -45,27 +45,27 @@ Every pilot art Task names its integration Task (SOU-61, or the replacement the 
 ### 4.1 Tasks
 | Task | Content | Lane | Assignee | Reviewers (Paperclip stages) |
 |---|---|---|---|---|
-| **SOU-64a** (new) | The Scrivener: direction sheet (3–4 directions at target size and in a representative composition) and direction record `docs/art/directions/char_scrivener.md` | **L2** (handoff A) | `game-artist` | `director` (decides, R8), `qa`, then Board approval |
+| **SOU-71** (new) | The Scrivener: direction sheet (3–4 directions at target size and in a representative composition) and direction record `docs/art/directions/char_scrivener.md` | **L2** (handoff A) | `game-artist` | `director` (decides, R8), `qa`, then Board approval |
 | SOU-64 | The Scrivener: production in the chosen direction (full figure and Skeleton2D parts atlas) | L1 | `game-artist` | `qa`, `director`, Board |
 | SOU-65 | Two common enemies | L1 | `game-artist` | `qa`, `director`, Board |
 | SOU-66 | Card illustration sample | L1 | `game-artist` | `qa`, `director`, Board |
 | SOU-67 | Bind-slot icon states and fray VFX frames | L1 | `game-artist` | `qa`, `director`, Board |
 | SOU-68 | Combat background, flooded hall | L1 | `game-artist` | `qa`, `director`, Board |
 | SOU-69 | Combat UI composition (decorative UI art; layout in existing M1 UI work) | L1 | `game-artist` (R7) | `qa`, `director`, Board |
-| **L0** (new, §4.4) | One planned variant of an accepted asset | L0 | `game-artist` | `qa`, Board |
+| **SOU-72** (L0, §4.4) | `enemy_attacker` hit state, 2 frames | L0 | `game-artist` | `qa`, `game-designer`, Board |
 | SOU-61 | Swap-in to the game: integration and every deferred check | Integration | `gameplay-programmer` (R7) | `qa`, `game-artist` (visual result), Board |
 
 ### 4.2 Blocker relations (Paperclip, not prose)
 | Task | Blocked by |
 |---|---|
-| SOU-64 | SOU-64a |
-| SOU-65 | SOU-64a (the enemies follow the main character's chosen direction) |
+| SOU-64 | SOU-71 |
+| SOU-65 | SOU-71 (the enemies follow the main character's chosen direction) |
 | SOU-69 | SOU-68 (the UI is composed against the chosen background) |
-| L0 sample | SOU-65 |
+| SOU-72 (L0 sample) | SOU-65 |
 | SOU-61 | Its existing blockers (SOU-52, SOU-54, SOU-56, SOU-64, SOU-65, SOU-68) plus SOU-66, SOU-67 and SOU-69 when their assets are in its scope |
 SOU-66, SOU-67 and SOU-68 have no art blockers. A cancelled Task has its relations moved to its replacement first (task-contract §6). **Schedule note:** SOU-61 also waits for the M1 gameplay chain (SOU-52, SOU-54), so the integrated slice that G8 PASS requires depends on M1 progress; the Board may split a smaller pilot integration Task that is not blocked by SOU-54, if it wants G8 earlier.
 
-Release order (WIP 1 per agent): SOU-66 (G7(b)) → SOU-64a → SOU-68 → SOU-64 → SOU-65 → SOU-67 → SOU-69 → L0 → SOU-61.
+Release order (WIP 1 per agent): SOU-66 (G7(b)) → SOU-71 → SOU-68 → SOU-64 → SOU-65 → SOU-67 → SOU-69 → SOU-72 → SOU-61.
 
 ### 4.3 Budgets and stop conditions
 Written into each Task description (R6). Defaults; the Board may set others per Task.
@@ -124,7 +124,7 @@ All collected by the **Board** (with `pc.py show`, `pc.py log`, GitHub PRs and l
 G8 is **NOT EVALUATED** until every Task of §4.1 has a final outcome and every row of §6 is filled for every Task, including failed and abandoned ones (a value may be `UNAVAILABLE` with its reason). Then it has exactly one of three outcomes, decided by the rules below in order.
 
 ### 7.1 Counting
-- **Direction (L2):** SOU-64a is measured on its own: direction accepted by its deciding review stage (yes or no), review rounds, budget used. It is not a production asset and is not in the production counts.
+- **Direction (L2):** SOU-71 is measured on its own: direction accepted by its deciding review stage (yes or no), review rounds, budget used. It is not a production asset and is not in the production counts.
 - **Production art Tasks:** SOU-64, SOU-65, SOU-66, SOU-67, SOU-68, SOU-69 (six), plus the L0 sample reported separately.
 - **Cancelled Tasks:** a Task the Board cancels for a reason outside art production (an M1 scope or schedule change), recorded with that reason, is **excluded** from the denominators and listed. Any other cancellation counts as **stopped** (not art-ready).
 - **Human art intervention**, per production art Task: **none**; **guidance** (Board decisions, description fixes, unblocking: not an art edit); **partial** (a human changed pixels of some of the delivered art); **full** (a human produced the art). A Task with partial or full intervention is **human-assisted**: it is reported but **never counted as art-ready** for G8.
@@ -137,7 +137,7 @@ G8 is **NOT EVALUATED** until every Task of §4.1 has a final outcome and every 
    - F3: no production art Task reached art-ready.
 2. Otherwise **PASS** if all of:
    - P1: a **vertical slice is verified**: the Scrivener (SOU-64), at least one common enemy (SOU-65) and the combat background (SOU-68), through SOU-61 or the Board's pilot integration Task, with `qa`'s verdict;
-   - P2: the L2 direction (SOU-64a) was accepted by its deciding stage;
+   - P2: the L2 direction (SOU-71) was accepted by its deciding stage;
    - P3: at least 4 of the 6 production art Tasks (or two thirds of the non-excluded ones, rounded up) are art-ready;
    - P4: the L0 sample is art-ready;
    - P5: no production art Task is human-assisted.
@@ -167,5 +167,5 @@ Recorded by Claude Code for the Board on 2026-11-22 (times UTC+7). Repository un
 | G5 | **Passed** | `check-agent-drift.py`: no adapter or allowlist drift (only the three expected role-text findings, fixed by G6). Effective live allowlists read from Paperclip: Game Artist 34 allowed / 32 disallowed, `acceptEdits`, art and engine rules = PixelFX `list.mjs` and `render.mjs`, the five Godot rules, `comfy-draft.py`, `art-ops.py`; UI Designer and QA Engineer: the five Godot rules each; Gameplay Programmer: Cursor, `--trust --auto-review`, no allowlist (as configured). All equal `agents.json` |
 | G6 | **Passed** | From c998f32: dry run `would update` ui-designer, game-artist, gameplay-programmer only; sync `updated` those three; read-back dry run: all ten roles `current` (code-reviewer not imported, as before); `check-agent-drift.py`: 0 drift findings |
 | G7(a) | **Passed** | art-ops (installed copy, scratch folder with `.git`): `info`, `resize --filter nearest` 64x64, `contact --bg 40 90 40` succeeded; refused with exit 1 and nothing written: `../x.png`, a junction under `art_src/`, `.git/x.png`. comfy-draft rejected before ComfyUI started: unknown model (exit 2), `--count 9`, `--width 4096`, `--width 500`, `--asset ../g7`. Generation (server started by the wrapper): SDXL seed 7, 512x512, 25 steps, 56 s including start; FLUX seed 7, 512x512, 4 steps, 26 s. Both PNGs: PNG signature, 512x512 RGB, inspected visually (a brass lantern as prompted); workflow and provenance JSON written (model file, licence, seed, steps, size, prompt). Runtime configuration from `/system_stats`: `argv` = `main.py --windows-standalone-build --listen 127.0.0.1 --port 8188 --disable-auto-launch --offline`; ComfyUI 0.46.0, embedded Python 3.12.10. Startup log: custom nodes imported = `websocket_image_save.py` only. Outputs kept in `~/game-studio-workspace/staging/art/g7_smoke/` |
-| G7(b) | **Not started** | Blocked by R2–R11 (§2) and the checklist (§5) |
+| G7(b) | **Not started** | R1–R11 done 2026-11-22; SOU-66 waits for the §5 checklist and its release |
 | G8 | Not started | After the pilot set (§4) |
