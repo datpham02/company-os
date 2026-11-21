@@ -72,11 +72,13 @@ projects:
     name: Deckbound
     department: game
     type: game
-    status: initializing          # repo created 2026-11-21 (seeded with README + docs/art/ART-PIPELINE.md); made public and main protected 2026-11-21; Paperclip project pending
+    status: initializing          # repo created 2026-11-21 (seeded with README + docs/art/ART-PIPELINE.md); made public and main protected 2026-11-21; Paperclip project created 2026-11-21
     repository:
       url: https://github.com/datpham02/deckbound.git
       defaultBranch: main
     engine:
       name: godot
       version: "4"                # exact 4.x version to be confirmed in Art Phase 0
+    paperclip:
+      projectId: "6c2e58ca-d747-4709-a4e2-43ece4ed7f08"   # company Soucean (SOU), created 2026-11-21
     frameworkVersion: 0.1.0
