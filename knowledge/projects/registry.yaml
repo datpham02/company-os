@@ -67,3 +67,16 @@ projects:
       projectId: "447a1ff4-83dc-4aa6-b7a1-a0334eee88f5"   # company Soucean (SOU)
     agents: [director, producer, project-manager, web-engineer, ui-designer, qa]
     frameworkVersion: 0.1.0
+
+  - id: deckbound
+    name: Deckbound
+    department: game
+    type: game
+    status: initializing          # repo created 2026-11-21 (private, seeded with README + docs/art/ART-PIPELINE.md); Paperclip project and branch protection pending
+    repository:
+      url: https://github.com/datpham02/deckbound.git
+      defaultBranch: main
+    engine:
+      name: godot
+      version: "4"                # exact 4.x version to be confirmed in Art Phase 0
+    frameworkVersion: 0.1.0

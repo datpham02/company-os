@@ -6,6 +6,7 @@ A project is a product. It belongs to one department and may have contributing d
 |---|---|---|---|
 | Lamplight Vigil | Game | game | [lamplight-vigil/README.md](lamplight-vigil/README.md) |
 | Soucean Game | Web | platform | [soucean-game/README.md](soucean-game/README.md) |
+| Deckbound | Game | game | [deckbound/README.md](deckbound/README.md) |
 
 - [registry.yaml](registry.yaml): machine-readable registry. Schema: [project-config.schema.yaml](project-config.schema.yaml).
 - Contract: [project-system.md](../../docs/design/project-system.md).
