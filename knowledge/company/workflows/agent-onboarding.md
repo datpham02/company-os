@@ -11,7 +11,7 @@ Roles added to Soucean after the import:
 
 | Role | Case | Role file | Agent Instance |
 |---|---|---|---|
-| `game-artist` | A | Added 2026-11-21 | Not created. Needs the Board's approval; route in [company-bootstrap.md §4](../../../docs/operations/company-bootstrap.md#4-existing-instance-a-role-or-allocation-changed-in-git), open question OQ-045 |
+| `game-artist` | A | Added 2026-11-21 | Created 2026-11-21 with the Board's approval by the agents-only import with `--collision skip` ([company-bootstrap.md §4](../../../docs/operations/company-bootstrap.md#4-existing-instance-a-role-or-allocation-changed-in-git)), then `post-import.py` for `GH_TOKEN`. Idle; Test Environment (step 5) and trial Task (step 6) not done |
 
 ## Trigger
 Capacity shortage or a missing skill set identified by `producer`/`project-manager`, or a Board request.

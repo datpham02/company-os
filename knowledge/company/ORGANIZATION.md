@@ -31,7 +31,7 @@ Providers are those of the live company **Soucean** (`SOU`, imported 2026-11-05 
 | `code-reviewer` | Company (Review Package pilot, `PROPOSED`) | Board Operator (no agent manages it) | [AGENTS.md](agents/code-reviewer/AGENTS.md) | `claude_local` | reviewer-strict (Read, Grep, Glob only; not in the live company until P6-B) |
 | `game-designer` | Game | `director` | [AGENTS.md](../departments/game/agents/game-designer/AGENTS.md) | `claude_local` | workspace-write |
 | `gameplay-programmer` | Game | `project-manager` | [AGENTS.md](../departments/game/agents/gameplay-programmer/AGENTS.md) | `cursor` | workspace-write |
-| `game-artist` | Game | `project-manager` | [AGENTS.md](../departments/game/agents/game-artist/AGENTS.md) | `claude_local` | workspace-write (asset files only; not in the live company until the Board approves adding it, OQ-045) |
+| `game-artist` | Game | `project-manager` | [AGENTS.md](../departments/game/agents/game-artist/AGENTS.md) | `claude_local` | workspace-write (asset files only; created in Soucean 2026-11-21, idle, not run yet) |
 | `web-engineer` | Web | `project-manager` | [AGENTS.md](../departments/web/agents/web-engineer/AGENTS.md) | `cursor` | workspace-write (dev/test environments only, ADR-014) |
 
 Provider is a property of the Agent Instance, not of the role (ADR-008).

@@ -252,6 +252,10 @@
       "secrets": [
         "GH_TOKEN"
       ],
+      "extraAllowedTools": [
+        "Bash(node \"$HOME/tools/pixelfx/tools/list.mjs\"*)",
+        "Bash(node \"$HOME/tools/pixelfx/tools/render.mjs\"*)"
+      ],
       "runtime": {
         "heartbeat": {
           "enabled": false,

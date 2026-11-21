@@ -9,7 +9,7 @@ Provider is configuration, not identity ([ADR-008](../../../docs/decisions/ADR-0
 
 | Provider | Paperclip adapter | Status | Agents today |
 |---|---|---|---|
-| Claude Code | `claude_local` | Connected | 6 of 8 live: `director`, `producer`, `project-manager`, `game-designer`, `ui-designer`, `qa-engineer`. `game-artist` (role added 2026-11-21, the 9th) is configured for it but not created live yet (OQ-045) |
+| Claude Code | `claude_local` | Connected | 7 of 9: `director`, `producer`, `project-manager`, `game-designer`, `ui-designer`, `qa-engineer`, `game-artist` (added 2026-11-21) |
 | Cursor CLI (`gpt-5.3-codex`) | `cursor` | Connected | `gameplay-programmer`, `web-engineer` |
 | Gemini CLI | `gemini_local` | Tried 2026-11-04; login failed; uninstalled | — |
 | Codex CLI | `codex_local` | Installed (0.166.0, OQ-009); no account, deferred by the Board on 2026-11-21 (OQ-010) | — |
@@ -53,7 +53,7 @@ Applied in this order. With a handful of roles the allocation can simply try eve
 
 ## 4. Worked examples (today's 9 roles, total workload 16)
 
-The 9 roles are the 8 live ones plus `game-artist` (workload 2, main work type `ui-design`). Cursor's `ui-design` fit is 1, so rule 1 keeps `game-artist` on Claude Code in every example below. `code-reviewer` (Phase 6 pilot) is left out until it joins the live company.
+The 9 roles are the 8 original ones plus `game-artist` (workload 2, main work type `ui-design`). Cursor's `ui-design` fit is 1, so rule 1 keeps `game-artist` on Claude Code in every example below. `code-reviewer` (Phase 6 pilot) is left out until it joins the live company.
 
 **One provider.** Everything on it. No review is cross-provider; Board approval is the only independent check.
 
