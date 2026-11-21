@@ -245,6 +245,20 @@
         }
       }
     },
+    "game-artist": {
+      "department": "game",
+      "profile": "claude-workspace-write",
+      "permissions": {},
+      "secrets": [
+        "GH_TOKEN"
+      ],
+      "runtime": {
+        "heartbeat": {
+          "enabled": false,
+          "maxConcurrentRuns": 1
+        }
+      }
+    },
     "web-engineer": {
       "department": "web",
       "profile": "cursor-workspace-write",

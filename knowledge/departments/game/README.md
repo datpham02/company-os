@@ -22,15 +22,17 @@ Design, build and ship original games of any genre the Board approves, with ever
 |---|---|---|
 | `game-designer` | Game only | [agents/game-designer](agents/game-designer/AGENTS.md) |
 | `gameplay-programmer` | Game only | [agents/gameplay-programmer](agents/gameplay-programmer/AGENTS.md) |
+| `game-artist` | Game only | [agents/game-artist](agents/game-artist/AGENTS.md) |
 | `director` | Company (head of this department) | [director](../../company/agents/director/AGENTS.md) |
 | `producer`, `project-manager`, `ui-designer`, `qa` | Company (shared) | [company agents](../../company/agents/) |
 
 ## Workflows
 - Company workflows apply to every game Task ([index](../../company/workflows/README.md)).
 - [new-game-concept.md](workflows/new-game-concept.md): the game part of creating a project.
+- [asset-production.md](workflows/asset-production.md): asset request, art, integration, QA and approval (`PROPOSED`).
 
 ## Domain knowledge
-- [game-rules.md](domain/game-rules.md): originality, design authority, default hotspot files, review gates.
+- [game-rules.md](domain/game-rules.md): originality, design authority, default hotspot files, review gates, art assets and the interim technical-art split.
 
 ## Review gates
 | Work | Reviewer | Board |
@@ -38,6 +40,7 @@ Design, build and ship original games of any genre the Board approves, with ever
 | Vision and pillars | `director` | Review recommended |
 | Design documents and tuning tables | `director` (design), `qa` (testability) | Approval stage on the Task |
 | Code | `qa`, on a different provider from the author where possible | Approval and merge (ADR-009) |
+| Art assets | `qa` (acceptance, visual defects); `game-designer` (readability) when the Task's review stage includes it | Approval and merge (ADR-009) |
 
 ## Projects
 | Project | Status | Registry |

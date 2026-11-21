@@ -7,6 +7,12 @@ Covers two cases: **(A)** a new Agent Role, **(B)** a new Agent Instance of an e
 ## Whole-company setup (package import)
 When a whole company is created or rebuilt, its agents come from a package import, not one hire request per agent ([company-bootstrap.md](../../../docs/operations/company-bootstrap.md), ADR-016). The Board decided on 2026-11-21 that this replaces steps 1–2 and 6 below for an imported company. Steps 4 and 5 still apply through `post-import.py` and the environment test. Soucean (2026-11-05) was set up this way. This workflow covers agents added afterwards.
 
+Roles added to Soucean after the import:
+
+| Role | Case | Role file | Agent Instance |
+|---|---|---|---|
+| `game-artist` | A | Added 2026-11-21 | Not created. Needs the Board's approval; route in [company-bootstrap.md §4](../../../docs/operations/company-bootstrap.md#4-existing-instance-a-role-or-allocation-changed-in-git), open question OQ-045 |
+
 ## Trigger
 Capacity shortage or a missing skill set identified by `producer`/`project-manager`, or a Board request.
 

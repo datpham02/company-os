@@ -42,7 +42,7 @@ dependencies:
       strategy: global-cli
       reference: https://code.claude.com/docs
     integrationStatus: approved     # ADR-008; Paperclip adapter claude_local
-    usedBy: [director, producer, project-manager, game-designer, ui-designer, qa]   # Soucean roster, config/paperclip/agents.json (2026-11-21)
+    usedBy: [director, producer, project-manager, game-designer, ui-designer, qa, game-artist]   # Soucean roster, config/paperclip/agents.json (2026-11-21; game-artist not live yet, OQ-045)
     compatibility: "Paperclip adapter type claude_local."
     notes: "See docs/integrations/claude-code-integration.md."
 
@@ -133,6 +133,24 @@ dependencies:
     usedBy: [gameplay-programmer, ui-designer, game-designer]
     compatibility: "Agent Skills (SKILL.md) with a router that detects the engine. Documented installs: `npx skills add gamedev-skills/awesome-gamedev-agent-skills` or as a Claude Code plugin marketplace. Lists Claude Code and Codex as compatible."
     notes: "Per-engine skills (Godot, Unity, Unreal, web engines, others). Repo has a NOTICE file (Apache-2.0)."
+
+  - id: pixelfx
+    name: PixelFX
+    category: game-development
+    source:
+      repository: https://github.com/patch-gg/pixelfx
+      docs: https://patch-gg.github.io/pixelfx/
+    license: MIT
+    required: false
+    versionConstraint: "pinned:5294518 (main, 2026-11-12; package.json 0.3.1; no tags or releases)"
+    verifiedVersion: null
+    install:
+      strategy: skill-pack
+      reference: https://github.com/patch-gg/pixelfx#the-skill
+    integrationStatus: candidate
+    usedBy: [game-artist]   # gameplay-programmer imports the exported sheets; it does not use the tool
+    compatibility: "Production-time art/VFX source library plus a Claude Code skill (plugin marketplace patch-gg/pixelfx, or skills/pixelfx). Not a shipped dependency of any game: only selected effects are exported as sprite sheets (`node tools/render.mjs <category>/<name> --sheet`: transparent PNG grid plus Aseprite-style JSON with frame rects, durations, fps, loop and pivot) and then go through the project's own asset workflow (knowledge/departments/game/workflows/asset-production.md). Needs Node >= 18; the game-artist allowlist does not allow `node` today."
+    notes: "Facts from LICENSE, NOTICE.md, package.json, README and the GitHub API at commit 5294518 on 2026-11-21. NOT security-reviewed (security-architecture.md section 11.1); not tested in any game. 244 effects in 21 categories. NOTICE.md: some effects and src/core/sim.js adapt Sprite Fusion's MIT effects (Hugo Duprez) and src/core/act.js adapts Hollow Crown (MIT), so keep those notices with exported work; the Patch Pixel font in gallery/fonts is NOT under MIT and is excluded. Lamplight Vigil allows only original or CC0 assets, so its output cannot be used there without a Board change to that rule. Risks: fit with each project's art references, frame size, pivot, fps, palette, transparency, upstream changes; never bulk-import the library."
 
   - id: playwright-mcp
     name: Playwright MCP

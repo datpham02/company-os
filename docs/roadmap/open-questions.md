@@ -54,7 +54,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-042 | How can a reviewer be kept from writing to the author's Task Workspace and branch (G-13)? | Open | Security, ADR-006, task-contract §8 |
 | OQ-043 | Can the studio run Paperclip in `authenticated` mode on Windows, so that no local process is the Board by default (G-14)? | Partially verified (sandbox, no agent runs): works on Windows and closes keyless Board access; migration and script auth needed | Security, Runtime prerequisites |
 | OQ-044 | Does Paperclip run two consecutive stages (`review`, then `approval`) whose only participant is the same user (`local-board`) as intended? | Open (source reading suggests yes; not run live) | Review Package Phase 6, P6-B |
-| OQ-045 | How is one agent added to the running Soucean company with an exact configuration (the `code-reviewer`), given that the package import creates a company? | Open | Review Package Phase 6, P6-B |
+| OQ-045 | How is one agent added to the running Soucean company with an exact configuration (the `code-reviewer`, then `game-artist`), given that the package import creates a company? | Open | Review Package Phase 6, P6-B; `game-artist` instance |
 
 ## Entries
 
@@ -556,4 +556,5 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Why it matters:** the `code-reviewer` must be created in Soucean with exactly the configuration `build-package.py --with-reviewer` produces, paused, without re-importing the company.
 - **Current assumption:** an agent can be created through the Paperclip UI or API (`POST /companies/<id>/agents`, used for sandbox agents in R5) with that configuration; `review-start`'s `check_reviewer_config` then confirms it.
 - **Verification method:** P6-B, with the Board's approval; record the exact procedure in the runbook.
+- **Also waiting on it (2026-11-21):** the `game-artist` Agent Instance. Its role and configuration are in Git; the candidate route is the agents-only import with `--collision skip` in [company-bootstrap.md §4](../operations/company-bootstrap.md#4-existing-instance-a-role-or-allocation-changed-in-git), dry run first, with the Board's approval.
 - **Status:** Open.

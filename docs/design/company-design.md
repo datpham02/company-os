@@ -18,6 +18,7 @@ Board Operator (human, Paperclip board)
     └── producer             Delivery authority
         └── project-manager  Per-project planning and delegation
             ├── gameplay-programmer   Game
+            ├── game-artist           Game
             ├── web-engineer          Web
             ├── ui-designer           Game and Web
             └── qa                    Game and Web
@@ -39,6 +40,7 @@ Rationale:
 | Task breakdown and assignment | `project-manager` | `project-manager` | No |
 | Technical implementation within a Task | `gameplay-programmer` / `ui-designer` | Implementer | No |
 | UI/UX design | `ui-designer` | `ui-designer` (within design docs) | No |
+| Look of a game asset | `game-artist` | `game-artist` (within the project's art direction); art direction → `game-designer`, or `director` when it changes the pillars | No |
 | Quality verdict on a change | `qa` | `qa` (review stage) | — |
 | Merge to Default Branch | any implementer via PR | **Board Operator** | Yes (ADR-009) |
 | Release a version | `producer` | **Board Operator** | Yes |
@@ -59,6 +61,7 @@ Agents MUST NOT take decisions outside their row. When unsure, escalate along th
 | Tasks | `project-manager` | Paperclip |
 | Gameplay code | `gameplay-programmer` | Game Repository |
 | UI code and UI specs | `ui-designer` | Game Repository |
+| Visual assets and their provenance | `game-artist` | Game Repository |
 | Test plans, bug reports | `qa` | Game Repository / Paperclip tasks |
 
 ## 5. Escalation

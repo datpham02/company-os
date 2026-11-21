@@ -9,7 +9,7 @@ Provider is configuration, not identity ([ADR-008](../../../docs/decisions/ADR-0
 
 | Provider | Paperclip adapter | Status | Agents today |
 |---|---|---|---|
-| Claude Code | `claude_local` | Connected | 6 of 8: `director`, `producer`, `project-manager`, `game-designer`, `ui-designer`, `qa-engineer` |
+| Claude Code | `claude_local` | Connected | 6 of 8 live: `director`, `producer`, `project-manager`, `game-designer`, `ui-designer`, `qa-engineer`. `game-artist` (role added 2026-11-21, the 9th) is configured for it but not created live yet (OQ-045) |
 | Cursor CLI (`gpt-5.3-codex`) | `cursor` | Connected | `gameplay-programmer`, `web-engineer` |
 | Gemini CLI | `gemini_local` | Tried 2026-11-04; login failed; uninstalled | — |
 | Codex CLI | `codex_local` | Installed (0.166.0, OQ-009); no account, deferred by the Board on 2026-11-21 (OQ-010) | — |
@@ -51,7 +51,9 @@ Applied in this order. With a handful of roles the allocation can simply try eve
 
 **Change:** adding or removing a provider, or changing `capacity` or `fit`, means rerun the rule, Board approves, update the changed agents. **Fallback:** a provider out of quota or down for a working day is marked unavailable and the rule is rerun.
 
-## 4. Worked examples (today's 8 roles, total workload 14)
+## 4. Worked examples (today's 9 roles, total workload 16)
+
+The 9 roles are the 8 live ones plus `game-artist` (workload 2, main work type `ui-design`). Cursor's `ui-design` fit is 1, so rule 1 keeps `game-artist` on Claude Code in every example below. `code-reviewer` (Phase 6 pilot) is left out until it joins the live company.
 
 **One provider.** Everything on it. No review is cross-provider; Board approval is the only independent check.
 
@@ -59,12 +61,12 @@ Applied in this order. With a handful of roles the allocation can simply try eve
 
 | Provider | Roles | Load |
 |---|---|---|
-| Claude Code | `ui-designer`, `qa`, `game-designer`, `producer`, `project-manager` | 7 |
-| Cursor | `gameplay-programmer`, `web-engineer`, `director` | 7 |
+| Claude Code | `ui-designer`, `qa`, `game-artist`, `game-designer`, `project-manager` | 8 |
+| Cursor | `gameplay-programmer`, `web-engineer`, `director`, `producer` | 8 |
 
-Every review is cross-provider. Changes from today: `qa` moves to Claude Code (Cursor's review fit is 1); `gameplay-programmer`, `web-engineer` and `director` move to Cursor.
+Every code review is cross-provider. `qa`'s review of `game-artist`'s assets is same-provider and cannot be avoided: rule 1 keeps both on Claude Code. Changes from today: `qa` moves to Claude Code (Cursor's review fit is 1); `director` and one read-only planner move to Cursor (rule 3, then rule 5; `producer` and `project-manager` tie, `producer` shown). With 8 roles (load 14) the split was 7 / 7 and `producer` stayed on Claude Code.
 
-**Two providers, capacity 2:1 for Claude Code.** Cursor would be at 150 % of its fair share; rule 4 moves `web-engineer` back: Claude Code 10, Cursor 4. `web-engineer`'s code and its review of `ui-designer` become same-provider.
+**Two providers, capacity 2:1 for Claude Code.** Cursor would be at 150 % of its fair share; rule 4 moves `web-engineer` back: Claude Code 11, Cursor 5. `web-engineer`'s code and its review of `ui-designer` become same-provider.
 
 **Three providers.** The same rule. Example with a third provider X that has `implementation` fit ≥ 2 and allowlist-level confinement: `gameplay-programmer` on Cursor, `web-engineer` on X, `qa` on Claude Code, so every code review is cross-provider.
 

@@ -11,6 +11,7 @@ Board Operator (human)
     └── producer                     Company (shared)
         └── project-manager          Company (shared)
             ├── gameplay-programmer  Game
+            ├── game-artist          Game
             ├── web-engineer         Web
             ├── ui-designer          Company (shared: Game and Web)
             └── qa                   Company (shared: Game and Web)
@@ -30,6 +31,7 @@ Providers are those of the live company **Soucean** (`SOU`, imported 2026-11-05 
 | `code-reviewer` | Company (Review Package pilot, `PROPOSED`) | Board Operator (no agent manages it) | [AGENTS.md](agents/code-reviewer/AGENTS.md) | `claude_local` | reviewer-strict (Read, Grep, Glob only; not in the live company until P6-B) |
 | `game-designer` | Game | `director` | [AGENTS.md](../departments/game/agents/game-designer/AGENTS.md) | `claude_local` | workspace-write |
 | `gameplay-programmer` | Game | `project-manager` | [AGENTS.md](../departments/game/agents/gameplay-programmer/AGENTS.md) | `cursor` | workspace-write |
+| `game-artist` | Game | `project-manager` | [AGENTS.md](../departments/game/agents/game-artist/AGENTS.md) | `claude_local` | workspace-write (asset files only; not in the live company until the Board approves adding it, OQ-045) |
 | `web-engineer` | Web | `project-manager` | [AGENTS.md](../departments/web/agents/web-engineer/AGENTS.md) | `cursor` | workspace-write (dev/test environments only, ADR-014) |
 
 Provider is a property of the Agent Instance, not of the role (ADR-008).
@@ -37,7 +39,7 @@ Provider is a property of the Agent Instance, not of the role (ADR-008).
 ## Planned roles (not defined yet)
 Each via [agent-onboarding.md](workflows/agent-onboarding.md), when workload requires it:
 - Company: `release-manager`; a department lead under `director` when a department has three or more roles of its own.
-- Game: `technical-director`, `engine-programmer`, `artist` / `art-director`, `audio-designer`, `narrative-designer`.
+- Game: `technical-director`, `engine-programmer`, `art-director`, `technical-artist` (only on the evidence in [game-rules.md §6](../departments/game/domain/game-rules.md#6-art-assets-and-technical-art)), `audio-designer`, `narrative-designer`.
 - Web: `devops-engineer` (more than one platform or self-hosted infrastructure, ADR-014).
 
 ## Change control
