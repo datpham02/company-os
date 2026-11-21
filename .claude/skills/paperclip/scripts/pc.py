@@ -205,6 +205,23 @@ def cmd_overview(a):
         print("  (none)")
 
 
+def run_label(run, detail=None):
+    """R3: how to show a run's status. Paperclip 2026.1023.0 cancels the run of an agent that moves its own issue
+    to someone else (for example to review) at that moment (server routes/issues.js, "Cancelled before issue
+    reassignment"): errorCode issue_reassigned. The run record (GET /heartbeat-runs/<id>, `detail`) then has
+    resultJson.reassignmentStopConfirmed and cancellation.expected; such a run finished its turn and is shown as
+    "handed over". Any other cancellation keeps its reason; the run list alone is never enough to say "handed over"."""
+    status = run.get("status") or "unknown"
+    if status != "cancelled":
+        return status
+    code = run.get("errorCode")
+    if code == "issue_reassigned":
+        rj = (detail or {}).get("resultJson") or {}
+        if rj.get("reassignmentStopConfirmed") is True and (rj.get("cancellation") or {}).get("expected") is True:
+            return "handed over"
+    return f"cancelled ({code})" if code else "cancelled"
+
+
 def cmd_show(a):
     i = issue(a.key)
     n = names(i["companyId"])
@@ -227,7 +244,16 @@ def cmd_show(a):
         print(f"\n[{c.get('createdAt', '')[:16]}] {author}:\n{body[: a.chars]}{' …' if len(body) > a.chars else ''}")
     print("\n--- runs (newest first) ---")
     for r in runs(i["id"])[:8]:
-        print(f"  {r['runId']}  {n.get(r['agentId'], r['agentId'][:8]):20} {r['status']:15} {r.get('createdAt', '')[:16]}  {r.get('livenessReason') or ''}")
+        detail = None
+        if r.get("status") == "cancelled" and r.get("errorCode") == "issue_reassigned":
+            try:
+                detail = call("GET", f"/heartbeat-runs/{r['runId']}")
+            except (ApiError, ValueError):
+                detail = None  # shown as cancelled (issue_reassigned): not confirmed as a hand-over
+        label = run_label(r, detail)
+        note = ("ended its turn by handing the issue over (Paperclip records it as cancelled)"
+                if label == "handed over" else (r.get("livenessReason") or ""))
+        print(f"  {r['runId']}  {n.get(r['agentId'], r['agentId'][:8]):20} {label:24} {r.get('createdAt', '')[:16]}  {note}")
 
 
 def cmd_log(a):

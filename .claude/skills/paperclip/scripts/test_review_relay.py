@@ -1053,6 +1053,94 @@ class ReviewerRunState(RelayEnv):
         self.assertIs(a.fn, pc.cmd_review_pack)
 
 
+class CheckPhaseFailures(RelayEnv):
+    """A3: a Paperclip failure before anything is recorded is an audited refusal, never a raw exception."""
+
+    def args(self, key=KEY):
+        return argparse.Namespace(key=key, run_id=RUN, identity=rp.BOARD, review_root=self.rr, staging_root=self.sr)
+
+    def relay_cli(self, api):
+        with self.assertRaises(rp.ReviewPackError) as cm:
+            rl.cmd_review_relay(self.args(), api, lambda: REVIEWER, head_now=lambda: SHA_HEAD, now=LATER,
+                                sleep=self.sleeps.append)
+        return cm.exception
+
+    def test_unreachable_paperclip_in_the_check_phase(self):
+        api = self.pc()
+        api.fail[("GET", f"/issues/{KEY}")] = [HttpError("Paperclip is not reachable (timed out)")] * 3
+        e = self.relay_cli(api)
+        self.assertIn("Paperclip did not answer", str(e))
+        self.assertIn("Nothing was recorded", str(e))
+        self.assertEqual(api.writes(), [])
+        last = rp.read_audit(self.rr)[-1]
+        self.assertEqual((last["event"], last["runId"]), ("refuse", RUN))
+
+    def test_paperclip_refusal_in_the_check_phase(self):
+        api = self.pc()
+        api.fail[("GET", f"/issues/{KEY}")] = [http("GET", f"/issues/{KEY}", 404, "Issue not found")]
+        e = self.relay_cli(api)
+        self.assertIn("check failed", str(e))
+        self.assertEqual(self.events()[-1], "refuse")
+        self.assertEqual(api.writes(), [])
+
+    def test_reviewer_lookup_failure_is_a_refusal(self):
+        def lookup():
+            raise HttpError("no agent matches 'code-reviewer'")
+        with self.assertRaises(rp.ReviewPackError):
+            rl.cmd_review_relay(self.args(), self.pc(), lookup, head_now=lambda: SHA_HEAD, now=LATER)
+        self.assertEqual(self.events()[-1], "refuse")
+
+    def test_audit_failure_after_the_decision_is_reported_not_raised(self):
+        api = self.pc()
+        real = rp.audit
+
+        def audit(rr, event, *args, **kw):
+            if event == "relay":
+                raise OSError("disk full")
+            return real(rr, event, *args, **kw)
+        rp.audit = audit
+        try:
+            out = self.relay(api)
+        finally:
+            rp.audit = real
+        self.assertIn("relayed approved", out)
+        self.assertIn("WARNING: the decision is recorded in Paperclip", out)
+        self.assertEqual(api.issue["status"], "done")
+
+    def test_failed_relay_refused_audit_is_still_a_relay_refusal(self):
+        """The recording step failed and its audit line could not be written: still RelayRefused (the comment may
+        be in Paperclip), never a "Nothing was recorded" refusal."""
+        api = self.pc()
+        api.fail[("PATCH", f"/issues/{api.issue['id']}")] = [http("PATCH", "/issues", 422, "bad decision")]
+        real = rp.audit
+
+        def audit(rr, event, *args, **kw):
+            if event == "relay-refused":
+                raise OSError("disk full")
+            return real(rr, event, *args, **kw)
+        rp.audit = audit
+        try:
+            with self.assertRaises(rl.RelayRefused) as cm:
+                rl.cmd_review_relay(self.args(), api, lambda: REVIEWER, head_now=lambda: SHA_HEAD, now=LATER,
+                                    sleep=self.sleeps.append)
+        finally:
+            rp.audit = real
+        self.assertNotIn("Nothing was recorded", str(cm.exception))
+        self.assertNotIn("refuse", self.events()[-1:])
+
+    def test_review_start_check_phase_failure_is_audited(self):
+        self.pin_review(started=False)
+        api = self.pc()
+        api.fail[("GET", f"/issues/{KEY}")] = [http("GET", f"/issues/{KEY}", 404, "Issue not found")]
+        a = argparse.Namespace(key=KEY, identity=rp.BOARD, review_root=self.rr, staging_root=self.sr)
+        with self.assertRaises(rp.ReviewPackError) as cm:
+            rl.cmd_review_start(a, api, lambda: COMPANY, lambda: REVIEWER, now=NOW, sleep=self.sleeps.append)
+        self.assertIn("check failed", str(cm.exception))
+        last = rp.read_audit(self.rr)[-1]
+        self.assertEqual(last["event"], "refuse")
+        self.assertTrue(last["reason"].startswith("review-start: "))
+
+
 class ReviewerConfig(RelayEnv):
     """P0 layers 1 and 2, checked by review-start before anything is created or woken."""
 

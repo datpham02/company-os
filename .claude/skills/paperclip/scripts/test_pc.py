@@ -35,6 +35,33 @@ def P(path):
     return pc.normalize_path(path)
 
 
+class RunLabel(unittest.TestCase):
+    """R3: a run cancelled because its agent handed the issue over is shown as "handed over", only when the run
+    record confirms it."""
+
+    HANDED = {"resultJson": {"reassignmentStopConfirmed": True,
+                             "cancellation": {"reason": "Cancelled before issue reassignment", "expected": True}}}
+
+    def test_handed_over_needs_the_run_record(self):
+        run = {"status": "cancelled", "errorCode": "issue_reassigned"}
+        self.assertEqual(pc.run_label(run, self.HANDED), "handed over")
+        self.assertEqual(pc.run_label(run), "cancelled (issue_reassigned)")
+        self.assertEqual(pc.run_label(run, {"resultJson": {"reassignmentStopConfirmed": True}}),
+                         "cancelled (issue_reassigned)")
+        self.assertEqual(pc.run_label(run, {"resultJson": {"cancellation": {"expected": True}}}),
+                         "cancelled (issue_reassigned)")
+
+    def test_other_cancellations_keep_their_reason(self):
+        self.assertEqual(pc.run_label({"status": "cancelled", "errorCode": "agent_paused"}, self.HANDED),
+                         "cancelled (agent_paused)")
+        self.assertEqual(pc.run_label({"status": "cancelled"}), "cancelled")
+        self.assertEqual(pc.run_label({}), "unknown")
+
+    def test_other_statuses_unchanged(self):
+        for s in ("succeeded", "failed", "running", "queued", "timed_out", "interrupted"):
+            self.assertEqual(pc.run_label({"status": s, "errorCode": "issue_reassigned"}, self.HANDED), s)
+
+
 class PathOverlap(unittest.TestCase):
     def test_same_file(self):
         self.assertTrue(pc.paths_overlap(P("src/a.ts"), P("src/a.ts")))

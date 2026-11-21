@@ -423,17 +423,33 @@ def relay(rr, sr, key, run_id, api, head_now, identity, reviewer_agent_id, now, 
             _post_comment(api, issue["id"], render_comment(v, run_id), run_id, lock["headSha"], sleep)
         _with_retry(lambda: api("PATCH", f"/issues/{issue['id']}", decision_body(v, run_id)), sleep)
     except Transient as e:
-        rp.audit(rr, "relay-refused", now, issue=key, head=lock["headSha"], run_id=run_id, reason=f"transient: {e}")
+        _audit_best_effort(rr, "relay-refused", now, issue=key, head=lock["headSha"], run_id=run_id,
+                           reason=f"transient: {e}")
         raise RelayRefused(f"{e}; re-run review-relay later (the receipt makes it safe), or the Board decides by "
                            f"hand: pc.py approve {key} or pc.py request-changes {key}")
     except Exception as e:
-        rp.audit(rr, "relay-refused", now, issue=key, head=lock["headSha"], run_id=run_id, reason=str(e)[:300])
+        _audit_best_effort(rr, "relay-refused", now, issue=key, head=lock["headSha"], run_id=run_id,
+                           reason=str(e)[:300])
         raise RelayRefused(f"Paperclip refused the relay ({str(e)[:200]}). The findings comment stays; "
                                  f"the Board decides by hand: pc.py approve {key} or pc.py request-changes {key}")
-    rp.audit(rr, "relay", now, issue=key, head=lock["headSha"], run_id=run_id, reason=v["verdict"],
-             reviewId=lock["reviewId"], reviewIssueId=lock["reviewIssueId"])
-    note = _close_review_issue(api, lock["reviewIssueId"], sleep)
+    try:
+        rp.audit(rr, "relay", now, issue=key, head=lock["headSha"], run_id=run_id, reason=v["verdict"],
+                 reviewId=lock["reviewId"], reviewIssueId=lock["reviewIssueId"])
+        audit_note = ""
+    except OSError as e:  # the decision is recorded in Paperclip; only the local audit line is missing
+        audit_note = (f"; WARNING: the decision is recorded in Paperclip but the audit log could not be written "
+                      f"({e}); review-pack --unstage will need --abandon")
+    note = _close_review_issue(api, lock["reviewIssueId"], sleep) + audit_note
     return f"{key}: relayed {v['verdict']} from run {run_id} ({len(v['findings'])} findings){note}"
+
+
+def _audit_best_effort(rr, event, now, **kw):
+    """Audit a refusal of the recording step. The comment, and perhaps the decision, may already be in Paperclip,
+    so a failed audit write must not escape as an error that the CLI would report as "Nothing was recorded"."""
+    try:
+        rp.audit(rr, event, now, **kw)
+    except OSError:
+        pass
 
 
 def _close_review_issue(api, sub_id, sleep):
@@ -820,8 +836,8 @@ def cmd_review_start(a, api, company_id, reviewer_agent_id, now=None, sleep=time
             raise rp.ReviewPackError(f"{a.key!r} is not an issue key")
         print(review_start(rr, sr, key, api, company_id(), reviewer_agent_id(), a.identity, now, sleep))
         return 0
-    except (rp.ReviewPackError, OSError, Transient) as e:
-        reason = str(e) if isinstance(e, rp.ReviewPackError) else f"error: {e}"
+    except Exception as e:  # review_start fails closed; every failure becomes an audited refusal
+        reason = _refusal_reason(e)
         try:
             rp.audit(rr, "refuse", now, issue=key, reason=f"review-start: {reason}")
         except OSError:
@@ -864,6 +880,18 @@ def github_head(manifest, token=None, transport=None):
     return head_now
 
 
+def _refusal_reason(e):
+    """A one-line reason for an audited refusal. Before A3, a Paperclip failure in the check phase (network or 5xx
+    after the retries, or a 4xx such as an unknown issue) escaped as a raw exception with no audit line."""
+    if isinstance(e, rp.ReviewPackError):
+        return str(e)
+    if isinstance(e, OSError):
+        return f"filesystem error: {e}"
+    if isinstance(e, Transient):
+        return f"Paperclip did not answer ({str(e)[:200]})"
+    return f"check failed ({type(e).__name__}: {str(e)[:200]})"  # a Paperclip 4xx, or an unexpected error
+
+
 def cmd_review_relay(a, api, reviewer_agent_id, head_now=None, now=None, sleep=time.sleep):
     """CLI entry. A failed check is audited as `refuse` (nothing recorded in Paperclip); a refused or failed
     recording is audited by relay() as `relay-refused`."""
@@ -887,8 +915,8 @@ def cmd_review_relay(a, api, reviewer_agent_id, head_now=None, now=None, sleep=t
         return 0
     except RelayRefused:
         raise
-    except (rp.ReviewPackError, OSError) as e:
-        reason = str(e) if isinstance(e, rp.ReviewPackError) else f"filesystem error: {e}"
+    except Exception as e:  # every other failure happened before anything was recorded: an audited refusal
+        reason = _refusal_reason(e)
         try:
             rp.audit(rr, "refuse", now, issue=key, run_id=a.run_id, reason=f"relay: {reason}")
         except OSError:
