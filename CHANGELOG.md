@@ -5,7 +5,7 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
-- `runtime/tools/comfy-draft.py` (D1, 2026-11-22): local ComfyUI concept drafts with the two approved models, no input images, output only to the staging folder with workflow and provenance JSON. `game-artist` may run its installed copy (exact rule). Tested with SDXL and FLUX.1 schnell.
+- `runtime/tools/comfy-draft.py` (D1, 2026-11-22): local ComfyUI concept drafts with the two approved models, no input images, output only to the staging folder with workflow and provenance JSON. `game-artist` may run its installed copy (exact rule). Tested with SDXL and FLUX.1 schnell. `runtime/tools/art-ops.py`: image operations (border-connected colour keying, trim, resize, canvas, sprite sheet, grade, contact sheet) with path limits; `game-artist` may run its installed copy.
 - Every reviewer role checks GitHub CI before a verdict (2026-11-22, SOU-39): rule added to the director, game-designer, ui-designer, gameplay-programmer, web-engineer and game-artist role files. `claude-read-only` gains `Bash(gh pr view*)` (read-only) so `director` can read the checks. Synced to the live agents.
 - Reviewers check GitHub CI before approving (2026-11-22, SOU-38): `qa` role file and `code-review-and-merge` step 2. A failing, errored or still-running check blocks approval. Uses `gh pr view --json statusCheckRollup`, already allowed.
 - Workflow-file pushes go through the Board (ADR-022 consequence, 2026-11-21, SOU-38): the author token has no Workflows permission, so the author commits the change and the Board pushes that exact commit to the Task Branch. Recorded in ADR-022 and the gameplay-programmer and web-engineer role files.

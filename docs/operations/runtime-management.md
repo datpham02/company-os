@@ -21,7 +21,7 @@ Execution workspaces persist "until a human closes them" (`VERIFIED`). Close a w
 
 ### 1.0 ComfyUI draft script (D1, 2026-11-22)
 
-`runtime/tools/comfy-draft.py` generates concept drafts with the local ComfyUI (`~/game-studio-workspace/tools/ComfyUI_windows_portable`, cu126 build for driver 572.83). `game-artist` runs the installed copy, so after changing the script run `Copy-Item runtime/tools/comfy-draft.py "$HOME/game-studio-workspace/tools/comfy-draft.py"`. Output goes to `~/game-studio-workspace/staging/art/<asset_id>/`. Test: `python -I runtime/tools/comfy-draft.py --asset smoke_test --model flux --prompt "..." --seed 7` (about 30 s on the RTX 3060).
+`runtime/tools/comfy-draft.py` generates concept drafts with the local ComfyUI (`~/game-studio-workspace/tools/ComfyUI_windows_portable`, cu126 build for driver 572.83). `game-artist` runs the installed copy, so after changing the script run `Copy-Item runtime/tools/comfy-draft.py "$HOME/game-studio-workspace/tools/comfy-draft.py"`. Output goes to `~/game-studio-workspace/staging/art/<asset_id>/`. `runtime/tools/art-ops.py` (crop, resize, colour-key, trim, canvas, sprite sheet, grade, contact sheet) is copied the same way to `$HOME/game-studio-workspace/tools/art-ops.py`; it uses ComfyUI's embedded Python (Pillow, NumPy). Test: `python -I runtime/tools/comfy-draft.py --asset smoke_test --model flux --prompt "..." --seed 7` (about 30 s on the RTX 3060).
 
 ### 1.1 Review-wake watchdog (`IMPLEMENTED`, 2026-11-04)
 
