@@ -114,7 +114,7 @@ def _line_count(pkg, side, path, old):
 def validate_verdict(v, lock, manifest, pkg):
     if v.get("schema") != rp.VERDICT_SCHEMA:
         raise rp.ReviewPackError(f"verdict schema is not {rp.VERDICT_SCHEMA}")
-    if v.get("verdict") not in VERDICTS:
+    if not isinstance(v.get("verdict"), str) or v.get("verdict") not in VERDICTS:
         raise rp.ReviewPackError(f"verdict {v.get('verdict')!r} is not one of {sorted(VERDICTS)}")
     if v.get("issue") != lock["issue"] or v.get("headSha") != lock["headSha"]:
         raise rp.ReviewPackError("the verdict's issue or headSha does not match the staging lock")
@@ -129,11 +129,11 @@ def validate_verdict(v, lock, manifest, pkg):
         if not isinstance(f, dict):
             raise rp.ReviewPackError(f"{what} is not an object")
         path, side, line = f.get("path"), f.get("side"), f.get("line")
-        if path not in files:
+        if not isinstance(path, str) or path not in files:
             raise rp.ReviewPackError(f"{what}: path {path!r} is not a file of the package")
-        if side not in SIDES:
+        if not isinstance(side, str) or side not in SIDES:
             raise rp.ReviewPackError(f"{what}: side {side!r} is not head or base")
-        if f.get("severity") not in SEVERITIES:
+        if not isinstance(f.get("severity"), str) or f.get("severity") not in SEVERITIES:
             raise rp.ReviewPackError(f"{what}: severity {f.get('severity')!r} is not one of {sorted(SEVERITIES)}")
         if not isinstance(f.get("title"), str) or not f["title"].strip():
             raise rp.ReviewPackError(f"{what}: title is missing")

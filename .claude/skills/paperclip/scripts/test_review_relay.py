@@ -308,7 +308,7 @@ class Check4Head(RelayEnv):
 class Check5Verdict(RelayEnv):
     def bad(self, fragment, final):
         api = FakePaperclip(final)
-        self.refused_nothing_written(fragment, api)
+        return self.refused_nothing_written(fragment, api)
 
     def test_no_result_event(self):
         api = self.pc()
@@ -365,6 +365,23 @@ class Check5Verdict(RelayEnv):
         self.bad("side", message(verdict("changes_requested", [finding(side="left")])))
         self.bad("severity", message(verdict("changes_requested", [finding(severity="blocker")])))
         self.bad("title is missing", message(verdict("changes_requested", [finding(title=" ")])))
+
+    def test_malformed_path_and_side_types_refused_without_type_error(self):
+        """Regression (PR #48 review): a list or dict in `path` or `side` raised TypeError (unhashable) before
+        the membership check, escaping the controlled refusal. It must be a ReviewPackError, nothing written."""
+        for field, value, fragment in (("path", [], "is not a file of the package"),
+                                       ("path", {}, "is not a file of the package"),
+                                       ("side", [], "is not head or base"),
+                                       ("side", {}, "is not head or base")):
+            with self.subTest(field=field, value=value):
+                e = self.bad(fragment, message(verdict("changes_requested", [finding(**{field: value})])))
+                self.assertNotIsInstance(e, TypeError)
+
+    def test_malformed_severity_and_verdict_types_refused_without_type_error(self):
+        for value in ([], {}):
+            with self.subTest(value=value):
+                self.bad("severity", message(verdict("changes_requested", [finding(severity=value)])))
+                self.bad("is not one of", message(verdict(value)))
 
 
 # ---------- §3.5 duplicates, retries and refusals ----------
@@ -504,6 +521,21 @@ class Cli(RelayEnv):
             rl.cmd_review_relay(self.args(), self.pc(status="todo"), lambda: REVIEWER, head_now=lambda: SHA_HEAD,
                                 now=LATER)
         self.assertEqual(self.events()[-1], "refuse")
+
+    def test_malformed_finding_refused_and_audited_through_the_cli(self):
+        """A malformed verdict goes through the CLI's controlled refusal: ReviewPackError, a `refuse` audit line,
+        nothing written to Paperclip (no TypeError escapes cmd_review_relay)."""
+        for field, value in (("path", []), ("side", {})):
+            with self.subTest(field=field):
+                api = self.pc(verdict("changes_requested", [finding(**{field: value})]))
+                with self.assertRaises(rp.ReviewPackError) as cm:
+                    rl.cmd_review_relay(self.args(), api, lambda: REVIEWER, head_now=lambda: SHA_HEAD, now=LATER,
+                                        sleep=self.sleeps.append)
+                self.assertIn("Nothing was recorded", str(cm.exception))
+                self.assertEqual(api.writes(), [])
+                e = rp.read_audit(self.rr)[-1]
+                self.assertEqual((e["event"], e["runId"]), ("refuse", RUN))
+                self.assertIn(f"finding #1: {field}", e["reason"])
 
     def test_bad_key(self):
         with self.assertRaises(rp.ReviewPackError) as cm:
