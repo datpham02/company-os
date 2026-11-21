@@ -46,6 +46,7 @@ Design, build and ship original games of any genre the Board approves, with ever
 | Project | Status | Registry |
 |---|---|---|
 | Lamplight Vigil | active | [knowledge/projects/lamplight-vigil](../../projects/lamplight-vigil/README.md) |
+| Deckbound | initializing | [knowledge/projects/deckbound](../../projects/deckbound/README.md) |
 
 ## Related
 [../README.md](../README.md) · [../../company/ORGANIZATION.md](../../company/ORGANIZATION.md) · [../../company/shared/game-platform-contract.md](../../company/shared/game-platform-contract.md)
