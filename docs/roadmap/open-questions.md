@@ -56,6 +56,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-044 | Does Paperclip run two consecutive stages (`review`, then `approval`) whose only participant is the same user (`local-board`) as intended? | Open (source reading suggests yes; not run live) | Review Package Phase 6, P6-B |
 | OQ-045 | How is one agent added to the running Soucean company with an exact configuration (the `code-reviewer`, then `game-artist`), given that the package import creates a company? | Open | Review Package Phase 6, P6-B; `game-artist` instance |
 | OQ-046 | Where is the REA MCP server registered so that only `gameplay-programmer` gets it, given that it runs on cursor-cli and Cursor's user config is shared with `web-engineer`? | Open | `rea` dependency, provider allocation |
+| OQ-047 | Can the account run each agent's configured model (`claude-fable-5-1`, `claude-sonnet-5-5`, `gpt-5.3-codex-high`) at its configured effort? | Open (stored config verified read-only; no run yet) | Provider allocation, agent model baseline 2026-11-21 |
 
 ## Entries
 
@@ -566,4 +567,11 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Unknowns:** whether Paperclip's Cursor adapter loads `~/.cursor/mcp.json` or a project `.cursor/mcp.json` at all, and whether it lets an agent call MCP tools without an approval prompt in non-interactive runs.
 - **Verification method:** in an isolated sandbox company, register a harmless stdio MCP server each way and check which agents' runs list it.
 - **Current assumption:** none; REA stays uninstalled for agents until this is answered.
+- **Status:** Open.
+
+### OQ-047 — Account access to the configured models
+- **Why it matters:** on 2026-11-21 the Board set one fixed model per agent (provider-allocation.md §1). The values were written to Soucean and read back, but stored configuration does not show that the subscription can run them.
+- **Evidence so far:** `claude_local` in Paperclip 2026.1023.0 lists `claude-fable-5-1` and `claude-sonnet-5-5` and passes `effort` as `--effort`; Claude Code 2.1.329 knows both ids (Sonnet 5.5 needs 2.1.284 or later). `agent models` (Cursor CLI 2026.11.05) lists `gpt-5.3-codex-high` for this account. No inference was run.
+- **Verification method:** the first normal Task run of each agent after the change; check its run log for the model actually used and for model or quota errors. No test run is started for this question alone.
+- **On failure:** stop that agent's work and ask the Board; no automatic fallback model (the Board's fixed-runtime rule). The pre-change snapshot is outside the repository; each change is also a Paperclip config revision.
 - **Status:** Open.

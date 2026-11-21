@@ -56,7 +56,7 @@ The adapter type is `cursor`. The API rejects `cursor_local` with "Unknown adapt
 
 `--sandbox enabled` does not work on Windows: the CLI exits with "Sandbox mode is enabled but not available on this system. Sandbox requires macOS or Linux."
 
-Current Stage 1 setting for `qa`: `extraArgs: ["--trust", "--auto-review"]`, model `gpt-5.3-codex`.
+Current setting for `gameplay-programmer` and `web-engineer` (Soucean, 2026-11-21): `extraArgs: ["--trust", "--auto-review"]`, model `gpt-5.3-codex-high`. The `cursor` adapter (Paperclip 2026.1023.0) has no reasoning-effort field (its UI `thinkingEffort` only selects `--mode plan|ask`), so effort is chosen through a model id variant that `agent models` lists. Model ids are per agent in `config/paperclip/agents.json`; see [provider-allocation.md](../../knowledge/company/policies/provider-allocation.md).
 
 ## 6. Failure modes
 

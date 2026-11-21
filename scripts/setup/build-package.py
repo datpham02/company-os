@@ -84,10 +84,22 @@ def check_reviewer_block(block, staging_root):
         sys.exit(f"the built code-reviewer configuration is refused: {e}")
 
 
+def model_fields(profile, agent):
+    """The agent's own `model` and `effort` (agents.json), which override the profile's. claude_local takes
+    `effort` as its own field (passed as --effort); the cursor adapter has none, so a Cursor agent names its
+    effort in the model id (for example gpt-5.3-codex-high) and an `effort` key is refused, never dropped."""
+    out = {k: agent[k] for k in ("model", "effort") if agent.get(k)}
+    if "effort" in out and profile["adapter"] != "claude_local":
+        sys.exit(f"agents.json: 'effort' is only supported for claude_local, not {profile['adapter']!r};"
+                 " use the model id variant instead")
+    return out
+
+
 def adapter_block(profile, agent, rules, prefix, workspace, cursor_cmd, staging_root=None, reviewer_cwd=None):
     sub = lambda xs: [x.replace("{PREFIX}", prefix) for x in xs]
     cfg = dict(profile.get("config", {}))
     cfg["cwd"] = workspace
+    cfg.update(model_fields(profile, agent))
     if is_strict_reviewer(profile):
         cfg["cwd"] = os.path.normpath(reviewer_cwd)
         cfg["extraArgs"] = reviewer_args(profile, staging_root)

@@ -5,6 +5,7 @@
 For every agent in config/paperclip/agents.json it compares, without writing anything:
 - adapter type;
 - adapterConfig.extraArgs, as build-package.py builds them for the company's issue prefix;
+- adapterConfig.model and adapterConfig.effort (the agent's own values, else the profile's);
 - runtimeConfig.heartbeat (`enabled`, `maxConcurrentRuns`);
 - the names of `env` bindings (never their values) against the declared secrets;
 - the managed AGENTS.md against the role file (as sync-instructions.py --dry-run does).
@@ -86,6 +87,11 @@ def drift(conf, company, agents_full, bodies, live_bodies, bp):
                        f"{', order only' if not missing and not extra else ''})"
                        + (f"; first missing: {missing[0][:80]!r}" if missing else "")
                        + (f"; first extra: {extra[0][:80]!r}" if extra else ""))
+        want_cfg = {**prof.get("config", {}), **bp.model_fields(prof, spec)}
+        for key in ("model", "effort"):
+            got = (live.get("adapterConfig") or {}).get(key)
+            if want_cfg.get(key) != got:
+                out.append(f"{slug}: {key} is {got!r}, expected {want_cfg.get(key)!r}")
         want_hb = (spec.get("runtime") or conf["runtime"]).get("heartbeat", {})
         got_hb = ((live.get("runtimeConfig") or {}).get("heartbeat")) or {}
         for key in ("enabled", "maxConcurrentRuns"):

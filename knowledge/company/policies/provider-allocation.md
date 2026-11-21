@@ -10,9 +10,19 @@ Provider is configuration, not identity ([ADR-008](../../../docs/decisions/ADR-0
 | Provider | Paperclip adapter | Status | Agents today |
 |---|---|---|---|
 | Claude Code | `claude_local` | Connected | 7 of 9: `director`, `producer`, `project-manager`, `game-designer`, `ui-designer`, `qa-engineer`, `game-artist` (added 2026-11-21) |
-| Cursor CLI (`gpt-5.3-codex`) | `cursor` | Connected | `gameplay-programmer`, `web-engineer` |
+| Cursor CLI | `cursor` | Connected | `gameplay-programmer`, `web-engineer` |
 | Gemini CLI | `gemini_local` | Tried 2026-11-04; login failed; uninstalled | — |
 | Codex CLI | `codex_local` | Installed (0.166.0, OQ-009); no account, deferred by the Board on 2026-11-21 (OQ-010) | — |
+
+**Models and effort (Board, 2026-11-21).** Each agent has one fixed runtime and one model; there is no automatic fallback or per-task routing. The values live per agent in `config/paperclip/agents.json` (`model`, and `effort` for `claude_local`), and `scripts/setup/check-agent-drift.py` compares them with the live company.
+
+| Agents | Adapter | Model id | Effort |
+|---|---|---|---|
+| `director`, `game-designer` | `claude_local` | `claude-fable-5-1` | `effort: high` (passed as `--effort`) |
+| `producer`, `project-manager`, `game-artist`, `qa-engineer`, `ui-designer` | `claude_local` | `claude-sonnet-5-5` | `effort: medium` |
+| `gameplay-programmer`, `web-engineer` | `cursor` | `gpt-5.3-codex-high` | in the model id; the `cursor` adapter has no effort field |
+
+Departures from the Board's first target, approved on 2026-11-21: Fable 5.2 is not in the Paperclip 2026.1023.0 `claude_local` catalog, so Fable 5.1 is used; the Cursor account lists no "GPT-5.6 Codex", so the Codex line stays at 5.3 with High effort; `qa-engineer` and `ui-designer` stay on Claude Code, because a switch to `cursor` drops their Claude allow and deny lists (Paperclip keeps only adapter-agnostic keys on an adapter change). Whether the account can use each model is `UNVERIFIED` until each agent's first run (OQ-047).
 
 On 2026-11-04 (the earlier company `GAM`) Cursor ran only `qa` reviews, which often ended without a recorded decision (E5 in [task-contract.md](../standards/task-contract.md)). In Soucean, Cursor runs the two implementation roles; they have no allow list, an accepted risk until the authentication migration (implementation plan D-05).
 
