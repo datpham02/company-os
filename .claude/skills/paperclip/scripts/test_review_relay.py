@@ -174,6 +174,9 @@ class FakePaperclip:
             return dict(self.agent)
         if (method, path) == ("GET", f"/companies/{COMPANY}/heartbeat-runs?agentId={REVIEWER}"):
             return [{"id": r["runId"], "status": r["status"]} for r in self.runs]
+        if (method, path) == ("GET", f"/companies/{COMPANY}/issues?assigneeAgentId={REVIEWER}"
+                                     f"&status=todo,in_progress,in_review,blocked&limit=50"):
+            return [dict(i) for i in getattr(self, "assigned", [])]
         if (method, path) == ("POST", f"/agents/{REVIEWER}/wakeup?companyId={COMPANY}"):
             self.wakes.append(body)
             err, started = self.wake_error or (None, False)
@@ -1307,6 +1310,17 @@ class ReviewRun(RelayEnv):
         with self.assertRaises(KeyboardInterrupt):
             self.run_review(on_sleep=interrupt)
         self.assertEqual(self.api.agent["status"], "paused")
+
+    def test_open_assigned_issue_blocks_the_run(self):
+        """An earlier review's sub-issue still open could start a run the moment the reviewer is resumed."""
+        self.api.assigned = [{"identifier": "SOU-50", "assigneeAgentId": REVIEWER, "status": "in_progress"}]
+        with self.assertRaisesRegex(rp.ReviewPackError, r"open assigned issues \[\('SOU-50', 'in_progress'\)\]"):
+            self.run_review()
+        self.assertEqual(self.lifecycle(), [])  # never resumed
+        self.assertIn("must be closed or cancelled", rl.review_run_check(self.api, COMPANY, REVIEWER))
+        # an issue assigned to someone else in the answer is not counted (filter checked on our side too)
+        self.api.assigned = [{"identifier": "SOU-51", "assigneeAgentId": "other", "status": "in_progress"}]
+        self.assertNotIn("SOU-51", rl.review_run_check(self.api, COMPANY, REVIEWER))
 
     def test_check(self):
         self.assertIn("is paused with no active run", rl.review_run_check(self.api, COMPANY, REVIEWER))

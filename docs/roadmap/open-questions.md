@@ -53,6 +53,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-041 | Does `maxConcurrentRuns: 1` enforce WIP 1 without delaying an agent's review wakes? | Answered from source (not run): wakes are queued, so a busy reviewer's review waits | Task contract, ADR-017 |
 | OQ-042 | How can a reviewer be kept from writing to the author's Task Workspace and branch (G-13)? | Open | Security, ADR-006, task-contract §8 |
 | OQ-043 | Can the studio run Paperclip in `authenticated` mode on Windows, so that no local process is the Board by default (G-14)? | Partially verified (sandbox, no agent runs): works on Windows and closes keyless Board access; migration and script auth needed | Security, Runtime prerequisites |
+| OQ-044 | Does Paperclip run two consecutive stages (`review`, then `approval`) whose only participant is the same user (`local-board`) as intended? | Open (source reading suggests yes; not run live) | Review Package Phase 6, P6-B |
+| OQ-045 | How is one agent added to the running Soucean company with an exact configuration (the `code-reviewer`), given that the package import creates a company? | Open | Review Package Phase 6, P6-B |
 
 ## Entries
 
@@ -538,3 +540,16 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 
 ## Related documents
 - [../conventions.md](../conventions.md) · [../decisions/README.md](../decisions/README.md) · [phases.md](phases.md)
+
+### OQ-044 — Two consecutive stages with the same user participant
+- **Why it matters:** Phase 6 pilot Tasks (`pc.py create --review-package`) have a `review` stage and an `approval` stage, both for `local-board`. The Verdict Relay records the review decision; the Board then decides the approval stage.
+- **Current assumption:** it works. Paperclip 2026.1023.0 (`services/issue-execution-policy.js`, `selectStageParticipant`) excludes only the issue's `returnAssignee` (the author) when it picks the next stage's participant, not the participant who just decided.
+- **Verification method:** P6-B, on an `OPT` sandbox issue: approve the `review` stage as `local-board` and check that the issue moves to the `approval` stage with `local-board` as participant.
+- **Impact if incorrect:** drop the approval stage (`--review-package --no-approval`); the Board's merge stays the gate.
+- **Status:** Open.
+
+### OQ-045 — Adding one agent to the running company
+- **Why it matters:** the `code-reviewer` must be created in Soucean with exactly the configuration `build-package.py --with-reviewer` produces, paused, without re-importing the company.
+- **Current assumption:** an agent can be created through the Paperclip UI or API (`POST /companies/<id>/agents`, used for sandbox agents in R5) with that configuration; `review-start`'s `check_reviewer_config` then confirms it.
+- **Verification method:** P6-B, with the Board's approval; record the exact procedure in the runbook.
+- **Status:** Open.

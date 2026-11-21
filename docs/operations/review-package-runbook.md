@@ -13,7 +13,7 @@
 | Relay checks; F1 re-check; Board merge after an approved relay | **Sandbox-validated** (R5, 6b re-run, test M) |
 | `--cleanup` reads closure from Paperclip (`completedAt` / `cancelledAt`) | **Sandbox-validated** (R5 test 8) |
 | W1: task read from the Paperclip issue (task-contract §2 sections), no state or task file | Offline tests only. **Not yet run against a live issue** |
-| W3: `create --review-package` stages `review` then `approval`, both `local-board` | Offline tests; Paperclip source read. **Two consecutive `local-board` stages not yet run live** (checked in P6-B on an `OPT` issue) |
+| W3: `create --review-package` stages `review` then `approval`, both `local-board` | Offline tests; Paperclip source read. **Two consecutive `local-board` stages not yet run live** (OQ-044, checked in P6-B on an `OPT` issue) |
 | W4: `review-run` (resume, start, wait, pause) | Offline tests only. **Not yet run live** |
 | Reviewer created in Soucean from `claude-reviewer-strict` | **Not done** (P6-B) |
 | No worktree or branch changed during a production review (§12 criterion 9) | **Not yet verified in production** (P6-C) |
@@ -35,7 +35,7 @@ These are tool-surface limits of Claude Code. The reviewer's process is **not** 
    - **Track the expiry:** record the expiry date in your calendar with a reminder 14 days before. The previous token lapsed silently (R5 F4); GitHub then answers 401 and nothing is packaged.
 4. **Reviewer agent** (`code-reviewer`, profile `claude-reviewer-strict`):
    - **Build:** `python -I scripts/setup/build-package.py --prefix SOU --with-reviewer --staging-root <Staging Root> --reviewer-cwd <reviewer folder> --out <dir>`. The build refuses a reviewer configuration that fails `check_reviewer_config`.
-   - **Create** the agent in Soucean with exactly that configuration, **paused**. How to add one agent to the existing company (UI or API) is decided and recorded in P6-B; importing a single agent into an existing company is `UNVERIFIED`.
+   - **Create** the agent in Soucean with exactly that configuration, **paused**. How to add one agent to the existing company (UI or API) is decided and recorded in P6-B; importing a single agent into an existing company is `UNVERIFIED` (OQ-045).
    - **Never resume it by hand** except through `review-run`. `post-import.py --resume` leaves it paused.
 5. **Checks:**
    - `pc.py review-run --check` says paused with no active run;
@@ -75,6 +75,7 @@ The author (`web-engineer`) pushes its Task Branch, opens the PR with its own to
 | GitHub 401 or 403 | The packager token expired or lacks access: the Board renews it (§1.3) |
 | "staging holds …" | Finish or unstage the other review first |
 | `review-run`: "not paused" or "active runs" | `review-run --check`; wait, or cancel the run, then pause the reviewer |
+| `review-run`: "open assigned issues" | An earlier review's sub-issue is still open: cancel it (`pc.py show <sub-issue>`, then cancel it in Paperclip), then run again. Resuming the reviewer with it open could start a run on it |
 | `review-run`: "ambiguous" or "recorded no reviewer run" | Nothing is retried. `review-pack --status`, then `review-start` again; it recovers or stops with instructions |
 | `review-run`: timeout | The reviewer is paused, which can cancel the run. Check the run; start again or decide by hand |
 | Relay: tool surface, log hash, verdict format, `reviewId` or challenge, head moved | The Board decides by hand. If the reviewer used a forbidden tool, follow §6 |

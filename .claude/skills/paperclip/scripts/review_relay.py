@@ -910,27 +910,40 @@ class ReviewerNotPaused(rp.ReviewPackError):
     """The reviewer could not be confirmed paused after a review-run; it may be left resumed."""
 
 
+OPEN_ASSIGNED = "todo,in_progress,in_review,blocked"  # statuses on which a resumed agent can be woken
+
+
 def reviewer_state(api, company_id, reviewer_agent_id, sleep=time.sleep):
-    """The reviewer agent's status and its active runs, read from Paperclip."""
+    """The reviewer agent's status, its active runs, and the open issues assigned to it, read from Paperclip.
+    An open assigned issue (for example the sub-issue of an earlier review whose relay was refused) can start a run
+    as soon as the reviewer is resumed (R2: Paperclip's issue_disposition_repair)."""
     agent = _with_retry(lambda: api("GET", f"/agents/{reviewer_agent_id}"), sleep)
     runs = _with_retry(lambda: api("GET", f"/companies/{company_id}/heartbeat-runs?agentId={reviewer_agent_id}"),
                        sleep)
-    if not isinstance(agent, dict) or not isinstance(runs, list):
-        raise rp.ReviewPackError("Paperclip returned a malformed agent or run list for the reviewer")
+    assigned = _with_retry(lambda: api("GET", f"/companies/{company_id}/issues?assigneeAgentId={reviewer_agent_id}"
+                                              f"&status={OPEN_ASSIGNED}&limit=50"), sleep)
+    if not isinstance(agent, dict) or not isinstance(runs, list) or not isinstance(assigned, list):
+        raise rp.ReviewPackError("Paperclip returned a malformed agent, run or issue list for the reviewer")
     active = [r for r in runs if isinstance(r, dict) and r.get("status") in rp.ACTIVE_RUN]
-    return {"status": agent.get("status"), "active": [(r.get("id"), r.get("status")) for r in active]}
+    wanted = set(OPEN_ASSIGNED.split(","))
+    open_issues = [i for i in assigned if isinstance(i, dict) and i.get("assigneeAgentId") == reviewer_agent_id
+                   and i.get("status") in wanted]
+    return {"status": agent.get("status"), "active": [(r.get("id"), r.get("status")) for r in active],
+            "openIssues": [(i.get("identifier"), i.get("status")) for i in open_issues]}
 
 
 def review_run_check(api, company_id, reviewer_agent_id, sleep=time.sleep):
     """W4 recovery check: is the reviewer left resumed (for example after a killed review-run)?"""
     st = reviewer_state(api, company_id, reviewer_agent_id, sleep)
+    note = (f"; open issues assigned to it {st['openIssues']} must be closed or cancelled before the next "
+            "review-run" if st["openIssues"] else "")
     if st["active"]:
         return (f"code-reviewer is {st['status']} with active runs {st['active']}: a review is running. Wait, or "
-                "cancel the run (pc.py cancel-run <id>); then make sure the reviewer is paused")
+                f"cancel the run (pc.py cancel-run <id>); then make sure the reviewer is paused{note}")
     if st["status"] != "paused":
         return (f"LEFT RESUMED: code-reviewer is {st['status']} with no active run. Pause it now in the Paperclip "
-                "UI (Agents > code-reviewer > Pause), then run this check again")
-    return "code-reviewer is paused with no active run"
+                f"UI (Agents > code-reviewer > Pause), then run this check again{note}")
+    return f"code-reviewer is paused with no active run{note}"
 
 
 def review_run(rr, sr, key, api, company_id, reviewer_agent_id, identity, now, sleep=time.sleep,
@@ -950,6 +963,9 @@ def review_run(rr, sr, key, api, company_id, reviewer_agent_id, identity, now, s
                                  "Check with: pc.py review-run --check")
     if st["active"]:
         raise rp.ReviewPackError(f"code-reviewer has active runs {st['active']}; wait or cancel them first")
+    if st["openIssues"]:
+        raise rp.ReviewPackError(f"code-reviewer has open assigned issues {st['openIssues']}; resuming it could start "
+                                 "runs on them. Close or cancel them first (an earlier review's sub-issue)")
     lines, attempted, failed = [], False, True
     try:
         attempted = True  # set before the call: a lost response may still have resumed it
