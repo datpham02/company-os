@@ -34,7 +34,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-022 | Engine choice and worktree compatibility | Open | Per project |
 | OQ-023 | How do role instructions reach the CLI under Paperclip adapters? | Partially verified | Stage 1 setup |
 | OQ-024 | Paperclip deployment mode and installation on this machine | Resolved (`local_trusted` on loopback, 2026.1023.0); authenticated mode in OQ-043 | Stage 1 |
-| OQ-025 | Backup procedure for Paperclip data | Partially verified (backup creation works; restore untested) | Operations |
+| OQ-025 | Backup procedure for Paperclip data | Partially verified (backup creation works; cold-copy restore verified in isolation 2026-11-21; method acceptance pending) | Operations |
 | OQ-026 | Is Hoppscotch MCP needed? | Open | Dependency evaluation |
 | OQ-027 | Stronger filesystem isolation without Docker | Open | Security |
 | OQ-028 | Framework Repository not yet under Git; GitHub account mapping | Resolved (now `datpham02/company-os`, ADR-018) | — |
@@ -273,7 +273,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
   - On this machine every backup uses the JavaScript engine, because no `pg_dump` or `psql` is installed. Open upstream issue #17854 reports that restoring such a backup drops all CHECK constraints.
   - Candidates for an isolated test, both unsupported: a cold copy of the stopped instance folder (recommended first), or a dump made with `pg_dump` 18 and then restored.
   - Still open; E8 is not met.
-- **Status:** Partially verified (backup creation only).
+- **WS-1 isolated run (2026-11-21):** a cold copy of a stopped sandbox instance folder (candidate B) started healthy, with data identical to the source (companies, issues, policies and states, comments, memberships, secret metadata, activity, master key; decision rows not read directly), and accepted writes. The copy is crash-consistent: on Windows the embedded Postgres goes down with Paperclip. See [auth-migration-phase-b.md](../architecture/auth-migration-phase-b.md) §7.1. The method is unsupported, so E8 is met only once the Board accepts it.
+- **Status:** Partially verified (backup creation; cold-copy restore verified in isolation, method acceptance pending).
 
 ### OQ-026 — Hoppscotch MCP
 - **Found:** Official package `@hoppscotch/mcp-server` (1.0.2); configured locally. Useful only for games with HTTP backends.

@@ -62,9 +62,21 @@ def write_config(name, conf):
         json.dump(conf, f, indent=2)
 
 
+def npm_root():
+    return subprocess.run(["cmd", "/c", "npm", "root", "-g"], capture_output=True, text=True).stdout.strip()
+
+
+def paperclip_cmd():
+    """node + the global paperclipai entry point, as the live instance runs (no cmd wrapper: it dies detached)."""
+    entry = os.path.join(npm_root(), "paperclipai", "dist", "index.js")
+    node = shutil.which("node")
+    if not (node and os.path.isfile(entry)):
+        raise Stop(f"node or {entry} not found")
+    return [node, entry]
+
+
 def pg_bin(tool):
-    npm_root = subprocess.run(["cmd", "/c", "npm", "root", "-g"], capture_output=True, text=True).stdout.strip()
-    path = os.path.join(npm_root, "paperclipai", "node_modules", "@embedded-postgres", "windows-x64", "native",
+    path = os.path.join(npm_root(), "paperclipai", "node_modules", "@embedded-postgres", "windows-x64", "native",
                         "bin", tool + ".exe")
     if not os.path.isfile(path):
         raise Stop(f"{tool} not found at {path}")
@@ -84,7 +96,8 @@ def cmd_init(a):
         raise Stop(f"{home(a.name)} already exists")
     os.makedirs(os.path.join(d, "secrets"))
     conf = {
-        "$meta": {"version": 1, "source": "company-os auth-sandbox"},
+        "$meta": {"version": 1, "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime()),
+                  "source": "onboard"},  # the only values Paperclip's doctor accepts
         "database": {"mode": "embedded-postgres", "embeddedPostgresDataDir": os.path.join(d, "db"),
                      "embeddedPostgresPort": a.pg_port,
                      "backup": {"enabled": False, "intervalMinutes": 60, "retentionDays": 30,
@@ -131,10 +144,10 @@ def cmd_start(a):
         if listening(p):
             raise Stop(f"port {p} is already in use")
     log = open(os.path.join(home(a.name), "console.log"), "ab")
-    flags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS if os.name == "nt" else 0
-    subprocess.Popen(["cmd", "/c", "paperclipai", "run", "--data-dir", home(a.name), "--instance", a.name,
-                      "--no-repair"], env=env_for(a.name), stdin=subprocess.DEVNULL, stdout=log, stderr=log,
-                     cwd=home(a.name), creationflags=flags)
+    flags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+    subprocess.Popen(paperclip_cmd() + ["run", "--data-dir", home(a.name), "--instance", a.name, "--no-repair"],
+                     env=env_for(a.name), stdin=subprocess.DEVNULL, stdout=log, stderr=log, cwd=home(a.name),
+                     creationflags=flags)
     end = time.time() + 240
     while time.time() < end:
         try:
@@ -142,7 +155,8 @@ def cmd_start(a):
             if h.get("status") == "ok":
                 for p in LIVE_PORTS:
                     if listening(p):
-                        raise Stop(f"live port {p} opened while the sandbox started; stopping")
+                        raise Stop(f"live port {p} opened while the sandbox started; run `auth-sandbox.py stop {a.name}` "
+                                   "now and find out what opened it")
                 print(f"{a.name} up on {port}: {h.get('deploymentMode')}, version {h.get('version')}")
                 return
         except OSError:
@@ -152,26 +166,48 @@ def cmd_start(a):
 
 
 def procs_of(name):
-    """PIDs of processes whose command line names this sandbox home."""
-    ps = ("Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like '*" + home(name).replace("'", "''")
-          + "*' } | ForEach-Object { $_.ProcessId }")
+    """PIDs of the Paperclip processes (never Postgres) whose command line names this sandbox home."""
+    ps = ("Get-CimInstance Win32_Process | Where-Object { $_.Name -ne 'postgres.exe' -and $_.CommandLine -like '*"
+          + home(name).replace("'", "''") + "*' } | ForEach-Object { $_.ProcessId }")
     out = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True).stdout
     me = os.getpid()
     return [int(x) for x in out.split() if x.strip().isdigit() and int(x) != me]
 
 
+def postmaster_alive(db):
+    """True while the postmaster named in postmaster.pid is running. A stale file (dead PID) means stopped."""
+    f = os.path.join(db, "postmaster.pid")
+    if not os.path.exists(f):
+        return False
+    with open(f, encoding="utf-8", errors="replace") as fh:
+        first = fh.readline().strip()
+    if not first.isdigit():
+        return True  # unreadable: assume running
+    out = subprocess.run(["tasklist", "/FI", f"PID eq {first}", "/NH"], capture_output=True, text=True).stdout
+    return first in out.split()
+
+
 def cmd_stop(a):
-    for pid in procs_of(a.name):
-        subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True)
+    """Order learned on 2026-11-21 (Paperclip 2026.1023.0, Windows):
+    1. stop only the Paperclip processes, never Postgres directly and no /T: pg_ctl stop while Paperclip runs makes
+       Paperclip start Postgres again, and killing the whole tree left an orphan worker holding the Postgres port;
+    2. pg_ctl stop -m fast, only if the postmaster is still alive. In practice the embedded postmaster goes down with
+       Paperclip, so the stop is crash-consistent (WAL recovery on the next start); the message says which."""
     db = config(a.name)["database"]["embeddedPostgresDataDir"]
-    if os.path.exists(os.path.join(db, "postmaster.pid")):
-        subprocess.run([pg_bin("pg_ctl"), "stop", "-D", db, "-m", "fast", "-w"], capture_output=True)
-    time.sleep(1)
+    for pid in procs_of(a.name):
+        subprocess.run(["taskkill", "/PID", str(pid), "/F"], capture_output=True)
+    time.sleep(2)
+    if postmaster_alive(db):
+        r = subprocess.run([pg_bin("pg_ctl"), "stop", "-D", db, "-m", "fast", "-w"], capture_output=True, text=True)
+        print(f"pg_ctl stop: {(r.stdout or r.stderr).strip().splitlines()[-1:] or ['ok']}")
+    time.sleep(2)
     conf = config(a.name)
     busy = [p for p in (conf["server"]["port"], conf["database"]["embeddedPostgresPort"]) if listening(p)]
-    if busy or os.path.exists(os.path.join(db, "postmaster.pid")):
+    if busy or postmaster_alive(db):
         raise Stop(f"{a.name} not fully stopped (listening: {busy})")
-    print(f"{a.name} stopped")
+    stale = os.path.exists(os.path.join(db, "postmaster.pid"))
+    print(f"{a.name} stopped" + (" (Postgres went down with Paperclip: crash-consistent, recovered from WAL on the "
+                                 "next start)" if stale else " (clean Postgres shutdown)"))
 
 
 def cmd_clone(a):
@@ -179,8 +215,8 @@ def cmd_clone(a):
     check_ports(a.port, a.pg_port)
     src, dst = home(a.name), home(a.new)
     conf = config(a.name)
-    if listening(conf["server"]["port"]) or os.path.exists(
-            os.path.join(conf["database"]["embeddedPostgresDataDir"], "postmaster.pid")):
+    if listening(conf["server"]["port"]) or listening(conf["database"]["embeddedPostgresPort"]) or \
+            postmaster_alive(conf["database"]["embeddedPostgresDataDir"]):
         raise Stop(f"{a.name} is running; a cold copy needs it stopped")
     if os.path.exists(dst):
         raise Stop(f"{dst} already exists")
