@@ -55,6 +55,7 @@ class RunLabel(unittest.TestCase):
         self.assertEqual(pc.run_label({"status": "cancelled", "errorCode": "agent_paused"}, self.HANDED),
                          "cancelled (agent_paused)")
         self.assertEqual(pc.run_label({"status": "cancelled"}), "cancelled")
+        self.assertEqual(pc.run_label({}), "unknown")
 
     def test_other_statuses_unchanged(self):
         for s in ("succeeded", "failed", "running", "queued", "timed_out", "interrupted"):

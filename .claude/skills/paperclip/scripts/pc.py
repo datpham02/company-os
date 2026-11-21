@@ -211,7 +211,7 @@ def run_label(run, detail=None):
     reassignment"): errorCode issue_reassigned. The run record (GET /heartbeat-runs/<id>, `detail`) then has
     resultJson.reassignmentStopConfirmed and cancellation.expected; such a run finished its turn and is shown as
     "handed over". Any other cancellation keeps its reason; the run list alone is never enough to say "handed over"."""
-    status = run.get("status")
+    status = run.get("status") or "unknown"
     if status != "cancelled":
         return status
     code = run.get("errorCode")
@@ -248,7 +248,7 @@ def cmd_show(a):
         if r.get("status") == "cancelled" and r.get("errorCode") == "issue_reassigned":
             try:
                 detail = call("GET", f"/heartbeat-runs/{r['runId']}")
-            except ApiError:
+            except (ApiError, ValueError):
                 detail = None  # shown as cancelled (issue_reassigned): not confirmed as a hand-over
         label = run_label(r, detail)
         note = ("ended its turn by handing the issue over (Paperclip records it as cancelled)"

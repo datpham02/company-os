@@ -423,11 +423,13 @@ def relay(rr, sr, key, run_id, api, head_now, identity, reviewer_agent_id, now, 
             _post_comment(api, issue["id"], render_comment(v, run_id), run_id, lock["headSha"], sleep)
         _with_retry(lambda: api("PATCH", f"/issues/{issue['id']}", decision_body(v, run_id)), sleep)
     except Transient as e:
-        rp.audit(rr, "relay-refused", now, issue=key, head=lock["headSha"], run_id=run_id, reason=f"transient: {e}")
+        _audit_best_effort(rr, "relay-refused", now, issue=key, head=lock["headSha"], run_id=run_id,
+                           reason=f"transient: {e}")
         raise RelayRefused(f"{e}; re-run review-relay later (the receipt makes it safe), or the Board decides by "
                            f"hand: pc.py approve {key} or pc.py request-changes {key}")
     except Exception as e:
-        rp.audit(rr, "relay-refused", now, issue=key, head=lock["headSha"], run_id=run_id, reason=str(e)[:300])
+        _audit_best_effort(rr, "relay-refused", now, issue=key, head=lock["headSha"], run_id=run_id,
+                           reason=str(e)[:300])
         raise RelayRefused(f"Paperclip refused the relay ({str(e)[:200]}). The findings comment stays; "
                                  f"the Board decides by hand: pc.py approve {key} or pc.py request-changes {key}")
     try:
@@ -439,6 +441,15 @@ def relay(rr, sr, key, run_id, api, head_now, identity, reviewer_agent_id, now, 
                       f"({e}); review-pack --unstage will need --abandon")
     note = _close_review_issue(api, lock["reviewIssueId"], sleep) + audit_note
     return f"{key}: relayed {v['verdict']} from run {run_id} ({len(v['findings'])} findings){note}"
+
+
+def _audit_best_effort(rr, event, now, **kw):
+    """Audit a refusal of the recording step. The comment, and perhaps the decision, may already be in Paperclip,
+    so a failed audit write must not escape as an error that the CLI would report as "Nothing was recorded"."""
+    try:
+        rp.audit(rr, event, now, **kw)
+    except OSError:
+        pass
 
 
 def _close_review_issue(api, sub_id, sleep):
@@ -878,7 +889,7 @@ def _refusal_reason(e):
         return f"filesystem error: {e}"
     if isinstance(e, Transient):
         return f"Paperclip did not answer ({str(e)[:200]})"
-    return f"Paperclip refused or failed ({type(e).__name__}: {str(e)[:200]})"
+    return f"check failed ({type(e).__name__}: {str(e)[:200]})"  # a Paperclip 4xx, or an unexpected error
 
 
 def cmd_review_relay(a, api, reviewer_agent_id, head_now=None, now=None, sleep=time.sleep):
