@@ -19,8 +19,8 @@
  *        notify the Board once per run.
  *    A notice is a console line starting with "ATTENTION" plus a Windows toast.
  *
- * It only reads issues and calls `POST /api/agents/{id}/wakeup`; it never changes issue state
- * or posts comments; a dead run is reported, not cancelled. What it already did is kept in memory, so a restart may notify again.
+ * It reads issues and calls `POST /api/agents/{id}/wakeup`; the only issue state it changes is the
+ * Board-pre-approved release above, through pc.py. It posts no comments; a dead run is reported, not cancelled. What it already did is kept in memory, so a restart may notify again.
  *
  * Run with Node 24+ (native TypeScript type stripping), next to Paperclip:
  *   node runtime/tools/review-wake-watchdog.ts            # loop, every 60 s
@@ -29,11 +29,15 @@
  *          --interval <s> (60), --grace <s> (90, review wakes),
  *          --idle <s> (900), --blocked-grace <s> (600), --retry-loop <n> (3), --wake-cooldown <s> (21600),
  *          --dead-silence <s> (1200, 0 = off),
- *          --no-stuck (review wakes only), --no-toast (console only), --dry-run (log, do not wake or toast).
+ *          --no-stuck (review wakes only), --no-toast (console only), --dry-run (log, do not wake, toast or release),
+ *          --no-board-queue, --no-auto-release, --python <exe> (default python).
  * Requires Paperclip in local_trusted mode on loopback (Board context without login).
  */
 
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { autoReleaseCheck, classifyBoardWait, endedWaits, hasAutoReleaseMarker, parseReleaseOutput, type BoardIssue } from "./board-queue-rules.ts";
 import { classifyDeadRun, classifyStuck, decide, LIVE_RUN, type Finding, type Issue, type Options, type Run, type RunDetail } from "./stuck-rules.ts";
 
 function option(name: string, fallback: string): string {
@@ -50,6 +54,11 @@ const once = flag("once");
 const stuckEnabled = !flag("no-stuck");
 const toastEnabled = !flag("no-toast");
 const dryRun = flag("dry-run");
+const boardQueueEnabled = !flag("no-board-queue");
+const autoReleaseEnabled = !flag("no-auto-release");
+const python = option("python", "python");
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const pcScript = resolve(repoRoot, ".claude", "skills", "paperclip", "scripts", "pc.py");
 const stuckOpts: Options = {
   idleSec: Number(option("idle", "900")),
   blockedGraceSec: Number(option("blocked-grace", "600")),
@@ -62,6 +71,8 @@ const REVIEW_ACTIVE = new Set(["queued", "starting", "running"]);
 // What the watchdog already did, in memory only (ADR-010: no run state in the repository).
 const notifiedKeys = new Set<string>();
 const lastWakeByIssue = new Map<string, number>();
+const boardWaitNotified = new Set<string>();
+const lastReleaseRefusal = new Map<string, string>();
 
 function log(message: string): void {
   console.log(`${new Date().toISOString()} ${message}`);
@@ -194,6 +205,49 @@ async function stuckSweep(companyId: string, companyName: string, issues: Issue[
   }
 }
 
+/** One toast per Board-wait episode; an episode ends when the issue stops waiting on the Board. */
+function boardQueue(companyName: string, issues: Issue[]): void {
+  const current = new Set<string>();
+  for (const issue of issues) {
+    const wait = classifyBoardWait(issue as BoardIssue);
+    if (!wait) continue;
+    current.add(wait.key);
+    if (boardWaitNotified.has(wait.key)) continue;
+    boardWaitNotified.add(wait.key);
+    log(`BOARD ${companyName}: ${wait.message}`);
+    toast(`${companyName}: ${issue.identifier} waits for you`, wait.message);
+  }
+  for (const key of endedWaits(boardWaitNotified, current)) boardWaitNotified.delete(key);
+}
+
+/** Release Board-pre-approved backlog issues whose blockers are done, through pc.py release (all guards kept). */
+async function autoRelease(companyId: string, companyName: string): Promise<void> {
+  const marked = (await listIssues(companyId, "backlog")).filter((row) => hasAutoReleaseMarker((row as BoardIssue).description));
+  for (const row of marked) {
+    const issue = await request<BoardIssue>("GET", `/issues/${row.id}`);
+    const check = autoReleaseCheck(issue);
+    if (!check.eligible) continue;
+    if (dryRun) {
+      log(`[dry-run] would run pc.py release ${issue.identifier}`);
+      continue;
+    }
+    const res = spawnSync(python, ["-I", pcScript, "release", issue.identifier], {
+      cwd: repoRoot, encoding: "utf-8", windowsHide: true, timeout: 120_000,
+      env: { ...process.env, PAPERCLIP_URL: api, PAPERCLIP_COMPANY: companyId },
+    });
+    const out = `${res.stdout ?? ""}${res.stderr ?? ""}${res.error ? res.error.message : ""}`;
+    const { released, detail } = parseReleaseOutput(issue.identifier, out);
+    if (released) {
+      lastReleaseRefusal.delete(issue.id);
+      log(`RELEASED ${companyName}: ${detail}`);
+      toast(`${companyName}: ${issue.identifier} started`, `${issue.title ?? ""} (auto-release approved by the Board)`.trim());
+    } else if (lastReleaseRefusal.get(issue.id) !== detail) {
+      lastReleaseRefusal.set(issue.id, detail); // log a refusal once until its reason changes (WIP, Write Set, ...)
+      log(`auto-release waits ${companyName}: ${detail}`);
+    }
+  }
+}
+
 async function sweepCompany(companyId: string, companyName: string): Promise<void> {
   const statuses = stuckEnabled ? "todo,in_progress,in_review,blocked" : "in_review";
   // The list endpoint omits executionState, recovery and blockers, so read each issue.
@@ -204,7 +258,9 @@ async function sweepCompany(companyId: string, companyName: string): Promise<voi
     return runCache.get(id)!;
   };
   await reviewWakes(companyId, issues, runsOf);
+  if (boardQueueEnabled) boardQueue(companyName, issues);
   if (stuckEnabled) await stuckSweep(companyId, companyName, issues, runsOf);
+  if (autoReleaseEnabled) await autoRelease(companyId, companyName);
 }
 
 async function sweep(): Promise<void> {
@@ -229,6 +285,7 @@ async function sweep(): Promise<void> {
 log(
   `studio watchdog: api=${api} interval=${intervalSec}s grace=${graceSec}s` +
     (stuckEnabled ? ` stuck(idle=${stuckOpts.idleSec}s blocked=${stuckOpts.blockedGraceSec}s retry-loop=${stuckOpts.retryLoopCount} cooldown=${stuckOpts.wakeCooldownSec}s dead-silence=${stuckOpts.deadSilenceSec}s toast=${toastEnabled})` : " stuck=off") +
+    ` board-queue=${boardQueueEnabled ? "on" : "off"} auto-release=${autoReleaseEnabled ? "on" : "off"}` +
     (dryRun ? " (dry-run)" : "") +
     (once ? " (once)" : ""),
 );
