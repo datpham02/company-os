@@ -716,6 +716,14 @@ def cmd_cancel_run(a):
     print(f"run {a.run_id} cancelled")
 
 
+def cmd_review_pack(a):
+    """review-pack through pc.py: --unstage asks Paperclip whether the reviewer agent still runs (R2)."""
+    def resolve(cid):
+        return agent(cid, review_pack.REVIEWER_AGENT)["id"]
+    return review_pack.cmd_review_pack(
+        a, reviewer_runs=lambda lock: review_relay.reviewer_run_state(call, lock, resolve))
+
+
 def cmd_review_relay(a):
     review_relay.cmd_review_relay(a, call, lambda: agent(company(a.company)["id"], review_pack.REVIEWER_AGENT)["id"])
 
@@ -786,7 +794,7 @@ def main():
     s = sub.add_parser("cancel-run", help="cancel a queued or running run")
     s.add_argument("run_id")
     s.set_defaults(fn=cmd_cancel_run)
-    review_pack.add_parser(sub)
+    review_pack.add_parser(sub).set_defaults(fn=cmd_review_pack)
     review_relay.add_parser(sub, cmd_review_relay)
     review_relay.add_start_parser(sub, cmd_review_start)
     a = p.parse_args()

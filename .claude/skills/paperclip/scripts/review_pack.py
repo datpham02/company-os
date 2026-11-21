@@ -908,10 +908,73 @@ def staging_status(rr, sr, state, now):
             "relayed": relayed(rr, lock), "ageHours": round(age_h, 1)}
 
 
-def unstage(rr, sr, state, abandon, now):
-    if os.path.exists(os.path.join(sr, OP_LOCK_FILE)):
-        raise ReviewPackError(f"a review-start is in progress ({os.path.join(sr, OP_LOCK_FILE)} exists); wait for it, "
-                              "or, after a crash, inspect the staging lock and Paperclip and delete that file by hand")
+def op_lock(sr, what, now):
+    """Exclusive short lock for state-changing staging operations (review-start, unstage), so they cannot
+    interleave. Never taken over automatically: a leftover file after a crash must be inspected and removed by
+    the Board. Returns its path; the caller removes it."""
+    path = os.path.join(sr, OP_LOCK_FILE)
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError:
+        raise ReviewPackError(f"another staging operation is in progress ({path} exists). If none is running "
+                              "(for example after a crash), check the staging lock and Paperclip, then delete "
+                              "that file by hand") from None
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(json.dumps({"op": what, "pid": os.getpid(), "at": iso(now)}) + "\n")
+    return path
+
+
+REVIEWER_ACTIVE = {"queued", "scheduled_retry", "running"}  # Paperclip 2026.1023.0 HEARTBEAT_RUN_STATUSES
+REVIEWER_TERMINAL = {"succeeded", "failed", "cancelled", "timed_out"}
+CHECK_STATES = {"active", "clear", "unverified"}
+
+
+def _reviewer_check(reviewer_runs, lock):
+    """Ask the injected Paperclip check (review_relay.reviewer_run_state, wired by pc.py) whether any run of the
+    reviewer agent may still use staging. review_pack itself opens no network connection. Without a check, or on
+    any error or malformed answer, the state is "unverified"."""
+    if reviewer_runs is None:
+        return {"state": "unverified", "reason": "no Paperclip check is available (run review-pack through pc.py)"}
+    try:
+        res = reviewer_runs(lock)
+    except Exception as e:  # any failure of the check is "cannot verify", never "clear"
+        return {"state": "unverified", "reason": f"the Paperclip check failed: {str(e)[:200]}"}
+    if not isinstance(res, dict) or res.get("state") not in CHECK_STATES:
+        return {"state": "unverified", "reason": "the Paperclip check returned no valid answer"}
+    return res
+
+
+def _unstage_decision(check, lock, abandon, was_relayed):
+    """R2 policy (docs/design/review-package-r2-unstage-design.md §3.3). Raises ReviewPackError to refuse."""
+    if check["state"] == "active":
+        run = (check.get("runs") or [{}])[0]
+        raise ReviewPackError(f"the reviewer agent has an active run ({run.get('id')}, {run.get('status')}); "
+                              f"cancel it first (pc.py cancel-run {run.get('id')}); --abandon does not override "
+                              "an active run")
+    if lock.get("reviewStart") in ("creating", "waking") and not (abandon and check["state"] == "clear"):
+        raise ReviewPackError(f"a review-start of {lock['issue']} may be in flight (reviewStart "
+                              f"{lock.get('reviewStart')}); unstage refuses. --abandon is accepted only once "
+                              "Paperclip shows no active reviewer run")
+    if check["state"] == "unverified" and not abandon:
+        raise ReviewPackError(f"the reviewer's run state could not be verified from Paperclip ({check.get('reason')}); "
+                              "unstage refuses. --abandon overrides this (logged as unverified)")
+    if not was_relayed and not abandon:
+        raise ReviewPackError(f"the review of {lock['issue']} has not been relayed; to drop it anyway run "
+                              "review-pack --unstage --abandon (logged)")
+
+
+def unstage(rr, sr, state, abandon, now, reviewer_runs=None):
+    """Clear staging after a relayed review, or abandon it. Since R2 the reviewer's run state comes from Paperclip
+    through `reviewer_runs` (an injected callable); `state` (the Phase 1 state file) is no longer consulted.
+    Takes staging.op, checks, marks the lock `unstaging`, checks again, then deletes (the lock last)."""
+    op = op_lock(sr, "unstage", now)
+    try:
+        return _unstage(rr, sr, abandon, now, reviewer_runs)
+    finally:
+        os.remove(op)
+
+
+def _unstage(rr, sr, abandon, now, reviewer_runs):
     lock = read_lock(sr)
     current = assert_contained(os.path.join(sr, "current"), sr)
     if not lock:
@@ -922,18 +985,25 @@ def unstage(rr, sr, state, abandon, now):
         _clear_staging(sr)
         audit(rr, "abandon", now, reason="cleared staging files without a lock")
         return "cleared orphaned staging files"
-    active = [r for r in lock_runs(state, lock) if r["status"] in ACTIVE_RUN]
-    if active:
-        raise ReviewPackError(f"the review of {lock['issue']} is still running ({active[0]['id']}, "
-                              f"{active[0]['status']}); wait for it or cancel the run first")
     was_relayed = relayed(rr, lock)
-    if not was_relayed and not abandon:
-        raise ReviewPackError(f"the review of {lock['issue']} has not been relayed; to drop it anyway run "
-                              "review-pack --unstage --abandon (logged)")
-    _clear_staging(sr)
+    check = _reviewer_check(reviewer_runs, lock)
+    _unstage_decision(check, lock, abandon, was_relayed)
+    previous = lock.get("unstaging")
+    update_lock(sr, unstaging=iso(now))
+    check = _reviewer_check(reviewer_runs, lock)  # second look, after the mark
+    try:
+        _unstage_decision(check, lock, abandon, was_relayed)
+    except ReviewPackError:
+        update_lock(sr, unstaging=previous)
+        raise
+    _clear_staging(sr)  # current/ first, the lock last
     event = "unstage" if was_relayed else "abandon"
-    audit(rr, event, now, issue=lock["issue"], head=lock["headSha"], run_id=lock.get("runId"),
-          reason="relayed review cleared" if was_relayed else "abandoned by the Board")
+    reason = "relayed review cleared" if was_relayed else "abandoned by the Board"
+    if check["state"] != "clear":
+        reason += f"; reviewer state unverified: {check.get('reason')}"
+    audit(rr, event, now, issue=lock["issue"], head=lock["headSha"], run_id=lock.get("runId"), reason=reason,
+          verified=check["state"] == "clear", reviewerAgentId=check.get("agentId"),
+          reviewerRuns=[{"id": r.get("id"), "status": r.get("status")} for r in (check.get("runs") or [])])
     return f"{event}: {lock['issue']} {lock['headSha'][:12]}"
 
 
@@ -1147,7 +1217,7 @@ def add_parser(sub):
     return s
 
 
-def cmd_review_pack(a, now=None):
+def cmd_review_pack(a, now=None, reviewer_runs=None):
     """CLI entry. Every refusal, including an unexpected filesystem error, becomes a ReviewPackError with a
     message and, once the Review Root is known, a `refuse` audit entry (audit D6)."""
     now = now or utcnow()
@@ -1157,7 +1227,7 @@ def cmd_review_pack(a, now=None):
         raise ReviewPackError(f"cannot prepare the roots: {e}")
     key = a.key if a.key and KEY_RE.match(a.key) else None
     try:
-        return _run(a, rr, sr, now)
+        return _run(a, rr, sr, now, reviewer_runs)
     except (ReviewPackError, OSError) as e:
         reason = str(e) if isinstance(e, ReviewPackError) else f"filesystem error: {e}"
         try:
@@ -1169,7 +1239,7 @@ def cmd_review_pack(a, now=None):
         raise ReviewPackError(reason) from e
 
 
-def _run(a, rr, sr, now):
+def _run(a, rr, sr, now, reviewer_runs=None):
     state = load_state(a.state_file)
     if a.abandon and not a.unstage:
         raise ReviewPackError("--abandon only goes with --unstage")
@@ -1180,7 +1250,7 @@ def _run(a, rr, sr, now):
             st = staging_status(rr, sr, state, now)
             print(json.dumps(st, indent=2, sort_keys=True))
         elif a.unstage:
-            print(unstage(rr, sr, state, a.abandon, now))
+            print(unstage(rr, sr, state, a.abandon, now, reviewer_runs))
         else:
             lines = cleanup(rr, sr, state, now)
             print("\n".join(lines) if lines else "nothing to clean up")

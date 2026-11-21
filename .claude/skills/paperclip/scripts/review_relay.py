@@ -452,20 +452,69 @@ START_STATES = (None, "creating", "create-refused", "sub-issue-created", "waking
 OP_LOCK = rp.OP_LOCK_FILE
 
 
-def _op_lock(sr, what, now):
-    """Exclusive short lock for state-changing staging operations (review-start, unstage), so two runs cannot
-    both create a sub-issue or wake the reviewer. Never taken over automatically: a leftover file after a crash
-    must be inspected and removed by the Board."""
-    path = os.path.join(sr, OP_LOCK)
-    try:
-        fd = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    except FileExistsError:
-        raise rp.ReviewPackError(f"another staging operation is in progress ({path} exists). If none is running "
-                                 "(for example after a crash), check the staging lock and Paperclip, then delete "
-                                 "that file by hand") from None
-    with os.fdopen(fd, "w", encoding="utf-8") as f:
-        f.write(json.dumps({"op": what, "pid": os.getpid(), "at": rp.iso(now)}) + "\n")
-    return path
+_op_lock = rp.op_lock  # shared with review_pack.unstage (R2)
+
+
+def reviewer_run_state(api, lock, resolve_reviewer, sleep=time.sleep):
+    """R2: may any run of the code-reviewer agent still use staging? Read-only Paperclip calls.
+
+    Returns {"state": "active" | "clear" | "unverified", "reason", "runs", "agentId", "companyId"}:
+    - company: the lock's companyId (recorded by review-start) or the reviewed issue's; they must agree;
+    - reviewer: resolve_reviewer(companyId) (the company's code-reviewer by name); it must agree with the lock's
+      reviewerAgentId when recorded;
+    - every run of that agent in the company (GET /companies/<id>/heartbeat-runs?agentId=, no limit: all rows)
+      created at or after stagedAt: queued / scheduled_retry / running -> active; interrupted or an unknown
+      status -> unverified; succeeded / failed / cancelled / timed_out -> fine;
+    - the lock's runId, when set, read by id: same id, agent, company and review sub-issue, else unverified.
+    Any read failure raises; review_pack turns that into "unverified"."""
+    issue = _with_retry(lambda: api("GET", f"/issues/{lock['issue']}"), sleep)
+    cid = (issue or {}).get("companyId")
+    if not cid:
+        return {"state": "unverified", "reason": f"{lock['issue']} has no company in Paperclip"}
+    if lock.get("companyId") and lock["companyId"] != cid:
+        return {"state": "unverified", "reason": "the staging lock names another company than the issue's"}
+    aid = resolve_reviewer(cid)
+    if not aid:
+        return {"state": "unverified", "reason": f"no {rp.REVIEWER_AGENT} agent found", "companyId": cid}
+    if lock.get("reviewerAgentId") and lock["reviewerAgentId"] != aid:
+        return {"state": "unverified", "reason": f"the {rp.REVIEWER_AGENT} agent differs from the one recorded in "
+                                                 "the staging lock", "companyId": cid, "agentId": aid}
+    rows = _with_retry(lambda: api("GET", f"/companies/{cid}/heartbeat-runs?agentId={aid}"), sleep)
+    if not isinstance(rows, list):
+        return {"state": "unverified", "reason": "the run list is not a list", "companyId": cid, "agentId": aid}
+    since = rp.parse_iso(lock["stagedAt"], "staging.lock stagedAt")
+    runs, odd = [], []
+    for r in rows:
+        if not isinstance(r, dict) or not all(isinstance(r.get(k), str) for k in ("id", "status", "createdAt")):
+            return {"state": "unverified", "reason": "a run in the list is malformed", "companyId": cid, "agentId": aid}
+        if r.get("agentId") not in (None, aid):
+            return {"state": "unverified", "reason": "the run list contains another agent's run",
+                    "companyId": cid, "agentId": aid}
+        if rp.parse_iso(r["createdAt"], f"run {r['id']} createdAt") < since:
+            continue
+        runs.append({"id": r["id"], "status": r["status"]})
+    base = {"companyId": cid, "agentId": aid}
+    active = [r for r in runs if r["status"] in rp.REVIEWER_ACTIVE]
+    if active:
+        return dict(base, state="active", reason="a reviewer run is active", runs=active)
+    odd = [r for r in runs if r["status"] not in rp.REVIEWER_TERMINAL]
+    if odd:
+        return dict(base, state="unverified", runs=odd,
+                    reason=f"reviewer run {odd[0]['id']} is {odd[0]['status']} (may still be recovered)")
+    if lock.get("runId"):
+        d = _with_retry(lambda: api("GET", f"/heartbeat-runs/{lock['runId']}"), sleep)
+        if not isinstance(d, dict) or d.get("id") != lock["runId"]:
+            return dict(base, state="unverified", runs=runs, reason=f"run {lock['runId']} was not returned")
+        if d.get("agentId") != aid or d.get("companyId") != cid or d.get("issueId") != lock.get("reviewIssueId"):
+            return dict(base, state="unverified", runs=runs,
+                        reason=f"run {lock['runId']} is not the reviewer's run of the review sub-issue")
+        if d.get("status") in rp.REVIEWER_ACTIVE:
+            return dict(base, state="active", reason="the recorded run is active",
+                        runs=[{"id": d["id"], "status": d["status"]}])
+        if d.get("status") not in rp.REVIEWER_TERMINAL:
+            return dict(base, state="unverified", runs=runs,
+                        reason=f"the recorded run is {d.get('status')}")
+    return dict(base, state="clear", reason="no active reviewer run since staging", runs=runs)
 
 
 def _is_refusal(err):
@@ -626,6 +675,9 @@ def _review_start(rr, sr, key, api, company_id, reviewer_agent_id, identity, now
         raise rp.ReviewPackError(f"staging holds {lock['issue']}, not {key}")
     if not lock.get("reviewId"):
         raise rp.ReviewPackError("this staging predates Option B (no reviewId); unstage and stage it again")
+    if lock.get("unstaging"):
+        raise rp.ReviewPackError(f"an unstage of {key} was interrupted (unstaging since {lock['unstaging']}); finish "
+                                 "it with review-pack --unstage before starting a review")
     state = lock.get("reviewStart")
     if state not in START_STATES:
         raise rp.ReviewPackError(f"staging.lock has an unknown reviewStart state {state!r}; inspect it")
@@ -694,7 +746,7 @@ def _review_start(rr, sr, key, api, company_id, reviewer_agent_id, identity, now
                     "review-start again: it looks for it and does not create a second one") from None
             _check_sub(sub, (sub or {}).get("id"), issue, reviewer_agent_id)
         lock = rp.update_lock(sr, reviewIssueId=sub["id"], reviewIssueKey=sub.get("identifier"),
-                              reviewStart="sub-issue-created")
+                              reviewStart="sub-issue-created", companyId=company_id, reviewerAgentId=reviewer_agent_id)
         rp.audit(rr, "review-start", now, issue=key, head=lock["headSha"], reason=f"sub-issue {sub.get('identifier')}",
                  reviewId=lock["reviewId"], reviewIssueId=sub["id"])
     sub_id = lock["reviewIssueId"]

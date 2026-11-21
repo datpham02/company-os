@@ -902,6 +902,148 @@ class LogIntegrity(RelayEnv):
         self.assertIn("bytes, the run record says", str(e))
 
 
+class ReviewerRunState(RelayEnv):
+    """R2: review_relay.reviewer_run_state reads the reviewer agent's runs from Paperclip (read-only)."""
+
+    def api(self, rows=None, detail=None, company=COMPANY):
+        calls = []
+        since = NOW + datetime.timedelta(minutes=1)
+
+        def api(method, path, body=None):
+            calls.append((method, path))
+            assert method == "GET", "reviewer_run_state must only read"
+            if path == f"/issues/{KEY}":
+                return {"id": ISSUE_ID, "companyId": company}
+            if path == f"/companies/{company}/heartbeat-runs?agentId={REVIEWER}":
+                return rows if rows is not None else [{"id": RUN, "status": "succeeded", "createdAt": rp.iso(since)}]
+            if path == f"/heartbeat-runs/{RUN}":
+                d = {"id": RUN, "agentId": REVIEWER, "companyId": company, "issueId": SUB_ID, "status": "succeeded"}
+                d.update(detail or {})
+                return d
+            raise http(method, path, 404, "not found")
+        api.calls = calls
+        return api
+
+    def state(self, api, **lock_over):
+        lock = rp.read_lock(self.sr)
+        lock.update(lock_over)
+        return rl.reviewer_run_state(api, lock, lambda cid: REVIEWER if cid == COMPANY else None, self.sleeps.append)
+
+    def row(self, status, minutes=2, **over):
+        return dict({"id": f"r-{status}", "status": status, "createdAt": rp.iso(NOW + datetime.timedelta(minutes=minutes))}, **over)
+
+    def test_clear_when_every_run_since_staging_is_terminal(self):
+        rows = [self.row(s) for s in ("succeeded", "failed", "cancelled", "timed_out")]
+        res = self.state(self.api(rows))
+        self.assertEqual((res["state"], res["agentId"], res["companyId"]), ("clear", REVIEWER, COMPANY))
+
+    def test_active_statuses(self):
+        for s in ("queued", "scheduled_retry", "running"):
+            with self.subTest(s=s):
+                res = self.state(self.api([self.row("succeeded"), self.row(s)]))
+                self.assertEqual((res["state"], res["runs"][0]["status"]), ("active", s))
+
+    def test_any_reviewer_run_counts_not_only_the_lock_run(self):
+        """A disposition-repair or stray run of the reviewer agent also reads staging."""
+        res = self.state(self.api([self.row("running", id="r-repair")]), runId=RUN)
+        self.assertEqual((res["state"], res["runs"][0]["id"]), ("active", "r-repair"))
+
+    def test_interrupted_or_unknown_status_is_unverified(self):
+        for s in ("interrupted", "starting", "paused", ""):
+            with self.subTest(s=s):
+                self.assertEqual(self.state(self.api([self.row(s)]))["state"], "unverified")
+
+    def test_runs_before_staging_ignored(self):
+        res = self.state(self.api([self.row("running", minutes=-5)]))
+        self.assertEqual(res["state"], "clear")
+
+    def test_malformed_or_foreign_rows_unverified(self):
+        for rows in ({"runs": []}, [None], [{"id": "x", "status": "running"}], [self.row("succeeded", agentId="other")]):
+            with self.subTest(rows=rows):
+                self.assertEqual(self.state(self.api(rows))["state"], "unverified")
+
+    def test_company_and_reviewer_must_agree_with_the_lock(self):
+        self.assertEqual(self.state(self.api(), companyId="co-other")["state"], "unverified")
+        self.assertEqual(self.state(self.api(), reviewerAgentId="agent-other")["state"], "unverified")
+        self.assertEqual(self.state(self.api(company="co-2"))["state"], "unverified")  # no reviewer resolved
+
+    def test_recorded_run_must_be_the_sub_issue_run(self):
+        for over in ({"id": "other"}, {"agentId": "a"}, {"companyId": "c"}, {"issueId": ISSUE_ID}):
+            with self.subTest(over=over):
+                self.assertEqual(self.state(self.api(detail=over), runId=RUN)["state"], "unverified")
+        self.assertEqual(self.state(self.api(detail={"status": "running"}), runId=RUN)["state"], "active")
+        self.assertEqual(self.state(self.api(detail={"status": "interrupted"}), runId=RUN)["state"], "unverified")
+        self.assertEqual(self.state(self.api(), runId=RUN)["state"], "clear")
+
+    def test_read_failures_raise_for_review_pack_to_treat_as_unverified(self):
+        def down(method, path, body=None):
+            raise HttpError("Paperclip is not reachable (timed out)")
+        with self.assertRaises(Exception):
+            self.state(down)
+        lock = rp.read_lock(self.sr)
+        self.assertIn("could not be verified", str(self.assert_unstage_refused(down)))
+        self.assertEqual(rp.read_lock(self.sr), lock)
+
+    def assert_unstage_refused(self, api):
+        with self.assertRaises(rp.ReviewPackError) as cm:
+            rp.unstage(self.rr, self.sr, {"issues": {}, "runs": []}, False, NOW,
+                       lambda lock: rl.reviewer_run_state(api, lock, lambda cid: REVIEWER, self.sleeps.append))
+        return cm.exception
+
+    def test_only_reads(self):
+        api = self.api()
+        self.state(api, runId=RUN)
+        self.assertTrue(all(m == "GET" for m, _ in api.calls))
+
+    def test_review_start_records_company_and_reviewer_and_respects_unstaging(self):
+        self.pin_review(started=False)
+        api = self.pc()
+        api.sub, api.runs = None, []
+        rp.update_lock(self.sr, unstaging=rp.iso(NOW))
+        with self.assertRaises(rp.ReviewPackError) as cm:
+            rl.review_start(self.rr, self.sr, KEY, api, COMPANY, REVIEWER, rp.BOARD, NOW, self.sleeps.append)
+        self.assertIn("unstage of SOU-12 was interrupted", str(cm.exception))
+        self.assertEqual(api.created, [])
+        rp.update_lock(self.sr, unstaging=None)
+        rl.review_start(self.rr, self.sr, KEY, api, COMPANY, REVIEWER, rp.BOARD, NOW, self.sleeps.append)
+        lock = rp.read_lock(self.sr)
+        self.assertEqual((lock["companyId"], lock["reviewerAgentId"]), (COMPANY, REVIEWER))
+
+    def test_unstage_holding_the_op_lock_blocks_review_start(self):
+        import threading
+        self.pin_review(started=False)
+        entered, release, out = threading.Event(), threading.Event(), []
+
+        def slow_check(lock):
+            entered.set()
+            release.wait(5)
+            return {"state": "clear", "runs": []}
+        t = threading.Thread(target=lambda: out.append(
+            rp.unstage(self.rr, self.sr, {"issues": {}, "runs": []}, True, NOW, slow_check)))
+        t.start()
+        self.assertTrue(entered.wait(5))
+        try:
+            api = self.pc()
+            api.sub, api.runs = None, []
+            with self.assertRaises(rp.ReviewPackError) as cm:
+                rl.review_start(self.rr, self.sr, KEY, api, COMPANY, REVIEWER, rp.BOARD, NOW, self.sleeps.append)
+            self.assertIn("another staging operation is in progress", str(cm.exception))
+            self.assertEqual((api.created, api.wakes), ([], []))
+        finally:
+            release.set()
+            t.join(5)
+        self.assertIn("abandon", out[0])
+
+    def test_pc_wires_review_pack_through_paperclip(self):
+        import pc
+        import argparse as ap
+        p = ap.ArgumentParser()
+        sub = p.add_subparsers(dest="cmd")
+        rp.add_parser(sub).set_defaults(fn=pc.cmd_review_pack)
+        a = p.parse_args(["review-pack", "--unstage", "--state-file", "s.json"])
+        self.assertIs(a.fn, pc.cmd_review_pack)
+
+
 class ReviewerConfig(RelayEnv):
     """P0 layers 1 and 2, checked by review-start before anything is created or woken."""
 
