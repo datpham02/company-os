@@ -363,6 +363,30 @@ def _review_run(api, run_id, issue, lock, reviewer_agent_id, sleep):
 
 # ---------- the relay ----------
 
+class StageChanged(Exception):
+    """The issue left the review stage, or its decision state changed, after the relay's checks."""
+
+
+def _stage_view(issue):
+    es = issue.get("executionState") or {}
+    part = es.get("currentParticipant") or {}
+    return {"status": issue.get("status"), "participant": (part.get("type"), part.get("userId") or part.get("agentId")),
+            "stageId": es.get("currentStageId"), "lastDecisionId": es.get("lastDecisionId")}
+
+
+def _recheck_before_decision(api, key, checked, sleep):
+    """F1 (R5 test 6b): read the issue again just before the decision PATCH. Paperclip 2026.1023.0 has no
+    conditional status update (only expectedExecutionPolicy, for policy-only writes), and the relay writes as
+    local-board, so a decision the Board made by hand meanwhile would be silently overwritten. This narrows the
+    window to the time between this read and the PATCH; it does not close it. It runs once, before the first PATCH
+    attempt: after a lost response the PATCH may have been applied, and a second read would see the relay's own
+    decision and misreport it."""
+    now_view, then = _stage_view(_with_retry(lambda: api("GET", f"/issues/{key}"), sleep)), _stage_view(checked)
+    changed = [f"{k} {then[k]!r} -> {now_view[k]!r}" for k in then if then[k] != now_view[k]]
+    if changed:
+        raise StageChanged("; ".join(changed))
+
+
 def relay(rr, sr, key, run_id, api, head_now, identity, reviewer_agent_id, now, sleep=time.sleep):
     """Returns a one-line result. Raises ReviewPackError on any failed check (nothing recorded) or refusal."""
     lock = rp.read_lock(sr)
@@ -421,7 +445,13 @@ def relay(rr, sr, key, run_id, api, head_now, identity, reviewer_agent_id, now, 
     try:
         if not mine:
             _post_comment(api, issue["id"], render_comment(v, run_id), run_id, lock["headSha"], sleep)
+        _recheck_before_decision(api, key, issue, sleep)
         _with_retry(lambda: api("PATCH", f"/issues/{issue['id']}", decision_body(v, run_id)), sleep)
+    except StageChanged as e:
+        _audit_best_effort(rr, "relay-refused", now, issue=key, head=lock["headSha"], run_id=run_id,
+                           reason=f"the issue changed before the decision: {e}"[:300])
+        raise RelayRefused(f"{key} changed while the relay ran ({e}). The relay recorded no decision and the "
+                           f"findings comment stays; a decision already made stands. Check it: pc.py show {key}")
     except Transient as e:
         _audit_best_effort(rr, "relay-refused", now, issue=key, head=lock["headSha"], run_id=run_id,
                            reason=f"transient: {e}")

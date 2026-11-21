@@ -84,6 +84,7 @@ class FakePaperclip:
         self.details = {}  # run id -> GET /heartbeat-runs/<id> body overriding the default
         self.sub = {"id": SUB_ID, "identifier": SUB_KEY, "parentId": ISSUE_ID, "companyId": COMPANY,
                     "assigneeAgentId": REVIEWER, "status": "in_progress"}
+        self.after_comment = None  # called after the findings comment is stored (F1: the Board acts meanwhile)
         self.created = []  # bodies of POST /companies/<id>/issues
         self.wake = {"id": RUN, "status": "queued"}
         self.wakes = []  # bodies of POST /agents/<id>/wakeup
@@ -177,6 +178,8 @@ class FakePaperclip:
             return dict(self.wake) if self.wake else {"status": "skipped"}
         if (method, path) == ("POST", f"/issues/{ISSUE_ID}/comments"):
             self.comments.insert(0, {"body": body["body"]})
+            if self.after_comment:
+                self.after_comment(self)
             return {"id": f"c{len(self.comments)}"}
         if (method, path) == ("PATCH", f"/issues/{ISSUE_ID}"):
             self.issue["status"] = body["status"]
@@ -1051,6 +1054,63 @@ class ReviewerRunState(RelayEnv):
         rp.add_parser(sub).set_defaults(fn=pc.cmd_review_pack)
         a = p.parse_args(["review-pack", "--unstage", "--state-file", "s.json"])
         self.assertIs(a.fn, pc.cmd_review_pack)
+
+
+class DecisionRecheck(RelayEnv):
+    """F1 (R5 test 6b): a decision the Board makes by hand while the relay runs is never overwritten."""
+
+    def board_acts(self, change):
+        def act(api):
+            change(api.issue)
+        return act
+
+    def test_board_decided_by_hand_meanwhile(self):
+        api = self.pc()
+
+        def board_approves(issue):  # the stage completes; Paperclip clears the participant
+            issue["status"] = "done"
+            issue["executionState"] = {"currentStageType": None, "currentParticipant": None}
+        api.after_comment = self.board_acts(board_approves)
+        with self.assertRaises(rl.RelayRefused) as cm:
+            self.relay(api)
+        msg = str(cm.exception)
+        self.assertIn("changed while the relay ran", msg)
+        self.assertIn("status 'in_review' -> 'done'", msg)
+        self.assertEqual(api.issue["status"], "done")  # the Board's decision stands
+        self.assertNotIn(("PATCH", f"/issues/{ISSUE_ID}"), api.writes())
+        self.assertEqual(len(api.comments), 1)  # the findings comment stays
+        self.assertEqual(self.events()[-1], "relay-refused")
+
+    def test_participant_or_stage_changed(self):
+        cases = {
+            "participant": lambda i: i["executionState"].update(currentParticipant={"type": "agent", "agentId": "x"}),
+            "stage": lambda i: i["executionState"].update(currentStageId="another-stage"),
+            "decision": lambda i: i["executionState"].update(lastDecisionId="d-board"),
+        }
+        for name, change in cases.items():
+            with self.subTest(name):
+                api = self.pc()
+                api.after_comment = self.board_acts(change)
+                with self.assertRaises(rl.RelayRefused):
+                    self.relay(api)
+                self.assertNotIn(("PATCH", f"/issues/{ISSUE_ID}"), api.writes())
+
+    def test_unchanged_issue_is_decided_as_before(self):
+        api = self.pc()
+        out = self.relay(api)
+        self.assertIn("relayed approved", out)
+        gets = [p for m, p, _ in api.calls if m == "GET" and p == f"/issues/{KEY}"]
+        self.assertGreaterEqual(len(gets), 2)  # the check, and the re-check just before the PATCH
+        idx_get = max(i for i, c in enumerate(api.calls) if c[:2] == ("GET", f"/issues/{KEY}"))
+        idx_patch = next(i for i, c in enumerate(api.calls) if c[:2] == ("PATCH", f"/issues/{ISSUE_ID}"))
+        self.assertLess(idx_get, idx_patch)
+
+    def test_recheck_read_failure_records_nothing(self):
+        api = self.pc()
+        api.after_comment = lambda a: a.fail.__setitem__(("GET", f"/issues/{KEY}"), [HttpError("unreachable")] * 3)
+        with self.assertRaises(rl.RelayRefused):
+            self.relay(api)
+        self.assertNotIn(("PATCH", f"/issues/{ISSUE_ID}"), api.writes())
 
 
 class CheckPhaseFailures(RelayEnv):
