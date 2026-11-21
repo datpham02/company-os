@@ -5,6 +5,11 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
+- OQ-042 Phase 6 production proposal (`docs/design/review-package-phase6-proposal.md`, `PROPOSED`, authorizes nothing):
+  - a strict `code-reviewer` agent in Soucean, profile `claude-reviewer-strict` (as validated in R1, P0 and R5), paused between reviews, no secrets;
+  - a pilot on `soucean-game` for five Tasks with a `review` stage for `local-board` filled by the relay;
+  - runbook outline, tokens, roots and retention, named risks (G-13 open, G-14 and B5 accepted, F1 window, B1 open items);
+  - work items W1–W5 and rollout steps P6-A to P6-D, each needing its own approval.
 - OQ-042 R6 Board decisions (2026-11-21):
   - **B3 / V3 answered: yes.** A sandbox agent's own process read every company on the instance, `SOU` included, with one `curl` and no credentials (`local_trusted`), so G-14 is a real gap.
   - **B4 (G-14)** is accepted as a named risk for now; the authenticated-mode migration (OQ-043, A5) stays planned.
