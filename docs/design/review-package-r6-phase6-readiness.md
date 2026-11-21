@@ -1,6 +1,6 @@
 # Review Package R6: Phase 6 readiness assessment
 
-- **Status:** `PROPOSED`, review only. **Update after R5 (2026-11-21):** B1 mostly closed, B2 closed, B5 confirmed as a risk, new blocker B7 (relay override, finding F1); see §5 and [review-package-r5-results.md](review-package-r5-results.md). Written for the Board Operator on 2026-11-21. It neither writes nor authorizes the Phase 6 production proposal (design §11).
+- **Status:** `PROPOSED`, review only. **Update after R5 (2026-11-21):** B1 mostly closed, B2 closed, B5 confirmed as a risk, new blocker B7 (relay override, finding F1), **since closed by PR #64 and a live re-run**; see §5 and [review-package-r5-results.md](review-package-r5-results.md). Written for the Board Operator on 2026-11-21. It neither writes nor authorizes the Phase 6 production proposal (design §11).
 - **Question:** what must hold before a Phase 6 production proposal can be written and judged?
 - **Inputs:**
   - [review-package.md](review-package.md) §11–§13;
@@ -82,7 +82,7 @@ A Phase 6 proposal SHOULD NOT be written until each item is closed, or the Board
 | B4 | G-14: local Board access and same-user file tampering | Authenticated mode (A5 implementation), or a named accepted risk in the proposal with its consequences for the relay | Board |
 | B5 | ADR-022 accepted risk: the agent token may bypass branch protection. **R5: the owner's login bypasses it (confirmed); token level untested** | A throwaway-repository test of an owner fine-grained token against a protected `main`. Then either keep the accepted risk with evidence, or move agents to a separate identity | Board approves the test |
 | B6 | Paperclip version coupling | A version pin and a re-check list in the runbook: <ul><li>`decideIssueOwnership`;</li><li>the reassignment cancel;</li><li>run record fields (`logSha256`, `resultJson`);</li><li>MCP tool registration;</li><li>log redaction.</li></ul> | Claude drafts; Board approves |
-| B7 (new, R5) | The relay can override a decision the Board makes by hand while it runs (F1) | Re-read the issue just before the decision PATCH; use a conditional update if Paperclip has one; then repeat test 6b | Claude (code, PR); Board approves |
+| B7 (new, R5) | The relay could override a decision the Board makes by hand while it runs (F1). **Closed (narrowed) 2026-11-21:** PR #64 re-checks the issue just before the decision PATCH; R5 test 6b re-run passed live (`OPT-17`). The window between the re-check and the PATCH remains, because Paperclip has no conditional status update; state it in the proposal | — | — |
 
 **Not blockers, but the proposal must state them:**
 - comprehension cannot be proven;
