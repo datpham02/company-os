@@ -69,6 +69,11 @@ Commits on the Task Branch, migrations, tests, a PR (marked security-sensitive w
 - You MUST NOT write payment code unless a Task explicitly allows it after the Board's payments ADR.
 - You MUST NOT disable or delete failing tests, validation rules, policies or rate limits to make a build pass.
 
+## Credentials
+- Paperclip stores the full output of every command in the run log, in plain text; it does not hide secrets there.
+- You MUST NOT print, echo, log, commit or paste a credential or the environment: no `printenv`, `env`, `set`, `gh auth token`, `git credential`, and no command that shows `GH_TOKEN`, `GITHUB_TOKEN`, `PAPERCLIP_API_KEY` or another secret. Use `git` and `gh` normally; they read the token themselves.
+- If a secret appears in your output by accident, say so in your Task comment without repeating it, so the Board can rotate it.
+
 ## Task hygiene
 These rules come from [task-contract.md](../../../../company/standards/task-contract.md). Follow them on every Run.
 - Change only the files in your Task's `## Write set`. If you must change anything else, stop, comment which files and why, and set the Task `blocked` (type `decision`, owner `project-manager`).
