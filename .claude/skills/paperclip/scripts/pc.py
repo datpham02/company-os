@@ -521,6 +521,53 @@ def wip_guard(i, reserved):
     return None
 
 
+AGENTS_CONFIG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..",
+                             "config", "paperclip", "agents.json")
+WRITE_PROFILE_MARK = "workspace-write"  # profiles that may edit, commit and push: claude-/cursor-workspace-write
+
+
+def agent_profiles():
+    """Agent key (Paperclip urlKey) -> permission profile name, from config/paperclip/agents.json."""
+    with open(AGENTS_CONFIG, encoding="utf-8") as f:
+        conf = json.load(f)
+    return {k.lower(): (v or {}).get("profile") for k, v in (conf.get("agents") or {}).items()}
+
+
+def authoring_problem(ag, description):
+    """Refusal text when the agent cannot write files but the Task's Write set names some; None otherwise.
+
+    Read-only profiles (director, producer, project-manager, code-reviewer) have their file writes, commits and
+    pushes refused at runtime, so such a Task loops until Paperclip's recovery parks it (SOU-18, SOU-36). A Write
+    set of `none`, or a description without a readable Write set (other checks report that), is not refused here.
+    """
+    if not WRITE_SET_HEADING.search(description or ""):
+        return None
+    try:
+        if not parse_write_set(description):
+            return None
+    except WriteSetError:
+        return None
+    key = (ag.get("urlKey") or ag.get("name") or "").lower()
+    profile = agent_profiles().get(key)
+    if profile is None:
+        return (f"{ag.get('name', key)} has no profile in config/paperclip/agents.json, so whether it can write "
+                f"the Write set's files cannot be checked")
+    if WRITE_PROFILE_MARK not in profile:
+        return (f"{ag.get('name', key)} uses the read-only profile {profile!r} and cannot create, edit, commit or "
+                f"push the files in this Task's Write set. Assign a role with a '{WRITE_PROFILE_MARK}' profile "
+                f"(game-designer, ui-designer, game-artist, gameplay-programmer, web-engineer, qa-engineer) and keep "
+                f"the read-only role as reviewer, or make the Write set `none`")
+    return None
+
+
+def assignee_authoring_guard(i):
+    """Release's hard check: the issue's agent assignee can write its Write set. Returns refusal text or None."""
+    ag = next((a for a in agents(i["companyId"]) if a["id"] == i["assigneeAgentId"]), None)
+    if ag is None:
+        return f"assignee {i['assigneeAgentId']} is not an agent of this company"
+    return authoring_problem(ag, i.get("description"))
+
+
 def release_problems(i):
     """Forceable task-contract checks (task-contract.md §2) before an issue may start. --force skips these only."""
     problems = []
@@ -555,6 +602,14 @@ def cmd_release(a):
             continue
         if busy:
             print(f"{key}: not released: {busy}. Nothing was changed.")
+            continue
+        try:
+            cannot_write = assignee_authoring_guard(i)
+        except (ApiError, OSError, ValueError) as e:
+            print(f"{key}: not released: the assignee's permission profile could not be checked ({e}). Nothing was changed.")
+            continue
+        if cannot_write:
+            print(f"{key}: not released: {cannot_write}. --force does not override this check. Nothing was changed.")
             continue
         try:
             report = write_set_guard(i, cache)
@@ -717,6 +772,9 @@ def cmd_assign(a):
                         f"which would skip release's checks. Park and hand it over with: assign {a.key} {a.agent} "
                         f"--status backlog, then: release {a.key}")
     ag = agent(i["companyId"], a.agent)
+    cannot_write = authoring_problem(ag, i.get("description"))
+    if cannot_write:
+        raise GateError(f"{a.key}: {cannot_write}")
     # Clear a user assignee (e.g. the Board after a stuck review): Paperclip allows only one assignee.
     body = {"assigneeAgentId": ag["id"], "assigneeUserId": None}
     if a.status and a.status != status:
@@ -757,6 +815,9 @@ def cmd_create(a):
     if review_package:
         check_review_package_create(a, desc)
     ag = agent(c["id"], a.assignee)
+    cannot_write = authoring_problem(ag, desc)
+    if cannot_write:
+        raise GateError(cannot_write)
     if review_package:
         # Phase 6 W3 (QA option a): the review stage's participant is the Board identity the Verdict Relay
         # records as; no agent review stage. Shape per Paperclip 2026.1023.0's issueExecutionStageSchema.

@@ -267,7 +267,8 @@ class FakePaperclip:
         return [{k: v for k, v in i.items() if k != "currentExecutionWorkspace"} for i in rows[:limit]]
 
     AGENTS = [{"id": "ag-1", "name": "web-engineer", "urlKey": "web-engineer"},
-              {"id": "ag-2", "name": "qa-engineer", "urlKey": "qa-engineer"}]
+              {"id": "ag-2", "name": "qa-engineer", "urlKey": "qa-engineer"},
+              {"id": "ag-3", "name": "Producer", "urlKey": "producer"}]
 
     def call(self, method, path, body=None):
         if method == "GET" and path.startswith(f"/companies/{CID}/issues?"):
@@ -780,6 +781,73 @@ class AssignGate(unittest.TestCase):
         self.assertEqual(len(fake.writes), 1)
         self.assertNotIn("status", fake.writes[0][2])
         self.assertEqual(fake.issues["id-70"]["status"], "backlog")
+
+
+PROFILES = {"web-engineer": "cursor-workspace-write", "qa-engineer": "claude-workspace-write",
+            "producer": "claude-read-only"}
+
+
+class ReadOnlyAuthoringGate(unittest.TestCase):
+    """A Task whose Write set names files must not go to a read-only agent (SOU-18, SOU-36)."""
+
+    def setUp(self):
+        patcher = mock.patch.object(pc, "agent_profiles", return_value=dict(PROFILES))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_create_refused_before_any_write(self):
+        fake = FakePaperclip([])
+        _, err = run_cmd(fake, pc.cmd_create, **create_args(assignee="producer"))
+        self.assertIsInstance(err, pc.GateError)
+        self.assertIn("read-only profile 'claude-read-only'", str(err))
+        self.assertEqual(fake.writes, [])
+
+    def test_create_allowed_for_write_profile_and_for_write_set_none(self):
+        for kw in (dict(assignee="web-engineer"), dict(assignee="producer", desc=ws_desc("none"))):
+            with self.subTest(**kw):
+                fake = FakePaperclip([])
+                _, err = run_cmd(fake, pc.cmd_create, **create_args(**kw))
+                self.assertIsNone(err)
+                self.assertEqual(len(fake.writes), 1)
+
+    def test_unknown_profile_refused(self):
+        fake = FakePaperclip([])
+        with mock.patch.object(pc, "agent_profiles", return_value={}):
+            _, err = run_cmd(fake, pc.cmd_create, **create_args())
+        self.assertIsInstance(err, pc.GateError)
+        self.assertIn("no profile in config/paperclip/agents.json", str(err))
+        self.assertEqual(fake.writes, [])
+
+    def test_assign_refused(self):
+        fake = FakePaperclip([make(80, status="backlog", assignee="ag-1")])
+        _, err = run_cmd(fake, pc.cmd_assign, key="SOU-80", agent="producer", status=None)
+        self.assertIsInstance(err, pc.GateError)
+        self.assertIn("SOU-80", str(err))
+        self.assertEqual(fake.writes, [])
+
+    def test_release_refused_even_with_force(self):
+        fake = FakePaperclip([make(81, status="backlog", assignee="ag-3")])
+        for force in (False, True):
+            out = release(fake, "SOU-81", force=force)
+            self.assertIn("SOU-81: not released", out)
+            self.assertIn("read-only profile", out)
+            self.assertIn("--force does not override", out)
+            self.assertEqual(fake.writes, [])
+
+    def test_release_allowed_for_write_profile(self):
+        fake = FakePaperclip([make(82, status="backlog", assignee="ag-1")])
+        out = release(fake, "SOU-82")
+        self.assertIn("SOU-82: released -> todo", out)
+
+    REAL_PROFILES = staticmethod(pc.agent_profiles)  # saved before setUp patches it
+
+    def test_real_config_marks_planning_roles_read_only(self):
+        real = self.REAL_PROFILES()
+        for role in ("director", "producer", "project-manager"):
+            self.assertNotIn(pc.WRITE_PROFILE_MARK, real[role], role)
+        for role in ("game-designer", "ui-designer", "game-artist", "gameplay-programmer", "web-engineer",
+                     "qa-engineer"):
+            self.assertIn(pc.WRITE_PROFILE_MARK, real[role], role)
 
 
 class CommentAndWakeGate(unittest.TestCase):

@@ -24,7 +24,7 @@ If Paperclip is not reachable, tell the user to double-click **Start Game Studio
 | `show SOU-8 [--comments N] [--description]` | One issue: status, assignee, current stage, blockers, branch, latest comments, runs. A run Paperclip cancelled because its agent handed the issue over (confirmed by the run record) shows as `handed over`; other cancellations show their reason, such as `cancelled (agent_paused)` |
 | `log <run-id> [--tail N]` | Output of one run; take run ids from `show` |
 | `triage` | Read-only daily sweep (knowledge/company/workflows/daily-triage.md): what needs the Board (including Paperclip recoveries handed to the Board), blocked issues and whether they name an unblock owner, stalled reviews, quiet tasks, ready backlog, and agents with more than one `in_progress` issue across all projects (or "COULD NOT CHECK WIP" when that cannot be read) |
-| `release SOU-8 [SOU-9 …] [--force]` | `backlog` → `todo`. **The assignee starts working immediately and spends usage.** First runs two hard guards (below): the WIP limit and the Write Set conflict guard. Then refuses an issue with no review/approval stage or with open blockers. `--force` skips only those last checks, and only on the user's explicit word |
+| `release SOU-8 [SOU-9 …] [--force]` | `backlog` → `todo`. **The assignee starts working immediately and spends usage.** First runs three hard guards (below): the WIP limit, the read-only assignee guard and the Write Set conflict guard. Then refuses an issue with no review/approval stage or with open blockers. `--force` skips only those last checks, and only on the user's explicit word |
 | `approve SOU-8 "comment"` | Board approval: sets `done` with the comment. Only works while the issue waits on the Board |
 | `request-changes SOU-8 "comment"` | Board sends the work back to the implementer with the comment |
 | `comment SOU-8 "text"` | Board comment without a decision. Refused on a `backlog` issue assigned to an agent, because it would wake the agent and start the task |
@@ -113,6 +113,14 @@ Each agent holds at most **one `in_progress` issue across all projects of the co
 - Any failure to read the full in_progress list refuses the release ("WIP could not be verified"); `triage` prints "COULD NOT CHECK WIP" instead of "(none)".
 - Issue lists are read page by page with Paperclip's keyset cursor (`sortField=id&sortDir=asc&afterId=…`, 1000 per page) until an empty page, for WIP, the Write Set guard and `triage`.
 - Not atomic: two release commands started at the same moment can both pass. `maxConcurrentRuns` is unchanged (still 20); runtime enforcement waits for OQ-041.
+
+## Read-only assignee guard (`create`, `assign`, `release`)
+
+A Task whose `## Write set` names files must go to an agent that can write them. `create`, `assign` and `release` refuse it when the assignee's profile in `config/paperclip/agents.json` is not a `*-workspace-write` profile, or when the agent has no profile there. `--force` never skips it. Rules:
+
+- Read-only today: `director`, `producer`, `project-manager` (`claude-read-only`) and `code-reviewer` (`claude-reviewer-strict`). They review and plan. Authoring goes to `game-designer`, `ui-designer`, `game-artist`, `gameplay-programmer`, `web-engineer` or `qa-engineer`.
+- A Write set of `none` is allowed for any agent. A missing or unreadable Write set is left to the other checks.
+- Why: a read-only agent's writes, commits and pushes are refused at runtime, so the Task loops until Paperclip's recovery parks it on the Board (SOU-18 on director, SOU-36 on producer).
 
 ## Write Set conflict guard (`release`)
 
