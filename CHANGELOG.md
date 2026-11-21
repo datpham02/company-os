@@ -4,12 +4,6 @@ All notable changes to the Game Studio framework are recorded here. The format f
 
 ## [Unreleased]
 
-### Changed
-- `review-pack --status` through `pc.py` now reports the reviewer's runs from Paperclip (the same check as `--unstage`: `source: paperclip`, `verified`, `active`, runs), never prints the staging challenge, and falls back to the state file only outside `pc.py`. Refusals of `--unstage` and `--status` are audited with the staged issue instead of `issue: null`.
-
-### Fixed
-- R2 `--unstage` (self-review): `reviewer_run_state` ignored reviewer runs created before the staging time even when they were still active, although such a run can read staging through the agent's fixed `--add-dir`. Any active run now blocks, whenever it started; the staging time still limits which `interrupted` or unknown runs count. Regression test added. The no-lock orphan cleanup now states that the reviewer's runs cannot be checked without a lock.
-
 ### Added
 - OQ-042 R2, Paperclip-backed `--unstage` (`docs/design/review-package-r2-unstage-design.md`): `review-pack --unstage` through `pc.py` decides from Paperclip, not the state file: every run of the `code-reviewer` agent since staging (`GET /companies/<id>/heartbeat-runs?agentId=`) and the lock's run by id. Active runs refuse even with `--abandon`; `interrupted`, unknown statuses, mismatches and Paperclip errors refuse unless `--abandon` (audited as unverified). `unstage` takes `staging.op`, checks twice around an `unstaging` mark and deletes the lock last; `review-start` records `companyId` and `reviewerAgentId` in the lock and refuses a lock marked `unstaging`. `review_pack.py` stays network-free (the check is injected). `--status` still reads the state file (follow-up). Offline tests; the live check (R2-E) needs approval.
 - OQ-042 reviewer write isolation (P0, `docs/design/review-package-reviewer-write-isolation.md`): Paperclip 2026.1023.0 adds its write-capable MCP tools to every issue-scoped `claude_local` run. The reviewer profile now removes every MCP tool (`--disallowedTools mcp__*` and a settings deny `mcp__*`) on top of `dontAsk` with an allow list of Read, Grep, Glob; `review-start` refuses a reviewer without that profile, any `env`, or a forbidden flag; `review-relay` reads the whole run log and accepts it only if its size and SHA-256 equal Paperclip's recorded `logBytes`/`logSha256` for the lock's run (it previously read only the first 256 KB page), then refuses a run whose log offered any tool besides Read, Grep, Glob, used another tool or recorded a refused attempt. New opt-in `probe_reviewer_tools.py` re-checks Claude Code's behaviour locally. Offline tests only; the sandbox step needs Board approval. G-13 stays open.
@@ -50,7 +44,11 @@ All notable changes to the Game Studio framework are recorded here. The format f
   - per-head storage with one serialized staging folder.
   Recorded the finding that Paperclip accepts a stage decision only from the current participant. Documentation only; nothing implemented, G-13 unresolved.
 
+### Changed
+- `review-pack --status` through `pc.py` now reports the reviewer's runs from Paperclip (the same check as `--unstage`: `source: paperclip`, `verified`, `active`, runs), never prints the staging challenge, and falls back to the state file only outside `pc.py`. Refusals of `--unstage` and `--status` are audited with the staged issue instead of `issue: null`.
+
 ### Fixed
+- R2 `--unstage` (self-review): `reviewer_run_state` ignored reviewer runs created before the staging time even when they were still active, although such a run can read staging through the agent's fixed `--add-dir`. Any active run now blocks, whenever it started; the staging time still limits which `interrupted` or unknown runs count. Regression test added. The no-lock orphan cleanup now states that the reviewer's runs cannot be checked without a lock.
 - Review packager audit (2026-11-20), regression tests for each fix:
   - **D1:** a junction or symlink planted under the Review or Staging Root made the packager write or delete outside its roots (verified on Windows 11). It now refuses any link below its roots and in packages.
   - **D3:** names shaped like 8.3 short names (for example `LONGFI~1.CS`) could alias another file. They are now refused.

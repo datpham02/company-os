@@ -717,7 +717,8 @@ def cmd_cancel_run(a):
 
 
 def cmd_review_pack(a):
-    """review-pack through pc.py: --unstage asks Paperclip whether the reviewer agent still runs (R2)."""
+    """review-pack through pc.py: --unstage and --status ask Paperclip whether the reviewer agent still runs
+    (R2); other modes ignore the check."""
     def resolve(cid):
         return agent(cid, review_pack.REVIEWER_AGENT)["id"]
     return review_pack.cmd_review_pack(

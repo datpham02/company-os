@@ -1250,10 +1250,15 @@ def cmd_review_pack(a, now=None, reviewer_runs=None):
         return _run(a, rr, sr, now, reviewer_runs)
     except (ReviewPackError, OSError) as e:
         reason = str(e) if isinstance(e, ReviewPackError) else f"filesystem error: {e}"
-        if key is None and (getattr(a, "unstage", False) or getattr(a, "status", False)):
-            key = _staged_issue(sr)  # --unstage/--status take no key: record the staged issue instead
+        extra = {}
+        if getattr(a, "unstage", False) or getattr(a, "status", False):
+            # --unstage/--status take no key: the audit line names the staged issue; a key typed anyway is kept
+            # apart, so it cannot pass for the issue that was staged.
+            if a.key:
+                extra["givenKey"] = a.key
+            key = _staged_issue(sr)
         try:
-            audit(rr, "refuse", now, issue=key, reason=reason)
+            audit(rr, "refuse", now, issue=key, reason=reason, **extra)
         except OSError:
             pass  # the refusal itself is still reported
         if isinstance(e, ReviewPackError):

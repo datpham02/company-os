@@ -870,6 +870,15 @@ class Cli(Env):
         self.assertIn("could not be verified", e["reason"])
         self.assertIn("abandon", self.run_cli(unstage=True, abandon=True, state_file=stf))
 
+    def test_key_typed_with_unstage_is_kept_apart_from_the_staged_issue(self):
+        sf, stf = self.files()
+        self.run_cli(key="SOU-12", source_fixture=sf, state_file=stf, allow_repo=[REPO])
+        with self.assertRaises(rp.ReviewPackError):
+            self.run_cli(key="SOU-99", unstage=True, state_file=stf)
+        e = rp.read_audit(self.rr)[-1]
+        self.assertEqual((e["event"], e["issue"], e["givenKey"]), ("refuse", "SOU-12", "SOU-99"))
+        self.assertIn("take no issue key", e["reason"])
+
     def test_refusal_audit_without_a_lock_has_no_issue(self):
         sf, stf = self.files()
         with open(rp.lock_path(self.sr), "w") as f:
