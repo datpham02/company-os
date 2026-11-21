@@ -5,6 +5,11 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
+- OQ-042 R6 Board decisions (2026-11-21):
+  - **B3 / V3 answered: yes.** A sandbox agent's own process read every company on the instance, `SOU` included, with one `curl` and no credentials (`local_trusted`), so G-14 is a real gap.
+  - **B5** is accepted as a named risk.
+  - **B6:** the Paperclip version re-check list is drafted (R6 §8).
+  - **B4 (G-14)** is accepted as a named risk for now; the authenticated-mode migration (OQ-043, A5) stays planned.
 - OQ-042 R5 live evidence (`docs/design/review-package-r5-results.md`, sandbox OPT, soucean-game sandbox PRs and a throwaway repository): §12 criteria 1, 3, 4, 7, 8 and the Board merge after an approved relay verified live; criterion 2 for representative cases; B5 confirmed (the owner's login bypasses branch protection). **Finding F1:** the relay overrode a decision the Board made by hand while it ran (test 6b failed), new R6 blocker B7. Design §12 and the R6 assessment updated. F1 was then fixed in PR #64; the 6b re-run passed live and B7 is recorded as closed (narrowed).
 - OQ-042 R6, Phase 6 readiness assessment (`docs/design/review-package-r6-phase6-readiness.md`, review only): **not ready**. Blockers B1–B6: R5 live evidence and the untested merge; `--cleanup` closure from Paperclip; V3; G-14; the ADR-022 branch-protection question; Paperclip version re-check list. Also lists what the Phase 6 proposal must contain and the recommended order.
 - Credential log mitigations (after the GH_TOKEN log redaction probe):
