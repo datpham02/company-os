@@ -1,6 +1,10 @@
 # Review Package R2: Paperclip-backed `--unstage` (R2-A design)
 
-- **Status:** PROPOSED. R2-A only: code reading and design, 2026-11-21. **No code changed, no Paperclip call that writes, no configuration changed.**
+- **Status:** IMPLEMENTED (2026-11-21).
+  - The design (R2-A) was written as code reading only, with no code or Paperclip change.
+  - The Board Operator approved it with the proposed decisions (§5), and it was implemented in PR #53 (R2-B to R2-D), checked live on the `OPT` sandbox (R2-E), and corrected after a self-review in PR #54 (§3.1).
+  - Results and live evidence: [review-package-r2-results.md](review-package-r2-results.md).
+  - The rest of this document keeps the R2-A analysis as written; §1 describes the code *before* R2.
 - **Code read:** `main` at `3a5ba8b` (PR #51 merged):
   - `.claude/skills/paperclip/scripts/review_pack.py`: `unstage`, `staging_status`, `lock_runs`, `relayed`, `stage`, `update_lock`, CLI;
   - `review_relay.py`: `review_start`, `_op_lock`, `_matching_runs`;
@@ -161,13 +165,14 @@ To bind this to the staging, `review-start` would additionally record `companyId
 
 Expected cost: one reviewer run (about US$0.05).
 
-## 5. Decisions for the Board
+## 5. Board decisions (taken 2026-11-21)
 
-1. **Confirmed-active runs:** refuse even with `--abandon` (proposed), or let `--abandon` override?
-2. **`interrupted`:** refuse unless `--abandon` (proposed), or treat it as terminal?
-3. Record `companyId` and `reviewerAgentId` in the lock at `review-start` (proposed; a small change to `review-start`)?
-4. Include `--status` in R2, or leave it as a follow-up (proposed: follow-up)?
-5. Approve R2-B to R2-D (code and offline tests), then R2-E (live, OPT) separately.
+All proposed options were approved ("Duyệt, làm R2-B–D", then "Duyệt R2-E"):
+1. **Confirmed-active runs** refuse even with `--abandon`. Implemented.
+2. **`interrupted`** refuses unless `--abandon`. Implemented.
+3. `review-start` records `companyId` and `reviewerAgentId` in the lock. Implemented.
+4. **`--status`** stays a follow-up: it still reads the state file.
+5. R2-B to R2-D were approved and implemented (PR #53); R2-E was approved separately and run on `OPT`.
 
 ## 6. Risks kept
 
