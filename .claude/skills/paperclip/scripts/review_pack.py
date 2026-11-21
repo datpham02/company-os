@@ -23,6 +23,7 @@ import secrets
 import shutil
 import sys
 import unicodedata
+import uuid
 
 PACKAGE_SCHEMA = "company-os/review-package@1"
 VERDICT_SCHEMA = "company-os/review-verdict@1"
@@ -59,7 +60,11 @@ MODE_FILE = {"100644", "100755"}
 MODE_SYMLINK = "120000"
 MODE_SUBMODULE = "160000"
 AUDIT_EVENTS = {"build", "reuse", "refuse", "stage", "unstage", "abandon", "relay", "relay-refused",
-                "cleanup", "cleanup-failed"}
+                "cleanup", "cleanup-failed", "review-start"}
+# Option B (post-Phase 5 assessment §3.5): a staging-only file binds the reviewer's verdict to this staging.
+REVIEW_ID_FILE = "REVIEW-ID.txt"
+# Exclusive lock file of review-start and unstage (review_relay._op_lock); never removed automatically after a crash.
+OP_LOCK_FILE = "staging.op"
 
 KEY_RE = re.compile(r"^[A-Z]+-\d+$")
 SHA1_RE = re.compile(r"^[0-9a-f]{40}$")
@@ -631,7 +636,8 @@ def render_review_md(plan):
     key, head = plan["key"], plan["shas"]["headSha"]
     t = plan["task"]
     schema = json.dumps({"schema": VERDICT_SCHEMA, "verdict": "approved | changes_requested", "issue": key,
-                         "headSha": head, "findings": [{"path": "...", "line": 1, "side": "head",
+                         "headSha": head, "reviewId": f"<from {REVIEW_ID_FILE}>",
+                         "challenge": f"<from {REVIEW_ID_FILE}>", "findings": [{"path": "...", "line": 1, "side": "head",
                                                         "severity": "critical | high | medium | low",
                                                         "title": "...", "detail": "...", "fix": "..."}],
                          "notReviewable": [{"path": "...", "reason": "..."}]})
@@ -646,6 +652,8 @@ def render_review_md(plan):
              "`notReviewable`.",
              "- You have read-only tools. Do not try to change anything.",
              f"- Review only issue {key} at head `{head}`.",
+             f"- Read `{REVIEW_ID_FILE}` next to this file (written when the package was staged) and copy its review "
+             "id and challenge into the verdict as `reviewId` and `challenge`.",
              "- End your final message with exactly one fenced `json` block in this shape:", "",
              "```json", schema, "```", ""]
     data = [f"Pull request: #{plan['pr'].get('number')} {plan['pr'].get('url') or ''}".rstrip(),
@@ -733,9 +741,11 @@ def expected_files(manifest):
     return out
 
 
-def verify_package(pkg, require_ready, expect_manifest_sha=None):
+def verify_package(pkg, require_ready, expect_manifest_sha=None, extra_files=None):
     """Check every file against the manifest: SHA-256 of each stored file and document, no missing or extra
-    files. Returns (manifest, manifest sha256). Detects accidental corruption, not a determined same-user writer."""
+    files. Returns (manifest, manifest sha256). Detects accidental corruption, not a determined same-user writer.
+    extra_files: {name: sha256} of staging-only files (REVIEW-ID.txt), which must exist and match."""
+    extra_files = extra_files or {}
     mpath = os.path.join(pkg, "manifest.json")
     try:
         with open(mpath, "rb") as f:
@@ -748,7 +758,7 @@ def verify_package(pkg, require_ready, expect_manifest_sha=None):
         raise ReviewPackError(f"package {pkg}: manifest differs from the staged one")
     if manifest.get("schema") != PACKAGE_SCHEMA:
         raise ReviewPackError(f"package {pkg}: manifest schema is not {PACKAGE_SCHEMA}")
-    expected = expected_files(manifest) | ({"READY"} if require_ready else set())
+    expected = expected_files(manifest) | ({"READY"} if require_ready else set()) | set(extra_files)
     actual = list_files(pkg)
     missing, extra = sorted(expected - actual), sorted(actual - expected)
     if missing or extra:
@@ -770,6 +780,9 @@ def verify_package(pkg, require_ready, expect_manifest_sha=None):
             raise ReviewPackError(f"package {pkg}: {name} fails its SHA-256 check")
     if manifest["documents"].get("patch.diff") != manifest["patchSha256"]:
         raise ReviewPackError(f"package {pkg}: patchSha256 does not match")
+    for name, want in extra_files.items():
+        if sha256_file(os.path.join(pkg, name)) != want:
+            raise ReviewPackError(f"package {pkg}: {name} fails its SHA-256 check")
     return manifest, msha
 
 
@@ -793,6 +806,32 @@ def read_lock(sr):
     return lock
 
 
+def staged_extra(lock):
+    """The staging-only files a lock expects in current/ (none for a lock written before Option B)."""
+    return {REVIEW_ID_FILE: lock["challengeSha256"]} if lock.get("challengeSha256") else {}
+
+
+def review_id_text(lock):
+    return (f"Review id: {lock['reviewId']}\nChallenge: {lock['challenge']}\n"
+            "Copy both values into your verdict as \"reviewId\" and \"challenge\". "
+            "They exist only in this staged file.\n").encode("utf-8")
+
+
+def update_lock(sr, **fields):
+    """Rewrite the staging lock with extra fields (atomic replace). The lock must exist."""
+    lock = read_lock(sr)
+    if lock is None:
+        raise ReviewPackError("nothing is staged")
+    lock.update(fields)
+    tmp = lock_path(sr) + ".tmp-" + secrets.token_hex(4)
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(json.dumps(lock, indent=2, sort_keys=True) + "\n")
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, lock_path(sr))
+    return lock
+
+
 def _staging_leftovers(sr):
     return [n for n in os.listdir(sr) if n.startswith(".current-tmp-")]
 
@@ -808,7 +847,8 @@ def stage(rr, sr, key, head, pkg, now):
             raise ReviewPackError(f"staging holds {lock['issue']} at {lock['headSha'][:12]} since {lock['stagedAt']}; "
                                   "one review at a time. Finish it, then run review-pack --unstage")
         if os.path.exists(os.path.join(current, "READY")):
-            verify_package(current, require_ready=True, expect_manifest_sha=lock["manifestSha256"])
+            verify_package(current, require_ready=True, expect_manifest_sha=lock["manifestSha256"],
+                           extra_files=staged_extra(lock))
             return "already staged"
         # Our own lock, but the copy never finished (crash): rebuild the copy.
         for name in _staging_leftovers(sr):
@@ -819,7 +859,9 @@ def stage(rr, sr, key, head, pkg, now):
         if os.path.exists(current) or _staging_leftovers(sr):
             raise ReviewPackError("staging has files but no lock; inspect them, then run review-pack --unstage --abandon")
         lock = {"issue": key, "headSha": head, "packagePath": pkg, "manifestSha256": store_msha,
-                "stagedAt": iso(now), "stagedBy": BOARD, "runId": None}
+                "stagedAt": iso(now), "stagedBy": BOARD, "runId": None,
+                "reviewId": str(uuid.uuid4()), "challenge": secrets.token_hex(16), "reviewIssueId": None}
+        lock["challengeSha256"] = sha256_bytes(review_id_text(lock))
         try:
             fd = os.open(lock_path(sr), os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         except FileExistsError:
@@ -831,6 +873,8 @@ def stage(rr, sr, key, head, pkg, now):
     tmp = assert_contained(os.path.join(sr, ".current-tmp-" + secrets.token_hex(8)), sr)
     shutil.copytree(pkg, tmp, ignore=shutil.ignore_patterns("READY"), symlinks=False)
     verify_package(tmp, require_ready=False, expect_manifest_sha=lock["manifestSha256"])
+    if lock.get("challengeSha256"):
+        write_new(os.path.join(tmp, REVIEW_ID_FILE), review_id_text(lock))
     os.rename(tmp, current)
     write_new(os.path.join(current, "READY"), b"")
     audit(rr, "stage", now, issue=key, head=head, reason="staged for code-reviewer")
@@ -865,6 +909,9 @@ def staging_status(rr, sr, state, now):
 
 
 def unstage(rr, sr, state, abandon, now):
+    if os.path.exists(os.path.join(sr, OP_LOCK_FILE)):
+        raise ReviewPackError(f"a review-start is in progress ({os.path.join(sr, OP_LOCK_FILE)} exists); wait for it, "
+                              "or, after a crash, inspect the staging lock and Paperclip and delete that file by hand")
     lock = read_lock(sr)
     current = assert_contained(os.path.join(sr, "current"), sr)
     if not lock:
@@ -1153,7 +1200,7 @@ def _run(a, rr, sr, now):
     result = stage(rr, sr, key, head, pkg, now)
     print(f"{key}: package {how} ({head[:12]}), {result} at {os.path.join(sr, 'current')}")
     print("next, if the Board decides to start the review (not run automatically):")
-    print(f"  python -I .claude/skills/paperclip/scripts/pc.py wake {REVIEWER_AGENT} "
-          f"--reason \"Review the staged package for {key} at head {head[:12]}\"")
-    print("note: wake the reviewer without --issue; Paperclip cancels an issue run of a non-assignee agent")
+    print(f"  python -I .claude/skills/paperclip/scripts/pc.py review-start {key}")
+    print("note: review-start creates the review sub-issue and wakes code-reviewer for it (Option B); "
+          "a plain wake is not accepted by review-relay")
     return 0
