@@ -273,7 +273,7 @@ Each stage needs its own Board approval and ends with a review. No stage starts 
 | **R3 `cancelled` semantics** | Report handovers correctly | Read-only classification in `pc.py` `show`/`triage` | Relay rules (unchanged) | Code, tests on recorded shapes | Handovers shown as "handed over"; real cancels unchanged | — | Revert | Code change |
 | **R4 PR credential decision** | Decide who opens PRs | Options 4.A 1–3; least-privilege review of Git Credential Manager | Creating credentials (done by the Board) | Decision record; runbook | Board decision recorded | — | — | Decision; any credential the Board creates |
 | **R5 §12 evidence** | Close the live gaps of §5 | Tests 1–4, 6–9 and merge in sandboxes | V3 | Phase 5b record | Each item Live or recorded as Failed | R1, R2 (for 6 and 8) | Sandbox cleanup | Sandbox execution; throwaway repository |
-| **R6 Phase 6 readiness** | State what must hold before a production proposal | Checklist: R1–R5 outcomes, G-13/G-14 position, V3 plan, runbook outline | Writing or approving Phase 6 | Readiness assessment | Board review | R1–R5 | — | Review only |
+| **R6 Phase 6 readiness** (assessed 2026-11-21: **not ready**, blockers B1–B6 in [review-package-r6-phase6-readiness.md](review-package-r6-phase6-readiness.md)) | State what must hold before a production proposal | Checklist: R1–R5 outcomes, G-13/G-14 position, V3 plan, runbook outline | Writing or approving Phase 6 | Readiness assessment | Board review | R1–R5 | — | Review only |
 
 **Optional R1b (Option B):** after R1, a sandbox test of project-less review sub-issues (workspace behaviour, wakes), then a decision on B.
 
