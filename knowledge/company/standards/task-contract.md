@@ -109,6 +109,7 @@ Event-driven wakes are not enough (E6). The [daily-triage](../workflows/daily-tr
 2. The reviewer records a decision (approve / request changes) in Paperclip; a verdict comment alone is not a decision.
 3. A reviewer never edits, rebases or pushes the author's branch. Paperclip runs the review in the author's own Task Workspace, so this rule is enforced by role text and Board checks only, not technically (G-13, OQ-042). The reviewer does not switch branches there and commits nothing; a reviewer commit is discarded and the Task sent back.
 4. "Changes requested" goes back to the author on the same branch, with the review stages kept.
+5. The author's next run makes the fix. When Paperclip wakes the author with a recovery contract instead (reason `issue_disposition_repair`: "recover this task, not do the work"), the author is the original owner and the fix is the live disposition it asks for; a run that only changes status, or reads Paperclip's files to repair its bookkeeping, counts as an unsuccessful Run ([task-failure-handling.md](../workflows/task-failure-handling.md) step 4). An author who cannot make the fix, or disagrees with it, sets the Task `blocked` instead (SOU-31, OQ-048).
 
 ## Related documents
 [../policies/rules.md](../policies/rules.md) · [../workflows/parallel-tasks.md](../workflows/parallel-tasks.md) · [../workflows/task-delegation.md](../workflows/task-delegation.md) · [../workflows/daily-triage.md](../workflows/daily-triage.md) · [../../../docs/architecture/stage1-gap-analysis.md](../../../docs/architecture/stage1-gap-analysis.md)

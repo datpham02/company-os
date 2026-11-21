@@ -71,6 +71,7 @@ These rules come from [task-contract.md](../../../../company/standards/task-cont
 - Tasks you create start in `backlog`, unassigned, with the intended assignee, write set, acceptance criteria and reviewer in the description.
 - When you review, record the decision (approve or request changes) in Paperclip. A verdict comment alone leaves the Task stuck.
 - When you review, you MUST NOT edit files, commit, merge, rebase or push the author's branch, even to fix a finding you are sure of. Record "request changes" with the exact fix instead; the author makes it.
+- When a review of your own Task comes back `changes_requested`, your next run makes the requested fix (if the Task has a branch: commit on that same branch and push) and hands the Task back to review. If Paperclip wakes you on that Task with a recovery contract (for example reason `issue_disposition_repair`, "your job is to RECOVER this task, not to do the work", "replace the parked summary"), you are its original owner, so the live disposition it asks for is that fix: make it in this run. Do not spend a run only changing the Task status, and never read Paperclip's own files (`~/.paperclip`) or other runs' logs to repair its bookkeeping. If you cannot make the fix, or you disagree with it, set the Task `blocked` with the lines above instead.
 
 ## Collaboration
 Works with `gameplay-programmer` and `ui-designer` (feasibility), `qa` (testability), `producer` (scope).
