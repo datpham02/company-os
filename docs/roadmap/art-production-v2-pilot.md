@@ -31,15 +31,15 @@ Checked 2026-11-22 against the live company, the Deckbound repository (`main` 1c
 The first pilot Task is released only when R1–R11 are done and the checklist of §5 passes; that release is G7(b).
 
 ## 3. Acceptance model: art-ready, integration-ready, verified
-The art Task merges before the asset exists in the game, and the integration Task needs the merged asset. To break that circle without waiving checks, acceptance has two stages that map onto Deckbound's own registry statuses (`planned → concept → review → approved → integrated → verified`):
+The art Task merges before the asset exists in the game, and the integration Task needs the merged asset. The company-wide contract that breaks this circle, with the hard gates of each stage, is in [quality-rubric.md, acceptance stages](../../knowledge/departments/game/domain/art/quality-rubric.md#acceptance-stages); the art and integration Task templates and the handoff and verdict formats carry it, so every reviewer receives it in the Task description. For Deckbound the stages map onto its registry statuses:
 
-| Stage | Reached when | Checks that must pass | Registry status |
-|---|---|---|---|
-| **Art-ready** | The art Task is merged by the Board | All hard gates; rubric categories that can be judged outside the engine: readability at target size on the target background **colour** (`art-ops contact --bg`), family consistency (contact sheet with its neighbours), craft, technical contract, provenance | `approved` |
-| **Integration-ready** | The integration Task is merged | The deferred checks below, on in-engine frames at the listed states and resolutions | `integrated` |
-| **Verified** | `qa` accepts the integrated slice in its review | Every deferred check passed, no open blocker finding | `verified` |
+| Stage | Deckbound registry status | Reached by |
+|---|---|---|
+| Art-ready | `approved` | Art Task (SOU-64 to SOU-69, L0) approved and merged |
+| Integration-ready | `integrated` | SOU-61 (or the Board's smaller pilot integration Task) approved and merged |
+| Verified | `verified` | `qa`'s verdict on that integration Task names the asset as verified |
 
-**Deferred, not waived:** checks that need the real scene (readability over the real background, in-engine scale against other assets, animation and VFX timing in context) are written in the art handoff and in the `qa` verdict as `UNVERIFIED — deferred to <integration Task>`. The integration Task's acceptance criteria list each one. A deferred check that fails goes back as an art fix (an L0 Task) and is counted once, as integration rework (§4.4). **An asset counts as accepted in G8 only when it is `verified`.**
+Every pilot art Task names its integration Task (SOU-61, or the replacement the Board creates); in-context checks are deferred only to it and stay `UNVERIFIED` until it validates them. **An asset counts as production-accepted in G8 only when it is `verified`.** A failed deferred check becomes an L0 fix Task, counted once as integration rework (§4.4).
 
 ## 4. Pilot set
 ### 4.1 Tasks
@@ -121,15 +121,39 @@ All collected by the **Board** (with `pc.py show`, `pc.py log`, GitHub PRs and l
 | Outcome | Final Task state plus the asset's registry status (`verified` or not) | — |
 
 ## 7. G8 — Phase 1 exit gate
-Evaluated once every Task of §4.1 has an outcome (verified, stopped or cancelled) and every row of §6 is filled for every Task, including failed and abandoned ones.
+G8 is **NOT EVALUATED** until every Task of §4.1 has a final outcome and every row of §6 is filled for every Task, including failed and abandoned ones (a value may be `UNAVAILABLE` with its reason). Then it has exactly one of three outcomes, decided by the rules below in order.
 
-| Outcome | Conditions | Consequence |
-|---|---|---|
-| **PASS** | (1) At least one **vertical art slice accepted and integrated**: the Scrivener, at least one common enemy and the combat background `verified` in the game through SOU-61 (or the Board's smaller pilot integration Task), with `qa`'s verdict; (2) no hard-gate regression; (3) at least 5 of the 7 art Tasks (SOU-64a to SOU-69) art-ready; (4) no Task needed a human edit of the art itself; (5) every metric recorded or marked `UNAVAILABLE` | Phase 1 closes. The Board approves the Phase 2 order from the tool-capability tally, keeping the hard dependencies of the roadmap |
-| **CONDITIONAL** | No hard-gate regression, but PASS (1) or (3) is not met, and the shortfall is traced to a **documented tool capability failure** that one Phase 2 workstream addresses | Phase 1 stays open. The Board may approve **only that workstream**, narrowly scoped, with its own prerequisites; G8 is evaluated again after it. Recorded as CONDITIONAL, never as PASS |
-| **FAIL** | A hard-gate regression; or most art Tasks needed human art edits; or no art Task reached art-ready; or the shortfall has no tool-capability explanation (process, brief or role problems) | No Phase 2 work. The Board decides the Phase 1 rework (process, templates, role text) and reruns the pilot |
+### 7.1 Counting
+- **Direction (L2):** SOU-64a is measured on its own: direction accepted by its deciding review stage (yes or no), review rounds, budget used. It is not a production asset and is not in the production counts.
+- **Production art Tasks:** SOU-64, SOU-65, SOU-66, SOU-67, SOU-68, SOU-69 (six), plus the L0 sample reported separately.
+- **Cancelled Tasks:** a Task the Board cancels for a reason outside art production (an M1 scope or schedule change), recorded with that reason, is **excluded** from the denominators and listed. Any other cancellation counts as **stopped** (not art-ready).
+- **Human art intervention**, per production art Task: **none**; **guidance** (Board decisions, description fixes, unblocking: not an art edit); **partial** (a human changed pixels of some of the delivered art); **full** (a human produced the art). A Task with partial or full intervention is **human-assisted**: it is reported but **never counted as art-ready** for G8.
+- **Art-ready count** = production art Tasks that reached art-ready with no human-assisted art. **Verified** follows §3.
 
-**Report to the Board:** the §6 table per Task, totals and medians, every failed or stopped Task with its reason, the tally of tool capability failures by Phase 2 workstream ([art-production-v2-phase2.md](art-production-v2-phase2.md)), and the proposed outcome. The Board decides the outcome.
+### 7.2 Rules, applied in this order
+1. **FAIL** if any of:
+   - F1: a hard-gate regression (a merged asset later found to break licence, provenance, originality, technical contract or scope);
+   - F2: more than half of the non-excluded production art Tasks are human-assisted;
+   - F3: no production art Task reached art-ready.
+2. Otherwise **PASS** if all of:
+   - P1: a **vertical slice is verified**: the Scrivener (SOU-64), at least one common enemy (SOU-65) and the combat background (SOU-68), through SOU-61 or the Board's pilot integration Task, with `qa`'s verdict;
+   - P2: the L2 direction (SOU-64a) was accepted by its deciding stage;
+   - P3: at least 4 of the 6 production art Tasks (or two thirds of the non-excluded ones, rounded up) are art-ready;
+   - P4: the L0 sample is art-ready;
+   - P5: no production art Task is human-assisted.
+3. Otherwise **CONDITIONAL** if **every** unmet P-condition is explained by at least one **documented tool capability failure** (§4.3 stop condition 2) on the Tasks concerned, each mapped to one Phase 2 workstream.
+4. Otherwise (**fallback**) **FAIL**: the shortfall has no tool-capability explanation (process, brief, role, schedule or quality problems).
+
+The rules are exhaustive and exclusive: every evaluated pilot ends in exactly one outcome, and an unsuccessful pilot can never be recorded as PASS.
+
+### 7.3 Consequences
+| Outcome | Consequence |
+|---|---|
+| **PASS** | Phase 1 closes. The Board approves the Phase 2 order from the tool-capability tally, keeping the roadmap's hard dependencies |
+| **CONDITIONAL** | Phase 1 stays open. The Board may approve **one remediation capability** for the documented failure, **with only its minimum mandatory dependencies** from the roadmap's hard-dependency table (for example inpainting needs the 2A prerequisites and the 2B `mask`, `compose` and `diff` subset), and nothing else of Phase 2. After it ships through its own gates, the affected pilot Tasks are rerun and G8 is evaluated again. This is not approval of the Phase 2 roadmap |
+| **FAIL** | No Phase 2 work. The Board decides the Phase 1 rework (process, templates, role text) and reruns the pilot |
+
+**Report to the Board:** the §6 table per Task, the direction result, totals and medians, every failed, stopped, cancelled or human-assisted Task with its reason, the tally of tool capability failures by Phase 2 workstream ([art-production-v2-phase2.md](art-production-v2-phase2.md)), and the outcome these rules give. The Board confirms the outcome.
 
 ## 8. Gate evidence log
 Recorded by Claude Code for the Board on 2026-11-22 (times UTC+7). Repository under test: Company OS `main` **c998f32** (merge of PR #88), checked out clean.

@@ -41,7 +41,9 @@ Selected: <file> — why: <reason>. Rejected: <candidate — why it fails>
 Evidence (committed, repository-relative): <art_src/review/KEY/candidates.png> · <art_src/review/KEY/on-target-bg.png> · <art_src/review/KEY/before-after-r1.png> · <representative scene (L2)>
 Refinement rounds: <n of budget> — issues fixed: <list>
 Preflight: dimensions <ok>, frames and order <ok>, alpha and edges <ok>, naming and directory <ok>, variants <ok>, provenance <ok>, write set (`git status --short`) <ok>
-UNVERIFIED: <check — why>, or none
+Stage: art-ready (in-context checks deferred; not production-accepted until verified)
+Deferred: <UNVERIFIED — deferred to <integration Task key>: <in-context check>>, or none
+UNVERIFIED (other): <check — why>, or none — any of these fails a hard gate
 Animated: pivot <x,y>, frame timing intent <ms per frame>, loop <yes/no>
 Known limitations: <list, or none>
 Self-check is not an approval.
@@ -55,6 +57,8 @@ Import and resources: <settings changed>
 States wired: <list>
 Evidence (committed): <art_src/review/KEY/<state>-<W>x<H>.png per state and resolution>
 Performance: <measurement against the budget>
+Deferred checks validated: <art Task key · asset · check — pass | fail — evidence path>, one line each
+Verified assets: <list>; not verified: <asset — open check>
 Art change requests sent to game-artist: <comment link, or none>
 UNVERIFIED: <check — why>, or none
 ```
@@ -62,9 +66,11 @@ UNVERIFIED: <check — why>, or none
 ## 4. Review verdict (`qa` or another review stage)
 ```md
 Verdict: <approved | changes requested>
+Stage judged: <art-ready | integration-ready>
 CI: <statusCheckRollup result>
 Hard gates: licence/provenance <pass|fail|UNVERIFIED> · originality <…> · technical contract <…> · readability at target size <…> · evidence <…> · write set <…>
 Scores (0–2, with observation): readability <n — …> · art direction <n — …> · craft <n — …> · coherence <n — …> · production <n — …> · evidence <n — …>
+Deferred (art-ready only): <UNVERIFIED — deferred to <integration Task key>: <check>>, or none · Verified (integration-ready only): <assets>; not verified: <asset — open check>
 Findings:
 1. <file, frame, region> — expected <…> — actual <…> — severity <blocker|major|minor> — evidence <path> — owner <role>
 ```
