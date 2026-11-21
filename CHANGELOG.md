@@ -5,6 +5,17 @@ All notable changes to the Game Studio framework are recorded here. The format f
 ## [Unreleased]
 
 ### Added
+- Authentication migration Phase B, repository part (`docs/architecture/auth-migration-phase-b.md`; no live change):
+  - `board_auth.py`, a shared Board-credential helper (D-AUTH-04): the mode from `/api/health`; nothing read or sent in `local_trusted`; in `authenticated` mode `PAPERCLIP_BOARD_TOKEN` or a Windows Credential Manager entry, fail closed, never `PAPERCLIP_API_KEY`, refused inside an agent run, 401 and 403 told apart, keys redacted. Wired into `pc.py`, `post-import.py`, `sync-instructions.py`, `check-agent-drift.py` and `merge-audit.py`. `pc.py` reads the Board identity from `/api/cli-auth/me`.
+  - `scripts/maintenance/migrate-participants.py` (D-AUTH-02): the A.4-verified guarded participant update, with the VA-4c and VA-5 skips, verification after each change and rollback by swapping `--from`/`--to`. Dry-run inventory today: SOU-17 and SOU-30 to change, SOU-28 to be decided first.
+  - `scripts/maintenance/auth-sandbox.py`: isolated instances for WS-1, WS-2 and WS-5, enforcing the step2 §3.1 boundaries. The isolated runs are not done yet (the live instance must be stopped first).
+  - WS-3 agent verification plan, WS-4 claim-URL procedure (retention: delete after the claim), WS-5 explicit-role rule, WS-6 inventory method. Board decisions of 2026-11-21: isolated runs yes, Cursor risk accepted for now (G-14 stays open).
+  - Tests: `test_board_auth.py` (14), `test_migrate_participants.py` (7).
+- Company OS roadmap Phases 1–4, Stage A plan and Stage B repository work (`docs/roadmap/implementation-plan.md`):
+  - Phase 1: Task evidence ledger and MUST-by-MUST matrix in `stage1-gap-analysis.md`; register and document drift fixed (phases, open questions, dependency registry, ADR-022 in security operations, package import in onboarding, project registry).
+  - Phase 2: `validate-registries.py` with a strict stdlib YAML subset reader, `check-dependencies.py` (found cursor-cli drift; registry not changed), `check-agent-drift.py`.
+  - Phase 3: not built (D-11).
+  - Phase 4: `maxConcurrentRuns: 1` for `gameplay-programmer` and `game-designer` in `agents.json` (live apply pending), `merge-audit.py`, the provider comparison protocol in `provider-allocation.md` §6.
 - OQ-042 Phase 6, P6-A (W1–W5; implementation only, nothing done in Soucean or Paperclip):
   - **W1:** `review-pack` through `pc.py` reads the issue and the task from Paperclip. It requires `in_review`, the right identity, and a project configured for the repository. Goal = title; acceptance criteria and write set only from exactly one `## Acceptance criteria` and one `## Write set` plain list (task-contract §2). Anything missing, ambiguous or not a list is refused, never inferred. No state or task file through `pc.py`; `--task-file` is refused there.
   - **W2:** reviewer profile and role. Profile `claude-reviewer-strict` and role `code-reviewer`; `config/paperclip/reviewer-settings.json`. `build-package.py --with-reviewer --staging-root --reviewer-cwd` builds it only on request and refuses a configuration that fails `check_reviewer_config`. That check now also requires `--strict-mcp-config`, `--no-session-persistence`, heartbeat off and `maxConcurrentRuns` 1. `post-import.py --resume` never resumes the reviewer.

@@ -1,5 +1,7 @@
 # Codex Integration
 
+> **Status (2026-11-21):** Codex CLI 0.166.0 is installed on the Windows studio machine (OQ-009), but no agent uses it: there is no Codex account, and the Board deferred Codex (OQ-010). The verification note below refers to the retired Ubuntu machine.
+
 **Provider ID:** `codex_local` · **Verified against:** `codex exec --help` of the Codex binary **0.166.0-alpha.5.1** found on the retired Ubuntu machine (bundled with the ChatGPT desktop app), 2026-11-03. **Codex is not installed on the Windows studio machine**; install the standalone CLI (OQ-009). Latest npm release: `@openai/codex` 0.166.0. Flags may differ slightly between the alpha binary and the stable release; re-verify after installation.
 
 ## 1. Role in the studio

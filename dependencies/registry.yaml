@@ -23,7 +23,7 @@ dependencies:
     install:
       strategy: external-service
       reference: https://github.com/paperclipai/paperclip#quickstart
-    integrationStatus: approved    # ADR-002 approves Paperclip as the orchestrator; not yet installed
+    integrationStatus: approved    # ADR-002; installed 2026-11-03 (OQ-031), pinned (OQ-008), still 2026.1023.0 on 2026-11-21
     usedBy: [studio]
     compatibility: "Node.js 24.11+ per Paperclip architecture docs; starts on native Windows 11 (OQ-031, partially verified); embedded PostgreSQL by default; pnpm 9 only for source checkouts."
     notes: "Docs reviewed at repo commit 7b8aa60. See docs/integrations/paperclip-integration.md."
@@ -37,12 +37,12 @@ dependencies:
     license: proprietary (Anthropic terms)
     required: true
     versionConstraint: ">=2.1.273"
-    verifiedVersion: "2.1.316 (~/.local/bin/claude on the Windows studio machine, 2026-11-03)"
+    verifiedVersion: "2.1.329 (claude --version on the Windows studio machine, 2026-11-21; first verified 2.1.316 on 2026-11-03)"
     install:
       strategy: global-cli
       reference: https://code.claude.com/docs
     integrationStatus: approved     # ADR-008; Paperclip adapter claude_local
-    usedBy: [director, producer, project-manager, game-designer, gameplay-programmer, ui-designer]
+    usedBy: [director, producer, project-manager, game-designer, ui-designer, qa]   # Soucean roster, config/paperclip/agents.json (2026-11-21)
     compatibility: "Paperclip adapter type claude_local."
     notes: "See docs/integrations/claude-code-integration.md."
 
@@ -59,8 +59,8 @@ dependencies:
     install:
       strategy: global-cli
       reference: https://github.com/openai/codex
-    integrationStatus: approved     # ADR-008; standalone install pending (OQ-009)
-    usedBy: [gameplay-programmer, qa]
+    integrationStatus: approved     # ADR-008; installed 0.166.0 (OQ-009) but not used: no account, deferred by the Board 2026-11-21 (OQ-010)
+    usedBy: []   # no agent uses Codex (OQ-010 deferred)
     compatibility: "Paperclip adapter type codex_local."
     notes: "Do not rely on app-bundled binaries. See docs/integrations/codex-integration.md."
 
@@ -77,7 +77,7 @@ dependencies:
       strategy: global-cli
       reference: https://cursor.com/docs/cli/installation
     integrationStatus: approved     # Board approved 2026-11-03; adapter test pending (OQ-033)
-    usedBy: [qa]
+    usedBy: [gameplay-programmer, web-engineer]   # Soucean roster (2026-11-21)
     compatibility: "Paperclip adapter type cursor, package @paperclipai/adapter-cursor-local (commands agent / cursor-agent). The CLI updates itself by default."
     notes: "Third provider, mainly to give qa a non-Claude model. See docs/integrations/cursor-integration.md."
 

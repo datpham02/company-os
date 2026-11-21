@@ -14,6 +14,10 @@ from unittest import mock
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # python -I leaves the script folder off sys.path
 import pc  # noqa: E402
 
+# Offline: the Board identity GET /cli-auth/me would return in local_trusted, and no health probe.
+pc._BOARD["id"] = "local-board"
+pc.board_auth._MODE[pc.API] = "local_trusted"
+
 CID, PA, PB = "co-1", "proj-a", "proj-b"
 
 

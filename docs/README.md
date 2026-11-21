@@ -61,6 +61,7 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 - [data-flow.md](architecture/data-flow.md): what flows between Paperclip, Game Studio, Runtime, providers, Git, tools.
 - [security-architecture.md](architecture/security-architecture.md): credentials, permissions, approval boundaries.
 - [stage1-gap-analysis.md](architecture/stage1-gap-analysis.md): requirements Paperclip did not meet in Stage 1, and the response to each.
+- [auth-migration-phase-b.md](architecture/auth-migration-phase-b.md): authentication migration Phase B: Board-token support, participant migration and sandbox tools; WS-3 to WS-6 procedures; isolated-run status.
 - [company-os-migration-map.md](architecture/company-os-migration-map.md): file-by-file restructure into `knowledge/` and departments (M1 done 2026-11-05).
 
 ### Design (`design/`)
@@ -90,6 +91,7 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 
 ### Roadmap (`roadmap/`)
 - [phases.md](roadmap/phases.md): what to build, in what order, and what must be verified first.
+- [implementation-plan.md](roadmap/implementation-plan.md): evidence-based plan for Phases 1–4 (`PROPOSED`, Stage A, 2026-11-21).
 - [open-questions.md](roadmap/open-questions.md): unverified assumptions (`OQ-NNN`) and conflicts (`C-NNN`).
 
 ### Company knowledge (`../knowledge/`, ADR-019)

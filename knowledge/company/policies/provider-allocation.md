@@ -5,16 +5,16 @@
 
 Provider is configuration, not identity ([ADR-008](../../../docs/decisions/ADR-008-provider-abstraction.md)). Moving a role to another provider never requires rewriting its instructions.
 
-## 1. Current state (2026-11-04)
+## 1. Current state (2026-11-21, Soucean)
 
 | Provider | Paperclip adapter | Status | Agents today |
 |---|---|---|---|
-| Claude Code | `claude_local` | Connected | 7 of 8 (all except QA) |
-| Cursor CLI (`gpt-5.3-codex`) | `cursor` | Connected | `qa` |
+| Claude Code | `claude_local` | Connected | 6 of 8: `director`, `producer`, `project-manager`, `game-designer`, `ui-designer`, `qa-engineer` |
+| Cursor CLI (`gpt-5.3-codex`) | `cursor` | Connected | `gameplay-programmer`, `web-engineer` |
 | Gemini CLI | `gemini_local` | Tried 2026-11-04; login failed; uninstalled | — |
-| Codex CLI | `codex_local` | Not installed (OQ-009) | — |
+| Codex CLI | `codex_local` | Installed (0.166.0, OQ-009); no account, deferred by the Board on 2026-11-21 (OQ-010) | — |
 
-Nearly all work draws on the Claude quota, and Cursor runs only reviews, which often end without a recorded decision (E5 in [task-contract.md](../standards/task-contract.md)).
+On 2026-11-04 (the earlier company `GAM`) Cursor ran only `qa` reviews, which often ended without a recorded decision (E5 in [task-contract.md](../standards/task-contract.md)). In Soucean, Cursor runs the two implementation roles; they have no allow list, an accepted risk until the authentication migration (implementation plan D-05).
 
 ## 2. Inputs
 
@@ -74,6 +74,32 @@ Every review is cross-provider. Changes from today: `qa` moves to Claude Code (C
 2. A fine-grained `GH_TOKEN` for that repository bound to the agent.
 3. Switch one role at a time, `gameplay-programmer` first; one trial Task reviewed by `qa` on Claude Code.
 4. Record the result here and in [../ORGANIZATION.md](../ORGANIZATION.md).
+
+## 6. Provider comparison protocol (Phase 4, P4-T04; `PROPOSED`)
+
+Fit scores in §2 change only on evidence. This is how the evidence is collected.
+
+1. **Pair:** the same Task class run once by each candidate provider:
+   - a small code Task with a write set of at most 5 files;
+   - or a review of the same Review Package.
+   Same role file, same permission profile class, same acceptance criteria.
+2. **Isolation:** a sandbox company and a throwaway repository, never a production repository. Each run needs the Board's authorization (provider quota, ADR-015).
+3. **Measures, recorded per run:**
+   - acceptance criteria met;
+   - review findings: count and severity;
+   - rework rounds until approval;
+   - run time;
+   - provider cost or quota used;
+   - rule violations (scope, recorded decision, credential rule).
+4. **Record:** one table row per run in this section's results table, with the run ids, and a dated note on any fit-score change in §2.
+5. **Scope today:**
+   - Claude Code (`claude_local`) and Cursor CLI (`cursor`);
+   - Codex is excluded until OQ-010 is reopened (no account, Board 2026-11-21);
+   - Gemini is excluded (login failed, §1).
+
+| Date | Task class | Provider | Criteria met | Findings | Rework | Time | Cost | Violations | Runs |
+|---|---|---|---|---|---|---|---|---|---|
+| — | No comparison run yet | | | | | | | | |
 
 ## Related documents
 [../../../docs/decisions/ADR-008-provider-abstraction.md](../../../docs/decisions/ADR-008-provider-abstraction.md) · [../../../docs/integrations/cursor-integration.md](../../../docs/integrations/cursor-integration.md) · [../../../docs/architecture/security-architecture.md](../../../docs/architecture/security-architecture.md) · [agent-system.md](../../../docs/design/agent-system.md)

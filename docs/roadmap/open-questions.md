@@ -14,30 +14,30 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-002 | Who owns Task Workspace (worktree) creation, and where do Paperclip's live? | Partially verified | Stage 1 setup, ADR-006 |
 | OQ-003 | Does a `process`-adapter agent receive the Task ID and resolved workspace? | Resolved (no) | Runtime Stage 2 |
 | OQ-004 | Task key format and branch naming in Paperclip worktree mode | Partially verified | Branch conventions |
-| OQ-005 | How is merge approval made enforceable and checkable? | Partially verified (Paperclip side works; GitHub link missing) | ADR-009 operation |
+| OQ-005 | How is merge approval made enforceable and checkable? | Resolved for the Paperclip side; GitHub link missing (accepted manual two-step, G-4) | ADR-009 operation |
 | OQ-006 | Can `director` be the Paperclip root (CEO) agent? | Partially verified | Studio setup |
 | OQ-007 | Can `knowledge/company/` + `knowledge/company/agents/` be imported with `paperclipai company import`? | Resolved | — |
-| OQ-008 | Which Paperclip version to pin, and how stable is its API? | Open | Installation |
+| OQ-008 | Which Paperclip version to pin, and how stable is its API? | Resolved (pinned 2026.1023.0); upgrades follow the re-check list | Installation |
 | OQ-009 | How should Codex CLI be installed (not on PATH)? | Resolved | — |
-| OQ-010 | How does Codex authenticate in headless runs on this machine? | Partially verified | Codex provider |
+| OQ-010 | How does Codex authenticate in headless runs on this machine? | Deferred (no Codex account; Board 2026-11-21) | Codex provider |
 | OQ-011 | How well do headless permission modes confine agents? | Resolved (Claude); Cursor in OQ-033 | Security profiles |
 | OQ-012 | Are subscription logins acceptable for automated runs (terms, quotas)? | Open | Provider auth |
 | OQ-013 | Runtime implementation language | Open (TypeScript proposed) | Runtime Stage 2 |
 | OQ-014 | Runtime state store | Open | Runtime Stage 2 |
 | OQ-015 | Concurrency and resource limits on this machine | Open | Parallel tasks |
 | OQ-016 | Who presses "merge"? | Open (human in GitHub until resolved) | ADR-009 |
-| OQ-017 | GitHub credential model for agents | Open | First game project |
+| OQ-017 | GitHub credential model for agents | Resolved (ADR-022: one shared fine-grained token, accepted risk) | First game project |
 | OQ-018 | Who creates new Game Repositories? | Open (Board Operator until resolved) | project-initialization |
 | OQ-019 | License of the Framework Repository | Open | Publishing |
 | OQ-020 | Where do OpenSpec specs live, and which OpenSpec version? | Open | OpenSpec integration |
 | OQ-021 | How to use Claude Code Game Studios without copying it | Open | Dependency evaluation |
 | OQ-022 | Engine choice and worktree compatibility | Open | Per project |
 | OQ-023 | How do role instructions reach the CLI under Paperclip adapters? | Partially verified | Stage 1 setup |
-| OQ-024 | Paperclip deployment mode and installation on this machine | Open | Stage 1 |
+| OQ-024 | Paperclip deployment mode and installation on this machine | Resolved (`local_trusted` on loopback, 2026.1023.0); authenticated mode in OQ-043 | Stage 1 |
 | OQ-025 | Backup procedure for Paperclip data | Partially verified (backup creation works; restore untested) | Operations |
 | OQ-026 | Is Hoppscotch MCP needed? | Open | Dependency evaluation |
 | OQ-027 | Stronger filesystem isolation without Docker | Open | Security |
-| OQ-028 | Framework Repository not yet under Git; GitHub account mapping | Resolved | — |
+| OQ-028 | Framework Repository not yet under Git; GitHub account mapping | Resolved (now `datpham02/company-os`, ADR-018) | — |
 | OQ-029 | Overlap with "Paperclip Runner" | Open | ADR-011 |
 | OQ-030 | Can one Paperclip agent run concurrent heartbeats for different Tasks? | Resolved (yes) | Parallel tasks |
 | OQ-031 | Does Paperclip run on native Windows? | Partially verified (server, import, agent test pass; wizard sign-in fails) | Stage 1, ADR-013 |
@@ -142,7 +142,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Current assumption:** Pin the npm `paperclipai` version used at install time; record it in the dependency registry.
 - **Verification method:** Check Paperclip release notes (`releases/` directory in its repo) for API changes before each upgrade.
 - **Impact if incorrect:** Broken integration after upgrades.
-- **Status:** Open.
+- **Result:** `paperclipai@2026.1023.0` installed on 2026-11-03 (OQ-031) and globally on 2026-11-04 (OQ-034), recorded in `dependencies/registry.yaml`. It is still the installed version on 2026-11-21; there has been no upgrade, although newer releases exist (2026.1117.0 was reported available, OQ-025). Before any upgrade, run the re-check list in [review-package-r6-phase6-readiness.md](../design/review-package-r6-phase6-readiness.md) §8.
+- **Status:** Resolved (version pinned). API stability is handled per upgrade.
 
 ### OQ-009 — Codex installation
 - **Why it matters:** Codex is a v1 Provider.
@@ -157,7 +158,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Verified so far:** Paperclip docs state Codex reads credentials from `$CODEX_HOME/auth.json`; `~/.codex/` exists on this machine. `codex login` exists.
 - **Verification method:** `codex login status` (check availability in `codex login --help`), then a test `codex exec` in a scratch repository.
 - **Result (2026-11-03, Windows):** `codex login --with-api-key` (key read from stdin) stores the key; `codex login status` reports "API key configured" and notes that authentication is checked only on the first request. A test `codex exec --sandbox read-only` in a scratch repository reached the OpenAI API and failed with "Quota exceeded. Check your plan and billing details." The API account has no usable credit yet. ChatGPT sign-in (`codex login`) asked for phone verification and was rate-limited.
-- **Status:** Partially verified.
+- **Status:** Deferred. The Board decided on 2026-11-21 to skip Codex for now: there is no Codex account. Phase 0 items 0.2 and 0.7 stay partial on the Codex side. Reopen when an account exists.
 
 ### OQ-011 — Headless permission confinement
 - **Why it matters:** Security profiles in [security-architecture.md §4](../architecture/security-architecture.md#4-agent-permissions-provider-level).
@@ -225,7 +226,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Verification method:** Create the token; verify an agent can push a Task Branch and open a PR, and cannot push to a protected Default Branch.
 - **Result (2026-11-03):** A fine-grained token limited to `datpham02/lamplight-vigil` (Contents and Pull requests read/write, 90-day expiry) is stored as the Paperclip company secret `GH_TOKEN` (provider `local_encrypted`). It is bound as `env.GH_TOKEN` (`secret_ref`, version `latest`) to `game-designer`, `gameplay-programmer` and `ui-designer`. `qa` is not bound yet; that needs a Board decision. The game repository's local clone uses `credential.helper = !gh auth git-credential`, so `git push` and `gh` both use `GH_TOKEN` when it is set.
 - **Result (GAM-2, 2026-11-04):** `gameplay-programmer` pushed its task branch with the bound token. `gh pr create` first failed with "Resource not accessible by personal access token": the token had been created without Pull requests permission. After the Board added **Pull requests: Read and write** (editing a fine-grained token keeps its value, so the Paperclip secret did not change), the agent opened PR datpham02/lamplight-vigil#1. Branch protection then requires one approval, and the PR author is the account itself, so merging needs the owner's admin bypass in the GitHub UI.
-- **Status:** Resolved for the first Game Repository.
+- **Status:** Resolved for the first Game Repository. Since 2026-11-21 the model is ADR-022: one shared fine-grained `GH_TOKEN` on the Board's account with *All repositories*, an accepted risk.
 
 ### OQ-018 — Creating Game Repositories
 - **Current assumption:** The Board Operator creates the repository (GitHub UI or `gh repo create`) after the approval step in [project-initialization.md](../../knowledge/company/workflows/project-initialization.md).
@@ -256,9 +257,10 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Status:** Partially verified.
 
 ### OQ-024 — Paperclip deployment on this machine
-- **Found:** Paperclip not installed. Documented install: `npx paperclipai onboard --yes`; modes `local_trusted` (loopback, no login) and `authenticated` (private/public).
+- **Found (before installation):** Paperclip not installed. Documented install: `npx paperclipai onboard --yes`; modes `local_trusted` (loopback, no login) and `authenticated` (private/public).
 - **Current assumption:** `local_trusted` on loopback for v1.
-- **Status:** Open.
+- **Result:** installed on the Windows studio machine on 2026-11-03 in `local_trusted` mode on `127.0.0.1:3100` (OQ-031); version pinned (OQ-008). The move to `authenticated` mode is OQ-043 and the authentication migration.
+- **Status:** Resolved for v1.
 
 ### OQ-025 — Paperclip backup
 - **Found:** Paperclip uses embedded PostgreSQL by default; `docs/deploy/database.md` exists in the Paperclip repo but was not reviewed for backup commands.
@@ -284,6 +286,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 
 ### OQ-028 — Framework Repository Git state
 - **Found (2026-11-03):** The repository is under Git with remote `git@github.com:datpham02/game-studio.git`; documentation v1.0 is pushed as commit `9d8ebb6`.
+- **Later:** renamed to `datpham02/company-os` on 2026-11-05 (ADR-018); history, issues and PRs kept. Commit `9d8ebb6` is no longer reachable from any branch (the history was rewritten before the first PRs); the earliest reachable commits are from the same day.
 - **Status:** Resolved.
 
 ### OQ-029 — "Paperclip Runner"

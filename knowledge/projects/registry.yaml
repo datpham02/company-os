@@ -40,6 +40,7 @@ projects:
     name: Lamplight Vigil
     department: game
     contributingDepartments: [web]   # hosted on Soucean Game through the game-platform contract
+    type: game                    # explicit (the schema default); 2026-11-21
     status: active                # initialization finished 2026-11-04: concept GAM-1, seed GAM-2, vision GAM-5, milestone plan GAM-7
     repository:
       url: https://github.com/datpham02/lamplight-vigil.git
@@ -57,7 +58,7 @@ projects:
     department: web
     contributingDepartments: [game]
     type: platform                # ADR-014 (Accepted 2026-11-04)
-    status: initializing          # repo + Paperclip project created 2026-11-04; seeding next
+    status: active                # Board 2026-11-21: initialization finished (seed GAM-20; M1 design closed 2026-11-05; M2 under way: SOU-27, SOU-29 merged)
                                   # Plan and M0 checklist: docs/plans/ in the soucean-game repository (moved at seeding, GAM-20). Contract: knowledge/company/shared/game-platform-contract.md (v1, ADR-020).
     repository:
       url: https://github.com/datpham02/soucean-game.git
