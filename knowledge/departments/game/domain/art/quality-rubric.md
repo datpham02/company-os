@@ -17,6 +17,19 @@ Any failed or unverified hard gate means `changes_requested` (or `blocked` when 
 
 Missing evidence is `UNVERIFIED`, not a pass.
 
+## Acceptance stages
+An asset is accepted in three stages. Each stage has its own hard gates; no stage waives a gate, and only a **verified** asset counts as production-accepted.
+
+| Stage | Reached when | Hard gates that must pass at this stage | May be deferred |
+|---|---|---|---|
+| **Art-ready** | The art Task's review stages approve and the Board merges it | Licence and provenance · originality · technical contract of the files · scope · evidence for every art-side check · critical readability **at target size on the target background colour** (`art-ops.py contact --bg`) and in every listed state | Only the **in-context checks** below, and only to a **named integration Task** |
+| **Integration-ready** | The integration Task's review stages approve and the Board merges it | Technical contract in the engine (import, filtering, pivot, frame timing, loop) · every deferred check of the assets it integrates, with committed in-engine evidence · performance budget · evidence · scope | Nothing |
+| **Verified** | `qa`'s verdict on the integration Task records each integrated asset as verified | Every deferred check passed; no open `blocker` finding on the asset | — |
+
+**In-context checks (the only deferrable ones):** readability over the real background or scene; scale against the other in-game assets; animation and VFX timing and loop in context; UI legibility in place at the device resolutions. Nothing else may be deferred: licence and provenance, originality, file-level technical contract, scope, art-side evidence and readability at target size are always checked at art-ready.
+
+**How a deferral is written:** `UNVERIFIED — deferred to <integration Task key>: <check>`, in the art handoff and repeated in the reviewer's verdict. A deferral without an existing integration Task key is not allowed: the reviewer requests changes (or the asset stays art-ready and is never counted as verified). The check stays `UNVERIFIED` until the named integration Task validates it with in-engine evidence; the integration Task's description lists every check deferred to it. A deferred check that fails is routed as a finding to a new art fix Task (L0), which blocks the asset's verification; the integration Task does not redraw the art.
+
 ## 2. Scored categories (0–2)
 Score each category that applies: **0** fails · **1** partly meets · **2** meets, with evidence. Always write the observation that justifies the score; a number alone is not a review. The total is for comparing pilot runs only and never overrides a hard gate.
 

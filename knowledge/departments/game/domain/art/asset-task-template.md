@@ -46,6 +46,7 @@ Reviewers (Paperclip review stages): qa<, game-designer when readability is at s
 - Licence rule: <project rule, e.g. original or CC0 only; AI-made art allowed under the Board decision of 2026-11-22>
 - Approved tools for this Task: <comfy-draft.py, art-ops.py, PixelFX (licence permitting), Godot capture>
 - Iteration budget: <default 2 critique-and-refine rounds>
+- Integration Task for in-context checks: <Task key, or none — then nothing may be deferred and the asset can reach art-ready only>
 - Open questions for art direction: <or none>
 
 ## Procedure (game-artist)
@@ -60,12 +61,13 @@ Reviewers (Paperclip review stages): qa<, game-designer when readability is at s
 - [ ] Output matches the technical spec: dimensions, frames, alpha, naming, directory, every variant.
 - [ ] Every new or changed file has a provenance record the licence rule allows; no third-party or traced art.
 - [ ] Evidence attached as listed below; limitations and unverified checks stated explicitly.
+- [ ] Acceptance stage reached: **art-ready**. In-context checks not judged here are written `UNVERIFIED — deferred to <integration Task key>: <check>`; nothing else is deferred. The asset is not production-accepted until the integration Task verifies them.
 
 ## Evidence required in the handoff
 <L0: before/after at target size. L1: candidate contact sheet at target size and why others fail; selected asset; before/after of each refinement round. L2: as L1, plus the representative scene and the decision record.> Always: preflight results with command output, provenance, pivot and timing for animated assets, known limitations, `ready for integration` or `art only`. Every image is committed under `art_src/review/<TASK-KEY>/` and cited by repository-relative path; target-background previews use `art-ops.py contact --bg <R G B>`. Staging paths, uncommitted files and descriptions are not evidence (reviewers mark them UNVERIFIED).
 
 ## Review rubric (for every reviewer)
-Hard gates (any failure or missing evidence = changes requested): licence and provenance · originality · technical contract · critical readability at target size · required evidence · write set only.
+Hard gates at this stage (art-ready; any failure or missing evidence = changes requested): licence and provenance · originality · technical contract of the files · critical readability at target size on the target background colour, in every listed state · required evidence · write set only. Only in-context checks (readability over the real background or scene, in-engine scale against other assets, animation and VFX timing in context, UI legibility in place) may be deferred, each written `UNVERIFIED — deferred to <integration Task key>: <check>`; a deferral without that key = changes requested. Approving this Task makes the asset art-ready, not production-accepted; it stays UNVERIFIED for the deferred checks until the integration Task validates them.
 Score each that applies 0 (fails), 1 (partly), 2 (meets, with evidence) and write the observation: readability · art direction · craft · coherence · production · evidence. Scores never override a hard gate. A 0 in art direction, craft or coherence = changes requested even when every hard gate passes, unless game-designer (director for vision or pillars) records an explicit exception in this Task naming the category, what is accepted and why; a 1 there is a finding, approvable only as minor with a follow-up Task or that exception. Taste questions without a named reference trait go to the design authority.
 Findings: location (file, frame, region), expected, actual, severity (blocker / major / minor), evidence, owner. Routing: look, size, frames, palette, provenance → this Task, game-artist · in-game behaviour, import, timing logic, shader, performance → the integration Task, gameplay-programmer · unclear or wrong requirement → game-designer.
 Reviewers never edit, commit or push this branch; record approve or changes requested in Paperclip.
@@ -98,7 +100,11 @@ Reviewers (Paperclip review stages): qa<, game-artist for the visual result when
 - Preview states and resolutions to capture: <e.g. idle and hit, at 1920x1080 and 2400x1080>
 - Performance budget: <draw calls, texture memory, particle count>
 
+## Deferred checks to validate
+<Copied from each art handoff and verdict: `<art Task key> · <asset> · <check>`. Every one must be validated here.>
+
 ## Acceptance criteria
+- [ ] Every deferred check listed above passes, each with a committed in-engine screenshot or frame strip cited by path; a failing check is a finding routed to a new art fix Task, which blocks verification of that asset.
 - [ ] The asset appears in <scene> in every listed state, with the pivot, timing and loop from the art handoff.
 - [ ] In-engine screenshots (or frames for motion) at each listed resolution and state are copied to `art_src/review/<TASK-KEY>/`, committed, cited by path and inspected.
 - [ ] The source art was not redrawn; any needed art change was requested from game-artist in a comment.
@@ -107,6 +113,9 @@ Reviewers (Paperclip review stages): qa<, game-artist for the visual result when
 
 ## Review routing
 Import, behaviour, timing logic, shader, performance → this Task, gameplay-programmer · source look, frames, palette → a new art Task for game-artist · requirement → game-designer.
+
+## Review rules (for every reviewer)
+Hard gates at this stage (integration-ready): technical contract in the engine (import, filtering, pivot, frame timing, loop) · every deferred check above validated with committed in-engine evidence · performance budget · evidence · write set only. Nothing may be deferred further. qa's verdict lists each integrated asset as `verified` or names the open check; only verified assets are production-accepted. Reviewers never edit, commit or push this branch; record approve or changes requested in Paperclip.
 ```
 
 ## 3. Game UI Task
