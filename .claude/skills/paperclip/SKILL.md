@@ -5,7 +5,7 @@ description: Operate the company's Paperclip instance for the Board Operator fro
 
 # Paperclip control (Board Operator)
 
-The studio runs on a local Paperclip in `local_trusted` mode (`http://127.0.0.1:3100`). Every command below is a REST call made as the **Board**, so treat each write as the user's own action.
+The studio runs on a local Paperclip in `local_trusted` mode (`http://127.0.0.1:3100`). Every command below is a REST call made as the **Board**, so treat each write as the user's own action. The Board identity is read from `GET /api/cli-auth/me` (`local-board` today). After the switch to `authenticated` mode the scripts send the Board key from `board_auth.py` (`PAPERCLIP_BOARD_TOKEN` or Windows Credential Manager, never `PAPERCLIP_API_KEY`) and stop when it is missing; `python -I .claude/skills/paperclip/scripts/board_auth.py status` shows the mode, the credential source (never the key) and the identity. Never ask for, print or type the key: the Board Operator stores it with `board_auth.py store`.
 
 Run every command from the repository root:
 

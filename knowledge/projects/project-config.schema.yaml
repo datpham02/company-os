@@ -1,5 +1,5 @@
 # JSON Schema (draft 2020-12), written in YAML, for knowledge/projects/registry.yaml.
-# Status: PROPOSED. Not yet enforced by any script (validation script is PLANNED).
+# Status: PROPOSED. Checked by scripts/maintenance/validate-registries.py (Phase 2, 2026-11-21), not enforced on commit.
 # Contract: docs/design/project-system.md
 $schema: "https://json-schema.org/draft/2020-12/schema"
 $id: "https://github.com/datpham02/company-os/knowledge/projects/project-config.schema.yaml"

@@ -4,7 +4,7 @@ Operational procedures implementing [../architecture/security-architecture.md](.
 
 ## 1. GitHub setup per Game Repository (Board Operator)
 
-1. Repository visibility: private unless deliberately public.
+1. Repository visibility: private unless deliberately public. (`lamplight-vigil` and `soucean-game` are deliberately public; see their README files.)
 2. Branch protection (or a ruleset) on the Default Branch:
    - require a pull request before merging, with at least 1 approving review;
    - block force pushes;
@@ -14,13 +14,19 @@ Operational procedures implementing [../architecture/security-architecture.md](.
 
 ## 2. Agent GitHub token
 
+The current model is [ADR-022](../decisions/ADR-022-author-pull-request-credential.md) (2026-11-21): **one shared token for every code-writing agent**, on the Board's own account.
+
 1. Create a **fine-grained personal access token** (GitHub Settings → Developer settings) with:
-   - *Repository access:* only the studio's Game Repositories;
-   - *Permissions:* Contents read/write, Pull requests read/write, Metadata read. Nothing else.
-   - Expiry: ≤ 90 days (`PROPOSED`).
-2. Store it in Paperclip as a company secret; bind it as `GH_TOKEN` only to code-writing agents (`gameplay-programmer`, `ui-designer`, `qa`, `game-designer`).
-3. Verify that the token can push a Task Branch and is rejected when pushing to the protected Default Branch.
-4. Calendar a rotation before expiry. Rotate immediately if a log or transcript may have exposed it.
+   - *Repository access:* *All repositories* of the Board's account. This is the Board's choice, an **accepted risk** recorded in ADR-022: the token also reaches repositories whose Default Branch is not protected, such as this framework repository. The stricter alternative is "only the studio's project repositories".
+   - *Permissions:* Contents read/write, Pull requests read/write, Metadata read. Nothing else: no administration, workflows, secrets or deletion.
+   - *Expiry:* at most 90 days.
+2. Store it in Paperclip as the company secret `GH_TOKEN` (a new version when rotating; bindings use `latest`). Bind it, by secret reference only, to the code-writing agents: in Soucean `game-designer`, `ui-designer`, `qa-engineer`, `gameplay-programmer`, `web-engineer` (`config/paperclip/agents.json`). Never to read-only agents.
+3. Make each agent clone use the token, not the host login: `credential.helper` reset, then `!gh auth git-credential` (ADR-022; `soucean-game` fixed 2026-11-21).
+4. **Known limit:** the token acts as the repository owner, so branch protection does **not** stop it. A test on 2026-11-21 confirmed that the owner's login can push to a protected Default Branch (Review Package R5, B5, an accepted risk). "Rejected when pushing to the protected Default Branch" is therefore **not** a valid check for this token. The Board's review of every PR is the gate.
+5. Calendar a rotation before expiry. Rotate immediately if a log or transcript may have exposed it: Paperclip does not redact `env` secrets in run logs ([gh-token-log-redaction-probe.md](../design/gh-token-log-redaction-probe.md)).
+6. **The Review Package packager token is separate:**
+   - read-only; held in Windows Credential Manager (`company-os/review-packager`), never in an agent's environment;
+   - its expiry date and a reminder are kept by the Board ([review-package-runbook.md](review-package-runbook.md)).
 
 ## 3. Provider credentials
 

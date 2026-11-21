@@ -71,7 +71,7 @@
 - `versionConstraint` is the policy; `verifiedVersion` is the fact.
 - `external-service` and `execution-provider` dependencies SHOULD be pinned (they change behaviour often).
 - Update policy: an upgrade is a Task. Read the upstream changelog → test on a scratch project → update `verifiedVersion` → Board approval for `required` dependencies.
-- Validation (`PLANNED` script `scripts/check-dependencies`): compare installed versions (`<tool> --version`) against constraints and report drift.
+- Validation: `scripts/maintenance/check-dependencies.py` (`IMPLEMENTED`, Phase 2, 2026-11-21) compares the installed version (`<tool> --version`) of the tools the studio machine runs with `verifiedVersion` and reports drift; it never installs anything. Registry structure and cross-references: `scripts/maintenance/validate-registries.py`.
 
 ## 7. Compatibility
 

@@ -26,15 +26,32 @@ API = os.environ.get("PAPERCLIP_URL", "http://127.0.0.1:3100/api").rstrip("/")
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
+def _load_board_auth():
+    """The shared Board-credential helper (D-AUTH-04), loaded by path: it lives next to pc.py."""
+    import importlib.util
+    path = os.path.join(REPO, ".claude", "skills", "paperclip", "scripts", "board_auth.py")
+    spec = importlib.util.spec_from_file_location("board_auth", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+board_auth = _load_board_auth()
+
+
 def call(method, path, body=None):
+    try:
+        hdrs = dict(board_auth.headers(API), **{"Content-Type": "application/json"})
+    except board_auth.AuthError as e:
+        raise SystemExit(board_auth.redact(e))
     req = urllib.request.Request(API + path, data=json.dumps(body).encode() if body is not None else None,
-                                 method=method, headers={"Content-Type": "application/json"})
+                                 method=method, headers=hdrs)
     try:
         with urllib.request.urlopen(req, timeout=60) as res:
             raw = res.read()
             return json.loads(raw) if raw else None
     except urllib.error.HTTPError as e:
-        raise SystemExit(f"{method} {path} -> {e.code}: {e.read().decode('utf-8', 'replace')[:300]}")
+        raise SystemExit(board_auth.http_error(method, path, e.code, e.read().decode("utf-8", "replace"), 300))
 
 
 def role_bodies():

@@ -1,6 +1,7 @@
 # Studio Bootstrap: Import Pre-configured Agents
 
-- **Status:** procedure `PROPOSED` ([ADR-016](../decisions/ADR-016-versioned-paperclip-package.md)). `scripts/setup/build-package.py` and `scripts/setup/post-import.py` are `IMPLEMENTED` and were used on 2026-11-05 to create the company **Soucean** (`SOU`); `sync-agents` is `PLANNED`.
+- **Status:** procedure `PROPOSED` ([ADR-016](../decisions/ADR-016-versioned-paperclip-package.md)). `scripts/setup/build-package.py` and `scripts/setup/post-import.py` are `IMPLEMENTED` and were used on 2026-11-05 to create the company **Soucean** (`SOU`); `sync-agents` (applying adapter config from Git) is `PLANNED`; drift is detected read-only by `scripts/setup/check-agent-drift.py --company <Name>` (Phase 2, 2026-11-21), and role texts are applied by `scripts/setup/sync-instructions.py`.
+- **Earlier company:** the first company, "Game Studio Soucean" (`GAM`), is **archived** in Paperclip (status `archived`, checked read-only on 2026-11-21). ADR-018 and older CHANGELOG lines describe it as "paused" on 2026-11-05. Its open work moved to `SOU-1`…`SOU-10`.
 - **Goal:** a fresh Paperclip gets the company, every agent with its reporting line, provider, permission profile, allowlist, budget and WIP limit, and the projects, from one import of versioned files. Only secrets and machine-specific values are entered locally. Nobody creates agents in the UI.
 
 ## 1. Verified facts (Paperclip 2026.1023.0, Windows 11)

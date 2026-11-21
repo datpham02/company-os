@@ -1,10 +1,11 @@
 """Paperclip control for the Game Studio Board Operator, through Paperclip's REST API.
 
 Stdlib only. Run with: python -I .claude/skills/paperclip/scripts/pc.py <command> [args]
-Requires Paperclip in local_trusted mode on loopback (Board context without login).
+Paperclip on loopback. In local_trusted mode the Board needs no login; in authenticated mode the Board key comes
+from board_auth.py (PAPERCLIP_BOARD_TOKEN or Windows Credential Manager; never PAPERCLIP_API_KEY).
 
 Environment: PAPERCLIP_URL (default http://127.0.0.1:3100/api), PAPERCLIP_COMPANY (name, prefix or id;
-default: the only active company).
+default: the only active company), PAPERCLIP_BOARD_TOKEN (authenticated mode only).
 """
 import argparse
 import datetime
@@ -21,9 +22,11 @@ import urllib.request
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import review_pack  # noqa: E402  (OQ-042 Phase 1: local only, no git, GitHub or Paperclip)
 import review_relay  # noqa: E402  (OQ-042 Phase 4a: Verdict Relay)
+import board_auth  # noqa: E402  (auth migration Phase B: Board credential, D-AUTH-04)
 
-API =os.environ.get("PAPERCLIP_URL", "http://127.0.0.1:3100/api").rstrip("/")
-BOARD_USER = "local-board"
+API = os.environ.get("PAPERCLIP_URL", "http://127.0.0.1:3100/api").rstrip("/")
+BOARD_LEGACY = "local-board"  # the implicit Board of local_trusted; the live identity comes from board_user()
+_BOARD = {}
 ACTIVE_RUN = {"queued", "starting", "running"}
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -35,15 +38,30 @@ class ApiError(Exception):
 
 def call(method, path, body=None):
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(API + path, data=data, method=method, headers={"Content-Type": "application/json"})
+    try:
+        hdrs = dict(board_auth.headers(API), **{"Content-Type": "application/json"})
+    except board_auth.AuthError as e:
+        raise ApiError(board_auth.redact(e))
+    req = urllib.request.Request(API + path, data=data, method=method, headers=hdrs)
     try:
         with urllib.request.urlopen(req, timeout=60) as res:
             raw = res.read()
             return json.loads(raw) if raw else None
     except urllib.error.HTTPError as e:
-        raise ApiError(f"{method} {path} -> {e.code}: {e.read().decode('utf-8', 'replace')[:400]}")
+        raise ApiError(board_auth.http_error(method, path, e.code, e.read().decode("utf-8", "replace")))
     except urllib.error.URLError as e:
         raise ApiError(f"Paperclip is not reachable at {API} ({e.reason}). Start it with runtime/tools/start-studio.cmd.")
+
+
+def board_user():
+    """The Board's Paperclip user id (GET /cli-auth/me): `local-board` in local_trusted, the claimed user after
+    the switch to authenticated (D-AUTH-04). Read once per process."""
+    if "id" not in _BOARD:
+        try:
+            _BOARD["id"] = board_auth.board_user_id(call)
+        except board_auth.AuthError as e:
+            raise ApiError(str(e))
+    return _BOARD["id"]
 
 
 # ---------- lookups ----------
@@ -160,7 +178,9 @@ def who(i, agent_names):
     if i.get("assigneeAgentId"):
         return agent_names.get(i["assigneeAgentId"], i["assigneeAgentId"][:8])
     if i.get("assigneeUserId"):
-        return "Board" if i["assigneeUserId"] == BOARD_USER else i["assigneeUserId"]
+        if i["assigneeUserId"] == board_user():
+            return "Board"
+        return "Board (legacy)" if i["assigneeUserId"] == BOARD_LEGACY else i["assigneeUserId"]
     return "-"
 
 
@@ -626,7 +646,7 @@ def board_decision(a, status, label):
     i = issue(a.key)
     s = i.get("executionState") or {}
     participant = s.get("currentParticipant") or {}
-    if i["status"] != "in_review" or participant.get("userId") != BOARD_USER:
+    if i["status"] != "in_review" or participant.get("userId") != board_user():
         raise ApiError(f"{a.key} is not waiting on the Board (status {i['status']}, stage {stage(i) or '-'})")
     if not a.comment.strip():
         raise ApiError("a Board decision needs a comment")
@@ -735,12 +755,12 @@ def cmd_create(a):
     if review_package:
         # Phase 6 W3 (QA option a): the review stage's participant is the Board identity the Verdict Relay
         # records as; no agent review stage. Shape per Paperclip 2026.1023.0's issueExecutionStageSchema.
-        stages = [{"type": "review", "participants": [{"type": "user", "userId": BOARD_USER}]}]
+        stages = [{"type": "review", "participants": [{"type": "user", "userId": board_user()}]}]
     else:
         stages = [{"type": "review", "participants": [{"type": "agent", "agentId": agent(c["id"], r)["id"]}]}
                   for r in a.review]
     if not a.no_approval:
-        stages.append({"type": "approval", "participants": [{"type": "user", "userId": BOARD_USER}]})
+        stages.append({"type": "approval", "participants": [{"type": "user", "userId": board_user()}]})
     # Always backlog: an assigned backlog issue wakes nobody. The Board is not inside a run, so Paperclip does
     # not make it inherit a run's workspace; no parentId or workspace field is sent.
     body = {"title": a.title, "description": desc, "assigneeAgentId": ag["id"], "status": "backlog"}

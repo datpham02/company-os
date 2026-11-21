@@ -21,7 +21,7 @@ Exit criteria: results written into [open-questions.md](open-questions.md); ADR-
 
 ## Phase 1: Stage 1 studio (configuration, not code)
 
-1. Create the real company and the 7 Agent Instances ([agent-onboarding.md](../../knowledge/company/workflows/agent-onboarding.md)).
+1. Create the real company and its Agent Instances ([agent-onboarding.md](../../knowledge/company/workflows/agent-onboarding.md)). Originally 7; the live company Soucean has 8 (`config/paperclip/agents.json`, 2026-11-21), plus the proposed Review Package `code-reviewer`. Done: see [implementation-plan.md](implementation-plan.md) §3.
 2. Configure GitHub token secret and branch protection ([security-operations.md](../operations/security-operations.md)).
 3. Create or register the first Game Project ([project-initialization.md](../../knowledge/company/workflows/project-initialization.md)).
 4. Run 5–10 real Tasks through [development-cycle.md](../../knowledge/company/workflows/development-cycle.md) and [code-review-and-merge.md](../../knowledge/company/workflows/code-review-and-merge.md).
@@ -53,4 +53,4 @@ Language and state store per OQ-013/OQ-014 (TypeScript + JSON files proposed).
 Resource limits (OQ-015), stronger isolation (OQ-027), automated merge-approval linkage (OQ-005/OQ-016), multi-provider comparisons.
 
 ## Related documents
-[open-questions.md](open-questions.md) · [../decisions/ADR-011-execution-path-selection.md](../decisions/ADR-011-execution-path-selection.md) · [../architecture/runtime-architecture.md](../architecture/runtime-architecture.md)
+[implementation-plan.md](implementation-plan.md) (Phase 1–4 plan, `PROPOSED`) · [open-questions.md](open-questions.md) · [../decisions/ADR-011-execution-path-selection.md](../decisions/ADR-011-execution-path-selection.md) · [../architecture/runtime-architecture.md](../architecture/runtime-architecture.md)
