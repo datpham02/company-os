@@ -4,11 +4,19 @@
 - **Copied into:** the `game-artist` role file (plan and handoff headings), the `gameplay-programmer` role file (integration evidence), and the art Task template (review format).
 
 ## Review evidence: where it lives and how reviewers open it
-Reviewers run in the Task Workspace and can open only what is on the Task Branch; they cannot rely on the staging folder, another machine or a description.
-1. Every image a reviewer must see (candidate contact sheet, target-background preview, before/after, representative scene, direction sheet) is written with `art-ops.py` to `art_src/review/<TASK-KEY>/` (or the review-evidence folder the project's `AGENTS.md` names), which is in the Task's write set, then committed and pushed.
-2. The handoff cites each image by its repository-relative path. Raw generator candidates stay in the staging folder; only the review sheets built from them are committed.
+Paperclip runs every review stage in the author's Task Workspace ([security-architecture.md §4](../../../../../docs/architecture/security-architecture.md#4-agent-permissions-provider-level), reviewer isolation), so a reviewer can open files in that workspace; it cannot rely on the staging folder, another machine or a description. The Board reads committed evidence on GitHub and workspace evidence on the studio machine. Each role uses only the tools it already has:
+
+| Task | Author | Capture with | Evidence folder | In the write set | Delivered by |
+|---|---|---|---|---|---|
+| Art | `game-artist` | `art-ops.py` (contact sheets, `--bg` previews, before/after); Godot frames where the asset already loads | `art_src/review/<TASK-KEY>/` | Yes | `art-ops.py` writes there directly; commit and push |
+| Integration | `gameplay-programmer` | The allowed Godot commands or the project's screenshot tool, at every state and resolution the Task lists | `art_src/review/<TASK-KEY>/` | Yes | Copy the captured frames there (its own workspace write access); commit and push |
+| Game UI | `ui-designer` | The allowed Godot commands only: `.godot/<name>*.png` and, in Deckbound, `.godot/qa/` | `.godot/` in the Task Workspace | **No** (generated, ignored by Git) | Left in the Task Workspace and listed by path; its allowlist cannot copy binary files elsewhere, and no new permission is added. `qa` recaptures the same states with the same commands for its verdict. A committed copy needs a Board decision ([OQ-049](../../../../../docs/roadmap/open-questions.md#oq-049--art-production-v2-delivery-and-tooling)) |
+
+A project may name another evidence folder in its `AGENTS.md`; it then replaces `art_src/review/<TASK-KEY>/` in the write set.
+1. Every image a reviewer must see (candidate contact sheet, target-background preview, before/after, representative scene, direction sheet, in-engine frames) is in the evidence folder above.
+2. The handoff cites each image by its path relative to the Task Workspace. Raw generator candidates stay in the staging folder; only the review sheets built from them are committed.
 3. Target-background preview: `art-ops.py contact --bg R G B --cell W H` with the background colour the brief names, at target size (`--filter nearest` for pixel art). A textured or in-scene background needs an in-engine screenshot (the integration Task, or a Godot frame where the asset can already be loaded); until compositing exists it is `UNVERIFIED`.
-4. A path in the staging folder, an uncommitted file, a path the reviewer cannot open, or a written description is **not evidence**: the reviewer marks the claim `UNVERIFIED`, which fails the evidence hard gate.
+4. A path in the staging folder, a path outside the Task Workspace, a file the reviewer cannot open, an uncommitted file where the table says committed, or a written description is **not evidence**: the reviewer marks the claim `UNVERIFIED`, which fails the evidence hard gate.
 
 ## 1. Plan comment (`game-artist`, before any file is written)
 ```md
@@ -45,7 +53,7 @@ Integration — <asset family> in <scene or system>
 PR: <link>
 Import and resources: <settings changed>
 States wired: <list>
-Evidence: <screenshot or frame paths per state and resolution>
+Evidence (committed): <art_src/review/KEY/<state>-<W>x<H>.png per state and resolution>
 Performance: <measurement against the budget>
 Art change requests sent to game-artist: <comment link, or none>
 UNVERIFIED: <check — why>, or none

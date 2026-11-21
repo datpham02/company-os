@@ -306,5 +306,174 @@ class PathBoundary(ArtOpsCase):
         self.refused("trim", self.st("a.png"), link)
 
 
+class CoverResizeBounds(ArtOpsCase):
+    """Finding (PR #87 re-review): --fit cover must not allocate an image larger than the target."""
+
+    def setUp(self):
+        super().setUp()
+        self.sizes = []
+        real = Image.Image.resize
+        test = self
+
+        def spy(im, size, *args, **kwargs):
+            test.sizes.append(tuple(size))
+            return real(im, size, *args, **kwargs)
+        Image.Image.resize = spy
+        self.addCleanup(setattr, Image.Image, "resize", real)
+
+    def check(self, src, fit, target=(64, 64)):
+        self.img(self.st("a.png"), src, (10, 20, 30, 255))
+        self.run_ok("resize", self.st("a.png"), self.st("b.png"), "--size", *map(str, target), "--fit", fit)
+        self.assertEqual(self.rgba(self.st("b.png")).size, target)
+        self.assertTrue(self.sizes)
+        for w, h in self.sizes:
+            self.assertLessEqual(w, target[0], self.sizes)
+            self.assertLessEqual(h, target[1], self.sizes)
+
+    def test_cover_tall_strip(self):
+        self.check((1, 4000), "cover")
+
+    def test_cover_wide_strip(self):
+        self.check((4000, 1), "cover")
+
+    def test_cover_wide_strip_to_tall_target(self):
+        self.check((4000, 3), "cover", (16, 200))
+
+    def test_contain_extreme_ratios(self):
+        self.check((1, 4000), "contain")
+        self.sizes.clear()
+        self.check((4000, 1), "contain")
+
+    def test_cover_keeps_the_centre(self):
+        im = self.img(self.st("a.png"), (30, 10), (0, 0, 255, 255))
+        for x in range(10, 20):
+            for y in range(10):
+                im.putpixel((x, y), (255, 0, 0, 255))
+        im.save(self.st("a.png"))
+        self.run_ok("resize", self.st("a.png"), self.st("b.png"), "--size", "10", "10", "--fit", "cover",
+                    "--filter", "nearest")
+        out = self.rgba(self.st("b.png"))
+        self.assertEqual({out.getpixel((x, y)) for x in range(10) for y in range(10)}, {(255, 0, 0, 255)})
+
+
+class KeyFloodFill(ArtOpsCase):
+    """Finding (PR #87 re-review): bounded, efficient border flood fill."""
+
+    def corridor(self, n):
+        """n x n: a red subject everywhere except a 1-px green corridor that winds as a serpentine from
+        the top-left border through every other row; its only opening is at (0, 1)."""
+        import numpy as np
+        a = np.zeros((n, n, 4), dtype=np.uint8)
+        a[...] = (200, 0, 0, 255)
+        green = (0, 200, 0, 255)
+        for y in range(1, n - 1, 2):
+            a[y, 1:n - 1] = green                      # a long horizontal corridor row
+            if y + 2 < n - 1:
+                x = n - 2 if (y // 2) % 2 == 0 else 1  # alternate ends join the next corridor row
+                a[y + 1, x] = green
+        a[1, 0] = green                                # the only opening to the border
+        return a
+
+    def test_long_winding_background_is_keyed(self):
+        import numpy as np
+        n = 257
+        a = self.corridor(n)
+        Image.fromarray(a, "RGBA").save(self.st("a.png"))
+        self.run_ok("key", self.st("a.png"), self.st("b.png"), "--color", "0", "200", "0")
+        out = np.asarray(self.rgba(self.st("b.png")))
+        green = (a[..., 1] == 200)
+        # every corridor pixel is reachable from the border through the serpentine, so all are keyed;
+        # the path is far longer than the image side, which the old capped loop never finished.
+        self.assertTrue((out[..., 3][green] == 0).all())
+        self.assertTrue((out[..., 3][~green] == 255).all())
+
+    def test_enclosed_pocket_stays_opaque(self):
+        import numpy as np
+        a = np.full((40, 40, 4), (0, 200, 0, 255), dtype=np.uint8)
+        a[10:30, 10:30] = (200, 0, 0, 255)
+        a[15:25, 15:25] = (0, 200, 0, 255)
+        Image.fromarray(a, "RGBA").save(self.st("a.png"))
+        self.run_ok("key", self.st("a.png"), self.st("b.png"))
+        out = np.asarray(self.rgba(self.st("b.png")))
+        self.assertEqual(out[0, 0, 3], 0)
+        self.assertEqual(out[20, 20, 3], 255)
+
+    def test_matches_reference_on_random_masks(self):
+        import numpy as np
+        from collections import deque
+        rng = np.random.default_rng(7)
+        for _ in range(20):
+            bg = rng.random((23, 31)) < 0.55
+            got = art_ops.border_connected(bg)
+            ref = np.zeros_like(bg)
+            q = deque((y, x) for y in range(bg.shape[0]) for x in range(bg.shape[1])
+                      if bg[y, x] and (y in (0, bg.shape[0] - 1) or x in (0, bg.shape[1] - 1)))
+            for y, x in q:
+                ref[y, x] = True
+            while q:
+                y, x = q.popleft()
+                for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+                    if 0 <= ny < bg.shape[0] and 0 <= nx < bg.shape[1] and bg[ny, nx] and not ref[ny, nx]:
+                        ref[ny, nx] = True
+                        q.append((ny, nx))
+            self.assertTrue((got == ref).all())
+
+    def test_worst_case_run_count_is_fast(self):
+        import time
+        import numpy as np
+        n = 1024
+        bg = np.indices((n, n)).sum(0) % 2 == 0      # checkerboard: the most runs per pixel
+        bg[::7, :] = True                            # with full rows to connect them
+        t = time.perf_counter()
+        art_ops.border_connected(bg)
+        self.assertLess(time.perf_counter() - t, 20)
+
+    def test_large_serpentine_is_fast(self):
+        import time
+        a = self.corridor(1025)[..., 1] == 200
+        t = time.perf_counter()
+        got = art_ops.border_connected(a)
+        self.assertLess(time.perf_counter() - t, 5)
+        self.assertTrue(got[a].all())
+
+
+class CanonicalPathsAndHardLinks(ArtOpsCase):
+    def setUp(self):
+        super().setUp()
+        self.img(self.st("a.png"), (2, 2), (1, 1, 1, 255))
+
+    def hardlink(self, src, dst):
+        try:
+            os.link(src, dst)
+        except (OSError, NotImplementedError):
+            self.skipTest("hard links not supported here")
+
+    def test_hard_linked_input_refused(self):
+        outside = os.path.join(self.outside, "secret.png")
+        self.img(outside, (2, 2), (9, 9, 9, 255))
+        self.hardlink(outside, os.path.join(self.ws, "art_src", "in.png"))
+        self.assertIn("hard-linked", self.refused("info", os.path.join("art_src", "in.png")))
+
+    def test_hard_linked_output_refused_and_target_untouched(self):
+        outside = os.path.join(self.outside, "victim.png")
+        self.img(outside, (5, 5), (9, 9, 9, 255))
+        self.hardlink(outside, os.path.join(self.ws, "art_src", "out.png"))
+        self.refused("trim", self.st("a.png"), os.path.join("art_src", "out.png"), "--pad", "0")
+        self.assertEqual(self.rgba(outside).size, (5, 5))
+
+    def test_overwrite_replaces_file_and_leaves_no_temp(self):
+        out = os.path.join(self.ws, "art_src", "o.png")
+        self.img(out, (7, 7))
+        self.run_ok("trim", self.st("a.png"), os.path.join("art_src", "o.png"), "--pad", "0")
+        self.assertEqual(self.rgba(out).size, (2, 2))
+        self.assertEqual(sorted(os.listdir(os.path.dirname(out))), ["o.png"])
+
+    def test_returns_canonical_paths(self):
+        self.img(os.path.join(self.ws, "art_src", "x.png"), (2, 2))
+        got = art_ops.check_in(os.path.join("art_src", ".", "x.png"))
+        self.assertEqual(got, os.path.realpath(os.path.join(self.ws, "art_src", "x.png")))
+        self.assertTrue(os.path.isabs(art_ops.check_out(os.path.join("art_src", "new.png"))))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)

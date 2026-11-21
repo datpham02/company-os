@@ -90,6 +90,7 @@ Reviewers (Paperclip review stages): qa<, game-artist for the visual result when
 
 ## Write set
 - `<scene, resource, import, animation or shader files>`
+- `art_src/review/<TASK-KEY>/` (in-engine evidence; or the folder the project's `AGENTS.md` names)
 
 ## Integration brief
 - Import settings, filtering and compression expected: <e.g. nearest filtering for pixel art>
@@ -99,7 +100,7 @@ Reviewers (Paperclip review stages): qa<, game-artist for the visual result when
 
 ## Acceptance criteria
 - [ ] The asset appears in <scene> in every listed state, with the pivot, timing and loop from the art handoff.
-- [ ] In-engine screenshots (or frames for motion) at each listed resolution and state are attached and inspected.
+- [ ] In-engine screenshots (or frames for motion) at each listed resolution and state are copied to `art_src/review/<TASK-KEY>/`, committed, cited by path and inspected.
 - [ ] The source art was not redrawn; any needed art change was requested from game-artist in a comment.
 - [ ] Performance budget met, with the measurement stated.
 - [ ] Smoke check passes; CI green.
@@ -127,6 +128,9 @@ Reviewers (Paperclip review stages): qa<, game-designer when gameplay informatio
 ## Write set
 - `<UI scenes, components, theme or token files>`
 
+## Evidence (not in the write set)
+Engine frames captured with the allowed Godot commands stay in the Task Workspace (`.godot/<name>*.png`; Deckbound: `.godot/qa/main-<W>x<H>.png`) and are listed by path in the handoff. `qa` recaptures them with the same commands.
+
 ## UI brief
 - Information priority and interaction flow: <…>
 - Target resolutions, aspect ratios, safe areas, input methods: <…>
@@ -137,7 +141,7 @@ Reviewers (Paperclip review stages): qa<, game-designer when gameplay informatio
 ## Acceptance criteria
 - [ ] New screen: wireframe and 2–3 layout options compared; chosen option and reason recorded. Routine screen: existing components reused.
 - [ ] Built with the approved tokens; every listed state implemented.
-- [ ] Engine screenshots at every listed resolution and state attached and inspected; hierarchy, spacing, contrast, alignment and overflow issues fixed.
+- [ ] Engine frames at every listed resolution and state captured in the Task Workspace, listed by path and inspected; hierarchy, spacing, contrast, alignment and overflow issues fixed. A size or state the allowed commands cannot capture is stated as UNVERIFIED.
 - [ ] Accessibility and input requirements checked, or each unverified check stated.
 - [ ] No third-party UI asset or font without a recorded licence.
 ```
