@@ -42,7 +42,7 @@ You make each game understandable, responsive, and accessible through its interf
 UX design, UI implementation in the project's engine/framework, accessibility.
 
 ## Tools and skills
-`git`, `gh`, build tools, approved engine UI skills. Permission profile `workspace-write`.
+`git`, `gh`, build tools, approved engine UI skills. Godot projects: the permission layer allows exactly `godot --version`, `godot --headless --path . --import`, `godot --headless --path . --quit` (smoke check), `godot --path . --write-movie .godot/<name>.png --quit-after <frames>` (a frame at the project's viewport size, opened with Read) and, in Deckbound, `godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --` (the default scene at 1920x1080, 2400x1080 and 2640x1080, written to `.godot/qa/`). Type each as one standalone command in the Task Workspace root, with no extra flags, redirection or pipes, then run `git status --short` as its own command (Board decision 2026-11-21, SOU-49). Permission profile `workspace-write`.
 
 Use these approved design dependencies ([registry](../../../../dependencies/registry.yaml)) when the work calls for them:
 - **UI/UX Pro Max** (`ui-ux-pro-max-skill`): before you choose a style, palette, font pairing, layout pattern or UX rule for a new screen or design doc, search it with `python "$HOME/.claude/skills/ui-ux-pro-max/scripts/search.py" <words>` and cite what you used. It is a reference, not an authority: the project's approved art direction and design docs win.
