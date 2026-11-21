@@ -5,7 +5,8 @@
 - **Status:**
   - Phase A (inventory) done: [review-package-r1-reviewer-inventory.md](review-package-r1-reviewer-inventory.md);
   - Phase B (validation) done;
-  - **Phase C (apply) and Phase D (verification) not started: they need the Board's approval to change Paperclip configuration.**
+  - **Phase C (apply) done 2026-11-21, 04:05–04:08 UTC, after the Board Operator's approval ("Duyệt Phase C")**, see §5;
+  - Phase D (live verification) not started.
 
 ## 1. Phase B1–B2: requirement by requirement
 
@@ -92,16 +93,49 @@ They were not repeated live in Phase B: that needs separate test profiles (R1 Ph
 - D2: negative test profiles, preferably on a separate test agent so the three reviewers stay valid;
 - D3: side-effect checks as in §2.
 
+## 5. Phase C: applied
+
+**Before any change:**
+- database backup `paperclip-20261121-110545.sql.gz`, `gzip -t` OK (not proof of a restore);
+- a pre-flight re-read of the three agents had to match the inventory exactly (same `extraArgs`, `paused`, no `--disallowedTools`), or nothing would change.
+
+**Changes**, nothing else:
+
+| Reviewer | `extraArgs` | New config revision | Settings file |
+|---|---|---|---|
+| REV `5312c2d4` | 15 → 17: appended `--disallowedTools mcp__*` | `88d0032f-6b4d-47a2-97de-79c1f24b2cff` | `deny` + `mcp__*`; backup `settings-C1.json.bak-r1` |
+| RPR `f098754d` | 15 → 17: same | `6e31460e-6f98-4eb1-a6ab-5750bde54e39` | same |
+| OPT `28a57b09` | 15 → 17: same | `e9c10316-0839-451b-9f7a-e019669054e3` | same |
+
+The change was a `PATCH /api/agents/<id>` with only `adapterConfig.extraArgs` (Paperclip merges `adapterConfig` shallowly).
+
+**Read-back and checks:**
+- **Agent records:** for each agent, every other `adapterConfig` key and every other agent field was unchanged (timestamps aside); status still `paused`.
+- **Config revisions:** each new revision's `beforeConfig`/`afterConfig` differ only in `adapterConfig.extraArgs`.
+- **Validator:** `check_reviewer_config` **PASS** for all three; the 18-requirement check **18/18** for all three.
+- **`probe_reviewer_tools.py --settings <each settings file>`:** **PASS** for all three (full profile, settings deny only, flag only). The model was offered exactly Glob, Grep, Read, and the write tool never reached the throwaway server.
+- **Side effects:**
+  - no agent resumed or woken;
+  - no new run in REV (3 runs, newest 2026-11-20 17:14Z), RPR (5, 02:46Z) or OPT (11, 03:32Z);
+  - author agents still paused;
+  - Soucean: newest run still 2026-11-06, agents idle.
+
+**Rollback:**
+- `POST /api/agents/<id>/config-revisions/<previous revision>/rollback`, or a `PATCH` restoring the 15-element `extraArgs`;
+- restore each settings file from its `.bak-r1`.
+
+The pre-change state is kept without secrets in the private `pc-r1/inventory-before.json`, rebuilt from the revisions' `beforeConfig` and the `.bak-r1` files after the first `inventory.json` was overwritten by the post-change inventory run.
+
 ## 4. Acceptance status (R1 §7)
 
 | Criterion | Status |
 |---|---|
 | Inventory for REV, RPR, OPT | Done |
 | No secrets in the reports | Done (env key names only, none present; prompts by length) |
-| Reviewer profiles updated after approval | **Pending approval** |
-| Paperclip API and settings file match | Pending (after C) |
+| Reviewer profiles updated after approval | **Done** (§5) |
+| Paperclip API and settings file match | **Done**: validator PASS, 18/18, probe PASS for all three |
 | Positive test | Pending (D1) |
 | Negative tests | Offline done; live pending (D2) |
-| No side effects | Done for B3; pending for C and D |
+| No side effects | Done for B3 and C; pending for D |
 | Evidence and timestamps | Done for A and B |
-| Profiles not updated or sandboxes gone | All three exist and are not updated; Soucean has no reviewer |
+| Profiles not updated or sandboxes gone | All three exist and are updated; Soucean has no reviewer (not touched) |

@@ -52,11 +52,11 @@ No `ask`, no `additionalDirectories`.
 
 ## 3. Observations
 
-- **No reviewer has the P0 profile.** `--disallowedTools mcp__*` is missing from `extraArgs`, and `mcp__*` is missing from the settings' `deny` list. Details in [the validation results](review-package-r1-validation-results.md).
+- **At inventory time no reviewer had the P0 profile.** `--disallowedTools mcp__*` was missing from `extraArgs`, and `mcp__*` from the settings' `deny` list. Both were added in Phase C (2026-11-21, 04:06 UTC). Details in [the validation results](review-package-r1-validation-results.md).
 - **`canCreateSkills: true`** is Paperclip's default agent permission. The reviewer has no tool to use it (no MCP, no shell, no network), and the R1 validator does not check it. Recorded for R2; not changed.
 - **Soucean has no `code-reviewer`.** Nothing to synchronize there; production use is Phase 6.
 - The private test folders (`pc-rp4`, `pc-rp5`, `pc-rp6`) and their settings files still exist.
 
 ## 4. Backup for Phase C
 
-This inventory and its machine-readable form (kept in the private `pc-r1` folder: `inventory.json`) record every reviewer's `extraArgs` and settings permissions before any change. They contain no secrets. Paperclip also keeps agent configuration revisions, which give a rollback path (`POST /api/agents/<id>/config-revisions/<id>/rollback`, used in D-STEP2-01).
+This inventory records every reviewer's `extraArgs` and settings permissions before any change. Its machine-readable form is in the private `pc-r1` folder: `inventory-before.json`, rebuilt from the Paperclip config revisions' `beforeConfig` and the settings `.bak-r1` files, because a later inventory run overwrote the first `inventory.json` with the post-change state; `inventory-after.json` holds that state. They contain no secrets. Paperclip also keeps agent configuration revisions, which give a rollback path (`POST /api/agents/<id>/config-revisions/<id>/rollback`, used in D-STEP2-01).
