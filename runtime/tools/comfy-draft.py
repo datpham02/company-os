@@ -161,6 +161,9 @@ def main(argv=None):
                        "cfg": MODELS[a.model]["cfg"], "size": [a.width, a.height], "prompt": a.prompt,
                        "negative": a.negative if a.model == "sdxl" else "", "reference_images_as_input": "none",
                        "workflow": f"{name}.workflow.json", "created": stamp}, f, indent=1)
+        # The agent cannot open the staging folder (outside its workspace), so print the provenance it must copy.
+        with open(os.path.join(out_dir, f"{name}.provenance.json"), encoding="utf-8") as f:
+            print(f"provenance {name}: " + json.dumps(json.load(f), ensure_ascii=False))
 
 
 if __name__ == "__main__":

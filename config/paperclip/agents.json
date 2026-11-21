@@ -229,7 +229,7 @@
         "GH_TOKEN"
       ],
       "extraAllowedTools": [
-        "Bash(python \"$HOME/.claude/skills/ui-ux-pro-max/scripts/search.py\"*)",
+        "Bash(python ~/.claude/skills/ui-ux-pro-max/scripts/search.py *)",
         "Bash(design.md *)",
         "Bash(godot --version)",
         "Bash(godot --headless --path . --import)",
@@ -285,15 +285,15 @@
         "GH_TOKEN"
       ],
       "extraAllowedTools": [
-        "Bash(node \"$HOME/tools/pixelfx/tools/list.mjs\"*)",
-        "Bash(node \"$HOME/tools/pixelfx/tools/render.mjs\"*)",
+        "Bash(node ~/tools/pixelfx/tools/list.mjs *)",
+        "Bash(node ~/tools/pixelfx/tools/render.mjs *)",
         "Bash(godot --version)",
         "Bash(godot --headless --path . --import)",
         "Bash(godot --headless --path . --quit)",
         "Bash(godot --path . --write-movie .godot/* --quit-after *)",
         "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)",
-        "Bash(python -I \"$HOME/game-studio-workspace/tools/comfy-draft.py\"*)",
-        "Bash(python -I \"$HOME/game-studio-workspace/tools/art-ops.py\"*)"
+        "Bash(python -I ~/game-studio-workspace/tools/comfy-draft.py *)",
+        "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)"
       ],
       "runtime": {
         "heartbeat": {
