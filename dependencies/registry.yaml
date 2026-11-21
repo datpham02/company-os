@@ -228,52 +228,71 @@ dependencies:
     name: ComfyUI (Windows portable build)
     category: game-development
     source:
-      repository: https://github.com/comfyanonymous/ComfyUI
+      repository: https://github.com/Comfy-Org/ComfyUI   # origin of the installed checkout (comfyanonymous/ComfyUI redirects here)
+      docs: https://docs.comfy.org/
     license: GPL-3.0   # LICENSE file of the installed copy
     required: false
-    versionConstraint: "pinned:0.46.0 (commit a277b5b); update only through the Board"
-    verifiedVersion: "0.46.0, commit a277b5bf213e8a44fa34817b7770b54f86ef4cea (2026-11-18), Windows portable build with CUDA 12.6 at $HOME/game-studio-workspace/tools/ComfyUI_windows_portable (read 2026-11-22). Embedded Python 3.12.10 with Pillow 13.0.0 and NumPy 2.5.4, used by art-ops.py. No custom nodes installed"
+    versionConstraint: "pinned:v0.46.0 (commit a277b5bf213e8a44fa34817b7770b54f86ef4cea); update only through the Board, as a new review of the diff"
+    verifiedVersion: "v0.46.0, commit a277b5bf213e8a44fa34817b7770b54f86ef4cea (2026-11-18), clean checkout (git status empty), Windows portable build with CUDA 12.6 at $HOME/game-studio-workspace/tools/ComfyUI_windows_portable (read 2026-11-22). Embedded Python stack: see comfyui-embedded-python. No third-party custom nodes (custom_nodes holds only the two upstream-tracked files example_node.py.example and websocket_image_save.py)"
     install:
       strategy: external-service
-      reference: docs/operations/runtime-management.md#10-comfyui-draft-script-and-art-ops-d1-2026-11-22
+      reference: "Official Windows portable release, https://github.com/Comfy-Org/ComfyUI/releases (README section 'Windows Portable'); installed by the Board; operations: docs/operations/runtime-management.md#10-comfyui-draft-script-and-art-ops-d1-2026-11-22"
     integrationStatus: integrated   # Board decision D1 2026-11-22: installed and used through comfy-draft.py and art-ops.py
     usedBy: [game-artist]
-    compatibility: "Local image generation server, started by runtime/tools/comfy-draft.py on loopback only. Agents never call it directly: game-artist runs only the installed copies of comfy-draft.py (text-to-image, the two approved checkpoints, no input images) and art-ops.py (Pillow image operations through the embedded Python), by exact allowlist rules (security-architecture.md section 4). Outputs go to ~/game-studio-workspace/staging/art/<asset_id>/."
-    notes: "Recorded 2026-11-22 for Art Production v2 release gate G2 (it was used under D1 without an entry, OQ-049). Its GPL-3.0 licence covers the ComfyUI software, not generated images; the licence of an output follows the checkpoint (see sd-xl-base-1-0, flux1-schnell-fp8) and the project's own licensing rule. No custom nodes: a custom node runs arbitrary code in the ComfyUI process and needs its own review and Board approval (Phase 2 plan, docs/roadmap/art-production-v2-phase2.md). Model downloads and updates are Board actions; agents install nothing."
+    compatibility: "Local image generation server, started by runtime/tools/comfy-draft.py on 127.0.0.1:8188 with --offline (no frontend internet access, partner/API nodes disabled) and --disable-auto-launch. Agents never call it directly: game-artist runs only the installed copies of comfy-draft.py (text-to-image, the two approved checkpoints, no input images) and art-ops.py, by exact allowlist rules (security-architecture.md section 4). Outputs go to ~/game-studio-workspace/staging/art/<asset_id>/."
+    notes: "security review: 2026-11-22, v0.46.0 (a277b5b), passed with one hardening (comfy-draft.py now adds --offline), performed by Claude Code for the Board, pending Board acceptance. Covered (security-architecture.md 11.1): (1) origin: official Comfy-Org repository, not a fork, checkout clean at the tag; (2) install path: portable archive, no installer; run_nvidia_gpu.bat starts main.py only; update/update.py and the update .bat files do git pull and pip install and are run by the Board only, never by agents; (3) agent-facing text: the bundled AGENTS.md (404 lines, upstream contributor style guide) read in full: no instructions to read secrets, send data, disable permissions or install anything; it forbids outbound internet requests in core; no SKILL.md, hooks, MCP config or plugins; (4) runtime: loopback only; without --offline the web frontend may reach the internet and partner (paid cloud API) nodes are available, hence --offline; no account, API key or telemetry configured; ComfyUI-Manager not enabled; (5) health: active official organisation; 4 published GitHub Security Advisories (GHSA-rj8c-c4p8-3c5h, GHSA-53g8-45wq-pcv8, GHSA-rvxv-29p8-pxgq, GHSA-pj59-g5vv-74q4: XSS and path traversal) all fixed in 0.28.0, so not applicable to 0.46.0; the LoadImage path-traversal advisory matters for any future image-input workflow; (6) trial: text-to-image smoke runs with both checkpoints at release gate G7. Its GPL-3.0 covers the ComfyUI software, not generated images: an output's licence follows the checkpoint and the project's own licensing rule. A third-party custom node runs arbitrary code in the ComfyUI process and needs its own review and Board approval. Model downloads and updates are Board actions; agents install nothing. Integrity: check-dependencies.py has no version command for this entry and reports it as skipped, which is not a runtime integrity check; the pin is the commit, checked at release gate G4 (git -C <ComfyUI> rev-parse HEAD and git status)."
+
+  - id: comfyui-embedded-python
+    name: ComfyUI embedded Python with Pillow and NumPy
+    category: game-development
+    source:
+      repository: https://www.python.org/downloads/windows/   # CPython "Windows embeddable package", shipped inside the ComfyUI portable archive
+      docs: "Pillow https://github.com/python-pillow/Pillow (https://pillow.readthedocs.io); NumPy https://github.com/numpy/numpy (https://numpy.org)"
+    license: "Python: PSF-2.0 (python_embeded/LICENSE.txt); Pillow: MIT-CMU; NumPy: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0 (License-Expression in the installed package metadata)"
+    required: false
+    versionConstraint: "pinned: CPython 3.12.10, Pillow 13.0.0, NumPy 2.5.4, as shipped with comfyui v0.46.0; changes only with a Board-approved ComfyUI update"
+    verifiedVersion: "CPython 3.12.10, Pillow 13.0.0, NumPy 2.5.4 in $HOME/game-studio-workspace/tools/ComfyUI_windows_portable/python_embeded (importlib.metadata, read 2026-11-22)"
+    install:
+      strategy: external-service
+      reference: "Part of the comfyui portable archive; nothing installed separately. Packages came with the archive or the Board's ComfyUI updates (pip inside python_embeded)"
+    integrationStatus: integrated   # used by runtime/tools/art-ops.py, which re-runs itself with this interpreter (Board decision 2026-11-22)
+    usedBy: [game-artist]
+    compatibility: "runtime/tools/art-ops.py and runtime/tools/test_art_ops.py need Pillow and NumPy; the studio Python has neither, so art-ops re-executes itself with this interpreter (-I -s). No other studio script uses it."
+    notes: "security review: 2026-11-22, CPython 3.12.10 / Pillow 13.0.0 / NumPy 2.5.4, passed, performed by Claude Code for the Board, pending Board acceptance: origin is the ComfyUI portable archive above; OSV (api.osv.dev, 2026-11-22) lists no known vulnerabilities for pillow 13.0.0, numpy 2.5.4, aiohttp 3.14.5, torch 2.14.1 or requests 2.34.2; no agent-facing text; no network use by art-ops. art-ops relies on Pillow's DecompressionBomb limit and its own pixel, size and path limits (security-architecture.md section 4). Integrity: check-dependencies.py reports this entry as skipped (no version command); G1 runs the art-ops tests with this interpreter, and the versions are re-read at release gate G4."
 
   - id: sd-xl-base-1-0
     name: Stable Diffusion XL 1.0 Base (checkpoint)
     category: game-development
     source:
-      repository: https://github.com/Stability-AI/generative-models   # modelspec.implementation in the file
-    license: "CreativeML Open RAIL++-M License"   # modelspec.license in the installed file
+      repository: https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0   # official publisher; file sd_xl_base_1.0.safetensors
+    license: "CreativeML Open RAIL++-M (Hugging Face tag license:openrail++; modelspec.license in the installed file)"
     required: false
     versionConstraint: "pinned: sd_xl_base_1.0.safetensors, SHA256 31e35c80fc4829d14f90153f4c74cd59c90b779f6afe05a74cd6120b893f7e5b"
-    verifiedVersion: "sd_xl_base_1.0.safetensors, 6,938,078,334 bytes, SHA256 31e35c80fc4829d14f90153f4c74cd59c90b779f6afe05a74cd6120b893f7e5b (modelspec: StabilityAI, 2023-07-26, stable-diffusion-xl-v1-base), in ComfyUI/models/checkpoints (read 2026-11-22)"
+    verifiedVersion: "sd_xl_base_1.0.safetensors, 6,938,078,334 bytes, SHA256 31e35c80fc4829d14f90153f4c74cd59c90b779f6afe05a74cd6120b893f7e5b, identical to the file published by stabilityai on Hugging Face (LFS SHA256 and size, checked 2026-11-22); in ComfyUI/models/checkpoints"
     install:
       strategy: external-service
-      reference: "Model file loaded by comfyui (models/checkpoints)"
+      reference: "Download from https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors into ComfyUI/models/checkpoints (Board only); loaded by comfyui"
     integrationStatus: integrated   # Board decision D1 2026-11-22
     usedBy: [game-artist]
     compatibility: "Selected with comfy-draft.py --model sdxl. Text-to-image only under D1."
-    notes: "Recorded 2026-11-22 for release gate G2. The RAIL++-M licence carries use restrictions (its attachment A); each project's licensing rule decides whether output made with it may ship. Not reviewed by a lawyer."
+    notes: "security review: 2026-11-22, SHA256 31e35c80...7e5b, passed, performed by Claude Code for the Board, pending Board acceptance: official publisher and an exact hash match; safetensors format (a JSON header plus raw tensors, parsed without executing code; no pickle); no agent-facing text, network use or account. The RAIL++-M licence carries use restrictions (its attachment A); each project's licensing rule decides whether output made with it may ship. Not reviewed by a lawyer. Integrity: check-dependencies.py reports this entry as skipped (no version command); the SHA256 is re-checked at release gate G4."
 
   - id: flux1-schnell-fp8
-    name: FLUX.1 [schnell] fp8 (checkpoint)
+    name: FLUX.1 [schnell] fp8 single-file checkpoint
     category: game-development
     source:
-      repository: https://huggingface.co/black-forest-labs/FLUX.1-schnell
-    license: Apache-2.0   # modelspec.license "Apache License 2.0" in the installed file
+      repository: https://huggingface.co/Comfy-Org/Flux-1-Schnell   # distribution (formerly Comfy-Org/flux1-schnell); upstream model https://huggingface.co/black-forest-labs/FLUX.1-schnell
+    license: "Apache-2.0 (Hugging Face tag license:apache-2.0 on both the Comfy-Org distribution and the black-forest-labs original; modelspec.license 'Apache License 2.0' in the installed file)"
     required: false
     versionConstraint: "pinned: flux1-schnell-fp8.safetensors, SHA256 ead426278b49030e9da5df862994f25ce94ab2ee4df38b556ddddb3db093bf72"
-    verifiedVersion: "flux1-schnell-fp8.safetensors, 17,236,328,572 bytes, SHA256 ead426278b49030e9da5df862994f25ce94ab2ee4df38b556ddddb3db093bf72 (modelspec: Black Forest Labs, Flux.1-schnell, 2024-08-01), single-file fp8 checkpoint in ComfyUI/models/checkpoints (read 2026-11-22)"
+    verifiedVersion: "flux1-schnell-fp8.safetensors, 17,236,328,572 bytes, SHA256 ead426278b49030e9da5df862994f25ce94ab2ee4df38b556ddddb3db093bf72, identical to the file published by Comfy-Org in Comfy-Org/Flux-1-Schnell (LFS SHA256 and size; repository not gated; head d31e040, checked 2026-11-22). modelspec: Black Forest Labs, Flux.1-schnell, 2024-08-01. In ComfyUI/models/checkpoints"
     install:
       strategy: external-service
-      reference: "Model file loaded by comfyui (models/checkpoints)"
+      reference: "Download from https://huggingface.co/Comfy-Org/Flux-1-Schnell/blob/main/flux1-schnell-fp8.safetensors into ComfyUI/models/checkpoints (Board only); loaded by comfyui"
     integrationStatus: integrated   # Board decision D1 2026-11-22
     usedBy: [game-artist]
     compatibility: "Selected with comfy-draft.py --model flux. Text-to-image only under D1."
-    notes: "Recorded 2026-11-22 for release gate G2. The file is a single-file fp8 repackage of the original release; where it was downloaded from was not recorded (UNVERIFIED), so the SHA256 above is the pin. Only the schnell variant is approved; other FLUX.1 variants (for example dev, fill, redux) carry different, partly non-commercial licences and are not approved (Phase 2 plan)."
+    notes: "security review: 2026-11-22, SHA256 ead42627...bf72, passed, performed by Claude Code for the Board, pending Board acceptance. Provenance: an fp8 single-file repackage (model, text encoders and VAE in one file) of Black Forest Labs' Apache-2.0 FLUX.1 [schnell], published by Comfy-Org, the organisation that also publishes ComfyUI; Black Forest Labs itself publishes only the bf16 file (23,782,506,688 bytes). Exact hash match with the Comfy-Org file; safetensors format, no pickle; no agent-facing text, network use or account. Only the schnell variant is approved; other FLUX.1 variants (for example dev, fill, redux) carry different, partly non-commercial licences and are not approved. Integrity: check-dependencies.py reports this entry as skipped (no version command); the SHA256 is re-checked at release gate G4."
 
   - id: github-cli
     name: GitHub CLI
