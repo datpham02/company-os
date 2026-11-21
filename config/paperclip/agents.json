@@ -5,7 +5,8 @@
   },
   "rules": {
     "reporting": "Paperclip reporting rule for this environment: to post comments or change issue status, call the Paperclip skill's paperclip-issue-update.sh as one standalone Bash command, for example: bash \"<absolute path to paperclip-issue-update.sh>\" --issue-id <literal issue id> --status done <<'MD' ... MD. Never wrap it in a script of your own, never use shell variables such as $PAPERCLIP_TASK_ID or $PAPERCLIP_API_KEY in a command, and never chain it with other commands using && or ;. Use the literal issue id from your task. The permission layer refuses anything else.",
-    "git": "Git rule: only the Task's assignee (implementer) commits and pushes. When you review someone else's Task, you never edit, commit, merge, rebase or push its branch; record request changes instead. As the assignee, you work on the task branch Paperclip created for you. Push only that branch, by its literal name, as one standalone command: git push -u origin <task-branch-name>. Never push main, never force-push. Open the pull request with one standalone command: gh pr create --base main --head <task-branch-name> --title \"...\" --body \"...\". To bring the task branch up to date with main, run git fetch origin, then git merge origin/main as separate standalone commands (never rebase), resolve any conflicts, commit the merge, and push normally."
+    "git": "Git rule: only the Task's assignee (implementer) commits and pushes. When you review someone else's Task, you never edit, commit, merge, rebase or push its branch; record request changes instead. As the assignee, you work on the task branch Paperclip created for you. Push only that branch, by its literal name, as one standalone command: git push -u origin <task-branch-name>. Never push main, never force-push. Open the pull request with one standalone command: gh pr create --base main --head <task-branch-name> --title \"...\" --body \"...\". To bring the task branch up to date with main, run git fetch origin, then git merge origin/main as separate standalone commands (never rebase), resolve any conflicts, commit the merge, and push normally.",
+    "secrets": "Credential rule: Paperclip stores the full output of every command you run in the run log, in plain text, and does not hide secrets there. Never print, echo, log or paste a credential or the environment: do not run printenv, env, set, export -p, gh auth token, git credential or any command that shows GH_TOKEN, GITHUB_TOKEN, PAPERCLIP_API_KEY or another secret value, and never expand such a variable in a command (no $GH_TOKEN, ${GH_TOKEN}, $env:GH_TOKEN or %GH_TOKEN%); the permission layer refuses those commands. Use git and gh normally; they read the token themselves. If a secret appears in your output by accident, say so in your Task comment without repeating it, so the Board can rotate it."
   },
   "runtime": {
     "heartbeat": {
@@ -31,10 +32,37 @@
         "Bash(git show*)"
       ],
       "disallowedTools": [
-        "Bash(git push*)"
+        "Bash(git push*)",
+        "Bash(printenv*)",
+        "Bash(env)",
+        "Bash(env *)",
+        "Bash(set)",
+        "Bash(export -p*)",
+        "Bash(declare -x*)",
+        "Bash(declare -p*)",
+        "Bash(*$GH_TOKEN*)",
+        "Bash(*${GH_TOKEN*)",
+        "Bash(*$env:GH_TOKEN*)",
+        "Bash(*%GH_TOKEN%*)",
+        "Bash(*$GITHUB_TOKEN*)",
+        "Bash(*${GITHUB_TOKEN*)",
+        "Bash(*$env:GITHUB_TOKEN*)",
+        "Bash(*%GITHUB_TOKEN%*)",
+        "Bash(*$PAPERCLIP_API_KEY*)",
+        "Bash(*${PAPERCLIP_API_KEY*)",
+        "Bash(*$env:PAPERCLIP_API_KEY*)",
+        "Bash(*%PAPERCLIP_API_KEY%*)",
+        "Bash(gh auth*)",
+        "Bash(git credential*)",
+        "Bash(git config*credential*)",
+        "Bash(*/proc/*/environ*)",
+        "Bash(*Get-ChildItem env:*)",
+        "Bash(*gci env:*)",
+        "Bash(*GetEnvironmentVariable*)"
       ],
       "rules": [
-        "reporting"
+        "reporting",
+        "secrets"
       ]
     },
     "claude-workspace-write": {
@@ -77,11 +105,38 @@
         "Bash(git push --force*)",
         "Bash(git push -f*)",
         "Bash(git push *--force*)",
-        "Bash(gh pr merge*)"
+        "Bash(gh pr merge*)",
+        "Bash(printenv*)",
+        "Bash(env)",
+        "Bash(env *)",
+        "Bash(set)",
+        "Bash(export -p*)",
+        "Bash(declare -x*)",
+        "Bash(declare -p*)",
+        "Bash(*$GH_TOKEN*)",
+        "Bash(*${GH_TOKEN*)",
+        "Bash(*$env:GH_TOKEN*)",
+        "Bash(*%GH_TOKEN%*)",
+        "Bash(*$GITHUB_TOKEN*)",
+        "Bash(*${GITHUB_TOKEN*)",
+        "Bash(*$env:GITHUB_TOKEN*)",
+        "Bash(*%GITHUB_TOKEN%*)",
+        "Bash(*$PAPERCLIP_API_KEY*)",
+        "Bash(*${PAPERCLIP_API_KEY*)",
+        "Bash(*$env:PAPERCLIP_API_KEY*)",
+        "Bash(*%PAPERCLIP_API_KEY%*)",
+        "Bash(gh auth*)",
+        "Bash(git credential*)",
+        "Bash(git config*credential*)",
+        "Bash(*/proc/*/environ*)",
+        "Bash(*Get-ChildItem env:*)",
+        "Bash(*gci env:*)",
+        "Bash(*GetEnvironmentVariable*)"
       ],
       "rules": [
         "reporting",
-        "git"
+        "git",
+        "secrets"
       ]
     },
     "cursor-workspace-write": {

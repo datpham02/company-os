@@ -119,6 +119,14 @@ Agents MUST NOT run (enforced by Provider deny lists where possible, and by rule
 - Provider credentials, GitHub tokens, and Paperclip tokens are separate and scoped.
 - Game Repositories MUST NOT contain secrets; game runtime secrets (if any) use the game's own secret mechanism.
 - Prompt-injection risk: content from issues, web pages, or repository files can instruct an agent to exfiltrate secrets. Least privilege and no-secrets-in-env-unless-needed are the primary defences.
+- **Run logs are not redacted** (2026-11-21, [gh-token-log-redaction-probe.md](../design/gh-token-log-redaction-probe.md)). Paperclip 2026.1023.0 stores every command's output in the run log in plain text. A secret bound in `env`, such as `GH_TOKEN`, is hidden only in the adapter-invocation metadata. Any command that prints it leaks it to every reader of the log. Mitigations:
+  - **Rule** (`rules.secrets` in `config/paperclip/agents.json`, the `## Credentials` section of every role file, and Studio Rules R4.1): never print the environment or a credential.
+  - **Deny list** in both Claude profiles (`disallowedTools`). It blocks `printenv`, `env`, `set`, `export -p`, `declare -x/-p`, `gh auth`, `git credential`, `git config …credential…`, `/proc/*/environ`, PowerShell environment reads, and any command that expands `GH_TOKEN`, `GITHUB_TOKEN` or `PAPERCLIP_API_KEY` (`$X`, `${X`, `$env:X`, `%X%`). The bare name is allowed, so a comment, commit message or PR text can still name the variable. Claude agents could already run only their `allowedTools`; the deny list keeps these commands refused if an allow pattern is widened later.
+  - **Verified 2026-11-21:**
+    - **Rule, in sandbox `OPT`.** A Paperclip run with the full `claude-workspace-write` arguments and a fake `GH_TOKEN` refused on its own to try `printenv`, `env`, `echo $GH_TOKEN`, `cat $GH_TOKEN`, `gh auth token` and `git credential fill`, citing the rule. It ran `cat GH_TOKEN-notes.txt` (bare name) and `git status`. The fake value never reached the log.
+    - **Deny list, without the rule.** Claude Code CLI with the same allow and deny lists, in an empty folder, refused all 8 commands (`printenv GH_TOKEN`, `env`, `echo $GH_TOKEN`, `echo ${GH_TOKEN}`, `cat $GH_TOKEN`, `gh auth token`, `git credential fill`, `set`) with "Permission … has been denied". `cat $GH_TOKEN` matches the allow pattern `Bash(cat *)`, so the deny wins. The bare-name `cat` ran.
+  - **Cursor agents** (`gameplay-programmer`, `web-engineer`) have a general shell and get only the rule. A Cursor-side deny list is not configured (`UNVERIFIED` whether the Cursor CLI supports one in this setup).
+  - **Rotate** the token at once if a run log shows it.
 
 ## 8. Approval boundaries
 
