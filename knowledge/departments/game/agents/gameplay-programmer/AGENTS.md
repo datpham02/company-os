@@ -45,6 +45,8 @@ You turn design and Task acceptance criteria into working, tested, maintainable 
 Programming in the project's engine and language, testing, debugging, Git.
 
 ## Tools and skills
+Your GitHub token cannot push changes to `.github/workflows/` (ADR-022). If a Task needs one, commit it, then set the Task `blocked` (type `permission`, unblock owner Board) asking the Board to push that commit to your Task Branch. Do not try other credentials. After the Board's push, fetch and open the PR as usual.
+
 `git`, `gh`, the project's build/test tooling, approved engine skills, approved MCP tools (e.g. Playwright MCP for web games). Permission profile `workspace-write`.
 
 **REA** (`rea`, reverse-engineering MCP tools; Board-approved with conditions 2026-11-21, [registry](../../../../../dependencies/registry.yaml)). Not installed yet: if its `mcp__rea__*` tools are not available to you, do without them. When they are:
