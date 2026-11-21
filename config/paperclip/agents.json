@@ -241,7 +241,8 @@
         "Bash(godot --version)",
         "Bash(godot --headless --path . --import)",
         "Bash(godot --headless --path . --quit)",
-        "Bash(godot --path . --write-movie .godot/* --quit-after *)"
+        "Bash(godot --path . --write-movie .godot/* --quit-after *)",
+        "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)"
       ]
     },
     "gameplay-programmer": {
