@@ -1,6 +1,6 @@
 # Review Package R5: live evidence plan for §12
 
-- **Status:** `PROPOSED`. A plan only; nothing here is authorized until the Board Operator approves it.
+- **Status:** approved by the Board Operator and **executed 2026-11-21**; results in [review-package-r5-results.md](review-package-r5-results.md).
 - **Goal:** close blocker B1 of the [R6 readiness assessment](review-package-r6-phase6-readiness.md), and B5 in the same run. Each §12 criterion that is only partly live, plus the merge step, ends as **Live** or is recorded as **Failed**.
 - **Board choices so far (2026-11-21):**
   - use `datpham02/soucean-game` for everything that does not write to its `main`;
