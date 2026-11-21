@@ -17,7 +17,7 @@ Paperclip reachable. Agents cannot list other issues (G-8), so the sweep itself 
 
 ## Steps
 1. **Board Operator** runs `python -I .claude/skills/paperclip/scripts/pc.py triage` (or asks Claude: "triage the studio"). It prints, oldest first:
-   - **Needs the Board:** issues assigned to the Board, pending Board approval stages, and Board Tasks for environment fixes;
+   - **Needs the Board:** issues assigned to the Board, pending Board approval stages, Paperclip recoveries handed to the Board (OQ-048), and Board Tasks for environment fixes;
    - **Blocked:** age, last comment, and whether the comment names an unblock owner ([task-contract.md §6](../standards/task-contract.md#6-blocker-protocol)); blocked issues whose blockers are all `done` or include a `cancelled` one;
    - **Review stalled:** `in_review` issues on an agent with no run since the stage started;
    - **Quiet:** `in_progress` issues with no update for a working day;

@@ -24,6 +24,7 @@ Each entry gives symptom → likely cause → fix. Paperclip error semantics are
 | UI not reachable | Server not running, or wrong bind | `paperclipai run` from `~/game-studio-workspace`; default `http://localhost:3100` |
 | Agent's `npm` commands fail oddly (missing `tsc`, wrong prefix) | Paperclip started through `npx`, so `npm_*` variables leaked into the agent (OQ-034) | Restart with the global `paperclipai run` |
 | Issue sits in `in_review` and the reviewer agent never runs | Reviewer not woken after an in-run hand-off (OQ-035) | Keep `runtime/tools/review-wake-watchdog.ts` running |
+| Issue stalls and no role reacts; system comment "Recovery owner: board" | Paperclip ended its recovery and made the Board the owner; heartbeats are off, so nobody else looks (OQ-048) | The watchdog prints `ATTENTION` and shows a toast. Read the issue (`pc.py show`), then fix the cause, hand it back (`assign … --status backlog`, `release`) or record a manual resolution |
 | Node version error at start | Node < 24.11 | `nvm use 24` |
 
 ## Git and workspaces

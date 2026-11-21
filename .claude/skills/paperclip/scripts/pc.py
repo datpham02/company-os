@@ -603,6 +603,11 @@ def cmd_triage(a):
         open_blockers = [b.get("identifier") for b in blockers if b.get("status") != "done"]
         if cancelled:
             sections["Blocked"].append((age, f"{key} {status}: blocker(s) {', '.join(cancelled)} cancelled; they never resolve. Re-point or remove the relation | {title}"))
+        rec = i.get("activeRecoveryAction") or {}
+        if rec.get("ownerType") == "board" and rec.get("status") in ("active", "escalated"):
+            # Paperclip gave up its own recovery and made the Board the owner; it tells no one (OQ-048).
+            sections["Needs the Board"].append((age, f"{key} {status}, Paperclip recovery waiting on the Board "
+                                                     f"({rec.get('cause') or 'no cause'}): {rec.get('nextAction') or 'inspect it'} | {title}"))
         if i.get("assigneeUserId") or part.get("type") == "user":
             why = "pending Board approval" if part.get("type") == "user" else "assigned to the Board"
             sections["Needs the Board"].append((age, f"{key} {status}, {why}, {age:.0f}h | {title}"))
