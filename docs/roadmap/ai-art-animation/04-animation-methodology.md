@@ -210,3 +210,5 @@ per-character joint limits, shoulder shift, PCHIP splines with broken-tangent ke
 | K3 | Mixamo: not used (Adobe ID + manual download + terms on automated access); revisit only if a Board member chooses to download clips themselves | approve |
 | K4 | KB content review by `director` (craft) before it becomes agent knowledge | approve |
 | K5 | Skills packaging after K4 (no new agent; D7 later decides the owner) | approve later |
+
+Board answers for K2–K5 (2026-11-22 20:30 GMT+7, reconciled 2026-11-23) are recorded in the [README decision log](README.md#decision-log-after-approval): K2–K4 approved, K5 deferred.

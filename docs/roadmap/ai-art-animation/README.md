@@ -43,6 +43,12 @@ Board answer 2026-11-22: "Duyệt D1–D9" (approve D1–D9 as recommended below
 ## Decision log after approval
 - **2026-11-22, D3 (Board: "Chốt và cài tier 1")**: drive C: keeps **at least 40 GB free**, checked before every install. After the Board's cleanup C: had 200.8 GB free (from 84 GB); after tier 1, 178 GB.
 - **2026-11-22, tier 1 installed (D2)** in the R&D ComfyUI `~/game-studio-workspace/rnd/ComfyUI_rnd` (copy of the production build a277b5b, port 8189, `--offline`, models in `rnd/models/` outside the production tree; stopped when no spike runs, so it does not compete with production for the 16 GB RAM). Weights, SHA256-checked against Hugging Face: FLUX.2 klein 4B + Qwen3-4B text encoder + FLUX.2 VAE (Apache-2.0), BiRefNet (MIT), and **R&D only** ToonOut (converted to safetensors by stripping a training key prefix) and the Fooocus inpaint patch; custom node `comfyui-inpaint-nodes` at 5b76817 (GPL-3.0, code reviewed). Registry entries with `integrationStatus: evaluating`. Smoke tests: klein 23.1 s at 768² without out-of-memory, BiRefNet 4.0 s, ToonOut 2.1 s, Fooocus + SDXL 65.2 s. Quality is judged in spikes S5–S7.
+- **2026-11-22 20:30 GMT+7, decisions U-A..U-J and K2–K5** (Board: "Duyệt và merge", answering the question to approve the decisions "as recommended" and merge PR #108). Recorded per decision against the recommendation column at commit 9f16d18 (Board reconciliation 2026-11-23):
+  - **Approved:** U-A (with the validator assumption tags), U-C, U-E, U-G, U-I, U-J (review cards; reviewer preview access is a separate decision, not taken), K2, K3, K4. K1 was approved earlier ("Duyệt K1", 2026-11-22).
+  - **Approved with amendment:** U-D (the `director`'s amended spike order). Animation R&D is paused by the Board since 2026-11-23.
+  - **Approved, later amended:** U-H. Board decisions KA-BD-5 and KA-BD-6 (2026-11-23): verified source data alone does not justify a hard limit; "clinical" values are a normative reference.
+  - **Deferred (not approved):** U-F, K5.
+  - **Pending:** U-B. The recommendation "approve (`director`: naming and mass tables only)" leaves the scope unclear; the Board confirms it separately.
 
 ## Review record
 `director` (SOU-78, 2026-11-22) approved for Board decision with these amendments, all applied:

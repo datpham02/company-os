@@ -277,3 +277,5 @@ GDNative-Ropesim would need a dependency review.
 | U-G | OpenStax: stop using it as a source (CC BY-NC-SA, AI-ingestion clause); keep only facts already cross-checked elsewhere; ask OpenStax/legal if the Board wants it | approve |
 | U-H | Functional ROM is informative, not a limit; clinical (realistic) or stylized (stylised) tier gates per character; character overrides must state why; the tier is recorded in the profile and printed in every QA report | approve |
 | U-J | Reviewer evidence: review cards with per-frame metrics for `director`, or give a reviewer preview access | review cards now; access is a separate Board decision |
+
+Board answers (2026-11-22 20:30 GMT+7, reconciled 2026-11-23) are recorded in the [README decision log](README.md#decision-log-after-approval): U-F deferred, U-B pending, U-H amended by KA-BD-5/6; the recommendation column above is unchanged.
