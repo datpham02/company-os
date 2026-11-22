@@ -57,8 +57,8 @@
         "Bash(git credential*)",
         "Bash(git config*credential*)",
         "Bash(*/proc/*/environ*)",
-        "Bash(*Get-ChildItem env:*)",
-        "Bash(*gci env:*)",
+        "Bash(*Get-ChildItem env*)",
+        "Bash(*gci env*)",
         "Bash(*GetEnvironmentVariable*)"
       ],
       "rules": [
@@ -130,8 +130,8 @@
         "Bash(git credential*)",
         "Bash(git config*credential*)",
         "Bash(*/proc/*/environ*)",
-        "Bash(*Get-ChildItem env:*)",
-        "Bash(*gci env:*)",
+        "Bash(*Get-ChildItem env*)",
+        "Bash(*gci env*)",
         "Bash(*GetEnvironmentVariable*)"
       ],
       "rules": [
