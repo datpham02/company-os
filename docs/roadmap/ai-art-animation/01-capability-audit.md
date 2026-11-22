@@ -49,8 +49,8 @@ There is **no** technical-artist or animator agent. Creating one is a Board deci
 |---|---|---|
 | Text-to-image (SDXL, FLUX schnell) | Available | `comfy-draft.py`, pilot Tasks SOU-66, SOU-68, SOU-71 |
 | Image-to-image on own art | Available | `comfy-edit.py img2img` (SDXL, FLUX), G7(c) 2026-11-22 |
-| Inpainting: repaint or remove existing content | Available | `comfy-edit.py inpaint` (SDXL); SOU-64 run 2 removed a lantern cleanly; outside-mask pixels restored exactly |
-| Inpainting: **insert a new object** | **Missing** | SOU-64 run 2 (6 failures) and Board spike S1: SDXL base fails with both latent-noise-mask and `InpaintModelConditioning` + `DifferentialDiffusion` (4/4 without the object). Needs an inpainting-trained model or another method |
+| Inpainting: repaint or remove existing content | Available (one production case) | `comfy-edit.py inpaint` (SDXL); SOU-64 run 2 removed a lantern cleanly (one case, not yet a measured capability); outside-mask pixels restored exactly (tested) |
+| Inpainting: **insert a new object** | **Missing** | SOU-64 run 2 (6 failures) and Board spike S1 (4 failures): 0/10 attempts on one input with SDXL base, with both latent-noise-mask and `InpaintModelConditioning` + `DifferentialDiffusion`. Needs an inpainting-trained model or another method |
 | FLUX inpaint | Blocked | Refused in `comfy-edit` after poor results (no inpainting training in schnell) |
 | Outpainting | Partial | Core node `ImagePadForOutpaint` present; no template, inherits the insertion limit |
 | Structural control (pose, depth, lineart) | Partial | Core ControlNet nodes present; **no ControlNet weights**, no permission |
@@ -94,7 +94,7 @@ There is **no** technical-artist or animator agent. Creating one is a Board deci
 | Capability | Class | Evidence |
 |---|---|---|
 | Import, `.import` files, smoke | Available | Agents run `godot --headless --import/--quit`; CI `headless-tests-and-smoke` |
-| Frame capture | Available | `--write-movie` and Deckbound's QA screenshot runner (scene path argument) |
+| Frame capture | Available (opaque); alpha: spike S3 | `--write-movie` and Deckbound's QA screenshot runner (scene path argument); transparent capture and headless behaviour untested |
 | Animation preview/render to video or strips | Partial | `--write-movie` can render frames; no fixture scenes for assets (Phase 2D backlog) |
 | Atlas/sprite-sheet packing tool | Missing | Open item in TOOL-DECISIONS |
 | Animation state machine generation | Research | Engine supports AnimationTree; no generator |
