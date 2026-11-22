@@ -1,7 +1,7 @@
 """Spike S2 (Board R&D, 2026-11-22): engine-neutral rig + clip JSON from part PNGs.
 
 Run with ComfyUI's embedded Python (NumPy, Pillow):  python -I -s make_rig.py
-Parts are full-canvas RGBA PNGs (832x1216, the master's frame) in art/parts/.
+Parts are full-canvas RGBA PNGs (832x1216, the master's frame) in art_src/parts/ (cut with art-ops mask + compose).
 Mesh: a grid over each part's alpha (cells with any opaque pixel), triangulated; this is the
 simplest mesh, not the CDT mesh of spike S10. Weights: rigid parts 1.0 to one bone; the cloak
 blends root -> torso by height (smoothstep), so a torso turn bends the cloak.

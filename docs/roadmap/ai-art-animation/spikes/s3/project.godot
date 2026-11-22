@@ -1,0 +1,14 @@
+config_version=5
+
+[application]
+config/name="godot-spikes"
+run/main_scene="res://s3_capture.tscn"
+
+[display]
+window/size/viewport_width=416
+window/size/viewport_height=608
+window/per_pixel_transparency/allowed=true
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+viewport/transparent_background=true
