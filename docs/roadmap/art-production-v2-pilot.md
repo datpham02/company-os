@@ -277,7 +277,7 @@ The Director's follow-up (SOU-75, card prompt guidance) was created through the 
 
 | ID | Finding | Class | G8 tally |
 |---|---|---|---|
-| SOU-68-F01 | No approved tool measures the value range: `art-ops` has no statistics command (mean luminance, percentiles against the Art Bible §3 anchors), so the value rule was judged by eye and measured only by the Board | Tool capability gap | **Counts once** (2D read-only image inspection / an `art-ops` `stats` command) |
+| SOU-68-F01 | No approved tool measures the value range: `art-ops` has no statistics command (mean luminance, percentiles against the Art Bible §3 anchors), so the value rule was judged by eye and measured only by the Board | Tool capability gap | **Counts once** (2B Advanced Art Ops: a read-only `stats` command, proposed as a 2B addition for the G8 report; not 2D, which is in-engine preview) |
 | SOU-68-F02 | Handoff/review race: QA's changes-requested run ended at 01:55 and the fix handoff landed at 01:56; Paperclip's one retry started no reviewer run and it moved the Task to `blocked` with a Board-owned recovery (`execution_review_participant_recovery`). `PATCH status` and `recovery-actions/resolve` (outcome `restored`) alone re-blocked it at once; resolve followed by an explicit reviewer wake restored the review | Lifecycle (OQ-048 family) | Not counted |
 | SOU-68-F03 | The Director could not observe CI (no authenticated `gh` in its runtime; `curl` and web fetch refused); recurrence of SOU-71-F05 | Review-evidence gap | Not counted (already recorded) |
 | SOU-68-F04 | The author could not correct the PR body (`gh pr edit` refused); the wrong file size stayed in the PR until the Board fixed it | Permission gap (procedural) | Not counted |
