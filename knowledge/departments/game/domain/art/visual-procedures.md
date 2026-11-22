@@ -74,7 +74,7 @@ Each line is the order of decisions; do not polish a later step before the earli
 | Step | Available to `game-artist` today | Gap (proposal only, [OQ-049](../../../../../docs/roadmap/open-questions.md#oq-049--art-production-v2-delivery-and-tooling)) |
 |---|---|---|
 | Candidates | `comfy-draft.py`: text-to-image, two approved models, 1–8 candidates, no input image | No reference image, img2img or inpainting: a targeted edit of one region is not possible with an approved tool |
-| Operations | `art-ops.py`: `info`, `crop`, `resize` (`--filter lanczos\|nearest`), `key`, `trim`, `canvas`, `sheet`, `grade`, `contact` (`--bg`) | No compositing of two images, no palette quantise or palette report |
+| Operations | `art-ops.py`: `info`, `crop`, `resize` (`--filter lanczos\|nearest`), `key`, `trim`, `canvas`, `sheet`, `grade`, `contact` (`--bg`); `mask` (rectangles, ellipses, polygons, from alpha or a colour; grow, shrink, invert, feather), `compose` (alpha over at a position, opacity, through a mask: exact base outside the mask), `diff` (heat map, changed pixels, per-channel delta, changes outside a mask) | No palette quantise or palette report; no byte-budget export |
 | Target-size review | `art-ops.py resize` to the display size, then `contact --cell W H` with the cell at least that size (contact only shrinks, never enlarges); `--bg R G B` for a flat target background | No compositing over a textured or in-scene background: needs an engine frame, else `UNVERIFIED` |
 | Enlarged review | `resize --filter nearest` (pixel art) or the default Lanczos (painted art) | — |
 | Before/after | `contact` with both versions side by side | No pixel diff |

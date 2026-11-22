@@ -17,6 +17,19 @@ Commands (all sizes in pixels):
   grade    <in> <out> [--brightness F] [--contrast F] [--saturation F]
   contact  <out> --cell W H [--bg R G B] [--filter lanczos|nearest] <img1> <img2> ...
                                                   review sheet with labels; --bg previews on a flat target colour
+  mask     <out> (--size W H | --like IMG) [--rect X Y W H]... [--ellipse X Y W H]... [--polygon X1 Y1 X2 Y2 X3 Y3 ...]...
+                 [--from-alpha IMG [--threshold N]] [--from-color IMG R G B [--tolerance N]]
+                 [--grow N] [--shrink N] [--invert] [--feather N]
+                                                  greyscale mask (255 = selected): union of the shapes and
+                                                  sources, then grow, shrink, invert, feather, in that order
+  compose  <out> --base IMG --over IMG [--at X Y] [--opacity F] [--mask MASK]
+                                                  alpha "over" of --over onto --base at X Y (output = base size);
+                                                  with --mask (base size), output = base wherever the mask is 0,
+                                                  exactly, and blends by the mask value elsewhere
+  diff     <out> <a> <b> [--mask MASK] [--fail-outside]
+                                                  heat map of |a - b| plus changed-pixel count, max and mean delta
+                                                  per channel; with --mask, the count of changed pixels where the
+                                                  mask is 0 (--fail-outside exits 1 if any)
 
 RGBA: canvas, sheet and contain-resize copy pixels exactly (no re-blending of alpha); contact composites
 each image over its background with the alpha "over" operator; resize premultiplies alpha (Pillow).
@@ -33,7 +46,8 @@ Path boundary (enforced by this script; everything else is policy, see security-
   canonical path; an output is written to a new temporary file that is then renamed over the target.
 - Limits: inputs up to MAX_INPUT_PIXELS (colour key: MAX_KEY_PIXELS), outputs up to MAX_SIDE per side,
   at most MAX_FILES images per command. `resize --fit cover` crops before it resamples, so no
-  intermediate image is larger than the target.
+  intermediate image is larger than the target. Masks: at most MAX_SHAPES shapes, MAX_POLY_POINTS points
+  per polygon, at most MAX_INPUT_PIXELS pixels, grow/shrink/feather up to MAX_MASK_RADIUS.
 """
 import argparse
 import bisect
@@ -52,12 +66,15 @@ MAX_INPUT_PIXELS = 4096 * 4096     # per input image
 MAX_KEY_PIXELS = 4096 * 4096       # colour key (scanline flood fill, O(runs log runs))
 MAX_FILES = 256                    # images per sheet or contact command
 MAX_INPUT_BYTES = 256 * 1024 * 1024
+MAX_SHAPES = 64                    # rectangles + ellipses + polygons per mask command
+MAX_POLY_POINTS = 256
+MAX_MASK_RADIUS = 64               # grow, shrink and feather, in pixels
 ASSET_ID = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 OUTPUT_DIRS = (("assets", "slice"), ("art_src",))
 FORBIDDEN_PARTS = {".git", ".paperclip"}
 
 try:
-    from PIL import Image, ImageDraw, ImageEnhance, ImageOps, UnidentifiedImageError
+    from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps, UnidentifiedImageError
     import numpy as np
 except ImportError:
     if os.environ.get("ART_OPS_REEXEC") or not os.path.isfile(COMFY_PY):
@@ -411,6 +428,140 @@ def cmd_contact(a):
     save(out, a.out)
 
 
+def load_mask(path, size=None):
+    """A greyscale mask (0-255). RGB(A) masks are read by luminance; the mask's own alpha is ignored."""
+    with _open(path) as im:
+        m = im.convert("L")
+    if size is not None and m.size != tuple(size):
+        fail(f"mask {path} is {m.width}x{m.height}, not {size[0]}x{size[1]}")
+    return m
+
+
+def _dilate(arr, n):
+    """Grey dilation by a (2n+1) square, as n separable 3-pixel max passes (n <= MAX_MASK_RADIUS)."""
+    for _ in range(n):
+        p = np.pad(arr, 1, mode="edge")
+        arr = np.maximum(np.maximum(p[1:-1, :-2], p[1:-1, 1:-1]), p[1:-1, 2:])
+        p = np.pad(arr, 1, mode="edge")
+        arr = np.maximum(np.maximum(p[:-2, 1:-1], p[1:-1, 1:-1]), p[2:, 1:-1])
+    return arr
+
+
+def cmd_mask(a):
+    for k in ("grow", "shrink", "feather"):
+        _range(getattr(a, k), 0, MAX_MASK_RADIUS, k)
+    _range(a.threshold, 0, 254, "threshold")
+    _range(a.tolerance, 0, 442, "tolerance")
+    shapes = len(a.rect) + len(a.ellipse) + len(a.polygon)
+    if shapes > MAX_SHAPES:
+        fail(f"at most {MAX_SHAPES} shapes per mask, got {shapes}")
+    if not shapes and not a.from_alpha and not a.from_color:
+        fail("give at least one shape (--rect, --ellipse, --polygon) or source (--from-alpha, --from-color)")
+    if (a.size is None) == (a.like is None):
+        fail("give exactly one of --size W H or --like IMG")
+    if a.like:
+        with _open(a.like) as im:
+            w, h = im.size
+    else:
+        w, h = _size(*a.size, what="mask")
+    if w * h > MAX_INPUT_PIXELS:
+        fail(f"mask {w}x{h} exceeds {MAX_INPUT_PIXELS} pixels (the input limit)")
+    m = Image.new("L", (w, h), 0)
+    d = ImageDraw.Draw(m)
+    for x, y, rw, rh in a.rect:
+        if rw < 1 or rh < 1:
+            fail(f"--rect {x} {y} {rw} {rh}: width and height must be at least 1")
+        d.rectangle((x, y, x + rw - 1, y + rh - 1), fill=255)
+    for x, y, ew, eh in a.ellipse:
+        if ew < 1 or eh < 1:
+            fail(f"--ellipse {x} {y} {ew} {eh}: width and height must be at least 1")
+        d.ellipse((x, y, x + ew - 1, y + eh - 1), fill=255)
+    for pts in a.polygon:
+        if len(pts) % 2 or not 3 <= len(pts) // 2 <= MAX_POLY_POINTS:
+            fail(f"--polygon needs 3 to {MAX_POLY_POINTS} X Y pairs, got {len(pts)} numbers")
+        d.polygon([(pts[i], pts[i + 1]) for i in range(0, len(pts), 2)], fill=255)
+    arr = np.asarray(m).copy()
+    if a.from_alpha:
+        src = load(a.from_alpha)
+        if src.size != (w, h):
+            fail(f"--from-alpha image is {src.width}x{src.height}, not the mask size {w}x{h}")
+        arr = np.maximum(arr, np.where(np.asarray(src.getchannel("A")) > a.threshold, 255, 0).astype(np.uint8))
+    if a.from_color:
+        path, rgb = a.from_color[0], a.from_color[1:]
+        try:
+            rgb = [int(v) for v in rgb]
+        except ValueError:
+            fail(f"--from-color needs IMG R G B, got {a.from_color}")
+        _colour(rgb, "from-color")
+        src = load(path)
+        if src.size != (w, h):
+            fail(f"--from-color image is {src.width}x{src.height}, not the mask size {w}x{h}")
+        px = np.asarray(src).astype(np.float32)
+        dist = np.sqrt(((px[..., :3] - np.array(rgb, dtype=np.float32)) ** 2).sum(-1))
+        arr = np.maximum(arr, np.where((dist <= a.tolerance) & (px[..., 3] > 0), 255, 0).astype(np.uint8))
+    if a.grow:
+        arr = _dilate(arr, a.grow)
+    if a.shrink:
+        arr = 255 - _dilate(255 - arr, a.shrink)
+    if a.invert:
+        arr = 255 - arr
+    out = Image.fromarray(arr.astype(np.uint8), "L")
+    if a.feather:
+        out = out.filter(ImageFilter.GaussianBlur(a.feather))
+    save(out, a.out)
+    sel = int((np.asarray(out) > 0).sum())
+    print(f"mask: {w}x{h}, selected (value > 0) {sel} px, full (255) {int((np.asarray(out) == 255).sum())} px")
+
+
+def cmd_compose(a):
+    _range(a.opacity, 0, 1, "opacity")
+    base = load(a.base)
+    over = load(a.over)
+    x, y = a.at
+    if abs(x) > MAX_SIDE or abs(y) > MAX_SIDE:
+        fail(f"--at must be within +-{MAX_SIDE}, got {x} {y}")
+    layer = Image.new("RGBA", base.size, (0, 0, 0, 0))
+    layer.paste(over, (x, y))                                   # exact copy, clipped to the base
+    if a.opacity < 1:
+        la = np.asarray(layer).copy()
+        la[..., 3] = np.rint(la[..., 3].astype(np.float32) * a.opacity).astype(np.uint8)
+        layer = Image.fromarray(la, "RGBA")
+    comp = base.copy()
+    comp.alpha_composite(layer)
+    if a.mask:
+        m = np.asarray(load_mask(a.mask, base.size)).astype(np.uint32)[..., None]
+        b, c = np.asarray(base).astype(np.uint32), np.asarray(comp).astype(np.uint32)
+        mixed = (b * (255 - m) + c * m + 127) // 255
+        # exact at both ends: mask 0 -> base, mask 255 -> composite
+        mixed = np.where(m == 0, b, np.where(m == 255, c, mixed))
+        comp = Image.fromarray(mixed.astype(np.uint8), "RGBA")
+    save(comp, a.out)
+
+
+def cmd_diff(a):
+    ia, ib = load(a.a), load(a.b)
+    if ia.size != ib.size:
+        fail(f"sizes differ: {ia.width}x{ia.height} and {ib.width}x{ib.height}")
+    da = np.abs(np.asarray(ia).astype(np.int16) - np.asarray(ib).astype(np.int16))
+    changed = da.max(-1) > 0
+    heat = np.zeros(da.shape[:2] + (4,), dtype=np.uint8)
+    heat[..., 0] = np.where(changed, np.maximum(64, da.max(-1)), 0).astype(np.uint8)
+    heat[..., 3] = 255
+    save(Image.fromarray(heat, "RGBA"), a.out)
+    n = changed.size
+    print(f"diff: {int(changed.sum())} of {n} px changed")
+    for i, ch in enumerate("RGBA"):
+        print(f"  {ch}: max {int(da[..., i].max())}, mean {float(da[..., i].mean()):.4f}")
+    if a.mask:
+        m = np.asarray(load_mask(a.mask, ia.size))
+        outside = int((changed & (m == 0)).sum())
+        print(f"  outside mask (mask = 0): {int((m == 0).sum())} px, changed {outside}")
+        if a.fail_outside and outside:
+            fail(f"{outside} pixels changed outside the mask")
+    elif a.fail_outside:
+        fail("--fail-outside needs --mask")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -435,6 +586,24 @@ def main(argv=None):
     s.add_argument("--filter", choices=sorted(FILTERS), default="lanczos")
     s.add_argument("--no-labels", action="store_true")
     s.add_argument("images", nargs="+"); s.set_defaults(fn=cmd_contact)
+    s = sub.add_parser("mask"); s.add_argument("out")
+    s.add_argument("--size", type=int, nargs=2, default=None); s.add_argument("--like", default=None)
+    s.add_argument("--rect", type=int, nargs=4, action="append", default=[])
+    s.add_argument("--ellipse", type=int, nargs=4, action="append", default=[])
+    s.add_argument("--polygon", type=int, nargs="+", action="append", default=[])
+    s.add_argument("--from-alpha", default=None); s.add_argument("--threshold", type=int, default=0)
+    s.add_argument("--from-color", nargs=4, default=None, metavar=("IMG", "R", "G", "B"))
+    s.add_argument("--tolerance", type=float, default=30)
+    s.add_argument("--grow", type=int, default=0); s.add_argument("--shrink", type=int, default=0)
+    s.add_argument("--invert", action="store_true"); s.add_argument("--feather", type=float, default=0)
+    s.set_defaults(fn=cmd_mask)
+    s = sub.add_parser("compose"); s.add_argument("out"); s.add_argument("--base", required=True)
+    s.add_argument("--over", required=True); s.add_argument("--at", type=int, nargs=2, default=[0, 0])
+    s.add_argument("--opacity", type=float, default=1.0); s.add_argument("--mask", default=None)
+    s.set_defaults(fn=cmd_compose)
+    s = sub.add_parser("diff"); s.add_argument("out"); s.add_argument("a"); s.add_argument("b")
+    s.add_argument("--mask", default=None); s.add_argument("--fail-outside", action="store_true")
+    s.set_defaults(fn=cmd_diff)
     a = ap.parse_args(argv)
     a.fn(a)
 

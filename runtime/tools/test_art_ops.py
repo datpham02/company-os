@@ -475,5 +475,124 @@ class CanonicalPathsAndHardLinks(ArtOpsCase):
         self.assertTrue(os.path.isabs(art_ops.check_out(os.path.join("art_src", "new.png"))))
 
 
+class MaskComposeDiff(ArtOpsCase):
+    """Phase 2B subset (2026-11-22): mask, compose, diff."""
+    np = art_ops.np
+
+    def L(self, path):
+        with Image.open(path) as im:
+            return self.np.asarray(im.convert("L"))
+
+    def noise(self, path, size, seed):
+        a = self.np.random.default_rng(seed).integers(0, 256, (size[1], size[0], 4)).astype("uint8")
+        Image.fromarray(a, "RGBA").save(path)
+        return a
+
+    def test_rect_ellipse_polygon_geometry(self):
+        self.run_ok("mask", self.st("m.png"), "--size", "20", "10", "--rect", "2", "3", "4", "2")
+        m = self.L(self.st("m.png"))
+        self.assertEqual(m.shape, (10, 20))
+        self.assertEqual(int((m == 255).sum()), 8)
+        self.assertTrue((m[3:5, 2:6] == 255).all())
+        self.assertEqual(set(self.np.unique(m)), {0, 255})
+        self.run_ok("mask", self.st("e.png"), "--size", "21", "21", "--ellipse", "0", "0", "21", "21")
+        e = self.L(self.st("e.png"))
+        self.assertEqual(e[10, 10], 255); self.assertEqual(e[0, 0], 0); self.assertEqual(e[10, 0], 255)
+        self.run_ok("mask", self.st("p.png"), "--size", "10", "10", "--polygon", "0", "0", "9", "0", "0", "9")
+        p = self.L(self.st("p.png"))
+        self.assertEqual(p[1, 1], 255); self.assertEqual(p[9, 9], 0)
+
+    def test_grow_shrink_invert_feather(self):
+        self.run_ok("mask", self.st("g.png"), "--size", "11", "11", "--rect", "5", "5", "1", "1", "--grow", "2")
+        self.assertEqual(int((self.L(self.st("g.png")) == 255).sum()), 25)
+        self.run_ok("mask", self.st("s.png"), "--size", "11", "11", "--rect", "2", "2", "7", "7", "--shrink", "2")
+        self.assertEqual(int((self.L(self.st("s.png")) == 255).sum()), 9)
+        self.run_ok("mask", self.st("i.png"), "--size", "4", "4", "--rect", "0", "0", "2", "4", "--invert")
+        i = self.L(self.st("i.png"))
+        self.assertTrue((i[:, :2] == 0).all() and (i[:, 2:] == 255).all())
+        self.run_ok("mask", self.st("f.png"), "--size", "40", "40", "--rect", "10", "10", "20", "20", "--feather", "3")
+        f = self.L(self.st("f.png"))
+        self.assertGreater(len(self.np.unique(f)), 3)
+        self.assertEqual(f[20, 20], 255); self.assertEqual(f[0, 0], 0)
+
+    def test_from_alpha_and_from_color(self):
+        im = Image.new("RGBA", (6, 6), (0, 0, 0, 0))
+        im.putpixel((1, 1), (10, 200, 10, 255)); im.putpixel((2, 2), (200, 10, 10, 40))
+        im.save(self.st("src.png"))
+        self.run_ok("mask", self.st("a.png"), "--like", self.st("src.png"), "--from-alpha", self.st("src.png"), "--threshold", "50")
+        a = self.L(self.st("a.png"))
+        self.assertEqual(a[1, 1], 255); self.assertEqual(a[2, 2], 0)
+        self.run_ok("mask", self.st("c.png"), "--like", self.st("src.png"), "--from-color", self.st("src.png"), "10", "200", "10", "--tolerance", "5")
+        c = self.L(self.st("c.png"))
+        self.assertEqual(int((c == 255).sum()), 1); self.assertEqual(c[1, 1], 255)
+
+    def test_mask_refusals(self):
+        self.img(self.st("x.png"), (4, 4))
+        self.refused("mask", self.st("m.png"), "--size", "4", "4")                       # nothing selected
+        self.refused("mask", self.st("m.png"), "--rect", "0", "0", "1", "1")             # no size
+        self.refused("mask", self.st("m.png"), "--size", "4", "4", "--like", self.st("x.png"), "--rect", "0", "0", "1", "1")
+        self.refused("mask", self.st("m.png"), "--size", "4", "4", "--polygon", "0", "0", "1", "1")
+        self.refused("mask", self.st("m.png"), "--size", "4", "4", "--rect", "0", "0", "1", "1", "--grow", "65")
+        self.refused("mask", self.st("m.png"), "--size", "4", "4", "--rect", "0", "0", "0", "1")
+        self.refused("mask", self.st("m.png"), "--size", "8192", "8192", "--rect", "0", "0", "1", "1")   # over the pixel limit
+        self.refused("mask", self.st("m.png"), "--size", "8", "8", "--from-alpha", self.st("x.png"))   # size mismatch
+        many = []
+        for _ in range(art_ops.MAX_SHAPES + 1):
+            many += ["--rect", "0", "0", "1", "1"]
+        self.refused("mask", self.st("m.png"), "--size", "4", "4", *many)
+        self.refused("mask", os.path.join(self.outside, "m.png"), "--size", "4", "4", "--rect", "0", "0", "1", "1")
+
+    def test_compose_over_position_and_opacity(self):
+        self.img(self.st("base.png"), (4, 4), (0, 0, 255, 255))
+        self.img(self.st("over.png"), (2, 2), (255, 0, 0, 255))
+        self.run_ok("compose", self.st("c.png"), "--base", self.st("base.png"), "--over", self.st("over.png"), "--at", "3", "3")
+        self.assertEqual(self.px(self.st("c.png"), (3, 3)), (255, 0, 0, 255))     # clipped at the edge
+        self.assertEqual(self.px(self.st("c.png"), (2, 2)), (0, 0, 255, 255))
+        self.assertEqual(self.rgba(self.st("c.png")).size, (4, 4))
+        self.run_ok("compose", self.st("h.png"), "--base", self.st("base.png"), "--over", self.st("over.png"), "--opacity", "0.5")
+        r, g, b, a = self.px(self.st("h.png"), (0, 0))
+        self.assertTrue(120 <= r <= 136 and 120 <= b <= 136 and a == 255)
+
+    def test_compose_with_mask_restores_outside_exactly(self):
+        base = self.noise(self.st("orig.png"), (32, 24), 1)
+        self.noise(self.st("edit.png"), (32, 24), 2)
+        self.run_ok("mask", self.st("m.png"), "--size", "32", "24", "--ellipse", "4", "2", "24", "20", "--feather", "1.5")
+        self.run_ok("compose", self.st("out.png"), "--base", self.st("orig.png"), "--over", self.st("edit.png"), "--mask", self.st("m.png"))
+        out = self.np.asarray(self.rgba(self.st("out.png")))
+        m = self.L(self.st("m.png"))
+        self.assertTrue((out[m == 0] == base[m == 0]).all())
+        self.assertGreater(int((m == 0).sum()), 0); self.assertGreater(int((m > 0).sum()), 0)
+        self.assertGreater(int((m == 255).sum()), 0)
+        self.assertTrue((out[m > 0] != base[m > 0]).any())
+        msg = self.run_ok("diff", self.st("d.png"), self.st("orig.png"), self.st("out.png"), "--mask", self.st("m.png"), "--fail-outside")
+        self.assertIn("changed 0", msg)
+
+    def test_compose_mask_size_must_match(self):
+        self.img(self.st("b.png"), (4, 4), (1, 2, 3, 255)); self.img(self.st("o.png"), (4, 4))
+        self.run_ok("mask", self.st("m.png"), "--size", "5", "5", "--rect", "0", "0", "1", "1")
+        self.refused("compose", self.st("c.png"), "--base", self.st("b.png"), "--over", self.st("o.png"), "--mask", self.st("m.png"))
+        self.refused("compose", self.st("c.png"), "--base", self.st("b.png"), "--over", self.st("o.png"), "--opacity", "2")
+
+    def test_diff_numbers_and_fail_outside(self):
+        self.img(self.st("a.png"), (4, 4), (10, 10, 10, 255))
+        im = Image.new("RGBA", (4, 4), (10, 10, 10, 255)); im.putpixel((0, 0), (30, 10, 10, 255)); im.save(self.st("b.png"))
+        msg = self.run_ok("diff", self.st("d.png"), self.st("a.png"), self.st("b.png"))
+        self.assertIn("1 of 16 px changed", msg); self.assertIn("R: max 20", msg); self.assertIn("G: max 0", msg)
+        self.assertEqual(self.px(self.st("d.png"), (0, 0))[0], 64); self.assertEqual(self.px(self.st("d.png"), (1, 1))[0], 0)
+        self.run_ok("mask", self.st("m.png"), "--size", "4", "4", "--rect", "2", "2", "2", "2")
+        self.refused("diff", self.st("d.png"), self.st("a.png"), self.st("b.png"), "--mask", self.st("m.png"), "--fail-outside")
+        self.refused("diff", self.st("d.png"), self.st("a.png"), self.st("b.png"), "--fail-outside")
+        self.img(self.st("c.png"), (5, 4))
+        self.refused("diff", self.st("d.png"), self.st("a.png"), self.st("c.png"))
+
+    def test_large_grow_is_bounded_in_time(self):
+        import time
+        self.run_ok("mask", self.st("m.png"), "--size", "1024", "1024", "--rect", "500", "500", "4", "4")
+        t = time.perf_counter()
+        self.run_ok("mask", self.st("g.png"), "--size", "1024", "1024", "--rect", "500", "500", "4", "4", "--grow", "64")
+        self.assertLess(time.perf_counter() - t, 10)
+        self.assertEqual(int((self.L(self.st("g.png")) == 255).sum()), (4 + 128) ** 2)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=1)
