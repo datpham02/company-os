@@ -14,7 +14,8 @@ What it does:
 What it refuses (pipeline §2.1, COMFYUI-WORKFLOW.md):
 - Any input image (no img2img, no reference images, no LoRA, no other model).
 - Writing anywhere except the staging folder.
-- Listening on anything but loopback.
+- Listening on anything but loopback, and a running server that was started without --listen 127.0.0.1
+  and --offline (checked in /system_stats before every run).
 """
 import argparse
 import datetime
@@ -139,6 +140,13 @@ def main(argv=None):
     ensure_server()
     stats = json.loads(get("/system_stats"))
     comfy_version = (stats.get("system") or {}).get("comfyui_version", "unknown")
+    # Server verification (2A prerequisite 1, closes OQ-049 item 8): never use a server that is not
+    # loopback-only and offline, even one started by someone else.
+    argv = (stats.get("system") or {}).get("argv") or []
+    listen = argv[argv.index("--listen") + 1] if "--listen" in argv[:-1] else None
+    if "--offline" not in argv or listen != HOST:
+        sys.exit(f"refusing the running ComfyUI (argv {argv}): it must run with --listen {HOST} and --offline; "
+                 "the Board restarts it")
     seed = a.seed if a.seed is not None else int(time.time()) % 2_000_000_000
     steps = a.steps or MODELS[a.model]["steps"]
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
