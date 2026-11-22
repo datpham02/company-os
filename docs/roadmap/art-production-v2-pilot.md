@@ -228,6 +228,33 @@ Repository under test: Company OS `main` **3807715** (PR #91 merged as d42cf1b, 
 ### Lifecycle defect 2026-11-22: SOU-75 created under the Director
 The Director's follow-up (SOU-75, card prompt guidance) was created through the agent's own task tool and, as gaps G-9 and G-10 describe, started at once (`in_progress`), assigned to the read-only `director`, as a child of SOU-66, **inheriting SOU-66's execution workspace and branch** while PR #22 waited for the Board. The Board parked it in `backlog` under `game-artist`, detached it to its own workspace, removed the parent link, set review stages (`qa-engineer` → `director` → Board) and rescoped it to a reusable Deckbound card prompt guide (subject, composition, lighting, palette, exclusions, validation before batch). Classified as a **lifecycle defect**, not an artistic capability failure; it is not in G8's tool-capability tally. **Lifecycle overhead, recorded apart from SOU-66's own runs:** run b29d867e (`director`, wake `issue_assigned`), 75.9 s, no reported cost (`UNAVAILABLE`), tokens input 50,338, output 119, cache read 716,040; it ended by handing over and changed no file on SOU-66's branch (head stayed 82593fe). **The manual recovery is not a fix:** agent-created Tasks still start at once, land on the creating agent and inherit its workspace (gaps G-9 and G-10); until those are solved, the Board checks every agent-created Task with `pc.py overview` and parks it.
 
+### Pilot Task result: SOU-71 (Scrivener L2 direction), done 2026-11-22
+**Lifecycle:** release → Game Artist handoff (recommends B) → Director changes requested (record the decision) → fix → Director approved **B Bell Cloak, seed 2203** → QA changes requested (**CI failed**: uncommitted `.import` files) → fix d04da0d → QA approved → Board approved for L2 visual-direction acceptance → deckbound PR #23 merged at **b6d1130cdcd0d74e7cf4c3f204f9a4d6c65a7912** (reviewed head d04da0dd9b59f0c385baa2a52ba3f1b2b289596a, CI SUCCESS) with the Board-authorized admin-merge exception for this PR only (single-account self-review limit; pinned with `--match-head-commit`) → SOU-71 `done`. The concept is an approved direction, **not** a production-ready atlas or rig.
+
+| Item | Record |
+|---|---|
+| Directions | 4, genuinely distinct (Board): A Gaunt Clerk, B Bell Cloak, C Satchel Bearer, D Angular Notary; comparable sheet (same cells, `#1B2026`, enemy-height block, 25% silhouette) |
+| Generated images | 19 of the 48 maximum: SDXL 4 (one validation per direction), FLUX 15 |
+| Critique / review rounds | Critique 1 of 1; Director 2 (changes requested, approved); QA 2 (changes requested, approved); Board 1 |
+| First-pass acceptance | No |
+| Runs | 8: Game Artist 4 (762.6 + 42.1 + 58.8 + 19.2 s), Director 2 (137.4 + 75.9 s), QA 2 (29.6 + 28.5 s); **1,154.2 s** |
+| Reported cost | **$0.303** for the one run that reports it (7a3a8bb7); the other seven ended by handing over and report no cost: **UNAVAILABLE** |
+| Tokens (all 8 runs) | input 505,201 · output 3,872 · cache read 6,301,476 |
+| Disposition-repair runs | 1 (0eea8206, Game Artist, 19.2 s): OQ-048 recurrence |
+| Human intervention (Board) | Brief preparation and release only during the run; afterwards the merge-exception decision and the Board approval; SOU-76 created for the production contract |
+
+| ID | Finding | Class | G8 tally |
+|---|---|---|---|
+| SOU-71-F01 | Cutouts keep pale halos and cast-shadow fringes: the generators add vignettes, glows and shadows to the backdrop, and `art-ops` cannot erase or mask a region | Tool capability gap | **Counts once** (2B masks / 2A region editing) |
+| SOU-71-F02 | Candidate-sheet labels identical (cut at 40 characters) | Tool defect, recurrence of SOU-66-F03 | Not counted (already recorded) |
+| SOU-71-F03 | SDXL validation images for B, C and D missed the subject (long prompts); A's first FLUX round had a dark backdrop that could not be keyed; fixed by shorter, shape-first prompts on FLUX and an explicit flat-backdrop line | Prompt-related waste | Not counted |
+| SOU-71-F04 | CI failed because the review PNGs' `.import` files were not committed; SOU-71's brief lacked the clean-tree criterion that SOU-66's had | Procedural (brief gap) | Not counted |
+| SOU-71-F05 | The Director approved with CI unobserved: its runs have no GitHub token; QA caught the failure | Review-evidence gap | Not counted |
+| SOU-71-F06 | The author could not change the Task status; one disposition-repair run | Lifecycle (OQ-048) | Not counted |
+| SOU-71-F07 | B is about 5 heads with the book at the chest, against Art Bible §5; low value separation on `#1B2026`; hidden face | Artistic, carried into the production contract | Not counted |
+
+**Before SOU-64 is released:** SOU-76 (Game Artist, documents only; reviewers Director, QA, Board) synchronizes Art Bible §5 and the Scrivener spec with B: proportions and book placement, AI-compatible source deliverables instead of a mandatory Krita file, one reconciled atlas limit and memory budget, the lantern/book/hand arrangement for `action_tear_page`, the production requirements as checkable lines, and the integration owner for rotation, overlap and animation checks once the Board names it. SOU-64 is blocked by SOU-76 and carries the Board's production requirements in its description.
+
 ### Incident 2026-11-22: SOU-66 first release
 - **Classification:** runtime permission and lifecycle failure, **not an artistic capability failure**. No image was generated, so it says nothing about art quality, and it is not counted in G8's tool-capability tally. It is counted in the pilot's cost and human-intervention records.
 - **What happened:** the permission layer refused `comfy-draft.py` (quoted `$HOME` allow rule never matches in Claude Code 2.1.329) and Read of the staging folder; the agent could not enter `blocked` (HTTP 422); Paperclip ran two disposition-repair wakes and escalated to `blocked`; the Board parked SOU-66 in `backlog`.
