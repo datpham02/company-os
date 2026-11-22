@@ -2,7 +2,7 @@
  "schema": "anatomy-profile.v1",
  "id": "humanoid_base",
  "body_type": "human",
- "status": "clinical and functional ranges from the verified table (research 2026-11-22, kb/functional-anatomy.md + human_joint_table.json); stylized tier is a studio heuristic",
+ "status": "clinical and functional numbers from kb/human_joint_table.json with per-tier provenance (KA-BD-6, 2026-11-23); stylized tier is a studio heuristic. No value is gate-eligible: validators may only warn on them.",
  "angle_convention": {
   "units": "deg",
   "measured_as": "anatomical angle of the child segment relative to the parent segment, 0 = neutral (anatomical position); flexion positive",
@@ -16,22 +16,31 @@
    "axes": "flex/ext (sagittal), lateral flex (frontal), rotation (transverse)",
    "movements": {
     "flex": {
-     "clinical": [
-      -75,
-      60
-     ],
-     "functional": [
-      -40,
-      40
-     ],
-     "stylized": [
-      -85,
-      70
-     ],
-     "sources": [
-      "LUTT"
-     ],
-     "status": "clinical verified, functional unverified"
+     "clinical": [-75, 60],
+     "functional": [-40, 40],
+     "stylized": [-85, 70],
+     "provenance": {
+      "clinical": {
+       "kind": "clinical_reference",
+       "source_ids": ["LUTT"],
+       "segment_frame": "cervical spine (head-neck relative to thorax)",
+       "statistic": "textbook typical value (single value; method and population not stated)",
+       "population": "not stated",
+       "active_passive": "not stated",
+       "read_level": "secondary (WikEM table attributed to Luttgens & Hamilton 1997; textbook not read)",
+       "confidence": "verified",
+       "gate_eligible": false,
+       "note": "flexion 60, extension 75 (as -75)"
+      },
+      "functional": {"kind": "unsupported", "source_ids": [], "confidence": "unverified", "gate_eligible": false, "note": "no source read gives this number (compile-time status: unverified)"},
+      "stylized": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "studio allowance for exaggeration (stylized tier); no source measures what looks believable"
+      }
+     }
     }
    },
    "notes": "negative = extension"
@@ -42,18 +51,20 @@
    "dof": 2,
    "movements": {
     "flex": {
-     "clinical": [
-      -25,
-      25
-     ],
-     "functional": [
-      -15,
-      20
-     ],
-     "stylized": [
-      -35,
-      35
-     ]
+     "clinical": [-25, 25],
+     "functional": [-15, 20],
+     "stylized": [-35, 35],
+     "provenance": {
+      "clinical": {"kind": "unsupported", "source_ids": [], "confidence": "unverified", "gate_eligible": false, "note": "the KB table has no head (C0-C1) numbers"},
+      "functional": {"kind": "unsupported", "source_ids": [], "confidence": "unverified", "gate_eligible": false, "note": "the KB table has no head (C0-C1) numbers"},
+      "stylized": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "studio allowance for exaggeration (stylized tier); no source measures what looks believable"
+      }
+     }
     }
    }
   },
@@ -63,24 +74,37 @@
    "dof": 3,
    "movements": {
     "flex": {
-     "clinical": [
-      -25,
-      50
-     ],
-     "functional": [
-      -15,
-      50
-     ],
-     "stylized": [
-      -35,
-      70
-     ],
-     "sources": [
-      "LUTT",
-      "GATES2016",
-      "ESOLA1996"
-     ],
-     "status": "verified"
+     "clinical": [-25, 50],
+     "functional": [-15, 50],
+     "stylized": [-35, 70],
+     "provenance": {
+      "clinical": {
+       "kind": "clinical_reference",
+       "source_ids": ["LUTT"],
+       "segment_frame": "thoracolumbar combined (frame not stated in the source)",
+       "statistic": "textbook typical value (single value; method and population not stated)",
+       "population": "not stated",
+       "active_passive": "not stated",
+       "read_level": "secondary (WikEM table attributed to Luttgens & Hamilton 1997; textbook not read)",
+       "confidence": "verified",
+       "gate_eligible": false,
+       "note": "flexion 50 (upper end of LUTT 45-50), extension 25 (as -25)"
+      },
+      "functional": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "no source gives these numbers. Gates 2016 trunk values are thorax-to-lab excursions in single tasks, not spinal ranges (kb/human_joint_table.json, reference_observations)"
+      },
+      "stylized": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "studio allowance for exaggeration (stylized tier); no source measures what looks believable"
+      }
+     }
     }
    },
    "notes": "bending is distributed over many vertebrae; a single-point bend is an error"
@@ -91,18 +115,14 @@
    "dof": "elevation/depression, protraction/retraction, upward/downward rotation",
    "movements": {
     "elevation_px_per_100px_height": {
-     "clinical": [
-      -1.5,
-      6
-     ],
-     "functional": [
-      -1,
-      4
-     ],
-     "stylized": [
-      -2,
-      8
-     ]
+     "clinical": [-1.5, 6],
+     "functional": [-1, 4],
+     "stylized": [-2, 8],
+     "provenance": {
+      "clinical": {"kind": "heuristic", "source_ids": [], "confidence": null, "gate_eligible": false, "note": "pixel units; no source", "units": "px per 100 px of character height"},
+      "functional": {"kind": "heuristic", "source_ids": [], "confidence": null, "gate_eligible": false, "note": "pixel units; no source", "units": "px per 100 px of character height"},
+      "stylized": {"kind": "heuristic", "source_ids": [], "confidence": null, "gate_eligible": false, "note": "pixel units; no source", "units": "px per 100 px of character height"}
+     }
     }
    }
   },
@@ -112,44 +132,78 @@
    "dof": 3,
    "movements": {
     "flex": {
-     "clinical": [
-      -50,
-      170
-     ],
-     "functional": [
-      -46,
-      121
-     ],
-     "stylized": [
-      -65,
-      190
-     ],
-     "sources": [
-      "CDC_ROM",
-      "LUTT",
-      "NAMDARI2012",
-      "GATES2016"
-     ],
-     "status": "verified"
+     "clinical": [-50, 170],
+     "functional": [-46, 121],
+     "stylized": [-65, 190],
+     "provenance": {
+      "clinical": {
+       "kind": "clinical_reference",
+       "source_ids": ["CDC_ROM", "LUTT"],
+       "segment_frame": "humerothoracic (arm relative to trunk; includes scapular motion)",
+       "statistic": "flexion: rounded CDC passive mean (168.8 M / 172.0 F); extension: LUTT textbook value 50 (as -50)",
+       "population": "CDC Joint ROM study: healthy adults 20-44 y, values by sex",
+       "active_passive": "passive (universal goniometer); LUTT: not stated",
+       "read_level": "web page (CDC reference table, summarised extraction) + abstract (SOUCIE2011); LUTT secondary (WikEM table attributed to Luttgens & Hamilton 1997; textbook not read)",
+       "confidence": "verified",
+       "gate_eligible": false
+      },
+      "functional": {
+       "kind": "functional_adl",
+       "source_ids": ["NAMDARI2012"],
+       "segment_frame": "humerothoracic",
+       "statistic": "average motion required across the tasks (abstract wording); flexion 121, extension 46 (as -46)",
+       "population": "20 healthy volunteers (40 shoulders)",
+       "task": "10 tasks of shoulder outcome scores",
+       "active_passive": "active (electromagnetic tracking)",
+       "read_level": "abstract",
+       "confidence": "verified",
+       "gate_eligible": false
+      },
+      "stylized": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "studio allowance for exaggeration (stylized tier); no source measures what looks believable"
+      }
+     }
     },
     "abduct": {
-     "clinical": [
-      0,
-      180
-     ],
-     "functional": [
-      0,
-      128
-     ],
-     "stylized": [
-      0,
-      195
-     ],
-     "sources": [
-      "LUTT",
-      "NAMDARI2012"
-     ],
-     "status": "verified"
+     "clinical": [0, 180],
+     "functional": [0, 128],
+     "stylized": [0, 195],
+     "provenance": {
+      "clinical": {
+       "kind": "clinical_reference",
+       "source_ids": ["LUTT"],
+       "segment_frame": "humerothoracic",
+       "statistic": "textbook typical value (single value; method and population not stated)",
+       "population": "not stated",
+       "active_passive": "not stated",
+       "read_level": "secondary (WikEM table attributed to Luttgens & Hamilton 1997; textbook not read)",
+       "confidence": "verified",
+       "gate_eligible": false
+      },
+      "functional": {
+       "kind": "functional_adl",
+       "source_ids": ["NAMDARI2012"],
+       "segment_frame": "humerothoracic",
+       "statistic": "average motion required across the tasks (abstract wording)",
+       "population": "20 healthy volunteers (40 shoulders)",
+       "task": "10 tasks of shoulder outcome scores",
+       "active_passive": "active (electromagnetic tracking)",
+       "read_level": "abstract",
+       "confidence": "verified",
+       "gate_eligible": false
+      },
+      "stylized": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "studio allowance for exaggeration (stylized tier); no source measures what looks believable"
+      }
+     }
     }
    },
    "notes": "180 deg of arm elevation is about 120 glenohumeral + 60 scapular"
@@ -160,25 +214,42 @@
    "dof": 1,
    "movements": {
     "flex": {
-     "clinical": [
-      -5,
-      145
-     ],
-     "functional": [
-      30,
-      130
-     ],
-     "stylized": [
-      -8,
-      155
-     ],
-     "sources": [
-      "CDC_ROM",
-      "LUTT",
-      "MORREY1981",
-      "GATES2016"
-     ],
-     "status": "verified"
+     "clinical": [-5, 145],
+     "functional": [30, 130],
+     "stylized": [-8, 155],
+     "provenance": {
+      "clinical": {
+       "kind": "clinical_reference",
+       "source_ids": ["CDC_ROM", "LUTT"],
+       "segment_frame": "humero-ulnar flexion",
+       "statistic": "rounded means of passive goniometry (flexion 144.6 M / 150.0 F; lower bound -5 from the female 'extension' mean 4.7, sign undefined on the page)",
+       "population": "CDC Joint ROM study: healthy adults 20-44 y, values by sex",
+       "active_passive": "passive (universal goniometer); LUTT: not stated",
+       "read_level": "web page (CDC reference table, summarised extraction) + abstract (SOUCIE2011); LUTT secondary (WikEM table attributed to Luttgens & Hamilton 1997; textbook not read)",
+       "confidence": "verified",
+       "gate_eligible": false
+      },
+      "functional": {
+       "kind": "functional_adl",
+       "source_ids": ["MORREY1981"],
+       "population": "33 normal adults (18 F, 15 M)",
+       "task": "15 activities of daily living",
+       "active_passive": "active (electrogoniometer)",
+       "read_level": "secondary at compile time (JBJS commentary); abstract read in the 2026-11-23 knowledge audit",
+       "confidence": "verified",
+       "gate_eligible": false,
+       "segment_frame": "humero-ulnar flexion",
+       "statistic": "arc sufficient for most of the activities (not an envelope)",
+       "note": "not a floor or a ceiling: some tasks need more extension or flexion"
+      },
+      "stylized": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "studio allowance for exaggeration (stylized tier); no source measures what looks believable"
+      }
+     }
     }
    },
    "flip_policy_2d": "through_neutral",
@@ -190,18 +261,42 @@
    "dof": 1,
    "movements": {
     "pronation": {
-     "clinical": [
-      -80,
-      80
-     ],
-     "functional": [
-      -50,
-      50
-     ],
-     "stylized": [
-      -90,
-      90
-     ]
+     "clinical": [-80, 80],
+     "functional": [-50, 50],
+     "stylized": [-90, 90],
+     "provenance": {
+      "clinical": {
+       "kind": "clinical_reference",
+       "source_ids": ["CDC_ROM", "LUTT"],
+       "segment_frame": "radio-ulnar rotation from mid-position",
+       "statistic": "pronation 80: rounded CDC mean (76.9 M / 82.0 F), LUTT 80; supination side 80: LUTT (CDC means 85.0 M / 90.6 F)",
+       "population": "CDC Joint ROM study: healthy adults 20-44 y, values by sex",
+       "active_passive": "passive (universal goniometer); LUTT: not stated",
+       "read_level": "web page (CDC reference table, summarised extraction) + abstract (SOUCIE2011); LUTT secondary (WikEM table attributed to Luttgens & Hamilton 1997; textbook not read)",
+       "confidence": "verified",
+       "gate_eligible": false,
+       "note": "sign not documented in this profile: + is assumed to be pronation from the movement name, while the KB data convention stores supination as +"
+      },
+      "functional": {
+       "kind": "functional_adl",
+       "source_ids": ["MORREY1981"],
+       "population": "33 normal adults (18 F, 15 M)",
+       "task": "15 activities of daily living",
+       "active_passive": "active (electrogoniometer)",
+       "read_level": "secondary at compile time (JBJS commentary); abstract read in the 2026-11-23 knowledge audit",
+       "confidence": "verified",
+       "gate_eligible": false,
+       "segment_frame": "radio-ulnar rotation from mid-position",
+       "statistic": "50 pronation and 50 supination suffice for most of the activities (not an envelope)"
+      },
+      "stylized": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "studio allowance for exaggeration (stylized tier); no source measures what looks believable"
+      }
+     }
     }
    },
    "notes": "not visible as a 2D angle; changes hand/weapon orientation"
@@ -212,76 +307,126 @@
    "dof": 2,
    "movements": {
     "flex": {
-     "clinical": [
-      -60,
-      60
-     ],
-     "functional": [
-      -60,
-      54
-     ],
-     "stylized": [
-      -80,
-      80
-     ],
-     "sources": [
-      "LUTT",
-      "RYU1991",
-      "GATES2016"
-     ],
-     "status": "verified; stylized widened because a 2D wrist angle mixes flexion, deviation and forearm rotation"
+     "clinical": [-60, 60],
+     "functional": [-60, 54],
+     "stylized": [-80, 80],
+     "provenance": {
+      "clinical": {
+       "kind": "clinical_reference",
+       "source_ids": ["LUTT"],
+       "segment_frame": "wrist (radiocarpal + midcarpal)",
+       "statistic": "textbook typical value (single value; method and population not stated)",
+       "population": "not stated",
+       "active_passive": "not stated",
+       "read_level": "secondary (WikEM table attributed to Luttgens & Hamilton 1997; textbook not read)",
+       "confidence": "verified",
+       "gate_eligible": false,
+       "note": "flexion 60, extension 60 (as -60)"
+      },
+      "functional": {
+       "kind": "functional_adl",
+       "source_ids": ["RYU1991"],
+       "segment_frame": "radiocarpal + midcarpal (wrist)",
+       "statistic": "maximum motion required for the task battery: flexion 54, extension 60 (as -60)",
+       "population": "40 normal subjects",
+       "task": "battery of daily tasks",
+       "active_passive": "active (biaxial electrogoniometer)",
+       "read_level": "abstract",
+       "confidence": "verified",
+       "gate_eligible": false
+      },
+      "stylized": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "studio allowance for exaggeration (stylized tier); no source measures what looks believable; widened because a 2D wrist angle mixes flexion, deviation and forearm rotation"
+      }
+     }
     },
     "radial_dev": {
-     "clinical": [
-      -30,
-      20
-     ],
-     "functional": [
-      -40,
-      17
-     ],
-     "stylized": [
-      -40,
-      30
-     ],
-     "sources": [
-      "LUTT",
-      "RYU1991",
-      "GATES2016"
-     ],
-     "status": "verified (functional ulnar > clinical: Luttgens conservative)"
+     "clinical": [-30, 20],
+     "functional": [-40, 17],
+     "stylized": [-40, 30],
+     "provenance": {
+      "clinical": {
+       "kind": "clinical_reference",
+       "source_ids": ["LUTT"],
+       "segment_frame": "wrist (radiocarpal + midcarpal)",
+       "statistic": "textbook typical value (single value; method and population not stated)",
+       "population": "not stated",
+       "active_passive": "not stated",
+       "read_level": "secondary (WikEM table attributed to Luttgens & Hamilton 1997; textbook not read)",
+       "confidence": "verified",
+       "gate_eligible": false,
+       "note": "radial 20, ulnar 30 (as -30); higher task values exist, not a ceiling"
+      },
+      "functional": {
+       "kind": "functional_adl",
+       "source_ids": ["RYU1991"],
+       "segment_frame": "radiocarpal + midcarpal (wrist)",
+       "statistic": "maximum motion required for the task battery: radial 17, ulnar 40 (as -40)",
+       "population": "40 normal subjects",
+       "task": "battery of daily tasks",
+       "active_passive": "active (biaxial electrogoniometer)",
+       "read_level": "abstract",
+       "confidence": "verified",
+       "gate_eligible": false
+      },
+      "stylized": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "studio allowance for exaggeration (stylized tier); no source measures what looks believable"
+      }
+     }
     }
    }
   },
-  "pelvis": {
-   "parent": null,
-   "type": "root",
-   "dof": 6
-  },
+  "pelvis": {"parent": null, "type": "root", "dof": 6},
   "hip": {
    "parent": "pelvis",
    "type": "ball-and-socket",
    "dof": 3,
    "movements": {
     "flex": {
-     "clinical": [
-      -18,
-      130
-     ],
-     "functional": [
-      -10,
-      101
-     ],
-     "stylized": [
-      -30,
-      140
-     ],
-     "sources": [
-      "CDC_ROM",
-      "LUTT",
-      "HYODO2017"
-     ],
-     "status": "verified"
+     "clinical": [-18, 130],
+     "functional": [-10, 101],
+     "stylized": [-30, 140],
+     "provenance": {
+      "clinical": {
+       "kind": "clinical_reference",
+       "source_ids": ["CDC_ROM"],
+       "segment_frame": "hip (femur relative to pelvis)",
+       "statistic": "rounded means of passive goniometry (flexion 130.4 M / 133.8 F; extension 17.4 M / 18.1 F, as -18)",
+       "population": "CDC Joint ROM study: healthy adults 20-44 y, values by sex",
+       "active_passive": "passive (universal goniometer)",
+       "read_level": "web page (CDC reference table, summarised extraction) + abstract (SOUCIE2011)",
+       "confidence": "verified",
+       "gate_eligible": false
+      },
+      "functional": {
+       "kind": "functional_adl",
+       "source_ids": ["HYODO2017", "WIKI_GAIT"],
+       "segment_frame": "hip (femur relative to pelvis)",
+       "statistic": "flexion 101: largest task mean of per-subject maxima (HYODO2017, abstract); extension 10 (as -10): typical gait value (WIKI_GAIT, tertiary)",
+       "population": "26 healthy adults (flexion)",
+       "task": "22 activities of daily living; walking",
+       "active_passive": "active",
+       "read_level": "abstract (flexion); tertiary, not re-read (extension)",
+       "confidence": "unverified",
+       "gate_eligible": false,
+       "note": "confidence is the weaker of the two bounds"
+      },
+      "stylized": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "studio allowance for exaggeration (stylized tier); no source measures what looks believable"
+      }
+     }
     }
    }
   },
@@ -291,25 +436,42 @@
    "dof": 1,
    "movements": {
     "flex": {
-     "clinical": [
-      0,
-      140
-     ],
-     "functional": [
-      0,
-      135
-     ],
-     "stylized": [
-      -5,
-      150
-     ],
-     "sources": [
-      "CDC_ROM",
-      "LUTT",
-      "ROWE2000",
-      "HYODO2017"
-     ],
-     "status": "verified"
+     "clinical": [0, 140],
+     "functional": [0, 135],
+     "stylized": [-5, 150],
+     "provenance": {
+      "clinical": {
+       "kind": "clinical_reference",
+       "source_ids": ["CDC_ROM"],
+       "segment_frame": "tibiofemoral flexion",
+       "statistic": "rounded means of passive goniometry (137.7 M / 141.9 F)",
+       "population": "CDC Joint ROM study: healthy adults 20-44 y, values by sex",
+       "active_passive": "passive (universal goniometer)",
+       "read_level": "web page (CDC reference table, summarised extraction) + abstract (SOUCIE2011)",
+       "confidence": "verified",
+       "gate_eligible": false
+      },
+      "functional": {
+       "kind": "functional_adl",
+       "source_ids": ["ROWE2000"],
+       "segment_frame": "tibiofemoral flexion",
+       "statistic": "approximate single-task value (getting out of a bath)",
+       "population": "20 elderly adults (mean age 67)",
+       "task": "gait and functional activities",
+       "active_passive": "active (flexible electrogoniometer)",
+       "read_level": "abstract",
+       "confidence": "verified",
+       "gate_eligible": false,
+       "note": "not an envelope (a crouch value in the KB table is higher)"
+      },
+      "stylized": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "studio allowance for exaggeration (stylized tier); no source measures what looks believable"
+      }
+     }
     }
    },
    "preferred_bend": "knee forward of the hip-ankle line (the shin folds backward)",
@@ -321,22 +483,39 @@
    "dof": 2,
    "movements": {
     "dorsiflex": {
-     "clinical": [
-      -55,
-      13
-     ],
-     "functional": [
-      -20,
-      10
-     ],
-     "stylized": [
-      -65,
-      30
-     ],
-     "sources": [
-      "CDC_ROM"
-     ],
-     "status": "verified (CDC passive mean; other charts give ~20 deg dorsiflexion)"
+     "clinical": [-55, 13],
+     "functional": [-20, 10],
+     "stylized": [-65, 30],
+     "provenance": {
+      "clinical": {
+       "kind": "clinical_reference",
+       "source_ids": ["CDC_ROM"],
+       "segment_frame": "talocrural",
+       "statistic": "dorsiflexion 13: rounded mean (12.7 M / 13.8 F); plantarflexion 55 (as -55): male mean 54.6 (F 62.1); passive goniometry",
+       "population": "CDC Joint ROM study: healthy adults 20-44 y, values by sex",
+       "active_passive": "passive (universal goniometer)",
+       "read_level": "web page (CDC reference table, summarised extraction) + abstract (SOUCIE2011)",
+       "confidence": "verified",
+       "gate_eligible": false
+      },
+      "functional": {
+       "kind": "functional_adl",
+       "source_ids": ["WIKI_GAIT"],
+       "segment_frame": "talocrural in gait",
+       "statistic": "typical gait values",
+       "task": "walking",
+       "read_level": "tertiary (Wikipedia; not re-read)",
+       "confidence": "unverified",
+       "gate_eligible": false
+      },
+      "stylized": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "studio allowance for exaggeration (stylized tier); no source measures what looks believable"
+      }
+     }
     }
    }
   }
@@ -359,37 +538,18 @@
    "check_2d": "when the upper arm points above shoulder height, the shoulder joint shift must rise; ratio ~2:1 arm:scapula",
    "class": "soft"
   },
-  {
-   "id": "lumbopelvic_rhythm",
-   "what": "large trunk flexion is shared between spine and hips",
-   "class": "soft"
-  },
-  {
-   "id": "proximal_to_distal",
-   "what": "in throws/strikes, peak angular speed moves hips -> trunk -> shoulder -> elbow -> wrist",
-   "class": "soft"
-  },
-  {
-   "id": "elbow_lock_under_load",
-   "what": "elbow not fully locked (0 deg) at an impact",
-   "class": "soft"
-  }
+  {"id": "lumbopelvic_rhythm", "what": "large trunk flexion is shared between spine and hips", "class": "soft"},
+  {"id": "proximal_to_distal", "what": "in throws/strikes, peak angular speed moves hips -> trunk -> shoulder -> elbow -> wrist", "class": "soft"},
+  {"id": "elbow_lock_under_load", "what": "elbow not fully locked (0 deg) at an impact", "class": "soft"}
  ],
- "collision": {
-  "head": {
-   "capsule_radius_ratio": 0.5
-  },
-  "torso": "polygon from shoulders and hips"
- },
- "proportions": {
-  "head_heights": 7.5,
-  "arm_span_to_height": 1.0
- },
+ "collision": {"head": {"capsule_radius_ratio": 0.5}, "torso": "polygon from shoulders and hips"},
+ "proportions": {"head_heights": 7.5, "arm_span_to_height": 1.0},
  "tiers": {
-  "clinical": "anatomical limit (hard for realistic characters)",
-  "functional": "range typically USED in everyday tasks - informative, never a limit (a straight arm at an impact is outside it and correct)",
-  "stylized": "studio allowance for exaggeration (hard for stylised characters); heuristic"
+  "clinical": "normative reference: means of passive goniometry (CDC) or textbook typical values (LUTT); people routinely exceed them; a plausibility reference, not a physical ceiling",
+  "functional": "range observed or required in the cited tasks - informative, never a limit (a straight arm at an impact is outside it and correct)",
+  "stylized": "studio allowance for exaggeration; heuristic"
  },
- "sources_table": "../../docs or kb: human_joint_table.json (ids LUTT, CDC_ROM, GATES2016, MORREY1981, RYU1991, NAMDARI2012, HYODO2017, ROWE2000, ESOLA1996)",
- "licence_note": "OpenStax A&P 2e pages are CC BY-NC-SA 4.0 and forbid AI ingestion without permission: no OpenStax text or figures in studio assets; facts cross-checked against the other sources"
+ "sources_table": "kb/human_joint_table.json (source ids and provenance field meanings)",
+ "licence_note": "OpenStax A&P 2e pages are CC BY-NC-SA 4.0 and forbid AI ingestion without permission: no OpenStax text or figures in studio assets; facts cross-checked against the other sources",
+ "provenance_legend": "each movement has provenance[tier] with kind, source_ids, segment_frame, statistic, population, task, active_passive, read_level, confidence, gate_eligible, note; field meanings in kb/human_joint_table.json meta.provenance_fields. A child profile or structure that overrides a tier range gets its own record (posecheck.override_joint); it never inherits these."
 }

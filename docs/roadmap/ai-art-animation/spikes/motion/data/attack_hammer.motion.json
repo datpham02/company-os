@@ -2,6 +2,7 @@
  "schema": "motion.v1",
  "id": "attack_hammer_overhead",
  "structure": "brute_hammer",
+ "category": "strike.heavy_overhead",
  "fps": 60,
  "loop": false,
  "intent": "A heavy overhead hammer smash toward a target on the right: readable wind-up, a fast committed swing driven by the body, a held impact, then a weighted recovery back to the idle stance.",

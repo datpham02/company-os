@@ -245,55 +245,138 @@ def seg_dist(p, a, b):
     return float(np.linalg.norm(p - (a + t * ab)))
 
 
+def facing_sign(s):
+    """+1 when the structure faces +x, -1 when it faces -x (anatomy.facing). Every directional measurement is taken in
+    the character frame (multiplied by this sign), so a mirrored clip gives identical outcomes."""
+    f = s.get("anatomy", {}).get("facing", "+x")
+    if f not in ("+x", "-x"):
+        raise ValueError(f"anatomy.facing must be '+x' or '-x', got {f!r}")
+    return 1 if f == "+x" else -1
+
+
 def run_checks(sol, frames):
+    """Raw measurements, keyed by quantity. Each entry: value, ok (True/False, or None when the measurement or its
+    threshold is missing), reason (why ok is None), threshold. No threshold has a default: a missing acceptance
+    value gives ok=None (unknown), never a heavy-hammer number. Classification (pass/fail/warn/unknown/
+    not_applicable) happens in posecheck through rules.py."""
     s, m = sol.s, sol.m
-    acc = m["acceptance"]
+    acc = m.get("acceptance", {})
+    face = facing_sign(s)
     res = {}
+
+    def put(name, value, ok, reason=None, threshold=None):
+        res[name] = {"value": value, "ok": None if ok is None else bool(ok), "reason": reason, "threshold": threshold}
+
+    def thr(key):
+        return acc.get(key)
+
+    def missing(key):
+        return f"acceptance.{key} missing (no default)"
+
+    ph = {p["name"]: p for p in m.get("phases", [])}
+    ev = {e["name"]: e["frame"] for e in m.get("events", [])}
+    imp = ev.get("impact")
+    n = len(frames)
     lens = {b: [float(np.linalg.norm(fr["J"][v["to"]] - fr["J"][v["from"]])) for fr in frames] for b, v in s["bones"].items()}
     table = {b: {"rest": round(sol.L[b], 2), "min": round(min(v), 2), "max": round(max(v), 2)} for b, v in lens.items()}
     dev = max(max(abs(x - sol.L[b]) for x in v) for b, v in lens.items())
-    res["bone_length_dev_px"] = (round(dev, 4), dev <= acc["bone_length_dev_px"])
+    t = thr("bone_length_dev_px")
+    put("bone_length_dev_px", round(dev, 4), None if t is None else dev <= t, None if t is not None else missing("bone_length_dev_px"), t)
     g = max(float(np.linalg.norm(fr["H"]["grip"] - fr["J"][sol.att["grip_joint"]])) for fr in frames)
-    res["grip_error_px"] = (round(g, 4), g <= acc["grip_error_px"])
+    t = thr("grip_error_px")
+    put("grip_error_px", round(g, 4), None if t is None else g <= t, None if t is not None else missing("grip_error_px"), t)
     hl = [float(np.linalg.norm(fr["H"]["head"] - fr["H"]["butt"])) for fr in frames]
-    res["weapon_rigid_dev_px"] = (round(max(hl) - min(hl), 4), max(hl) - min(hl) < 0.01)
-    res["weapon_instances"] = (sol.att["count"], sol.att["count"] == 1)
-    viol = []
-    for f, fr in enumerate(frames):
-        for jn, lim in s["joint_limits"].items():
-            if jn == "note" or jn not in fr["rel"]:
-                continue
-            v = fr["rel"][jn]
-            if not lim[0] <= v <= lim[1]:
-                viol.append((f, jn, round(v, 1)))
-    res["joint_limit_violations"] = (viol[:6], len(viol) == 0)
-    el = [fr["rel"]["arm_f.elbow"] for fr in frames]
-    res["elbow_range_deg"] = ([round(min(el), 1), round(max(el), 1)], max(el) - min(el) >= acc.get("elbow_range_min_deg", 90))
-    imp = [e for e in m["events"] if e["name"] == "impact"][0]["frame"]
-    # KB hammer rule 3: the elbow is most bent at the top of the wind-up, about 70-120 deg of flexion
-    ph0 = {p["name"]: p for p in m["phases"]}
-    wtop = max(abs(frames[f]["rel"]["arm_f.elbow"]) for f in range(ph0["windup"]["end"] - 8, ph0["windup"]["end"] + 1))
-    lo, hi = acc.get("windup_elbow_flex_deg", [70, 125])
-    res["windup_elbow_flex_deg"] = (round(wtop, 1), lo <= wtop <= hi)
-    interior = 180 - abs(frames[imp]["rel"]["arm_f.elbow"])
-    res["impact_elbow_interior_deg"] = (round(interior, 1), interior >= acc.get("impact_elbow_interior_min_deg", 150))
-    worst = 0.0
-    for c in m["constraints"]:
+    put("weapon_rigid_dev_px", round(max(hl) - min(hl), 4), max(hl) - min(hl) < 0.01, threshold=0.01)
+    att = s.get("attachments", {}).get("hammer", {})
+    probs = [p for p, bad in (("asset missing", att.get("asset") not in s.get("objects", {})),
+                              ("parent bone missing", att.get("parent_bone") not in s["bones"]),
+                              ("grip joint missing", att.get("grip_joint") not in s["joints"]),
+                              (f"declared count {att.get('count')} != 1", att.get("count") != 1)) if bad]
+    put("attachment", {"count": att.get("count"), "problems": probs}, not probs, threshold="count == 1, parts exist")
+    # 2D rig limits declared by the structure (rel2d, character frame); channels without a limit are reported, not free
+    lim2d = {k: v for k, v in s.get("joint_limits", {}).items() if k != "note"}
+    per = {}
+    for ch in (frames[0]["rel"] if frames else {}):
+        vals = [face * frames[f]["rel"][ch] for f in range(n)]
+        if ch not in lim2d:
+            per[ch] = {"ok": None, "reason": "no 2D joint limit declared for this channel", "value": [round(float(min(vals)), 1), round(float(max(vals)), 1)]}
+            continue
+        lo, hi = lim2d[ch]
+        bad = [f for f, v in enumerate(vals) if not lo <= v <= hi]
+        per[ch] = {"ok": not bad, "value": [round(float(min(vals)), 1), round(float(max(vals)), 1)], "frames": bad[:6], "threshold": [lo, hi]}
+    put("joint_limits_2d", per, all(v["ok"] for v in per.values()) if per and all(v["ok"] is not None for v in per.values()) else None,
+        None if per and all(v["ok"] is not None for v in per.values()) else "some channels have no declared 2D limit")
+    el = [fr["rel"]["arm_f.elbow"] for fr in frames] if frames and "arm_f.elbow" in frames[0]["rel"] else None
+    t = thr("elbow_range_min_deg")
+    if el is None:
+        put("elbow_range_deg", None, None, "no channel arm_f.elbow")
+    else:
+        put("elbow_range_deg", [round(float(min(el)), 1), round(float(max(el)), 1)], None if t is None else max(el) - min(el) >= t,
+            None if t is not None else missing("elbow_range_min_deg"), t)
+    # KB hammer rule 3: the elbow is most bent at the top of the wind-up (window: last 8 frames of the wind-up)
+    t = thr("windup_elbow_flex_deg")
+    if "windup" not in ph or el is None:
+        put("windup_elbow_flex_deg", None, None, "missing phase 'windup' or channel arm_f.elbow")
+    else:
+        lo_f, hi_f = max(0, ph["windup"]["end"] - 8), min(n - 1, ph["windup"]["end"])
+        wtop = max(abs(wrap(frames[f]["rel"]["arm_f.elbow"])) for f in range(lo_f, hi_f + 1))
+        put("windup_elbow_flex_deg", round(wtop, 1), None if t is None else t[0] <= wtop <= t[1],
+            None if t is not None else missing("windup_elbow_flex_deg"), t)
+    t = thr("impact_elbow_interior_min_deg")
+    if imp is None or el is None:
+        put("impact_elbow_interior_deg", None, None, "missing event 'impact' or channel arm_f.elbow")
+    else:
+        interior = 180 - abs(wrap(frames[imp]["rel"]["arm_f.elbow"]))
+        put("impact_elbow_interior_deg", round(interior, 1), None if t is None else interior >= t,
+            None if t is not None else missing("impact_elbow_interior_min_deg"), t)
+    worst, spans_seen = 0.0, 0
+    for c in m.get("constraints", []):
         if c["type"] != "contact":
             continue
         joint = s["contacts"][c["contact"]]["joint"]
         spans = c["frames"] if isinstance(c["frames"][0], list) else [c["frames"]]
         for a, b in spans:
-            pts = np.array([frames[f]["J"][joint] for f in range(a, min(b, len(frames)))])
+            pts = np.array([frames[f]["J"][joint] for f in range(a, min(b, n))])
             if len(pts):
+                spans_seen += 1
                 worst = max(worst, float(np.abs(pts - pts[0]).max()))
-    res["foot_slide_px"] = (round(worst, 3), worst <= acc["foot_slide_px"])
+    t = thr("foot_slide_px")
+    if not spans_seen:
+        put("foot_slide_px", None, None, "no contact constraint declared", t)
+    else:
+        put("foot_slide_px", round(worst, 3), None if t is None else worst <= t, None if t is not None else missing("foot_slide_px"), t)
+    res["foot_slide_px"]["declared_contacts"] = spans_seen
+    # weapon vs ground (ported from the R&D copy via review, KA-BD-11): lowest point of the rigid weapon shape vs the
+    # ground line of the contacts. Planar model: all parts lie in one plane, so this is exact in that model.
+    gys = [c["ground_y"] for c in s.get("contacts", {}).values() if "ground_y" in c]
+    t = thr("ground_penetration_tol_px")
+    if not gys:
+        put("weapon_ground_penetration_px", None, None, "no contact declares ground_y")
+    else:
+        gy = max(gys)
+        low = [max(float(p[1]) for poly in fr["shape"].values() for p in poly) - gy for fr in frames]
+        if t is None:
+            put("weapon_ground_penetration_px", [round(max(low), 1)], None, missing("ground_penetration_tol_px"))
+        else:
+            pen = [f for f, v in enumerate(low) if v > t]
+            put("weapon_ground_penetration_px", {"max_below_ground": round(max(low), 1), "first_frames": pen[:6],
+                                                 "frame_count": len(pen), "frame_span": [pen[0], pen[-1]] if pen else None},
+                not pen, threshold=t)
     com = np.array([sol.com(fr) for fr in frames])
-    ph = {p["name"]: p for p in m["phases"]}
-    idle_x = com[0, 0]
-    wind_min = com[ph["windup"]["start"]:ph["windup"]["end"], 0].min()
-    res["com_back_in_windup_px"] = (round(float(idle_x - wind_min), 1), idle_x - wind_min >= acc["com_back_in_windup_px"])
-    res["com_forward_at_impact_px"] = (round(float(com[imp, 0] - idle_x), 1), com[imp, 0] - idle_x >= acc["com_forward_at_impact_px"])
+    # COM along the facing (character frame): positive = forward
+    fwd = face * com[:, 0]
+    t = thr("com_back_in_windup_px")
+    if "windup" not in ph:
+        put("com_back_in_windup_px", None, None, "missing phase 'windup'")
+    else:
+        back = float(fwd[0] - fwd[ph["windup"]["start"]:ph["windup"]["end"]].min())
+        put("com_back_in_windup_px", round(back, 1), None if t is None else back >= t, None if t is not None else missing("com_back_in_windup_px"), t)
+    t = thr("com_forward_at_impact_px")
+    if imp is None:
+        put("com_forward_at_impact_px", None, None, "missing event 'impact'")
+    else:
+        f_imp = float(fwd[imp] - fwd[0])
+        put("com_forward_at_impact_px", round(f_imp, 1), None if t is None else f_imp >= t, None if t is not None else missing("com_forward_at_impact_px"), t)
     out = []
     for f, fr in enumerate(frames):
         xs = []
@@ -302,49 +385,64 @@ def run_checks(sol, frames):
             xs += [a[0] + spec["toe"][0], a[0] + spec["heel"][0]]
         if not (min(xs) - 4 <= com[f, 0] <= max(xs) + 4):
             out.append(f)
-    res["com_outside_support_frames"] = (out, len(out) == 0)
+    put("com_outside_support_frames", out, len(out) == 0, threshold="x-span of contacts +-4 px")
+    # weapon angle in the character frame (facing * unwrapped screen angle): positive = turning with the strike
     hang = np.array(unwrap_series([fr["ham_angle"] for fr in frames]))
-    sw = hang[ph["swing"]["start"]:ph["swing"]["end"] + 1]
-    mono = bool(np.all(np.diff(sw) >= -1e-6))
-    res["swing_weapon_angle_monotonic"] = (mono, mono)
-    wu = hang[ph["windup"]["start"]:ph["windup"]["end"] + 1]
-    res["windup_opposite_to_swing"] = (round(float(wu[-1] - wu[0]), 1), (wu[-1] - wu[0]) < 0 < (sw[-1] - sw[0]))
-    ft = hang[ph["follow_through"]["start"]:ph["follow_through"]["end"] + 1]
-    over = float(ft.max() - hang[imp])
-    res["follow_through_overshoot_deg"] = (round(over, 1), over >= acc["follow_through_overshoot_deg"])
-    hc = s["proxy"]["head_circle"]
-    # face zone = the lower half of the head circle (eyes to chin). A forearm passing ABOVE the head during an
-    # overhead swing is anatomically correct in a 3/4 view; one crossing the face zone is not (Board review v1).
+    hc_ang = face * hang
+    if "swing" not in ph:
+        put("swing_weapon_angle_monotonic", None, None, "missing phase 'swing'")
+    else:
+        sw = hc_ang[ph["swing"]["start"]:ph["swing"]["end"] + 1]
+        mono = bool(np.all(np.diff(sw) >= -1e-6))
+        put("swing_weapon_angle_monotonic", mono, mono, threshold="non-decreasing along the facing")
+    if "windup" not in ph or "swing" not in ph:
+        put("windup_opposite_to_swing", None, None, "missing phase 'windup' or 'swing'")
+    else:
+        wu = hc_ang[ph["windup"]["start"]:ph["windup"]["end"] + 1]
+        sw = hc_ang[ph["swing"]["start"]:ph["swing"]["end"] + 1]
+        put("windup_opposite_to_swing", round(float(wu[-1] - wu[0]), 1), (wu[-1] - wu[0]) < 0 < (sw[-1] - sw[0]),
+            threshold="windup turn < 0 < swing turn")
+    t = thr("follow_through_overshoot_deg")
+    if "follow_through" not in ph or imp is None:
+        put("follow_through_overshoot_deg", None, None, "missing phase 'follow_through' or event 'impact'")
+    else:
+        ft = hc_ang[ph["follow_through"]["start"]:ph["follow_through"]["end"] + 1]
+        over = float(ft.max() - hc_ang[imp])
+        put("follow_through_overshoot_deg", round(over, 1), None if t is None else over >= t,
+            None if t is not None else missing("follow_through_overshoot_deg"), t)
+    hc = s.get("proxy", {}).get("head_circle")
+    # face zone = the lower half of the head circle (eyes to chin), a 2D screen-overlap proxy (no depth)
     def face_hit(fr):
         c = fr["J"][hc["joint"]]
         a, b = fr["J"]["elbow_f"], fr["J"]["wrist_f"]
-        for t in np.linspace(0, 1, 21):
-            q = a + t * (b - a)
+        for t_ in np.linspace(0, 1, 21):
+            q = a + t_ * (b - a)
             if np.linalg.norm(q - c) < hc["r"] * 0.9 and q[1] > c[1] - 0.1 * hc["r"]:
                 return True
         return False
-    # Checked on the held/readable poses (impact .. end of recovery). During the fast swing the arms of a heavy
-    # overhead smash legitimately pass in front of the head for a frame or two.
-    cross = [f for f, fr in enumerate(frames) if ph["impact"]["start"] <= f < ph["recovery"]["end"] and face_hit(fr)]
-    res["forearm_crosses_face_zone_frames"] = (cross[:8], len(cross) == 0)
-    # velocity continuity of the weapon head: a frame-to-frame speed jump larger than `velocity_jump_ratio` of the
-    # local speed is a discontinuity (a pop). The impact stop is exempt: it is the designed hit-stop.
+    if not hc or "impact" not in ph or "recovery" not in ph or "elbow_f" not in s["joints"] or "wrist_f" not in s["joints"]:
+        put("forearm_crosses_face_zone_frames", None, None, "missing head circle, joints elbow_f/wrist_f, or phases impact/recovery")
+    else:
+        cross = [f for f, fr in enumerate(frames) if ph["impact"]["start"] <= f < ph["recovery"]["end"] and face_hit(fr)]
+        put("forearm_crosses_face_zone_frames", cross[:8], len(cross) == 0, threshold="none in impact.start..recovery.end")
     hp = np.array([fr["H"]["head"] for fr in frames])
     v = np.linalg.norm(np.diff(hp, axis=0), axis=1)
-    # weapon still fast at contact (KB hammer rule 8: tip speed at contact >= 80% of the swing's peak; the hit-stop
-    # is a runtime time-freeze event, not a baked deceleration)
-    sw_lo, sw_hi = ph["swing"]["start"], imp
-    peak = float(v[sw_lo:sw_hi].max()) if sw_hi > sw_lo else 0.0
-    contact = float(v[imp - 1]) if imp >= 1 else 0.0
-    ratio = contact / peak if peak else 0.0
-    res["contact_speed_ratio"] = (round(ratio, 2), ratio >= acc.get("contact_speed_ratio_min", 0.8))
+    # weapon still fast at contact (KB hammer rule 8: tip speed at contact >= 80% of the swing's peak)
+    t = thr("contact_speed_ratio_min")
+    if "swing" not in ph or imp is None or imp <= ph["swing"]["start"]:
+        put("contact_speed_ratio", None, None, "missing phase 'swing' or event 'impact' after it")
+    else:
+        peak = float(v[ph["swing"]["start"]:imp].max())
+        ratio = float(v[imp - 1]) / peak if peak else 0.0
+        put("contact_speed_ratio", round(ratio, 2), None if t is None else ratio >= t, None if t is not None else missing("contact_speed_ratio_min"), t)
     # a pop = one frame much faster than BOTH neighbours (a spike), above an imperceptibility floor
-    jumps = []
-    for i in range(1, len(v) - 1):
-        if v[i] > acc.get("velocity_floor_px", 15.0) and v[i] > acc.get("pop_ratio", 2.0) * max(v[i - 1], v[i + 1]):
-            jumps.append((i, round(float(v[i]), 1)))
-    res["weapon_velocity_pops"] = (jumps[:6], len(jumps) == 0)
-    res["solver_flags"] = (sorted(set(x[1] for x in sol.flags)), len(sol.flags) == 0)
+    fl, pr = thr("velocity_floor_px"), thr("pop_ratio")
+    if fl is None or pr is None:
+        put("weapon_velocity_pops", None, None, missing("velocity_floor_px / pop_ratio"))
+    else:
+        jumps = [(i, round(float(v[i]), 1)) for i in range(1, len(v) - 1) if v[i] > fl and v[i] > pr * max(v[i - 1], v[i + 1])]
+        put("weapon_velocity_pops", jumps[:6], len(jumps) == 0, threshold=[fl, pr])
+    put("solver_flags", sorted(set(x[1] for x in sol.flags)), len(sol.flags) == 0, threshold="no flags")
     return res, com, hang, table
 
 
@@ -384,12 +482,13 @@ def save_all(sol, frames, com, hang, table, res, out, art_base):
     name = m["id"]
     os.makedirs(out, exist_ok=True)
     k, off, W, Hh = 0.5, (60, 30), 560, 620
-    imp = [e for e in m["events"] if e["name"] == "impact"][0]["frame"]
+    imp = [e for e in m["events"] if e["name"] == "impact"][0]["frame"]      # this renderer draws strike evidence
+    ground_y = max((c["ground_y"] for c in s["contacts"].values() if "ground_y" in c), default=972)  # 972: old literal
     imgs = []
     for f, fr in enumerate(frames):
         im = Image.new("RGB", (W, Hh), BG)
         d = ImageDraw.Draw(im)
-        gy = 972 * k + off[1] + 9
+        gy = ground_y * k + off[1] + 9
         d.line([(0, gy), (W, gy)], fill=(60, 66, 74), width=2)
         draw_pose(d, fr, s, k, off)
         for j in s["chains"]["arm_f"]["joints"]:
@@ -422,7 +521,7 @@ def save_all(sol, frames, com, hang, table, res, out, art_base):
         draw_pose(ImageDraw.Draw(layer), frames[kf], s, k, off)
         T = Image.blend(T, layer, 0.18)
     d = ImageDraw.Draw(T)
-    gy = 972 * k + off[1] + 9
+    gy = ground_y * k + off[1] + 9
     d.line([(0, gy), (W, gy)], fill=(60, 66, 74), width=2)
     paths = {"head": ([fr["H"]["head"] for fr in frames], None), "hand": ([fr["J"]["hand_f"] for fr in frames], (230, 230, 230)),
              "elbow": ([fr["J"]["elbow_f"] for fr in frames], (120, 200, 255)), "com": (list(com), (255, 220, 80))}
@@ -490,10 +589,15 @@ def save_all(sol, frames, com, hang, table, res, out, art_base):
         sm = sil(frames[kf]); rows.append((kf, phase_of(m, kf), round(float((base & sm).sum() / max(1, (base | sm).sum())), 3)))
     report = {"motion": m["id"], "frames": sol.n, "fps": m["fps"],
               "phases": [(p["name"], p["start"], p["end"]) for p in m["phases"]],
-              "checks": {kk: {"value": v[0], "pass": bool(v[1])} for kk, v in res.items()},
+              "checks": res,
+              "note": "raw measurements: ok is None when the value or its acceptance threshold is missing (unknown, never "
+                      "a pass). Classification and the verdict come from posecheck.py (rules.py).",
               "bone_lengths": table, "silhouette_iou_vs_idle": rows}
     iou_imp = [r for r in rows if r[0] == imp][0][2]
-    report["checks"]["impact_silhouette_iou"] = {"value": iou_imp, "pass": iou_imp <= m["acceptance"]["impact_silhouette_iou_max"]}
+    t = m.get("acceptance", {}).get("impact_silhouette_iou_max")
+    report["checks"]["impact_silhouette_iou"] = {"value": iou_imp, "ok": None if t is None else iou_imp <= t,
+                                                 "reason": None if t is not None else "acceptance.impact_silhouette_iou_max missing (no default)",
+                                                 "threshold": t}
     json.dump(report, open(os.path.join(out, f"{name}_checks.json"), "w"), indent=1, default=str)
     return report
 
@@ -505,7 +609,8 @@ def main(sp, mp, out):
     res, com, hang, table = run_checks(sol, frames)
     rep = save_all(sol, frames, com, hang, table, res, out, os.path.dirname(os.path.abspath(sp)))
     for kk, v in rep["checks"].items():
-        print(f"{'PASS' if v['pass'] else 'FAIL'}  {kk}: {v['value']}")
+        tag = {True: "OK  ", False: "OUT ", None: "UNKN"}[v["ok"]]
+        print(f"{tag}  {kk}: {v['value']}" + (f"  ({v['reason']})" if v.get("reason") else ""))
     print("bone lengths:", {b: (t["min"], t["max"]) for b, t in rep["bone_lengths"].items()})
 
 

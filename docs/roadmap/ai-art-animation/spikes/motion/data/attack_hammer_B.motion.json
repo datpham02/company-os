@@ -2,6 +2,7 @@
  "schema": "motion.v2",
  "id": "attack_hammer_B",
  "structure": "brute_hammer",
+ "category": "strike.heavy_overhead",
  "fps": 60,
  "loop": false,
  "method": "B: knowledge-guided keyframes (FK arms, kinetic chain: hips lead chest lead arm; elbow extends through the swing)",
@@ -738,6 +739,8 @@
  ],
  "acceptance": {
   "bone_length_dev_px": 0.01,
+  "ground_penetration_tol_px": 3.0,
+  "ground_penetration_tol_px_why": "numerical tolerance ported with the R&D ground check (rnd motion.py, 2026-11-22); not a source value",
   "grip_error_px": 0.5,
   "foot_slide_px": 2.0,
   "com_back_in_windup_px": 15,
