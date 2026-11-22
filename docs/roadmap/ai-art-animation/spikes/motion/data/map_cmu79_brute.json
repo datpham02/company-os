@@ -1,0 +1,80 @@
+{
+ "schema": "retarget-map.v1",
+ "id": "attack_hammer_C",
+ "intent": "A heavy overhead hammer smash toward a target on the right, taken from a real two-handed wood-chopping performance and retargeted to the character.",
+ "source": {
+  "label": "CMU 79_01 chopping wood, second chop",
+  "asf": "../refs/cmu/79.asf",
+  "amc": "../refs/cmu/79_01.amc",
+  "frames": [
+   262,
+   400
+  ],
+  "fps": 60,
+  "licence": "CMU mocap: free for all uses; the data may not be resold even converted",
+  "lateral_pair": [
+   "lfemur",
+   "rfemur"
+  ]
+ },
+ "camera": {
+  "yaw_deg": 25,
+  "forward_sign": 1,
+  "note": "orthographic; screen +x = actor forward rotated 25 deg toward the actor's right (a 3/4 side view)"
+ },
+ "joints": {
+  "pelvis": "root",
+  "chest": "thorax",
+  "neck": "upperneck",
+  "head": "head",
+  "shoulder_f": "rclavicle",
+  "elbow_f": "rhumerus",
+  "wrist_f": "rradius",
+  "hand_f": "rwrist",
+  "shoulder_b": "lclavicle",
+  "elbow_b": "lhumerus",
+  "hand_b": "lradius",
+  "hip_k": "lhipjoint",
+  "knee_k": "lfemur",
+  "ankle_k": "ltibia",
+  "hip_f": "rhipjoint",
+  "knee_f": "rfemur",
+  "ankle_f": "rtibia"
+ },
+ "weapon": {
+  "front_hand": "rwrist",
+  "back_hand": "lwrist",
+  "source_axis": "not used: hands slide together; CMU hand rotation not captured",
+  "wrist_rule": {
+   "cocked": -80,
+   "release_at": 0.65,
+   "contact": -50,
+   "follow": -30,
+   "note": "relative wrist angle (deg); limits from the structure"
+  }
+ },
+ "adjust": {
+  "key_step": 2,
+  "shoulder_shift_gain": 1.0,
+  "impact_at_speed_peak": true,
+  "plant_threshold_px": 25
+ },
+ "acceptance": {
+  "bone_length_dev_px": 0.01,
+  "grip_error_px": 0.5,
+  "foot_slide_px": 2.0,
+  "com_back_in_windup_px": 15,
+  "com_forward_at_impact_px": 25,
+  "follow_through_overshoot_deg": 5,
+  "impact_silhouette_iou_max": 0.85,
+  "elbow_range_min_deg": 120,
+  "impact_elbow_interior_min_deg": 150,
+  "pop_ratio": 2.0,
+  "velocity_floor_px": 15.0,
+  "contact_speed_ratio_min": 0.8,
+  "windup_elbow_flex_deg": [
+   70,
+   125
+  ]
+ }
+}

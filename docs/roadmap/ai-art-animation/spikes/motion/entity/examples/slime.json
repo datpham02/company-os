@@ -1,0 +1,64 @@
+{
+ "id": "slime",
+ "identity": {
+  "role": "enemy",
+  "movement_identity": "bouncy, wobbling, sticky"
+ },
+ "topology": "deformable",
+ "components": [
+  {
+   "type": "deformable_body",
+   "name": "body",
+   "params": {
+    "elasticity": 0.8,
+    "damping": 0.3,
+    "volume_preservation": 0.9
+   }
+  },
+  {
+   "type": "ballistic",
+   "name": "hop"
+  },
+  {
+   "type": "shader_deformation",
+   "name": "surface_wobble"
+  }
+ ],
+ "locomotion_modes": [
+  "hop",
+  "slide"
+ ],
+ "contacts": {
+  "base": {
+   "component": "body",
+   "expected": "phase (between hops)"
+  }
+ },
+ "validation": {
+  "physical": [
+   "triangle_flip",
+   "area_preservation",
+   "recovery_time",
+   "parabola_fit"
+  ]
+ },
+ "environment": {
+  "gravity": [
+   0,
+   1
+  ],
+  "medium": "air"
+ },
+ "characteristic_length": {
+  "value_px": null,
+  "basis": "diameter"
+ },
+ "structural_assumptions": [
+  "deformable",
+  "mesh",
+  "grounded",
+  "airborne",
+  "periodic",
+  "card_scene"
+ ]
+}

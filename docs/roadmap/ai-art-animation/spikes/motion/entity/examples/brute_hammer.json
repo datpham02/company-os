@@ -1,0 +1,104 @@
+{
+ "id": "brute_hammer",
+ "identity": {
+  "name": "Attacker (Deckbound benchmark)",
+  "role": "enemy",
+  "movement_identity": "slow, heavy, committed blows; head low between the shoulders"
+ },
+ "topology": "skeletal + rigid attachment",
+ "anatomy": "../../profiles/heavy_humanoid.json",
+ "components": [
+  {
+   "type": "articulated_skeleton",
+   "name": "body",
+   "params": {
+    "structure": "../../data/structure_brute_hammer.json",
+    "limit_tier": "stylized"
+   }
+  },
+  {
+   "type": "rigid_attachment",
+   "name": "hammer",
+   "params": {
+    "asset": "hammer_master",
+    "grip": "body.hand_f"
+   }
+  },
+  {
+   "type": "flexible_appendage",
+   "name": "loincloth",
+   "params": {
+    "stiffness": "low",
+    "driver": "body.pelvis"
+   }
+  },
+  {
+   "type": "interaction_contact",
+   "name": "hit_target",
+   "params": {
+    "reaction_delay_frames": 2
+   }
+  }
+ ],
+ "locomotion_modes": [
+  "walk"
+ ],
+ "contacts": {
+  "feet": {
+   "component": "body",
+   "expected": "always (attacks)"
+  }
+ },
+ "references": [
+  {
+   "kind": "mocap",
+   "source": "CMU 79_01 chopping wood",
+   "licence": "CMU: free for all uses, no resale",
+   "use": "body timing, coil, weight"
+  }
+ ],
+ "artistic": {
+  "weight_feel": "heavy (mass_scale 1.4)",
+  "telegraph": "wind-up readable at 270 px"
+ },
+ "gameplay": {
+  "events": [
+   "impact"
+  ],
+  "timing_budgets": {
+   "windup_min_ms": 340
+  }
+ },
+ "validation": {
+  "physical": "skeletal + attachment validators",
+  "fictional": [],
+  "artistic": "director on previews"
+ },
+ "environment": {
+  "gravity": [
+   0,
+   1
+  ],
+  "medium": "air"
+ },
+ "characteristic_length": {
+  "value_px": 210,
+  "basis": "leg length"
+ },
+ "structural_assumptions": [
+  "articulated",
+  "bilateral",
+  "legged",
+  "grounded",
+  "trunk",
+  "humanoid_arm",
+  "attachment",
+  "rigid",
+  "interaction",
+  "card_scene",
+  "layered_2d",
+  "mirrorable",
+  "periodic",
+  "chain"
+ ]
+}

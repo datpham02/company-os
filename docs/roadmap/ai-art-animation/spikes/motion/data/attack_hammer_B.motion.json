@@ -1,0 +1,758 @@
+{
+ "schema": "motion.v2",
+ "id": "attack_hammer_B",
+ "structure": "brute_hammer",
+ "fps": 60,
+ "loop": false,
+ "method": "B: knowledge-guided keyframes (FK arms, kinetic chain: hips lead chest lead arm; elbow extends through the swing)",
+ "intent": "A heavy overhead hammer smash toward a target on the right: readable wind-up, a fast committed swing driven by the body, a held impact with the arm extended, then a weighted recovery back to the idle stance.",
+ "pose_channels": {
+  "root": "[dx,dy] pelvis offset",
+  "chains": "per chain, offsets from the rest pose in degrees for each channel listed in the structure (trunk: spine, neck, head; arm_f: shoulder, elbow, wrist; arm_b: shoulder, elbow)",
+  "shift": "per chain base joint offset [dx,dy] in the chest frame (shoulder protraction/elevation)",
+  "feet": "per contact [dx,0]; a change between keys is a step with a lift arc"
+ },
+ "phases": [
+  {
+   "name": "idle",
+   "start": 0,
+   "end": 8
+  },
+  {
+   "name": "anticipation",
+   "start": 8,
+   "end": 18
+  },
+  {
+   "name": "windup",
+   "start": 18,
+   "end": 46
+  },
+  {
+   "name": "swing",
+   "start": 46,
+   "end": 56
+  },
+  {
+   "name": "impact",
+   "start": 56,
+   "end": 64
+  },
+  {
+   "name": "follow_through",
+   "start": 64,
+   "end": 72
+  },
+  {
+   "name": "recovery",
+   "start": 72,
+   "end": 98
+  },
+  {
+   "name": "return_to_idle",
+   "start": 98,
+   "end": 120
+  }
+ ],
+ "keys": [
+  {
+   "frame": 0,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     0,
+     0
+    ],
+    "chains": {
+     "trunk": [
+      0,
+      0,
+      0
+     ],
+     "arm_f": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "arm_b": [
+      0,
+      0
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      0,
+      0
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 8,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     0,
+     0
+    ],
+    "chains": {
+     "trunk": [
+      0,
+      0,
+      0
+     ],
+     "arm_f": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "arm_b": [
+      0,
+      0
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      0,
+      0
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 18,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     8,
+     24
+    ],
+    "chains": {
+     "trunk": [
+      8,
+      3,
+      5
+     ],
+     "arm_f": [
+      7.9,
+      -9.2,
+      12.4
+     ],
+     "arm_b": [
+      4,
+      4
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      4,
+      6
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 30,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     -12,
+     14
+    ],
+    "chains": {
+     "trunk": [
+      -8,
+      -2,
+      -3
+     ],
+     "arm_f": [
+      119.9,
+      -131.2,
+      6.4
+     ],
+     "arm_b": [
+      -14,
+      -10
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      -4,
+      -12
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 40,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     -26,
+     15
+    ],
+    "chains": {
+     "trunk": [
+      -16,
+      -4,
+      -6
+     ],
+     "arm_f": [
+      123.9,
+      -275.2,
+      -30.9
+     ],
+     "arm_b": [
+      -28,
+      -22
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      -8,
+      -18
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 46,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     -28,
+     17
+    ],
+    "chains": {
+     "trunk": [
+      -18,
+      -5,
+      -7
+     ],
+     "arm_f": [
+      127.9,
+      -279.2,
+      -31.6
+     ],
+     "arm_b": [
+      -30,
+      -24
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      -8,
+      -18
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 50,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     0,
+     22
+    ],
+    "chains": {
+     "trunk": [
+      -6,
+      -2,
+      -2
+     ],
+     "arm_f": [
+      153.9,
+      -301.2,
+      -11.6
+     ],
+     "arm_b": [
+      -10,
+      -10
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      -2,
+      -16
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 53,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     18,
+     27
+    ],
+    "chains": {
+     "trunk": [
+      10,
+      2,
+      4
+     ],
+     "arm_f": [
+      187.9,
+      -215.2,
+      0.4
+     ],
+     "arm_b": [
+      12,
+      2
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      -10,
+      -40
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 56,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     30,
+     30
+    ],
+    "chains": {
+     "trunk": [
+      24,
+      6,
+      8
+     ],
+     "arm_f": [
+      255.9,
+      -165.2,
+      8.1
+     ],
+     "arm_b": [
+      30,
+      12
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      16,
+      10
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      42,
+      0
+     ]
+    }
+   },
+   "break": true
+  },
+  {
+   "frame": 60,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     33,
+     34
+    ],
+    "chains": {
+     "trunk": [
+      28,
+      7,
+      10
+     ],
+     "arm_f": [
+      273.9,
+      -161.2,
+      12.4
+     ],
+     "arm_b": [
+      30,
+      12
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      16,
+      10
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      42,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 72,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     34,
+     36
+    ],
+    "chains": {
+     "trunk": [
+      29,
+      8,
+      11
+     ],
+     "arm_f": [
+      281.9,
+      -163.2,
+      10.4
+     ],
+     "arm_b": [
+      36,
+      14
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      18,
+      12
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      42,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 84,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     30,
+     30
+    ],
+    "chains": {
+     "trunk": [
+      20,
+      6,
+      8
+     ],
+     "arm_f": [
+      312.9,
+      -159.2,
+      -5.9
+     ],
+     "arm_b": [
+      20,
+      10
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      10,
+      6
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      42,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 98,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     16,
+     15
+    ],
+    "chains": {
+     "trunk": [
+      6,
+      1,
+      2
+     ],
+     "arm_f": [
+      327.9,
+      -85.2,
+      35.4
+     ],
+     "arm_b": [
+      8,
+      4
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      2,
+      -2
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      42,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 110,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     2,
+     3
+    ],
+    "chains": {
+     "trunk": [
+      -1,
+      0,
+      -1
+     ],
+     "arm_f": [
+      357.9,
+      -10.2,
+      0.4
+     ],
+     "arm_b": [
+      -1,
+      0
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      0,
+      0
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 120,
+   "ease": "spline",
+   "pose": {
+    "root": [
+     0,
+     0
+    ],
+    "chains": {
+     "trunk": [
+      0,
+      0,
+      0
+     ],
+     "arm_f": [
+      360.0,
+      0.0,
+      0.0
+     ],
+     "arm_b": [
+      0,
+      0
+     ]
+    },
+    "shift": {
+     "arm_f": [
+      0,
+      0
+     ]
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  }
+ ],
+ "step": {
+  "lift_px": 16
+ },
+ "constraints": [
+  {
+   "type": "contact",
+   "contact": "foot_k",
+   "frames": [
+    0,
+    120
+   ]
+  },
+  {
+   "type": "contact",
+   "contact": "foot_f",
+   "frames": [
+    [
+     0,
+     50
+    ],
+    [
+     56,
+     98
+    ],
+    [
+     110,
+     120
+    ]
+   ]
+  },
+  {
+   "type": "attachment",
+   "object": "hammer",
+   "frames": "all"
+  }
+ ],
+ "events": [
+  {
+   "frame": 46,
+   "name": "swing_start"
+  },
+  {
+   "frame": 56,
+   "name": "impact",
+   "point": "hammer.head",
+   "hitstop_frames": 4,
+   "hitstop": "runtime time-freeze of the whole scene (not baked into the curves)"
+  }
+ ],
+ "acceptance": {
+  "bone_length_dev_px": 0.01,
+  "grip_error_px": 0.5,
+  "foot_slide_px": 2.0,
+  "com_back_in_windup_px": 15,
+  "com_forward_at_impact_px": 25,
+  "follow_through_overshoot_deg": 5,
+  "impact_silhouette_iou_max": 0.85,
+  "elbow_range_min_deg": 120,
+  "impact_elbow_interior_min_deg": 150,
+  "velocity_floor_px": 15.0,
+  "pop_ratio": 2.0,
+  "contact_speed_ratio_min": 0.8,
+  "windup_elbow_flex_deg": [
+   70,
+   125
+  ]
+ },
+ "interpolation": "pchip"
+}

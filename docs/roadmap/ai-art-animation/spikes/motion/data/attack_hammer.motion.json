@@ -1,0 +1,486 @@
+{
+ "schema": "motion.v1",
+ "id": "attack_hammer_overhead",
+ "structure": "brute_hammer",
+ "fps": 60,
+ "loop": false,
+ "intent": "A heavy overhead hammer smash toward a target on the right: readable wind-up, a fast committed swing driven by the body, a held impact, then a weighted recovery back to the idle stance.",
+ "pose_channels": {
+  "pelvis": "[dx, dy] px offset of the pelvis from rest (root motion, crouch)",
+  "spine": "deg, chest rotation about the pelvis (lean); + = forward (clockwise, toward the target)",
+  "neck": "deg about the chest",
+  "head": "deg about the neck",
+  "arm_f": "hammer arm by IK: reach = shoulder-to-hand distance px, dir = deg of the hand seen from the shoulder in the chest frame, hammer = deg of the hammer axis in the chest frame (0 = +x)",
+  "arm_b": "free arm by FK: shoulder, elbow deg offsets",
+  "feet": "per contact [dx, 0]; a dx change between keys is a step with an automatic lift arc"
+ },
+ "phases": [
+  {
+   "name": "idle",
+   "start": 0,
+   "end": 8,
+   "purpose": "ready stance"
+  },
+  {
+   "name": "anticipation",
+   "start": 8,
+   "end": 18,
+   "purpose": "small dip and counter-move that announces the wind-up"
+  },
+  {
+   "name": "windup",
+   "start": 18,
+   "end": 46,
+   "purpose": "weight sinks onto the back leg (crouch, not a rise: the legs are near straight at rest), chest arches back, hammer swung back over the head; brief hold at the top"
+  },
+  {
+   "name": "swing",
+   "start": 46,
+   "end": 54,
+   "purpose": "fast accelerating arc driven by hips then chest then arm; front foot steps in"
+  },
+  {
+   "name": "impact",
+   "start": 54,
+   "end": 62,
+   "purpose": "contact held (hit-stop), body sunk onto the front leg"
+  },
+  {
+   "name": "follow_through",
+   "start": 62,
+   "end": 70,
+   "purpose": "hammer and chest continue past the contact and settle"
+  },
+  {
+   "name": "recovery",
+   "start": 70,
+   "end": 96,
+   "purpose": "rise, pull the hammer back up, weight back to centre"
+  },
+  {
+   "name": "return_to_idle",
+   "start": 96,
+   "end": 120,
+   "purpose": "step the front foot back and settle into the ready stance"
+  }
+ ],
+ "keys": [
+  {
+   "frame": 0,
+   "ease": "inout",
+   "pose": {
+    "pelvis": [
+     0,
+     0
+    ],
+    "spine": 0,
+    "neck": 0,
+    "head": 0,
+    "arm_f": {
+     "reach": 132,
+     "dir": -114,
+     "hammer": -59
+    },
+    "arm_b": {
+     "shoulder": 0,
+     "elbow": 0
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 8,
+   "ease": "inout",
+   "pose": {
+    "pelvis": [
+     0,
+     0
+    ],
+    "spine": 0,
+    "neck": 0,
+    "head": 0,
+    "arm_f": {
+     "reach": 132,
+     "dir": -114,
+     "hammer": -59
+    },
+    "arm_b": {
+     "shoulder": 0,
+     "elbow": 0
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 18,
+   "ease": "inout",
+   "pose": {
+    "pelvis": [
+     6,
+     14
+    ],
+    "spine": 4,
+    "neck": 2,
+    "head": 3,
+    "arm_f": {
+     "reach": 126,
+     "dir": -104,
+     "hammer": -46
+    },
+    "arm_b": {
+     "shoulder": 4,
+     "elbow": 4
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 40,
+   "ease": "out",
+   "pose": {
+    "pelvis": [
+     -26,
+     15
+    ],
+    "spine": -16,
+    "neck": -4,
+    "head": -6,
+    "arm_f": {
+     "reach": 150,
+     "dir": -158,
+     "hammer": -198
+    },
+    "arm_b": {
+     "shoulder": -28,
+     "elbow": -22
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 46,
+   "ease": "in",
+   "pose": {
+    "pelvis": [
+     -28,
+     17
+    ],
+    "spine": -18,
+    "neck": -5,
+    "head": -7,
+    "arm_f": {
+     "reach": 148,
+     "dir": -160,
+     "hammer": -208
+    },
+    "arm_b": {
+     "shoulder": -30,
+     "elbow": -24
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 54,
+   "ease": "lin",
+   "pose": {
+    "pelvis": [
+     30,
+     30
+    ],
+    "spine": 24,
+    "neck": 6,
+    "head": 8,
+    "arm_f": {
+     "reach": 190,
+     "dir": 22,
+     "hammer": 68
+    },
+    "arm_b": {
+     "shoulder": 30,
+     "elbow": 12
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      42,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 62,
+   "ease": "out",
+   "pose": {
+    "pelvis": [
+     30,
+     32
+    ],
+    "spine": 25,
+    "neck": 6,
+    "head": 8,
+    "arm_f": {
+     "reach": 190,
+     "dir": 23,
+     "hammer": 70
+    },
+    "arm_b": {
+     "shoulder": 31,
+     "elbow": 12
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      42,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 70,
+   "ease": "inout",
+   "pose": {
+    "pelvis": [
+     34,
+     36
+    ],
+    "spine": 29,
+    "neck": 8,
+    "head": 11,
+    "arm_f": {
+     "reach": 192,
+     "dir": 32,
+     "hammer": 82
+    },
+    "arm_b": {
+     "shoulder": 36,
+     "elbow": 14
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      42,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 96,
+   "ease": "inout",
+   "pose": {
+    "pelvis": [
+     16,
+     15
+    ],
+    "spine": 6,
+    "neck": 1,
+    "head": 2,
+    "arm_f": {
+     "reach": 140,
+     "dir": -80,
+     "hammer": -32
+    },
+    "arm_b": {
+     "shoulder": 8,
+     "elbow": 4
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      42,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 110,
+   "ease": "out",
+   "pose": {
+    "pelvis": [
+     2,
+     3
+    ],
+    "spine": -1,
+    "neck": 0,
+    "head": -1,
+    "arm_f": {
+     "reach": 133,
+     "dir": -116,
+     "hammer": -61
+    },
+    "arm_b": {
+     "shoulder": -1,
+     "elbow": 0
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "frame": 120,
+   "ease": "lin",
+   "pose": {
+    "pelvis": [
+     0,
+     0
+    ],
+    "spine": 0,
+    "neck": 0,
+    "head": 0,
+    "arm_f": {
+     "reach": 132,
+     "dir": -114,
+     "hammer": -59
+    },
+    "arm_b": {
+     "shoulder": 0,
+     "elbow": 0
+    },
+    "feet": {
+     "foot_k": [
+      0,
+      0
+     ],
+     "foot_f": [
+      0,
+      0
+     ]
+    }
+   }
+  }
+ ],
+ "curves": {
+  "lin": "linear",
+  "in": "cubic ease-in (accelerates into the next key)",
+  "out": "cubic ease-out (decelerates into the next key)",
+  "inout": "smoothstep"
+ },
+ "step": {
+  "lift_px": 16
+ },
+ "constraints": [
+  {
+   "type": "contact",
+   "contact": "foot_k",
+   "frames": [
+    0,
+    120
+   ]
+  },
+  {
+   "type": "contact",
+   "contact": "foot_f",
+   "frames": [
+    [
+     0,
+     46
+    ],
+    [
+     54,
+     96
+    ],
+    [
+     110,
+     120
+    ]
+   ]
+  },
+  {
+   "type": "attachment",
+   "object": "hammer",
+   "frames": "all"
+  }
+ ],
+ "events": [
+  {
+   "frame": 54,
+   "name": "impact",
+   "point": "hammer.head",
+   "hitstop_frames": 8
+  },
+  {
+   "frame": 46,
+   "name": "swing_start"
+  }
+ ],
+ "acceptance": {
+  "bone_length_dev_px": 0.01,
+  "grip_error_px": 0.5,
+  "foot_slide_px": 2.0,
+  "com_back_in_windup_px": 15,
+  "com_forward_at_impact_px": 25,
+  "swing_hammer_angle_monotonic": true,
+  "anticipation_opposite": true,
+  "follow_through_overshoot_deg": 5,
+  "impact_silhouette_iou_max": 0.85
+ }
+}

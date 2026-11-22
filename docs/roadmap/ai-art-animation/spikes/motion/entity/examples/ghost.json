@@ -1,0 +1,77 @@
+{
+ "id": "ghost",
+ "identity": {
+  "role": "enemy",
+  "movement_identity": "drifting, weightless, fading"
+ },
+ "topology": "deformable + field",
+ "components": [
+  {
+   "type": "hover_float",
+   "name": "drift",
+   "params": {
+    "bob_period_s": 2.4
+   }
+  },
+  {
+   "type": "cloth",
+   "name": "shroud_tail",
+   "params": {
+    "pins": "head"
+   }
+  },
+  {
+   "type": "shader_deformation",
+   "name": "wobble"
+  },
+  {
+   "type": "particle_emission",
+   "name": "wisps"
+  }
+ ],
+ "contacts": {
+  "ground": {
+   "expected": "never"
+  }
+ },
+ "fictional_rules": [
+  {
+   "id": "no_gravity",
+   "rule": "ignores gravity and ground contact",
+   "overrides": "ground_contact, balance -> not applied"
+  },
+  {
+   "id": "phasing",
+   "rule": "may pass through walls",
+   "overrides": "collision -> not applied"
+  }
+ ],
+ "validation": {
+  "fictional": [
+   "no_gravity",
+   "phasing"
+  ],
+  "physical": [
+   "loop_seam",
+   "pins"
+  ],
+  "artistic": "readable silhouette, consistent drift"
+ },
+ "environment": {
+  "gravity": [
+   0,
+   1
+  ],
+  "medium": "air"
+ },
+ "characteristic_length": {
+  "value_px": null,
+  "basis": "body length"
+ },
+ "structural_assumptions": [
+  "periodic",
+  "cloth",
+  "mesh",
+  "card_scene"
+ ]
+}

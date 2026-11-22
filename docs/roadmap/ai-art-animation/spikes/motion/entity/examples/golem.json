@@ -1,0 +1,59 @@
+{
+ "id": "golem",
+ "identity": {
+  "role": "enemy",
+  "movement_identity": "rigid stone blocks, enormous mass, grinding joints"
+ },
+ "topology": "rigid parts",
+ "components": [
+  {
+   "type": "articulated_skeleton",
+   "name": "body",
+   "params": {
+    "joint_spec": "mechanical (no soft tissue), stiff limits"
+   }
+  },
+  {
+   "type": "hinge_linkage",
+   "name": "plates"
+  },
+  {
+   "type": "particle_emission",
+   "name": "dust_on_step"
+  }
+ ],
+ "artistic": {
+  "weight_feel": "exaggerated mass: long anticipation, ground shake on contact"
+ },
+ "validation": {
+  "physical": [
+   "pivot",
+   "intersection",
+   "ground_contact"
+  ],
+  "artistic": "mass reads"
+ },
+ "environment": {
+  "gravity": [
+   0,
+   1
+  ],
+  "medium": "air"
+ },
+ "characteristic_length": {
+  "value_px": null,
+  "basis": "leg length"
+ },
+ "structural_assumptions": [
+  "articulated",
+  "bilateral",
+  "legged",
+  "grounded",
+  "trunk",
+  "rigid",
+  "card_scene",
+  "layered_2d",
+  "mirrorable",
+  "periodic"
+ ]
+}

@@ -1,0 +1,22 @@
+{
+ "schema": "pose-library-spec.v1",
+ "structure": "brute_hammer",
+ "from_motion": "attack_hammer_B.motion.json",
+ "poses": [
+  {"id": "relaxed_standing_hammer_raised", "from_key": 0, "context": "idle / ready with the hammer held up (the master art pose)", "reference": "master art (SOU-81 6115)"},
+  {"id": "combat_stance_dip", "from_key": 18, "context": "anticipation dip before a heavy overhead strike", "reference": "KB anticipation; method B"},
+  {"id": "overhead_raise", "from_key": 30, "context": "lifting a heavy tool overhead (elbow extending)", "reference": "KB hammer checklist; CMU 79_01 timing",
+   "limitations": ["the arm rises behind the trunk (soft finding): a forward-up raise is more natural; to be corrected"]},
+  {"id": "windup_top", "from_key": 46, "context": "top of the wind-up: weight on the back foot, hammer dropped behind the head", "reference": "KB rule 3 (elbow 70-120)"},
+  {"id": "swing_mid", "from_key": 53, "context": "mid swing: elbow leads, shoulder raised, hips forward", "reference": "KB kinetic chain"},
+  {"id": "impact_extended", "from_key": 56, "context": "impact of a heavy downward strike: arm nearly straight, weight on the front leg", "reference": "KB rules 3, 5"},
+  {"id": "follow_through_low", "from_key": 72, "context": "follow-through after a ground strike", "reference": "KB follow-through"},
+  {"id": "recovery_hang", "from_key": 84, "context": "recovery: the hammer hangs, momentum carried", "reference": "method B"},
+  {"id": "crouch_deep", "pose": {"root": [0, 40], "chains": {"trunk": [12, 4, 6], "arm_f": [0, 0, 0], "arm_b": [10, 10]}, "shift": {"arm_f": [0, 0]}, "feet": {"foot_k": [0, 0], "foot_f": [0, 0]}},
+   "context": "crouch / brace (both feet planted)", "reference": "KB balance and support"},
+  {"id": "step_forward", "pose": {"root": [20, 18], "chains": {"trunk": [6, 0, 2], "arm_f": [0, 0, 0], "arm_b": [10, 0]}, "shift": {"arm_f": [0, 0]}, "feet": {"foot_k": [0, 0], "foot_f": [42, 0]}},
+   "context": "a step with the front foot, weight transferring forward", "reference": "KB weight transfer"},
+  {"id": "invalid_knee_backward_demo", "pose": {"root": [0, -30], "chains": {"trunk": [0, 0, 0], "arm_f": [0, 0, 0], "arm_b": [0, 0]}, "shift": {"arm_f": [0, 0]}, "feet": {"foot_k": [0, 0], "foot_f": [0, 0]}},
+   "context": "NEGATIVE example: pelvis lifted beyond the legs' reach (must fail)", "reference": "regression"}
+ ]
+}

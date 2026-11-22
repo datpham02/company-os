@@ -1,0 +1,55 @@
+{
+ "schema": "anatomy-profile.v1",
+ "id": "flying_creature",
+ "body_type": "winged (bird, bat, dragon)",
+ "status": "provisional: values pending the verified research tables",
+ "joints": {
+  "wing_shoulder": {
+   "type": "ball",
+   "movements": {
+    "elevation": {
+     "clinical": [
+      -60,
+      90
+     ]
+    }
+   }
+  },
+  "wing_elbow": {
+   "type": "hinge",
+   "movements": {
+    "flex": {
+     "clinical": [
+      0,
+      150
+     ]
+    }
+   },
+   "coupled": "elbow and wrist fold together (bird wing folding mechanism)"
+  },
+  "wing_wrist": {
+   "type": "hinge",
+   "movements": {
+    "flex": {
+     "clinical": [
+      0,
+      160
+     ]
+    }
+   }
+  },
+  "legs": "as quadruped hind leg or bird leg (digitigrade, backward-pointing joint is the ankle)"
+ },
+ "coupled_rules": [
+  {
+   "id": "wing_fold",
+   "what": "elbow flexion drives wrist flexion (fold/unfold together)",
+   "class": "soft"
+  },
+  {
+   "id": "downstroke_power",
+   "what": "downstroke faster than upstroke; wing tip on a figure-of-eight arc",
+   "class": "soft"
+  }
+ ]
+}

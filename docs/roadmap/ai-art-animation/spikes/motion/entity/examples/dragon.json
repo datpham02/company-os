@@ -1,0 +1,106 @@
+{
+ "id": "dragon",
+ "identity": {
+  "role": "boss",
+  "movement_identity": "reptilian weight on the ground, bat-like wings, whip tail, fire breath"
+ },
+ "topology": "hybrid",
+ "anatomy": "../../profiles/quadruped.json",
+ "components": [
+  {
+   "type": "articulated_skeleton",
+   "name": "body",
+   "params": {
+    "anatomy": "quadruped"
+   }
+  },
+  {
+   "type": "legged_gait",
+   "name": "walk",
+   "params": {
+    "pattern": "lateral-sequence walk",
+    "duty": 0.7
+   }
+  },
+  {
+   "type": "wing",
+   "name": "wings",
+   "params": {
+    "membrane": "bat-like",
+    "fold_coupling": true
+   },
+   "attach_to": "body.scapula"
+  },
+  {
+   "type": "undulating_body",
+   "name": "tail_wave",
+   "params": {
+    "mode": "lateral"
+   },
+   "attach_to": "body.pelvis"
+  },
+  {
+   "type": "flexible_appendage",
+   "name": "tail_tip",
+   "attach_to": "tail_wave.end"
+  },
+  {
+   "type": "rigid_attachment",
+   "name": "armor_plates",
+   "params": {
+    "parent": "body.spine"
+   }
+  },
+  {
+   "type": "particle_emission",
+   "name": "fire_breath",
+   "attach_to": "body.jaw",
+   "params": {
+    "event": "breath_start..breath_end"
+   }
+  }
+ ],
+ "locomotion_modes": [
+  "walk",
+  "fly",
+  "glide"
+ ],
+ "fictional_rules": [
+  {
+   "id": "lift",
+   "rule": "wings lift the body despite its mass (fantasy)",
+   "overrides": "no physical lift/mass check"
+  }
+ ],
+ "validation": {
+  "physical": "per component",
+  "fictional": [
+   "lift"
+  ],
+  "artistic": "reads as one creature, not parts"
+ },
+ "environment": {
+  "gravity": [
+   0,
+   1
+  ],
+  "medium": "air"
+ },
+ "characteristic_length": {
+  "value_px": null,
+  "basis": "leg length"
+ },
+ "structural_assumptions": [
+  "articulated",
+  "legged",
+  "grounded",
+  "trunk",
+  "wing",
+  "chain",
+  "attachment",
+  "rigid",
+  "periodic",
+  "card_scene",
+  "layered_2d"
+ ]
+}

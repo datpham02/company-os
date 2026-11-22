@@ -1,0 +1,17 @@
+{
+ "schema": "anatomy-profile.v1",
+ "id": "stylized_humanoid",
+ "extends": "humanoid_base",
+ "body_type": "stylized humanoid",
+ "status": "provisional: values pending the verified research tables",
+ "limit_tier_default": "stylized",
+ "overrides": {
+  "proportions": {
+   "head_heights": [
+    3,
+    5.5
+   ]
+  },
+  "notes": "exaggeration allowed in timing, squash/stretch and arcs; joint directions still anatomical (no backward knees, no reversed elbows)"
+ }
+}

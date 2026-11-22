@@ -1,0 +1,154 @@
+{
+ "schema": "entity-motion-profile.v1 (definition)",
+ "status": "PROPOSED",
+ "principle": "composition, not inheritance: an entity lists motion components; knowledge profiles (anatomy, materials, fictional rules) are parameters of components. Only id, components and validation are required.",
+ "fields": {
+  "id": "unique id",
+  "identity": {
+   "name": "",
+   "role": "player|enemy|npc|prop|environment|effect",
+   "movement_identity": "one sentence: how it should feel"
+  },
+  "topology": "skeletal | segmented chain | rigid parts | deformable | particle/field | hybrid",
+  "anatomy": "optional anatomy profile (profiles/*.json) for biological skeletal components",
+  "proportions": {},
+  "mass": {
+   "total": "relative",
+   "distribution": "per component/segment"
+  },
+  "materials": {
+   "<part>": {
+    "elasticity": 0,
+    "damping": 0,
+    "friction": 0,
+    "rigid": true
+   }
+  },
+  "components": [
+   {
+    "type": "<registry id>",
+    "name": "<instance>",
+    "params": {},
+    "attach_to": "<component.socket>"
+   }
+  ],
+  "locomotion_modes": [
+   "walk",
+   "run",
+   "fly",
+   "swim",
+   "slither",
+   "hover",
+   "roll",
+   "teleport"
+  ],
+  "contacts": {
+   "<name>": {
+    "component": "",
+    "point": "",
+    "expected": "always|phase|never"
+   }
+  },
+  "attachments": {
+   "<socket>": {
+    "component": "",
+    "transform": [
+     0,
+     0,
+     0
+    ]
+   }
+  },
+  "collision": {
+   "approx": "capsules|polygons|circles"
+  },
+  "environment_interactions": [
+   "ground",
+   "water",
+   "wind",
+   "walls"
+  ],
+  "interactions": [
+   {
+    "type": "attach|driven_by|grab|throw|collide|transform",
+    "a": "",
+    "b": "",
+    "events": []
+   }
+  ],
+  "references": [
+   {
+    "kind": "mocap|video|anatomy|art|analogue",
+    "source": "",
+    "licence": "",
+    "use": "timing|arcs|gait|pose"
+   }
+  ],
+  "artistic": {
+   "weight_feel": "",
+   "stylisation": "",
+   "readability": "",
+   "telegraph": ""
+  },
+  "gameplay": {
+   "events": [],
+   "hitboxes": "",
+   "timing_budgets": {}
+  },
+  "methods_allowed": [
+   "fk_keyframe",
+   "mocap_retarget",
+   "procedural",
+   "physics",
+   "shader",
+   "engine particles",
+   "frame-by-frame (generated)"
+  ],
+  "fictional_rules": [
+   {
+    "id": "",
+    "rule": "",
+    "overrides": "<validator id> -> expected behaviour"
+   }
+  ],
+  "validation": {
+   "physical": "validators that apply",
+   "fictional": "validators replaced by fictional rules",
+   "artistic": "review items"
+  },
+  "environment": {
+   "gravity": [
+    0,
+    1
+   ],
+   "medium": "air|water|none",
+   "note": "physical context; fictional rules only for behaviour that contradicts it"
+  },
+  "characteristic_length": {
+   "value_px": 0,
+   "basis": "leg length (legged) | body length | diameter",
+   "note": "unit of every threshold"
+  },
+  "structural_assumptions": [
+   "articulated",
+   "bilateral",
+   "legged",
+   "grounded",
+   "trunk",
+   "humanoid_arm",
+   "attachment",
+   "rigid",
+   "interaction",
+   "card_scene",
+   "layered_2d",
+   "mirrorable",
+   "periodic",
+   "wing",
+   "chain",
+   "cloth",
+   "mesh",
+   "deformable",
+   "airborne"
+  ]
+ }
+}

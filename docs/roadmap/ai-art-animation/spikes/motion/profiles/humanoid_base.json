@@ -1,0 +1,395 @@
+{
+ "schema": "anatomy-profile.v1",
+ "id": "humanoid_base",
+ "body_type": "human",
+ "status": "clinical and functional ranges from the verified table (research 2026-11-22, kb/functional-anatomy.md + human_joint_table.json); stylized tier is a studio heuristic",
+ "angle_convention": {
+  "units": "deg",
+  "measured_as": "anatomical angle of the child segment relative to the parent segment, 0 = neutral (anatomical position); flexion positive",
+  "projection_2d": "a structure maps each 2D channel to (joint, movement, sign, zero_offset): anatomical = sign * (relative_2d - zero_offset). Joints whose 2D sign can invert with axial rotation (elbow seen in a 3/4 view) declare flip_policy 'through_neutral'."
+ },
+ "joints": {
+  "neck": {
+   "parent": "thorax",
+   "type": "gliding-series (C1-C7)",
+   "dof": 3,
+   "axes": "flex/ext (sagittal), lateral flex (frontal), rotation (transverse)",
+   "movements": {
+    "flex": {
+     "clinical": [
+      -75,
+      60
+     ],
+     "functional": [
+      -40,
+      40
+     ],
+     "stylized": [
+      -85,
+      70
+     ],
+     "sources": [
+      "LUTT"
+     ],
+     "status": "clinical verified, functional unverified"
+    }
+   },
+   "notes": "negative = extension"
+  },
+  "head": {
+   "parent": "neck",
+   "type": "atlanto-occipital (condyloid)",
+   "dof": 2,
+   "movements": {
+    "flex": {
+     "clinical": [
+      -25,
+      25
+     ],
+     "functional": [
+      -15,
+      20
+     ],
+     "stylized": [
+      -35,
+      35
+     ]
+    }
+   }
+  },
+  "spine": {
+   "parent": "pelvis",
+   "type": "gliding-series (thoracolumbar)",
+   "dof": 3,
+   "movements": {
+    "flex": {
+     "clinical": [
+      -25,
+      50
+     ],
+     "functional": [
+      -15,
+      50
+     ],
+     "stylized": [
+      -35,
+      70
+     ],
+     "sources": [
+      "LUTT",
+      "GATES2016",
+      "ESOLA1996"
+     ],
+     "status": "verified"
+    }
+   },
+   "notes": "bending is distributed over many vertebrae; a single-point bend is an error"
+  },
+  "scapula": {
+   "parent": "thorax",
+   "type": "scapulothoracic (gliding, not a true joint)",
+   "dof": "elevation/depression, protraction/retraction, upward/downward rotation",
+   "movements": {
+    "elevation_px_per_100px_height": {
+     "clinical": [
+      -1.5,
+      6
+     ],
+     "functional": [
+      -1,
+      4
+     ],
+     "stylized": [
+      -2,
+      8
+     ]
+    }
+   }
+  },
+  "shoulder": {
+   "parent": "scapula",
+   "type": "ball-and-socket (glenohumeral)",
+   "dof": 3,
+   "movements": {
+    "flex": {
+     "clinical": [
+      -50,
+      170
+     ],
+     "functional": [
+      -46,
+      121
+     ],
+     "stylized": [
+      -65,
+      190
+     ],
+     "sources": [
+      "CDC_ROM",
+      "LUTT",
+      "NAMDARI2012",
+      "GATES2016"
+     ],
+     "status": "verified"
+    },
+    "abduct": {
+     "clinical": [
+      0,
+      180
+     ],
+     "functional": [
+      0,
+      128
+     ],
+     "stylized": [
+      0,
+      195
+     ],
+     "sources": [
+      "LUTT",
+      "NAMDARI2012"
+     ],
+     "status": "verified"
+    }
+   },
+   "notes": "180 deg of arm elevation is about 120 glenohumeral + 60 scapular"
+  },
+  "elbow": {
+   "parent": "shoulder",
+   "type": "hinge (humero-ulnar)",
+   "dof": 1,
+   "movements": {
+    "flex": {
+     "clinical": [
+      -5,
+      145
+     ],
+     "functional": [
+      30,
+      130
+     ],
+     "stylized": [
+      -8,
+      155
+     ],
+     "sources": [
+      "CDC_ROM",
+      "LUTT",
+      "MORREY1981",
+      "GATES2016"
+     ],
+     "status": "verified"
+    }
+   },
+   "flip_policy_2d": "through_neutral",
+   "notes": "never bends backward beyond a few degrees; nearly straight but not locked at impacts"
+  },
+  "forearm": {
+   "parent": "elbow",
+   "type": "pivot (radio-ulnar)",
+   "dof": 1,
+   "movements": {
+    "pronation": {
+     "clinical": [
+      -80,
+      80
+     ],
+     "functional": [
+      -50,
+      50
+     ],
+     "stylized": [
+      -90,
+      90
+     ]
+    }
+   },
+   "notes": "not visible as a 2D angle; changes hand/weapon orientation"
+  },
+  "wrist": {
+   "parent": "forearm",
+   "type": "condyloid (radiocarpal)",
+   "dof": 2,
+   "movements": {
+    "flex": {
+     "clinical": [
+      -60,
+      60
+     ],
+     "functional": [
+      -60,
+      54
+     ],
+     "stylized": [
+      -80,
+      80
+     ],
+     "sources": [
+      "LUTT",
+      "RYU1991",
+      "GATES2016"
+     ],
+     "status": "verified; stylized widened because a 2D wrist angle mixes flexion, deviation and forearm rotation"
+    },
+    "radial_dev": {
+     "clinical": [
+      -30,
+      20
+     ],
+     "functional": [
+      -40,
+      17
+     ],
+     "stylized": [
+      -40,
+      30
+     ],
+     "sources": [
+      "LUTT",
+      "RYU1991",
+      "GATES2016"
+     ],
+     "status": "verified (functional ulnar > clinical: Luttgens conservative)"
+    }
+   }
+  },
+  "pelvis": {
+   "parent": null,
+   "type": "root",
+   "dof": 6
+  },
+  "hip": {
+   "parent": "pelvis",
+   "type": "ball-and-socket",
+   "dof": 3,
+   "movements": {
+    "flex": {
+     "clinical": [
+      -18,
+      130
+     ],
+     "functional": [
+      -10,
+      101
+     ],
+     "stylized": [
+      -30,
+      140
+     ],
+     "sources": [
+      "CDC_ROM",
+      "LUTT",
+      "HYODO2017"
+     ],
+     "status": "verified"
+    }
+   }
+  },
+  "knee": {
+   "parent": "hip",
+   "type": "modified hinge",
+   "dof": 1,
+   "movements": {
+    "flex": {
+     "clinical": [
+      0,
+      140
+     ],
+     "functional": [
+      0,
+      135
+     ],
+     "stylized": [
+      -5,
+      150
+     ],
+     "sources": [
+      "CDC_ROM",
+      "LUTT",
+      "ROWE2000",
+      "HYODO2017"
+     ],
+     "status": "verified"
+    }
+   },
+   "preferred_bend": "knee forward of the hip-ankle line (the shin folds backward)",
+   "notes": "never bends forward (backward-knee is an error for humans)"
+  },
+  "ankle": {
+   "parent": "knee",
+   "type": "hinge (talocrural) + subtalar",
+   "dof": 2,
+   "movements": {
+    "dorsiflex": {
+     "clinical": [
+      -55,
+      13
+     ],
+     "functional": [
+      -20,
+      10
+     ],
+     "stylized": [
+      -65,
+      30
+     ],
+     "sources": [
+      "CDC_ROM"
+     ],
+     "status": "verified (CDC passive mean; other charts give ~20 deg dorsiflexion)"
+    }
+   }
+  }
+ },
+ "segments_mass": {
+  "source": "Dempster/Winter style approximation (to be verified by the biomechanics research)",
+  "head_neck": 0.081,
+  "trunk": 0.497,
+  "upper_arm": 0.028,
+  "forearm": 0.016,
+  "hand": 0.006,
+  "thigh": 0.1,
+  "shank": 0.0465,
+  "foot": 0.0145
+ },
+ "coupled_rules": [
+  {
+   "id": "scapulohumeral_rhythm",
+   "what": "raising the arm above about 30 deg moves the shoulder joint (scapula) up and rotates it",
+   "check_2d": "when the upper arm points above shoulder height, the shoulder joint shift must rise; ratio ~2:1 arm:scapula",
+   "class": "soft"
+  },
+  {
+   "id": "lumbopelvic_rhythm",
+   "what": "large trunk flexion is shared between spine and hips",
+   "class": "soft"
+  },
+  {
+   "id": "proximal_to_distal",
+   "what": "in throws/strikes, peak angular speed moves hips -> trunk -> shoulder -> elbow -> wrist",
+   "class": "soft"
+  },
+  {
+   "id": "elbow_lock_under_load",
+   "what": "elbow not fully locked (0 deg) at an impact",
+   "class": "soft"
+  }
+ ],
+ "collision": {
+  "head": {
+   "capsule_radius_ratio": 0.5
+  },
+  "torso": "polygon from shoulders and hips"
+ },
+ "proportions": {
+  "head_heights": 7.5,
+  "arm_span_to_height": 1.0
+ },
+ "tiers": {
+  "clinical": "anatomical limit (hard for realistic characters)",
+  "functional": "range typically USED in everyday tasks - informative, never a limit (a straight arm at an impact is outside it and correct)",
+  "stylized": "studio allowance for exaggeration (hard for stylised characters); heuristic"
+ },
+ "sources_table": "../../docs or kb: human_joint_table.json (ids LUTT, CDC_ROM, GATES2016, MORREY1981, RYU1991, NAMDARI2012, HYODO2017, ROWE2000, ESOLA1996)",
+ "licence_note": "OpenStax A&P 2e pages are CC BY-NC-SA 4.0 and forbid AI ingestion without permission: no OpenStax text or figures in studio assets; facts cross-checked against the other sources"
+}
