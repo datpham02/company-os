@@ -3,6 +3,7 @@
 - **Initiative:** AI-Native Game Art & Animation Production Pipeline ([README](README.md))
 - **Date:** 2026-11-22. **Prepared by:** Claude Code for the Board (Board decision 2026-11-22: Claude Code performs audit, research and spikes; `director` reviews as design authority, because the `director` runtime is read-only and has no web or script access).
 - **Method:** every row was checked on the studio machine or in the repositories on this date, unless marked `UNVERIFIED`. Nothing was installed for this audit.
+- **Dated snapshot:** this audit records the state of 2026-11-22 before the tier-1 installs and is not kept up to date. Rows have changed since, for example background removal (BiRefNet built as `comfy-edit.py matte`, spike S7) and the tier-1 R&D models (decision D2). Current tool status: [dependencies/registry.yaml](../../../dependencies/registry.yaml) and [spike results](spikes/README.md).
 
 Classification: **Available** (works today, tested) · **Partial** (some of it works, or the code is present but weights, permission or integration are missing) · **Missing** · **Blocked** (exists but a rule, licence or permission stops its use) · **Research** (unknown whether it can work).
 

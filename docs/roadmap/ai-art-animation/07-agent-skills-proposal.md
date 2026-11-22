@@ -24,7 +24,7 @@ pass.
 
 **Order (`director`, SOU-87):** motion-qa (the evidence contract) → animation-reference-research (licence gate) → motion-design (with the reference-selection gate of 08 §5) → motion-retargeting → body-mechanics; creature, gait, chain and wing skills wait until those tools exist.
 
-**Review cards:** every skill that hands work to `director` attaches a review card per preview package (frame numbers to look at, what to compare, per-frame metrics), because the reviewer cannot open media. **Stable anchors:** skills cite KB sections by stable anchors (not section numbers), because the K4 review will renumber the KB.
+**Review cards:** every skill that hands work to `director` attaches a review card per preview package (frame numbers to look at, what to compare, per-frame metrics). `director` can open still images committed in the Task Workspace (smoke test SOU-91, 2026-11-22: it opened and judged a PNG); whether it can play GIF or MP4 previews is untested. **Stable anchors:** skills cite KB sections by stable anchors (not section numbers), because the K4 review will renumber the KB.
 
 **Packaging:** each skill becomes a `SKILL.md` with these sections plus links to the KB sections, stored with the
 studio knowledge (not in a project repository), after Board approval and a `director` review of the KB content.

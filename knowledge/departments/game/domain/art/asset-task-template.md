@@ -39,7 +39,9 @@ Reviewers (Paperclip review stages): qa<, game-designer when readability is at s
 - Gameplay role and information priority: <what the player must notice first, second>
 - Target display size, background, camera and angle: <e.g. 64x64 px on the forest tile set, side view>
 - States and variants: <idle, hit, disabled …>
-- Identity that must not change: <traits, colours, proportions>
+- Identity invariants (the entity, not one image): <proportion ratios, signature shapes, palette ramps, costume parts and their counts, line and rendering rules, face and mark identifiers>
+- Pose-specific properties this Task may change: <silhouette outline, limb angles, facing, camera, expression, grip, cloth and state, overlap order; or none>
+- Representation being replaced (if any): <source image, view, pose, bind state or part split; or none>
 - Reference traits to match (3–5, observable): <e.g. 2 px dark outline; light from top-left; 4-value palette ramp>
 - Output: <format, dimensions, frames, cell size, pivot, loop, file naming>
 - Budget: <file size, texture size, frame count>
@@ -57,7 +59,7 @@ Reviewers (Paperclip review stages): qa<, game-designer when readability is at s
 
 ## Acceptance criteria
 - [ ] Purpose and silhouette read at the target size, on the target background, in every listed state.
-- [ ] Matches the named reference traits; no identity or style drift from the approved references.
+- [ ] Matches the named reference traits; every identity invariant holds; pose-specific properties changed only as this Task states; no style drift from the approved references.
 - [ ] Output matches the technical spec: dimensions, frames, alpha, naming, directory, every variant.
 - [ ] Every new or changed file has a provenance record the licence rule allows; no third-party or traced art.
 - [ ] Evidence attached as listed below; limitations and unverified checks stated explicitly.

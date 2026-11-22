@@ -49,12 +49,21 @@ makes motion.**
 ```
 
 Rules:
-- **Motion before art.** No artwork generation for an animation until its motion spec passes blocking review.
+- **Motion intent and constraints come before final art.** Before final artwork is produced, the motion spec records
+  intent, key poses, contacts and the art requirements derived from them. The technique that produces artwork and
+  motion is chosen per entity structure, art direction, motion intent and production requirements: skeletal, mesh
+  deformation, pose-conditioned generation, frame-by-frame, procedural, 3D-to-2D, sprite replacement, physics or a
+  hybrid (§5, [08 §5](08-universal-motion-system.md#5-motion-method-selection-criteria)). Artwork generation may run before, during or after deterministic
+  blocking when the chosen technique needs it; the checks that apply to that technique still gate acceptance.
 - **Locked properties are data and are checked:** bone lengths, proportions, one instance per rigid object, the grip
   transform, ground contact. A violation fails the build, not a reviewer's eye.
 - **Rigid objects are independent assets** with a grip point and a pivot; they move only by transforms.
-- **Generation is for artwork and reconstruction only** (a part's hidden area, a missing view, a master asset), never
-  for geometry, timing or continuity.
+- **Generative models may produce artwork, including new poses, views and frames,** when conditioned on a structural
+  input the studio controls (rig-derived pose, depth or part masks) and an identity reference. Geometry, timing and
+  object continuity stay under deterministic control wherever the chosen technique needs continuity (rigged parts,
+  attachments, loops). Where the technique is generative (pose-conditioned key poses, frame-by-frame, sprite
+  replacement), those properties are enforced by selection gates (structure, identity, no extra or missing limbs or
+  props) and measured, not assumed.
 - **No technique is the studio default.** The structure and motion data are shared; each asset picks a binding
   (skeletal, partial skeletal, mesh, frame-by-frame, hybrid) by the comparison in §5.
 
@@ -111,9 +120,13 @@ Scale 1 (poor) to 5 (strong), for this studio (AI agents only, RTX 3060 12 GB / 
 | AI motion generation (video → poses) | 3 | 2 | none | full; RAM-bound (S12) | 3 as reference only | 2 | high |
 | **Hybrid: motion spec + structure + partial skeletal + rigid attachments + procedural secondary + generated artwork for parts** | **5** | **5** | medium | artwork only | **5** | **5** | medium |
 
-**Recommendation:** the hybrid row as the studio default *architecture* (shared data and checks), with the binding
-chosen per asset class: partial skeletal for characters with big actions, mesh-only for idles of simple figures,
-frame-by-frame only where the style needs it (pixel art, benchmark B4).
+**Recommendation:** no technique is the studio default. What is shared is the data and the checks (motion spec,
+structure, acceptance), not a binding. The technique is selected per asset from the entity's structure, the art
+direction, the motion intent and the production requirements: skeletal, mesh deformation, pose-conditioned
+generation, frame-by-frame, procedural, 3D-to-2D, sprite replacement, physics or a hybrid ([08 §5](08-universal-motion-system.md#5-motion-method-selection-criteria)).
+Deterministic constraints are kept where the selected technique needs geometric or object continuity. The scores
+above are one operator's judgement on one character (heuristic, benchmark-specific): they inform the choice and
+are not a selection rule.
 
 ## 6. Benchmark rework (hammer attacker)
 
@@ -164,7 +177,7 @@ silhouette comparison against the master and part identity (Gate A).
 | Revised methodology | §3 |
 | Motion specification schema | §4 (`structure.v1`, `motion.v1`) |
 | Technical approaches + cost/complexity comparison | §5 |
-| Benchmark results, rendered preview, QA findings | **blocking pass done (2026-11-22, proxies, R&D `rnd/motion/`)**: 120 frames at 60 fps, 8 phases; all 13 automatic checks pass (bone length dev 0 px, grip error 0 px, rigid hammer dev 0 px, 1 hammer, foot slide 0 px, COM 71 px back in the wind-up and 75 px forward at impact, COM inside the support polygon on every frame, swing monotonic, wind-up opposite to the swing, follow-through overshoot 19°, no solver flags, impact silhouette IoU 0.38). The checks caught two body-mechanics errors in the first spec (a rise on near-straight legs; the hips driven past the back foot: 17.7 px foot slide) and one eye-review fault each round (hammer leaving the frame; a weak horizontal wind-up). Art pass after blocking approval |
+| Benchmark results, rendered preview, QA findings | **blocking pass run (2026-11-22, proxies, R&D `rnd/motion/`)**: 120 frames at 60 fps, 8 phases. Technical checks: 13 of 13 passed (planar 2D proxy set of that date; it does not detect weapon-ground penetration, foreshortening or temporal coverage between key poses): bone length dev 0 px, grip error 0 px, rigid hammer dev 0 px, 1 hammer, foot slide 0 px, COM 71 px back in the wind-up and 75 px forward at impact, COM inside the support polygon on every frame, swing monotonic, wind-up opposite to the swing, follow-through overshoot 19°, no solver flags, impact silhouette IoU 0.38. Visual review: no blocking approval or visual acceptance is recorded. A pass count shows the checks ran, not that the motion is good. The checks caught two body-mechanics errors in the first spec (a rise on near-straight legs; the hips driven past the back foot: 17.7 px foot slide) and one eye-review fault each round (hammer leaving the frame; a weak horizontal wind-up). Art follows the technique chosen per §3 and §5 |
 | Recommendation for a reusable implementation | §5 recommendation; tools: `motion` solver + checks + QA renderer (engine-neutral), Godot adapter |
 
 Constraints kept: no change to budget, permissions or the agent structure; no manual art, rigging or animation by the
