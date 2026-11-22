@@ -97,6 +97,17 @@ def system_stats():
         return None
 
 
+def listen_address(argv):
+    """The value of the last --listen (argparse keeps the last one), or None."""
+    found = None
+    for i, v in enumerate(argv):
+        if v == "--listen":
+            found = argv[i + 1] if i + 1 < len(argv) else None
+        elif v.startswith("--listen="):
+            found = v.split("=", 1)[1]
+    return found
+
+
 def verify_server(stats):
     """Prerequisite 1: refuse a server that is not loopback-only, offline, and the expected version."""
     sysinfo = (stats or {}).get("system") or {}
@@ -104,10 +115,7 @@ def verify_server(stats):
     problems = []
     if "--offline" not in argv:
         problems.append("started without --offline")
-    try:
-        listen = argv[argv.index("--listen") + 1]
-    except (ValueError, IndexError):
-        listen = None
+    listen = listen_address(argv)
     if listen != HOST:
         problems.append(f"listen address is {listen!r}, not {HOST}")
     if sysinfo.get("comfyui_version") != EXPECTED_VERSION:
@@ -332,11 +340,11 @@ def main(argv=None):
                       "input": a.input, "input_sha256": sha256(in_path),
                       "workflow": f"{name}.workflow.json", "created": stamp, "run_id": run_id}
             if a.template == "inpaint":
-                raw = os.path.join(out_dir, f"{name}_raw.png")
-                edited.save(raw)
                 final, changed = restore_outside(original, edited, mask)
                 if changed:
                     fail(f"{changed} pixels outside the mask differ after the restore; output discarded")
+                raw = os.path.join(out_dir, f"{name}_raw.png")
+                edited.save(raw)
                 record.update({"mask": a.mask, "mask_sha256": sha256(mask_path), "raw_output": os.path.basename(raw),
                                "outside_mask_changed": 0,
                                "outside_mask_pixels": int((np.asarray(mask) == 0).sum())})

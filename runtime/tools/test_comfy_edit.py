@@ -112,7 +112,9 @@ class ServerVerification(Case):
         for argv, version in ((["main.py", "--listen", "127.0.0.1"], ce.EXPECTED_VERSION),            # no --offline
                               (["main.py", "--listen", "0.0.0.0", "--offline"], ce.EXPECTED_VERSION),  # not loopback
                               (["main.py", "--offline"], ce.EXPECTED_VERSION),                         # default listen
-                              (["main.py", "--listen", "127.0.0.1", "--offline"], "0.45.0")):          # other version
+                              (["main.py", "--listen", "127.0.0.1", "--offline"], "0.45.0"),           # other version
+                              (["main.py", "--listen", "127.0.0.1", "--listen", "0.0.0.0", "--offline"], ce.EXPECTED_VERSION),
+                              (["main.py", "--listen=0.0.0.0", "--offline"], ce.EXPECTED_VERSION)):
             with self.assertRaises(SystemExit):
                 ce.verify_server({"system": {"argv": argv, "comfyui_version": version}})
         with self.assertRaises(SystemExit):
@@ -221,6 +223,20 @@ class Runs(Case):
         ce.run_prompt = capture
         self.go("img2img", "--model", "sdxl", "--asset", "hero", "--input", "art_src/t.png", "--prompt", "p", "--backdrop", "10", "20", "30")
         self.assertEqual(seen, {"mode": "RGB", "px": (10, 20, 30)})
+
+
+class RestoreFailure(Case):
+    def test_nothing_kept_when_the_restore_check_fails(self):
+        self.noise("art_src/in.png", self.size)
+        self.mask("art_src/m.png", self.size, (10, 10, 20, 20))
+        saved = ce.restore_outside
+        ce.restore_outside = lambda o, e, m: (o, 3)
+        try:
+            self.assertIn("outside the mask", self.refused("inpaint", "--model", "sdxl", "--asset", "hero", "--input", "art_src/in.png", "--mask", "art_src/m.png", "--prompt", "p"))
+        finally:
+            ce.restore_outside = saved
+        self.assertEqual(os.listdir(os.path.join(self.staging, "hero")), [])
+        self.assertEqual(os.listdir(os.path.join(ce.comfy_input_dir(), "edit")), [])
 
 
 class Restore(unittest.TestCase):

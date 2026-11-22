@@ -143,7 +143,12 @@ def main(argv=None):
     # Server verification (2A prerequisite 1, closes OQ-049 item 8): never use a server that is not
     # loopback-only and offline, even one started by someone else.
     argv = (stats.get("system") or {}).get("argv") or []
-    listen = argv[argv.index("--listen") + 1] if "--listen" in argv[:-1] else None
+    listen = None
+    for i, v in enumerate(argv):                      # argparse keeps the last --listen
+        if v == "--listen":
+            listen = argv[i + 1] if i + 1 < len(argv) else None
+        elif v.startswith("--listen="):
+            listen = v.split("=", 1)[1]
     if "--offline" not in argv or listen != HOST:
         sys.exit(f"refusing the running ComfyUI (argv {argv}): it must run with --listen {HOST} and --offline; "
                  "the Board restarts it")
