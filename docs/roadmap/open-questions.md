@@ -58,6 +58,7 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 | OQ-046 | Where is the REA MCP server registered so that only `gameplay-programmer` gets it, given that it runs on cursor-cli and Cursor's user config is shared with `web-engineer`? | Open | `rea` dependency, provider allocation |
 | OQ-047 | Can the account run each agent's configured model (`claude-fable-5-1`, `claude-sonnet-5-5`, `gpt-5.3-codex-high`) at its configured effort? | Open (stored config verified read-only; no run yet) | Provider allocation, agent model baseline 2026-11-21 |
 | OQ-048 | Stuck issues reach no one: Paperclip hands them to the Board silently and no role sweeps | Worked around (watchdog alerts) | Stage 1 operations |
+| OQ-050 | Do per-agent `--settings`, `desiredSkills` and a generated instructions package isolate and deliver a role's knowledge as intended (game-artist pilot)? | Open (prepared; not run) | Knowledge delivery, ADR-024 |
 
 ## Entries
 
@@ -604,4 +605,19 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **Moved out of the backlog (Board decisions 2026-11-22, early exceptions before G8, [art-production-v2-phase2.md](art-production-v2-phase2.md)):** image-to-image and masked inpainting (in `comfy-edit.py`, not in `comfy-draft` templates), compositing through a mask (`art-ops.py compose`), pixel comparison (`art-ops.py diff`) and figure cut-out (`comfy-edit.py matte`); permissions in [security-architecture.md §4](../architecture/security-architecture.md#4-agent-permissions-provider-level).
 - **Registry gap (closed 2026-11-22, gate G2, PR #88):** `comfyui` (v0.46.0, GPL-3.0), `comfyui-embedded-python` (CPython 3.12.10, Pillow 13.0.0, NumPy 2.5.4), `sd-xl-base-1-0` (CreativeML Open RAIL++-M) and `flux1-schnell-fp8` (Apache-2.0) are in [dependencies/registry.yaml](../../dependencies/registry.yaml), read from the installed copies, with a security review each (accepted by the Board 2026-11-22). Both checkpoints match their official distributions byte for byte (SHA256): SDXL from stabilityai, the fp8 FLUX file from Comfy-Org's `Flux-1-Schnell`. `check-dependencies.py` skips all four (no version command); integrity is checked at release gate G4.
 - **Project registry gap:** Deckbound has no `agents` list in [registry.yaml](../../knowledge/projects/registry.yaml), while asset-production's precondition requires `game-artist` there. The Board adds it, or confirms the precondition does not apply while the project is `initializing`.
+- **Status:** Open.
+
+### OQ-050 — Knowledge delivery pilot: isolation and delivery claims
+- **Why it matters:** [ADR-024](../decisions/ADR-024-knowledge-delivery-generated-role-packages.md) (`PROPOSED`) delivers company rules through a generated `AGENTS.md` and procedure through Studio Skills, and switches off inherited user skills, plugins and auto-memory for one agent through a settings file ([knowledge-delivery.md](../operations/knowledge-delivery.md) §4, changes A-C).
+- **`UNVERIFIED`, to be tested by pilot runs P1-P4 (each needs Board approval):**
+  1. `enabledPlugins` merge semantics: does `false` in `--settings` override `true` in `~/.claude/settings.json`, per plugin?
+  2. Does `disableBundledSkills` remove every bundled skill? Do user skills in `~/.claude/skills` stop loading with `skillOverrides: off`?
+  3. Does `autoMemoryEnabled: false` stop auto-memory reads as well as writes?
+  4. Does the agent discover and use an assigned company skill without being told its name, and can it read the skill's supporting file?
+  5. Does a resumed session keep the skill and the instructions revision (same prompt-cache hash)?
+  6. Company skill registration details: the `markdown` field of `POST /companies/{id}/skills` (whole `SKILL.md`?), the key format used by `desiredSkills`, `selectedPaths` semantics of `POST /companies/{id}/skill-sources`, and whether the GitHub connection can read this repository.
+- **Verified so far (read-only, installed Paperclip 2026.1023.0):**
+  - `PATCH /agents/:id` merges top-level `adapterConfig` keys unless `replaceAdapterConfig` is set;
+  - `POST /agents/:id/skills/sync` requires `mode` `add`, `remove` or `replace`;
+  - local skill imports are allowed only under project workspaces or the managed skills root.
 - **Status:** Open.

@@ -1,0 +1,436 @@
+{
+  "schema": "role-knowledge-manifest.v1",
+  "_comment": "Role Knowledge Manifest (ADR-024, PROPOSED). Input of scripts/setup/gen-role-packages.py. Units select source text by exact heading (and optionally by the opening words of blocks, or by exact lines); a renamed heading stops generation. Every block of a role file must be claimed by exactly one unit. Delivery: always-loaded (core of the managed AGENTS.md), command-reference (the separate exact-command block of the same file), on-demand (listed in the Knowledge index; the agent asks for it), skill (delivered only through an assigned Studio Skill), not-delivered. Normative sentences of a unit that is not always-loaded or command-reference must be verbatim in the delivered text or listed under coverage. Status: approved / proposed / experimental / superseded (docs/conventions.md labels APPROVED / PROPOSED / UNVERIFIED (R&D) / DEPRECATED). Generated output is never edited by hand.",
+  "budget": {
+    "core_max_bytes": 32000,
+    "command_reference_max_bytes": 6000,
+    "combined_max_bytes": 38000,
+    "authority": "Board decision 2026-11-23 (Knowledge Delivery change set, item 2)"
+  },
+  "package_intro": "# Role instructions: {role}\n\nGenerated from Company OS at the source commit above, because its files are not readable from your Task Workspace. Each part opens with a `kd:unit` comment: source, hash, status, authority. `status=proposed` marks a Board-approved pilot procedure, not an Accepted ADR. This text grants no permission; the permission layer decides what you may run.",
+  "command_reference_intro": "## Command reference\n\nExact allowed command forms. Use no other form; when one is refused, follow the refusal protocol above.",
+  "company_rules_heading": "## Company and department rules",
+  "on_request_note": "On request (not in your Task Workspace): name the item in your Task comment and ask for its text to be pasted into the Task; never guess its contents.",
+  "roles": {
+    "game-artist": {
+      "department": "game",
+      "role_file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "settings_file": "config/paperclip/agent-settings/game-artist.settings.json",
+      "memory_policy": "Task-session only: auto-memory off through the per-agent settings file (pilot change B, PROPOSED); existing memory files are not read, moved or deleted.",
+      "units": [
+        {
+          "id": "ga-role-identity",
+          "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+          "headings": [
+            "(preamble)",
+            "Identity",
+            "Mission",
+            "Responsibilities"
+          ],
+          "status": "approved",
+          "authority": "role file",
+          "delivery": "always-loaded"
+        },
+        {
+          "id": "ga-role-visual",
+          "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+          "headings": [
+            "Visual design and refinement"
+          ],
+          "status": "proposed",
+          "authority": "AP-v2 pilot 2026-11-22; KA-BD-1/2",
+          "delivery": "always-loaded"
+        },
+        {
+          "id": "ga-role-authority",
+          "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+          "headings": [
+            "Authority",
+            "Required capabilities"
+          ],
+          "status": "approved",
+          "authority": "role file",
+          "delivery": "always-loaded"
+        },
+        {
+          "id": "ga-role-tools",
+          "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+          "headings": [
+            "Tools and skills"
+          ],
+          "blocks_starting_with": [
+            "**Reviewing:**",
+            "Since 2026-11-22 the Board accepts AI-made final art",
+            "Permission profile `workspace-write`"
+          ],
+          "status": "approved",
+          "authority": "role file; Board 2026-11-22",
+          "delivery": "always-loaded"
+        },
+        {
+          "id": "ga-role-commands",
+          "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+          "headings": [
+            "Tools and skills"
+          ],
+          "blocks_starting_with": [
+            "`git` on Task Branches",
+            "Godot projects:"
+          ],
+          "title": "Tools and skills: exact command forms",
+          "status": "approved",
+          "authority": "Board D1, 2026-11-21/22; agents.json",
+          "delivery": "command-reference"
+        },
+        {
+          "id": "ga-role-io",
+          "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+          "headings": [
+            "Inputs",
+            "Outputs"
+          ],
+          "status": "approved",
+          "authority": "role file",
+          "delivery": "always-loaded"
+        },
+        {
+          "id": "ga-role-ownership",
+          "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+          "headings": [
+            "Ownership with Gameplay Programmer (interim)"
+          ],
+          "status": "approved",
+          "authority": "KA-BD-9 (interim)",
+          "delivery": "on-demand"
+        },
+        {
+          "id": "ga-role-constraints",
+          "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+          "headings": [
+            "Constraints"
+          ],
+          "status": "approved",
+          "authority": "role file",
+          "delivery": "always-loaded"
+        },
+        {
+          "id": "ga-role-credentials",
+          "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+          "headings": [
+            "Credentials"
+          ],
+          "dedup": "every sentence is delivered by the secrets system-prompt rule and rules R4.1 (coverage below)",
+          "status": "approved",
+          "authority": "role file",
+          "delivery": "not-delivered"
+        },
+        {
+          "id": "ga-role-hygiene",
+          "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+          "headings": [
+            "Task hygiene",
+            "Collaboration",
+            "Escalation",
+            "Success criteria"
+          ],
+          "status": "approved",
+          "authority": "role file; task contract",
+          "delivery": "always-loaded"
+        },
+        {
+          "id": "co-rules",
+          "source": "knowledge/company/policies/rules.md",
+          "headings": [
+            "R1. Repositories and code",
+            "R2. Tasks",
+            "R3. Approvals",
+            "R4. Security",
+            "R5. Dependencies",
+            "R6. Honesty",
+            "R7. Scope"
+          ],
+          "status": "approved",
+          "authority": "rules.md",
+          "delivery": "always-loaded"
+        },
+        {
+          "id": "co-task-blockers",
+          "source": "knowledge/company/standards/task-contract.md",
+          "headings": [
+            "6. Blocker protocol"
+          ],
+          "status": "approved",
+          "authority": "task-contract",
+          "delivery": "on-demand"
+        },
+        {
+          "id": "co-task-reviews",
+          "source": "knowledge/company/standards/task-contract.md",
+          "headings": [
+            "8. Reviews"
+          ],
+          "status": "approved",
+          "authority": "task-contract",
+          "delivery": "on-demand"
+        },
+        {
+          "id": "co-task-contract",
+          "source": "knowledge/company/standards/task-contract.md",
+          "headings": [
+            "2. Task contract"
+          ],
+          "status": "approved",
+          "authority": "task-contract",
+          "delivery": "on-demand"
+        },
+        {
+          "id": "co-approval-boundaries",
+          "source": "docs/architecture/security-architecture.md",
+          "headings": [
+            "8. Approval boundaries"
+          ],
+          "status": "approved",
+          "authority": "security-architecture; ADR-009",
+          "delivery": "on-demand"
+        },
+        {
+          "id": "game-originality",
+          "source": "knowledge/departments/game/domain/game-rules.md",
+          "headings": [
+            "1. Originality"
+          ],
+          "status": "approved",
+          "authority": "game-rules",
+          "delivery": "always-loaded"
+        },
+        {
+          "id": "game-art-ownership",
+          "source": "knowledge/departments/game/domain/game-rules.md",
+          "headings": [
+            "6. Art assets and technical art"
+          ],
+          "status": "approved",
+          "authority": "game-rules; KA-BD-9",
+          "delivery": "on-demand"
+        },
+        {
+          "id": "game-generated-art",
+          "source": "knowledge/departments/game/workflows/asset-production.md",
+          "headings": [
+            "Generated art (Board decisions D1 and 2026-11-22)"
+          ],
+          "status": "approved",
+          "authority": "Board D1, 2026-11-22",
+          "delivery": "always-loaded"
+        }
+      ],
+      "coverage": [
+        {
+          "unit": "ga-role-credentials",
+          "match": "You MUST NOT print, echo, log, commit or paste a credential",
+          "covered_by": [
+            "Never print, echo, log or paste a credential or the environment",
+            "do not run printenv, env, set, export -p, gh auth token, git credential or any command that shows GH_TOKEN, GITHUB_TOKEN, PAPERCLIP_API_KEY or another secret value",
+            "Never print, log, commit, or paste secrets, tokens, or credential files."
+          ]
+        },
+        {
+          "unit": "co-task-blockers",
+          "match": "MUST post this comment",
+          "covered_by": [
+            "When you set a Task `blocked`, post exactly these lines, then the details:",
+            "`Blocked:` one line",
+            "`Unblock owner:` an agent id or Board",
+            "`Check again:` when."
+          ]
+        },
+        {
+          "unit": "co-task-blockers",
+          "match": "The blocker must be a Paperclip blocker relation",
+          "covered_by": [
+            "For a dependency, ask for a Paperclip blocker relation, not only a sentence."
+          ]
+        },
+        {
+          "unit": "co-task-blockers",
+          "match": "**Cancelling a Task:**",
+          "not_applicable": "cancelling Tasks is a project-manager or Board step (daily-triage, task-failure-handling); the game-artist role has no cancellation duty"
+        },
+        {
+          "unit": "co-task-reviews",
+          "match": "A reviewer never edits, rebases or pushes",
+          "covered_by": [
+            "When you review, you MUST NOT edit files, commit, merge, rebase or push the author's branch"
+          ]
+        },
+        {
+          "unit": "co-task-contract",
+          "match": "A Task MUST NOT be released",
+          "covered_by": [
+            "Tasks you create start in `backlog`, unassigned, with the intended assignee, write set, acceptance criteria and reviewer in the description."
+          ]
+        },
+        {
+          "unit": "game-art-ownership",
+          "match": "**Art references live in the project.**",
+          "covered_by": [
+            "read the active project's art references",
+            "If the Task needs an art reference the project does not have, stop and ask"
+          ]
+        },
+        {
+          "unit": "game-art-ownership",
+          "match": "**Technical Artist (not a role yet).**",
+          "not_applicable": "proposing a new role is a director and Board decision (agent-onboarding workflow, R3.1 new Agent Instances); it sets no duty for game-artist"
+        },
+        {
+          "unit": "ga-role-ownership",
+          "match": "Hand technical implementation to",
+          "covered_by": [
+            "You MUST NOT write or change application code, gameplay systems, animation state machines, engine import settings, shaders or shared pipeline code",
+            "Hand them to `gameplay-programmer` with the requirement."
+          ]
+        },
+        {
+          "unit": "ga-role-ownership",
+          "match": "never changes the requirement itself",
+          "covered_by": [
+            "You MUST NOT change gameplay mechanics or balance; `game-designer` owns them.",
+            "gameplay purpose or readability conflicts → `game-designer`"
+          ]
+        },
+        {
+          "unit": "ga-role-ownership",
+          "match": "never approves its own work",
+          "covered_by": [
+            "You MUST NOT approve, merge or mark done your own work"
+          ]
+        }
+      ],
+      "on_demand_documents": [
+        "knowledge/departments/game/workflows/asset-production.md",
+        "knowledge/departments/game/domain/art/visual-procedures.md",
+        "knowledge/departments/game/domain/art/quality-rubric.md",
+        "knowledge/departments/game/domain/art/handoff-templates.md",
+        "knowledge/departments/game/domain/art/complexity-lanes.md",
+        "knowledge/company/workflows/code-review-and-merge.md"
+      ],
+      "project_documents": [
+        "AGENTS.md",
+        "docs/art/ART-BIBLE.md",
+        "docs/art/ART-PIPELINE.md",
+        "docs/art/TOOL-DECISIONS.md"
+      ],
+      "skills": [
+        {
+          "name": "studio-art-identity-and-refinement",
+          "status": "proposed",
+          "note": "use it when it is in your skill list (pilot change C); if it is not listed, ask for visual-procedures.md instead. Everything mandatory is already in this file."
+        }
+      ],
+      "block_splits": [
+        {
+          "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+          "heading": "Tools and skills",
+          "before": [
+            "Since 2026-11-22 the Board accepts AI-made final art",
+            "Godot projects:",
+            "Permission profile `workspace-write`"
+          ]
+        }
+      ]
+    }
+  },
+  "skills": {
+    "studio-art-identity-and-refinement": {
+      "title": "Studio skill: art identity and targeted refinement",
+      "description": "Game-artist procedure for refining an approved asset or drawing a new pose, view or state while keeping the entity's identity: three lists (identity invariants, pose-specific properties, replaceable representations), seed choice by evidence, smallest-change refinement with the allowed comfy-edit and art-ops commands.",
+      "department": "game",
+      "roles": [
+        "game-artist"
+      ],
+      "status": "proposed",
+      "authority": "KA-BD-2 (Board 2026-11-23, approved with amendment); Art Production v2 pilot (Board 2026-11-22); KD-BD-9 pilot change C (preparation only)",
+      "dir": "knowledge/departments/game/skills/studio-art-identity-and-refinement",
+      "reference_file": "reference/seed-and-identity.md",
+      "reference_title": "Seed and identity rules (source text)",
+      "reference_intro": "Copied from Company OS at the source commit in the first line; each part names its source. When this text and your role instructions differ, your role instructions win and you say so in your Task comment.",
+      "purpose": "Keep an entity recognisably itself when you refine an approved asset or redraw it in a new pose, view or state, and choose seeds by evidence instead of habit. It adds no rule and grants no permission: every mandatory rule is in your role instructions, and the permission layer decides what you may run.",
+      "activation": [
+        "the Task asks for a targeted refinement of an approved asset (one listed defect, one region);",
+        "the Task asks for a new action pose, alternate view, transformation state, new bind pose, or rig-ready / animation-driven art of an existing entity;",
+        "you are about to choose or reuse a seed for a variant of an existing asset."
+      ],
+      "procedure": [
+        "Open `reference/seed-and-identity.md` (this skill's supporting file) and the Task's brief; write the three lists: identity invariants, pose-specific properties, replaceable representations. Ask in your Task comment when the brief does not give them.",
+        "Targeted refinement: change only the listed issue. Make a mask with `python -I ~/game-studio-workspace/tools/art-ops.py mask` and repaint that region with `python -I ~/game-studio-workspace/tools/comfy-edit.py inpaint` (SDXL), or use `python -I ~/game-studio-workspace/tools/comfy-edit.py img2img` at low denoise for family consistency.",
+        "New pose, view or state: judge the result against the identity invariants, not against the source pixels or silhouette, and list which pose-specific properties changed.",
+        "Seeds: treat a reused seed as one candidate to test; record every seed, its result and why you kept or rejected it.",
+        "Compare before and after at target size with `python -I ~/game-studio-workspace/tools/art-ops.py contact` and check unintended changes with `python -I ~/game-studio-workspace/tools/art-ops.py diff`; revert a fix that breaks an invariant.",
+        "When no allowed command can carry the invariants into the new pose, post the blocker lines (`Type: permission` or `decision`) as your role instructions say; never work around a refusal."
+      ],
+      "dependencies": [
+        {
+          "id": "comfyui",
+          "note": "integrated; used only through comfy-draft.py and comfy-edit.py (dependencies/registry.yaml)"
+        },
+        {
+          "id": "sd-xl-base-1-0",
+          "note": "integrated; the only model for inpaint"
+        },
+        {
+          "id": "flux1-schnell-fp8",
+          "note": "integrated; img2img and drafts only (no FLUX inpainting)"
+        },
+        {
+          "id": "comfyui-embedded-python",
+          "note": "integrated; runs art-ops.py"
+        }
+      ],
+      "limitations": [
+        "Status `PROPOSED`: prepared for the game-artist pilot (change C); not assigned until the Board approves that change.",
+        "Discovery by the agent, use without being named, and reading of the supporting file are UNVERIFIED until pilot run P1.",
+        "Inserting new objects with inpaint failed 0/10 in SOU-64; region edits are approved only on the project's own art.",
+        "Not approved: reference images from outside the project, image-prompt adapters, LoRA, ControlNet, FLUX inpainting.",
+        "R&D-only tools (R&D ComfyUI, FLUX.2 klein, SAM 3.1, ViTPose, ToonOut, Fooocus inpaint patch, Krita) are not available."
+      ],
+      "reference_units": [
+        {
+          "id": "sk-role-lock",
+          "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+          "headings": [
+            "Visual design and refinement"
+          ],
+          "blocks_starting_with": [
+            "**What to lock: the entity's identity",
+            "Rules by kind of task:"
+          ],
+          "title": "From the game-artist role: what to lock",
+          "status": "proposed",
+          "authority": "KA-BD-2 (Board 2026-11-23); role file"
+        },
+        {
+          "id": "sk-vp-refine",
+          "source": "knowledge/departments/game/domain/art/visual-procedures.md",
+          "headings": [
+            "5. Art critique and targeted refinement"
+          ],
+          "status": "proposed",
+          "authority": "Art Production v2 (PROPOSED, Board 2026-11-22); KA-BD-2"
+        },
+        {
+          "id": "sk-template-brief",
+          "source": "knowledge/departments/game/domain/art/asset-task-template.md",
+          "lines_containing": [
+            "- Identity invariants (the entity, not one image):",
+            "- Pose-specific properties this Task may change:",
+            "- Representation being replaced (if any):",
+            "every identity invariant holds"
+          ],
+          "status": "proposed",
+          "authority": "asset Task template (PROPOSED, 2026-11-22)"
+        }
+      ]
+    }
+  }
+}

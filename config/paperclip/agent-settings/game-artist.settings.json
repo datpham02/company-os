@@ -1,0 +1,14 @@
+{
+  "syncClaudeAiSkills": false,
+  "disableBundledSkills": true,
+  "enabledPlugins": {
+    "gamedev@awesome-gamedev-agent-skills": false,
+    "context-engineering@context-engineering-marketplace": false,
+    "pixelfx@pixelfx": false
+  },
+  "skillOverrides": {
+    "reverse-engineer-anything": "off",
+    "ui-ux-pro-max": "off"
+  },
+  "autoMemoryEnabled": false
+}

@@ -1,0 +1,5096 @@
+{
+ "citations": {
+  "033fab637b": {
+   "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+   "quote": "`comfy-draft.py`, pilot Tasks SOU-66, SOU-68, SOU-71",
+   "verified": true
+  },
+  "05388b56b4": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "Godot commands for `qa-engineer` (Board decision 2026-11-21, OQ-048 / SOU-31)",
+   "verified": true
+  },
+  "089f5e2bf0": {
+   "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+   "quote": "SOU-64 run 2 removed a lantern cleanly (one case, not yet a measured capability)",
+   "verified": true
+  },
+  "0f3bd95fa5": {
+   "file": "dependencies/registry.yaml",
+   "quote": "Board starts the stack; agents only run the listed test command.",
+   "verified": true
+  },
+  "108c4cf6f1": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "Task-branch push (added for the first Game Repository, 2026-11-03)",
+   "verified": true
+  },
+  "1663ad4622": {
+   "external": "board-rnd/knowledge-delivery/evidence/SOU-88.json",
+   "quote": "**Required sections: not found.** I could not open that file.",
+   "verified": false
+  },
+  "167a12d2e0": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "Merging stays with the Board (ADR-009)",
+   "verified": true
+  },
+  "1b0754209c": {
+   "external": "board-rnd/knowledge-delivery/evidence/SOU-92.json",
+   "quote": "my role instructions point to it, but it is outside my readable directories",
+   "verified": false
+  },
+  "1f5fe56847": {
+   "external": "board-rnd/knowledge-delivery/evidence/SOU-92.json",
+   "quote": "because the `paperclip-issue-update.sh` path isn't available to me",
+   "verified": false
+  },
+  "24bd76d0d6": {
+   "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+   "quote": "`art-ops key` (colour key, border-connected) works on flat backdrops; cast shadows defeat it (SOU-64-F)",
+   "verified": true
+  },
+  "25aa87ae1f": {
+   "external": "board-rnd/knowledge-delivery/evidence/SOU-88.json",
+   "quote": "## KD baseline GA-1: answers",
+   "verified": false
+  },
+  "26118ea481": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "`gh pr view` for the `read-only` profile (Board decision 2026-11-22, SOU-39)",
+   "verified": true
+  },
+  "2b66a9c35e": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "Godot commands for `ui-designer`, `game-artist` and `game-designer` (Board decision 2026-11-21, SOU-49)",
+   "verified": true
+  },
+  "2dafef589d": {
+   "external": "board-rnd/models/pose/vitpose-base-simple/provenance.json",
+   "quote": "R&D evaluation only (Board 2026-11-22): joint localisation / skeleton initialisation for artwork rigging; not a production dependency",
+   "verified": false
+  },
+  "2e48d9fc02": {
+   "file": "docs/roadmap/ai-art-animation/README.md",
+   "quote": "SAM 3 custom licence → legal check, else SAM 2.1",
+   "verified": true
+  },
+  "39836fadfc": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "ComfyUI edit script for `game-artist` (Board decision 2026-11-22, Phase 2A stage 1 approved early after SOU-64's tool capability failure)",
+   "verified": true
+  },
+  "40d6224e27": {
+   "external": "board-rnd/knowledge-delivery/cursor_security.md",
+   "quote": "| Files outside the worktree | **Read, as shown in runs** (section 4.3).",
+   "verified": false
+  },
+  "41fb4a7f9c": {
+   "file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+   "quote": "Never feed an image that is not this project's own art; no other way to edit a region is approved.",
+   "verified": true
+  },
+  "45715288fd": {
+   "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+   "quote": "Agents run `godot --headless --import/--quit`",
+   "verified": true
+  },
+  "479ab6efab": {
+   "external": "board-rnd/knowledge-delivery/evidence/SOU-90.json",
+   "quote": "## KD baseline DR-1 answers",
+   "verified": false
+  },
+  "4e8a586ad3": {
+   "external": "board-rnd/knowledge-governance/proposals.md",
+   "quote": "links to Company OS documents are dead at runtime (verified: smoke tests SOU-88, SOU-92)",
+   "verified": false
+  },
+  "505ca556ef": {
+   "file": "dependencies/registry.yaml",
+   "quote": "No agent allow rule points at it.",
+   "verified": true
+  },
+  "57957a7b55": {
+   "file": "dependencies/registry.yaml",
+   "quote": "Security review: 2026-11-04, npm 2.15.0, approved with conditions (GAM-35)",
+   "verified": true
+  },
+  "5c4a0bcabd": {
+   "file": "dependencies/registry.yaml",
+   "quote": "Board 2026-11-21: reviewed, approved, installed at $HOME/tools/pixelfx",
+   "verified": true
+  },
+  "5dad0983d6": {
+   "external": "board-rnd/knowledge-delivery/evidence/SOU-90.json",
+   "quote": "**Could I read it:** no.",
+   "verified": false
+  },
+  "64d3d57fb6": {
+   "file": "docs/roadmap/art-production-v2-pilot.md",
+   "quote": "Not producible by agents (no Krita)",
+   "verified": true
+  },
+  "7899d3021e": {
+   "file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+   "quote": "Type these tool paths exactly as `~/…`, unquoted: a quoted path, `$HOME` or an absolute path is refused by the permission layer (tested 2026-11-22).",
+   "verified": true
+  },
+  "7ff5980e0b": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "Deckbound screenshot command for `qa-engineer` (Board decision 2026-11-21, SOU-34)",
+   "verified": true
+  },
+  "804d5f07f4": {
+   "external": "board-rnd/knowledge-delivery/evidence/SOU-88.json",
+   "quote": "**2. \"Push it straight to main.\"** I refuse.",
+   "verified": false
+  },
+  "80926c98ce": {
+   "file": "knowledge/departments/game/workflows/asset-production.md",
+   "quote": "Not approved: reference images from outside the project, image-prompt adapters, LoRA, ControlNet, FLUX inpainting.",
+   "verified": true
+  },
+  "89619eee66": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "`godot_console` is the console build Winget installs next to `godot`.",
+   "verified": true
+  },
+  "89f5b33298": {
+   "file": "docs/operations/runtime-management.md",
+   "quote": "`resize --filter nearest` into `art_src/`",
+   "verified": true
+  },
+  "8a5ce123d5": {
+   "file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+   "quote": "If an art Task lacks the lane, target size and background, reference traits or acceptance criteria, set it `blocked`",
+   "verified": true
+  },
+  "8d14ff57b6": {
+   "external": "board-rnd/knowledge-governance/decision_register.md",
+   "quote": "| KD-BD-8 | Agent permissions (`canCreateAgents`, `canCreateSkills`, other admin) | **open**: audit |",
+   "verified": false
+  },
+  "8d165bc393": {
+   "file": "docs/operations/runtime-management.md",
+   "quote": "11/11 passed, leftover backdrop 0.003",
+   "verified": true
+  },
+  "8dfdc8f89e": {
+   "external": "board-rnd/models/checkpoints/sam3.1_multiplex_fp16.provenance.json",
+   "quote": "R&D evaluation only (Board 2026-11-22): segmentation for artwork layer extraction; not a production dependency",
+   "verified": false
+  },
+  "91d66af39c": {
+   "file": "dependencies/registry.yaml",
+   "quote": "Fooocus inpaint patch for SDXL (inpaint_v26.fooocus.patch + fooocus_inpaint_head.pth) — R&D only",
+   "verified": true
+  },
+  "9528da1eb3": {
+   "external": "board-rnd/knowledge-governance/BOARD_REVIEW_R3.md",
+   "quote": "| gameplay-programmer | **paused** (`manual`, 2026-11-22T17:51:00Z)",
+   "verified": false
+  },
+  "9665a149f4": {
+   "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+   "quote": "`--write-movie` and Deckbound's QA screenshot runner (scene path argument); transparent capture and headless behaviour untested",
+   "verified": true
+  },
+  "96f12c733b": {
+   "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+   "quote": "`art-ops compose`/`trim`/`diff`; Board recipe tested 2026-11-22",
+   "verified": true
+  },
+  "972dbaaefa": {
+   "file": "dependencies/registry.yaml",
+   "quote": "Board decision D1 2026-11-22: installed and used through comfy-draft.py and art-ops.py",
+   "verified": true
+  },
+  "9742533e04": {
+   "file": "docs/operations/runtime-management.md",
+   "quote": "`contact --bg",
+   "verified": true
+  },
+  "9a5aada516": {
+   "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+   "quote": "`comfy-edit.py img2img` (SDXL, FLUX), G7(c) 2026-11-22",
+   "verified": true
+  },
+  "9ecf26168f": {
+   "file": "docs/roadmap/art-production-v2-pilot.md",
+   "quote": "| G8 | Not started |",
+   "verified": true
+  },
+  "a505917a77": {
+   "file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+   "quote": "When the method needs a command you are not allowed to run, say `UNVERIFIED: not run — no allowed command`",
+   "verified": true
+  },
+  "a617d85566": {
+   "file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+   "quote": "Type each as one standalone command in the Task Workspace root, with no extra flags, redirection or pipes",
+   "verified": true
+  },
+  "aac8cddce9": {
+   "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+   "quote": "`qa-engineer` and `director` open images",
+   "verified": true
+  },
+  "acfb333b1f": {
+   "file": "dependencies/registry.yaml",
+   "quote": "Not tested in any game.",
+   "verified": true
+  },
+  "add9971d93": {
+   "file": "dependencies/registry.yaml",
+   "quote": "not installed for agents, not trial-run",
+   "verified": true
+  },
+  "adfc31fbf9": {
+   "file": "knowledge/company/standards/task-contract.md",
+   "quote": "A Task MUST NOT be released (moved out of `backlog`) unless it has every field below.",
+   "verified": true
+  },
+  "b37d9281a7": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "ComfyUI draft script for `game-artist` (Board decision 2026-11-22, D1)",
+   "verified": true
+  },
+  "b7cfb4eb89": {
+   "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+   "quote": "`art-ops mask` (2026-11-22)",
+   "verified": true
+  },
+  "bf527ee7ba": {
+   "external": "board-rnd/knowledge-audit/BOARD_REVIEW.md",
+   "quote": "Five installed tools have no registry entry: Godot, ffmpeg, Krita, SAM 3.1, ViTPose.",
+   "verified": false
+  },
+  "c578c4b388": {
+   "external": "board-rnd/knowledge-governance/decision_register.md",
+   "quote": "**done 2026-11-22T17:51Z**: both agents paused via `POST /agents/{id}/pause`",
+   "verified": false
+  },
+  "c8644ea32c": {
+   "external": "board-rnd/knowledge-governance/BOARD_REVIEW_R3.md",
+   "quote": "| web-engineer | **paused** (17:51:00Z)",
+   "verified": false
+  },
+  "cb088658b0": {
+   "file": "docs/roadmap/art-production-v2-pilot.md",
+   "quote": "Yes (`art-ops info`, `grade --contrast` + `resize` previews, review)",
+   "verified": true
+  },
+  "d0238df862": {
+   "file": "dependencies/registry.yaml",
+   "quote": "ToonOut (BiRefNet fine-tuned for anime-style cut-outs) — R&D only",
+   "verified": true
+  },
+  "d1afb24d3b": {
+   "file": "docs/operations/runtime-management.md",
+   "quote": "art-ops, from a scratch folder with `.git`: `info`, `resize --filter nearest` into `art_src/`, `contact --bg",
+   "verified": true
+  },
+  "d4893d12fa": {
+   "file": "dependencies/registry.yaml",
+   "quote": "approved (GAM-19)",
+   "verified": true
+  },
+  "d65ac616e4": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "The **reporting rule** is required.",
+   "verified": true
+  },
+  "d8f8c9288c": {
+   "file": "dependencies/registry.yaml",
+   "quote": "integrationStatus: integrated   # Board decision 2026-11-22 after spike S7: comfy-edit.py matte",
+   "verified": true
+  },
+  "dd60b790c8": {
+   "external": "board-rnd/knowledge-delivery/evidence/SOU-91.json",
+   "quote": "**Did I see the image: yes.**",
+   "verified": false
+  },
+  "deaf9222f4": {
+   "file": "docs/roadmap/art-production-v2-phase2.md",
+   "quote": "the 2B `mask`, `compose` and `diff` subset",
+   "verified": true
+  },
+  "e1b8f6ed5e": {
+   "file": "dependencies/registry.yaml",
+   "quote": "Board 2026-11-21: approved with the conditions in notes; not installed (Cursor MCP scope open, OQ-046)",
+   "verified": true
+  },
+  "e578831ff3": {
+   "external": "board-rnd/knowledge-governance/decision_register.md",
+   "quote": "| KD-BD-7 | `code-reviewer` absent live | **open**: verify first |",
+   "verified": false
+  },
+  "ebd4289980": {
+   "file": "knowledge/company/standards/task-contract.md",
+   "quote": "| Assignee | Paperclip assignee | An agent whose role and permission profile can do the work |",
+   "verified": true
+  },
+  "f0472fa4b7": {
+   "file": "dependencies/registry.yaml",
+   "quote": "started by the Board on 127.0.0.1:8189 with --offline; never by agents",
+   "verified": true
+  },
+  "f319ddb073": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "For `read-only` roles, drop `--permission-mode acceptEdits` and the `git add` / `git commit` entries.",
+   "verified": true
+  },
+  "fb21fe4b0a": {
+   "external": "board-rnd/knowledge-delivery/cursor_security.md",
+   "quote": "**The two Cursor agents have no technical isolation.**",
+   "verified": false
+  },
+  "fbeb1897e9": {
+   "external": "board-rnd/knowledge-delivery/skills_memory_inventory.md",
+   "quote": "No Bash call in SOU logs ran the ui-ux-pro-max or pixelfx scripts.",
+   "verified": false
+  }
+ },
+ "generated_note": "Generated file. Do not edit by hand.",
+ "generator": {
+  "path": "scripts/setup/gen-capability-catalog.py",
+  "version": "1"
+ },
+ "not_a_grant": "A catalog entry is not a permission grant and never grants permission. It describes what was configured, approved and observed on the dates of its sources. Permission comes only from the enforced adapter configuration and Board decisions; Cursor agents have no enforced allowlist today.",
+ "rnd_only": [
+  {
+   "allow_rules": "none (searched every role's allow rules for: comfyui_rnd, 8189, rnd/)",
+   "availability": "not available",
+   "facts": [
+    {
+     "source": "dependencies/registry.yaml [f0472fa4b7]",
+     "text": "Board only; never started by agents"
+    },
+    {
+     "source": "dependencies/registry.yaml [505ca556ef]",
+     "text": "no agent allow rule points at it"
+    }
+   ],
+   "label": "ComfyUI R&D copy (comfyui-rnd, port 8189)",
+   "registry": "comfyui-rnd: evaluating"
+  },
+  {
+   "allow_rules": "none (searched every role's allow rules for: klein, qwen)",
+   "availability": "not available",
+   "facts": [],
+   "label": "FLUX.2 klein 4B (+ Qwen3-4B encoder)",
+   "registry": "flux2-klein-4b: evaluating"
+  },
+  {
+   "allow_rules": "none (searched every role's allow rules for: sam3, sam 3)",
+   "availability": "not available",
+   "facts": [
+    {
+     "source": "external: board-rnd/models/checkpoints/sam3.1_multiplex_fp16.provenance.json (not verified from this repository) [8dfdc8f89e]",
+     "text": "R&D evaluation only (Board 2026-11-22); not a production dependency"
+    },
+    {
+     "source": "docs/roadmap/ai-art-animation/README.md [2e48d9fc02]",
+     "text": "SAM 3 licence needs a legal check (D5)"
+    },
+    {
+     "source": "external: board-rnd/knowledge-audit/BOARD_REVIEW.md (not verified from this repository) [bf527ee7ba]",
+     "text": "no registry entry"
+    }
+   ],
+   "label": "SAM 3.1 (segmentation)",
+   "registry": "no registry entry"
+  },
+  {
+   "allow_rules": "none (searched every role's allow rules for: vitpose)",
+   "availability": "not available",
+   "facts": [
+    {
+     "source": "external: board-rnd/models/pose/vitpose-base-simple/provenance.json (not verified from this repository) [2dafef589d]",
+     "text": "R&D evaluation only (Board 2026-11-22); not a production dependency"
+    },
+    {
+     "source": "external: board-rnd/knowledge-audit/BOARD_REVIEW.md (not verified from this repository) [bf527ee7ba]",
+     "text": "no registry entry"
+    }
+   ],
+   "label": "ViTPose base (pose)",
+   "registry": "no registry entry"
+  },
+  {
+   "allow_rules": "none (searched every role's allow rules for: toonout)",
+   "availability": "not available",
+   "facts": [
+    {
+     "source": "dependencies/registry.yaml [d0238df862]",
+     "text": "R&D only"
+    }
+   ],
+   "label": "ToonOut (anime cut-out model)",
+   "registry": "toonout: evaluating"
+  },
+  {
+   "allow_rules": "none (searched every role's allow rules for: fooocus)",
+   "availability": "not available",
+   "facts": [
+    {
+     "source": "dependencies/registry.yaml [91d66af39c]",
+     "text": "R&D only"
+    }
+   ],
+   "label": "Fooocus inpaint patch (SDXL)",
+   "registry": "fooocus-inpaint-patch: evaluating"
+  },
+  {
+   "allow_rules": "none (searched every role's allow rules for: krita)",
+   "availability": "not available",
+   "facts": [
+    {
+     "source": "docs/roadmap/art-production-v2-pilot.md [64d3d57fb6]",
+     "text": "not producible by agents (no Krita)"
+    },
+    {
+     "source": "external: board-rnd/knowledge-audit/BOARD_REVIEW.md (not verified from this repository) [bf527ee7ba]",
+     "text": "no registry entry"
+    }
+   ],
+   "label": "Krita (paint-over)",
+   "registry": "no registry entry"
+  },
+  {
+   "allow_rules": "none",
+   "availability": "not available",
+   "facts": [],
+   "label": "ComfyUI inpaint nodes (Acly) — R&D ComfyUI only",
+   "registry": "comfyui-inpaint-nodes: evaluating"
+  },
+  {
+   "allow_rules": "none",
+   "availability": "not available",
+   "facts": [],
+   "label": "Qwen3-4B text encoder for FLUX.2 klein (qwen_3_4b.safetensors)",
+   "registry": "qwen3-4b-text-encoder: evaluating"
+  }
+ ],
+ "roles": {
+  "code-reviewer": {
+   "adapter": "claude_local",
+   "department": "company",
+   "operations": [
+    {
+     "approved": {
+      "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [e578831ff3]",
+      "value": "open: KD-BD-7"
+     },
+     "expect": null,
+     "group": "Review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: claude-code 2.1.329"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/code-reviewer/AGENTS.md#identity",
+      "value": "yes"
+     },
+     "kind": "builtin",
+     "label": "strict read-only Review Package review",
+     "operation": "strict-review",
+     "permitted": {
+      "rule": null,
+      "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [e578831ff3]",
+      "value": "not live"
+     },
+     "plain": "review a staged change package (Read, Grep, Glob only)",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "no"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 31",
+      "value": "claude-code: approved"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "no"
+     },
+     "sample": null
+    }
+   ],
+   "profile": "claude-reviewer-strict",
+   "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [e578831ff3]",
+   "status": "not live (KD-BD-7 open)"
+  },
+  "director": {
+   "adapter": "claude_local",
+   "department": "company",
+   "operations": [
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (ADR-009: merging stays with the Board)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/director/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "push to main",
+     "operation": "push-main",
+     "permitted": {
+      "rule": "Bash(git push*)",
+      "source": "config/paperclip/agents.json profile claude-read-only disallowedTools",
+      "value": "denied"
+     },
+     "plain": "push to main",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push origin main"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (Board only)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/director/AGENTS.md#constraints",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr merge",
+     "operation": "merge-pr",
+     "permitted": {
+      "rule": null,
+      "source": "config/paperclip/agents.json (no matching rule)",
+      "value": "no allow rule"
+     },
+     "plain": "merge a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr merge 12"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [26118ea481]",
+      "value": "Board decision 2026-11-22, SOU-39"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/director/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "gh pr view (CI checks)",
+     "operation": "read-pr-checks",
+     "permitted": {
+      "rule": "Bash(gh pr view*)",
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "read a PR and its CI results",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr view 12 --json statusCheckRollup"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [f319ddb073]",
+      "value": "no (read-only profile)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/director/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "write a file through `cat >`",
+     "operation": "write-file-via-shell",
+     "permitted": {
+      "note": "SEC-01: redirect writes are expected to be denied in -p default mode; untested",
+      "rule": "Bash(cat *)",
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "write files",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown (SEC-01 lab test not run)"
+     },
+     "sample": "cat > notes.md <<EOF"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [d65ac616e4]",
+      "value": "reporting rule (security-architecture §4)"
+     },
+     "expect": null,
+     "group": "Paperclip",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: paperclip 2026.1023.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/director/AGENTS.md#outputs",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "post Task comment / status (paperclip-issue-update.sh)",
+     "operation": "paperclip-report",
+     "permitted": {
+      "note": "SEC-01: leading-wildcard allow rule, open security item",
+      "rule": "Bash(*paperclip-issue-update.sh*)",
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "report on its Task",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 12",
+      "value": "paperclip: approved"
+     },
+     "runtime_verified": {
+      "source": "external: board-rnd/knowledge-delivery/evidence/SOU-90.json (not verified from this repository) [479ab6efab]",
+      "value": "yes: SOU-90 answer posted by the agent"
+     },
+     "sample": "bash \"<skills>/paperclip/scripts/paperclip-issue-update.sh\" --issue-id SOU-1 --status in_review"
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "n/a (delivery question, KD-BD-2)"
+     },
+     "expect": null,
+     "group": "Knowledge",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/director/AGENTS.md#task-hygiene",
+      "value": "yes"
+     },
+     "kind": "builtin",
+     "label": "read Company OS documents at runtime",
+     "operation": "read-company-os",
+     "permitted": {
+      "rule": null,
+      "source": "external: board-rnd/knowledge-governance/proposals.md (not verified from this repository) [4e8a586ad3]",
+      "value": "none (outside the Task Workspace)"
+     },
+     "plain": "read company rules and workflows directly",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "external: board-rnd/knowledge-delivery/evidence/SOU-90.json (not verified from this repository) [5dad0983d6]",
+      "value": "no: refused (SOU-90)"
+     },
+     "sample": null
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "n/a (built-in tool)"
+     },
+     "expect": null,
+     "group": "Knowledge",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/director/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "builtin",
+     "label": "open images with Read (vision review)",
+     "operation": "view-images",
+     "permitted": {
+      "rule": null,
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [aac8cddce9]",
+      "value": "built-in Read, Task Workspace only"
+     },
+     "plain": "look at images in its workspace",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "external: board-rnd/knowledge-delivery/evidence/SOU-91.json (not verified from this repository) [dd60b790c8]",
+      "value": "yes: SOU-91: image opened and reviewed"
+     },
+     "sample": null
+    },
+    {
+     "approved": {
+      "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [8d14ff57b6]",
+      "value": "open: KD-BD-8 audit"
+     },
+     "expect": "refused",
+     "group": "Paperclip",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/director/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "paperclip-permission",
+     "label": "create agents / skills in Paperclip (admin)",
+     "operation": "create-agents",
+     "permitted": {
+      "rule": null,
+      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
+      "value": "declared canCreateAgents=true, canCreateSkills=true"
+     },
+     "plain": "create new agents or skills",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    }
+   ],
+   "profile": "claude-read-only",
+   "source": "no pause recorded",
+   "status": "active"
+  },
+  "game-artist": {
+   "adapter": "claude_local",
+   "department": "game",
+   "operations": [
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [b37d9281a7]",
+      "value": "Board decision D1 2026-11-22"
+     },
+     "expect": null,
+     "group": "Image generation",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui v0.46.0; sd-xl-base-1-0 sd_xl_base_1.0.safetensors; flux1-schnell-fp8 flux1-schnell-fp8.safetensors"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "comfy-draft (text-to-image)",
+     "operation": "comfy-draft",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/comfy-draft.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "make concept drafts from a text description (local AI, two approved models)",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 227, line 263, line 280",
+      "value": "comfyui: integrated, sd-xl-base-1-0: integrated, flux1-schnell-fp8: integrated"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [033fab637b]",
+      "value": "yes: used in pilot Tasks SOU-66, SOU-68, SOU-71"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/comfy-draft.py --asset a1 --model sdxl --prompt p"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [39836fadfc]",
+      "value": "Board decision 2026-11-22, Phase 2A stage 1"
+     },
+     "expect": null,
+     "group": "Image generation",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui v0.46.0; sd-xl-base-1-0 sd_xl_base_1.0.safetensors; flux1-schnell-fp8 flux1-schnell-fp8.safetensors"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#visual-design-and-refinement",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "comfy-edit img2img",
+     "operation": "comfy-edit-img2img",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/comfy-edit.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "redraw its own art at low strength to keep a family consistent",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 227, line 263, line 280",
+      "value": "comfyui: integrated, sd-xl-base-1-0: integrated, flux1-schnell-fp8: integrated"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [9a5aada516]",
+      "value": "yes: G7(c) 2026-11-22 (installed copy, both models)"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/comfy-edit.py img2img --asset a1 --model sdxl --input art_src/a.png --prompt p --denoise 0.3"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [39836fadfc]",
+      "value": "Board decision 2026-11-22, Phase 2A stage 1"
+     },
+     "expect": null,
+     "group": "Image generation",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui v0.46.0; sd-xl-base-1-0 sd_xl_base_1.0.safetensors"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#visual-design-and-refinement",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "comfy-edit inpaint (SDXL)",
+     "operation": "comfy-edit-inpaint",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/comfy-edit.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "repaint or remove one masked region of its own art",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 227, line 263",
+      "value": "comfyui: integrated, sd-xl-base-1-0: integrated"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [089f5e2bf0]",
+      "value": "yes: SOU-64 run 2, one removal case; inserting new objects failed 0/10"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/comfy-edit.py inpaint --asset a1 --model sdxl --input art_src/a.png --mask art_src/m.png --prompt p"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [d8f8c9288c]",
+      "value": "Board decision 2026-11-22 after spike S7"
+     },
+     "expect": null,
+     "group": "Image generation",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: birefnet birefnet.safetensors 444,473,596 bytes; comfyui v0.46.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "comfy-edit matte (BiRefNet)",
+     "operation": "comfy-edit-matte",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/comfy-edit.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "cut a figure out of its backdrop",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 365, line 227",
+      "value": "birefnet: integrated, comfyui: integrated"
+     },
+     "runtime_verified": {
+      "source": "docs/operations/runtime-management.md [8d165bc393]",
+      "value": "yes: G7(d) 2026-11-22: 11/11 SOU-81 images passed (repository copy, production ComfyUI)"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/comfy-edit.py matte --asset a1 --input art_src/a.png"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [972dbaaefa]",
+      "value": "Board decision D1 2026-11-22 (ComfyUI used through comfy-draft.py and art-ops.py)"
+     },
+     "expect": null,
+     "group": "Image operations (art-ops)",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui-embedded-python CPython 3.12.10"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "art-ops info",
+     "operation": "art-ops-info",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "inspect image size, alpha and budget",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 245",
+      "value": "comfyui-embedded-python: integrated"
+     },
+     "runtime_verified": {
+      "source": "docs/operations/runtime-management.md [d1afb24d3b]",
+      "value": "yes: G7(a) smoke of the installed copy"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/art-ops.py info a.png"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [972dbaaefa]",
+      "value": "Board decision D1 2026-11-22"
+     },
+     "expect": null,
+     "group": "Image operations (art-ops)",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui-embedded-python CPython 3.12.10"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "art-ops crop",
+     "operation": "art-ops-crop",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "crop an image",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 245",
+      "value": "comfyui-embedded-python: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "no"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/art-ops.py crop a.png"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [972dbaaefa]",
+      "value": "Board decision D1 2026-11-22"
+     },
+     "expect": null,
+     "group": "Image operations (art-ops)",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui-embedded-python CPython 3.12.10"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "art-ops resize",
+     "operation": "art-ops-resize",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "resize (nearest for pixel art)",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 245",
+      "value": "comfyui-embedded-python: integrated"
+     },
+     "runtime_verified": {
+      "source": "docs/operations/runtime-management.md [89f5b33298]",
+      "value": "yes: G7(a) smoke of the installed copy"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/art-ops.py resize a.png"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [972dbaaefa]",
+      "value": "Board decision D1 2026-11-22"
+     },
+     "expect": null,
+     "group": "Image operations (art-ops)",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui-embedded-python CPython 3.12.10"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "art-ops key",
+     "operation": "art-ops-key",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "make a flat backdrop colour transparent (icons, UI shapes)",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 245",
+      "value": "comfyui-embedded-python: integrated"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [24bd76d0d6]",
+      "value": "yes: works on flat backdrops; cast shadows defeat it (SOU-64-F)"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/art-ops.py key a.png"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [972dbaaefa]",
+      "value": "Board decision D1 2026-11-22"
+     },
+     "expect": null,
+     "group": "Image operations (art-ops)",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui-embedded-python CPython 3.12.10"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "art-ops trim",
+     "operation": "art-ops-trim",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "trim transparent borders",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 245",
+      "value": "comfyui-embedded-python: integrated"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [96f12c733b]",
+      "value": "yes: Board recipe tested 2026-11-22 (compose/trim/diff)"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/art-ops.py trim a.png"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [972dbaaefa]",
+      "value": "Board decision D1 2026-11-22"
+     },
+     "expect": null,
+     "group": "Image operations (art-ops)",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui-embedded-python CPython 3.12.10"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "art-ops canvas",
+     "operation": "art-ops-canvas",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "pad an image to a canvas size",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 245",
+      "value": "comfyui-embedded-python: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "no"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/art-ops.py canvas a.png"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [972dbaaefa]",
+      "value": "Board decision D1 2026-11-22"
+     },
+     "expect": null,
+     "group": "Image operations (art-ops)",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui-embedded-python CPython 3.12.10"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "art-ops sheet",
+     "operation": "art-ops-sheet",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "pack frames into a sprite sheet",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 245",
+      "value": "comfyui-embedded-python: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "no"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/art-ops.py sheet a.png"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [972dbaaefa]",
+      "value": "Board decision D1 2026-11-22"
+     },
+     "expect": null,
+     "group": "Image operations (art-ops)",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui-embedded-python CPython 3.12.10"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "art-ops grade",
+     "operation": "art-ops-grade",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "adjust contrast and saturation for checks",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 245",
+      "value": "comfyui-embedded-python: integrated"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [cb088658b0]",
+      "value": "yes: used for SOU-66 acceptance checks"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/art-ops.py grade a.png"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [972dbaaefa]",
+      "value": "Board decision D1 2026-11-22"
+     },
+     "expect": null,
+     "group": "Image operations (art-ops)",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui-embedded-python CPython 3.12.10"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "art-ops contact",
+     "operation": "art-ops-contact",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "make a review sheet of candidates",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 245",
+      "value": "comfyui-embedded-python: integrated"
+     },
+     "runtime_verified": {
+      "source": "docs/operations/runtime-management.md [9742533e04]",
+      "value": "yes: G7(a) smoke of the installed copy"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/art-ops.py contact a.png"
+    },
+    {
+     "approved": {
+      "source": "docs/roadmap/art-production-v2-phase2.md [deaf9222f4]",
+      "value": "Board decision 2026-11-22 (2A stage 1 with the 2B mask/compose/diff subset)"
+     },
+     "expect": null,
+     "group": "Image operations (art-ops)",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui-embedded-python CPython 3.12.10"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "art-ops mask",
+     "operation": "art-ops-mask",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "make a mask for inpainting or compositing",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 245",
+      "value": "comfyui-embedded-python: integrated"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [b7cfb4eb89]",
+      "value": "yes: available 2026-11-22"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/art-ops.py mask a.png"
+    },
+    {
+     "approved": {
+      "source": "docs/roadmap/art-production-v2-phase2.md [deaf9222f4]",
+      "value": "Board decision 2026-11-22 (2A stage 1 with the 2B mask/compose/diff subset)"
+     },
+     "expect": null,
+     "group": "Image operations (art-ops)",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui-embedded-python CPython 3.12.10"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "art-ops compose",
+     "operation": "art-ops-compose",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "place an image over a background",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 245",
+      "value": "comfyui-embedded-python: integrated"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [96f12c733b]",
+      "value": "yes: Board recipe tested 2026-11-22"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/art-ops.py compose a.png"
+    },
+    {
+     "approved": {
+      "source": "docs/roadmap/art-production-v2-phase2.md [deaf9222f4]",
+      "value": "Board decision 2026-11-22 (2A stage 1 with the 2B mask/compose/diff subset)"
+     },
+     "expect": null,
+     "group": "Image operations (art-ops)",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: comfyui-embedded-python CPython 3.12.10"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "art-ops diff",
+     "operation": "art-ops-diff",
+     "permitted": {
+      "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "show what changed between two images",
+     "production_validated": {
+      "source": "docs/roadmap/art-production-v2-pilot.md [9ecf26168f]",
+      "value": "no: G8 not started"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 245",
+      "value": "comfyui-embedded-python: integrated"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [96f12c733b]",
+      "value": "yes: Board recipe tested 2026-11-22"
+     },
+     "sample": "python -I ~/game-studio-workspace/tools/art-ops.py diff a.png b.png"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [5c4a0bcabd]",
+      "value": "Board 2026-11-21: reviewed, approved, installed"
+     },
+     "expect": null,
+     "group": "PixelFX",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: pixelfx 5294518"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "pixelfx list.mjs",
+     "operation": "pixelfx-list",
+     "permitted": {
+      "rule": "Bash(node ~/tools/pixelfx/tools/list.mjs *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "search the pixel-art effects library",
+     "production_validated": {
+      "source": "dependencies/registry.yaml [acfb333b1f]",
+      "value": "no: not tested in any game"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 137",
+      "value": "pixelfx: integrated"
+     },
+     "runtime_verified": {
+      "source": "external: board-rnd/knowledge-delivery/skills_memory_inventory.md (not verified from this repository) [fbeb1897e9]",
+      "value": "no: no agent run in SOU logs"
+     },
+     "sample": "node ~/tools/pixelfx/tools/list.mjs fire"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [5c4a0bcabd]",
+      "value": "Board 2026-11-21: reviewed, approved, installed"
+     },
+     "expect": null,
+     "group": "PixelFX",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: pixelfx 5294518"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "pixelfx render.mjs --sheet",
+     "operation": "pixelfx-render",
+     "permitted": {
+      "rule": "Bash(node ~/tools/pixelfx/tools/render.mjs *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "export one effect as a sprite sheet",
+     "production_validated": {
+      "source": "dependencies/registry.yaml [acfb333b1f]",
+      "value": "no: not tested in any game"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 137",
+      "value": "pixelfx: integrated"
+     },
+     "runtime_verified": {
+      "source": "external: board-rnd/knowledge-delivery/skills_memory_inventory.md (not verified from this repository) [fbeb1897e9]",
+      "value": "no: no agent run in SOU logs"
+     },
+     "sample": "node ~/tools/pixelfx/tools/render.mjs fire/burst --sheet --out art_src/fx"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --version",
+     "operation": "godot-version",
+     "permitted": {
+      "rule": "Bash(godot --version)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "check the Godot version",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "godot --version"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --headless --import",
+     "operation": "godot-import",
+     "permitted": {
+      "rule": "Bash(godot --headless --path . --import)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "import project assets (headless)",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [45715288fd]",
+      "value": "yes: agents run it (role not named in source)"
+     },
+     "sample": "godot --headless --path . --import"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --headless --quit",
+     "operation": "godot-smoke",
+     "permitted": {
+      "rule": "Bash(godot --headless --path . --quit)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "smoke-check that the project loads",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [45715288fd]",
+      "value": "yes: agents run it (role not named in source)"
+     },
+     "sample": "godot --headless --path . --quit"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --write-movie (one frame)",
+     "operation": "godot-frame",
+     "permitted": {
+      "rule": "Bash(godot --path . --write-movie .godot/* --quit-after *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "render a frame to look at",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [9665a149f4]",
+      "value": "yes: available, opaque only; transparent capture untested (role not named)"
+     },
+     "sample": "godot --path . --write-movie .godot/shot.png --quit-after 2"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot_console QA screenshot runner (Deckbound)",
+     "operation": "godot-qa-screenshot",
+     "permitted": {
+      "rule": "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "render the default scene at three screen sizes",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [9665a149f4]",
+      "value": "yes: available, opaque only (role not named)"
+     },
+     "sample": "godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#responsibilities",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "push the Task Branch",
+     "operation": "push-task-branch",
+     "permitted": {
+      "rule": "Bash(git push -u origin SOU-*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "push its own Task Branch",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push -u origin SOU-99-example"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#responsibilities",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr create",
+     "operation": "open-pr",
+     "permitted": {
+      "rule": "Bash(gh pr create*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "open a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr create --base main --head SOU-99-example --title t --body b"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (ADR-009: merging stays with the Board)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#constraints",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "push to main",
+     "operation": "push-main",
+     "permitted": {
+      "rule": "Bash(git push origin main*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write disallowedTools",
+      "value": "denied"
+     },
+     "plain": "push to main",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "external: board-rnd/knowledge-delivery/evidence/SOU-88.json (not verified from this repository) [804d5f07f4]",
+      "value": "yes: refused in GA-1 answer (no command run)"
+     },
+     "sample": "git push origin main"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (Board only)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#constraints",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr merge",
+     "operation": "merge-pr",
+     "permitted": {
+      "rule": "Bash(gh pr merge*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write disallowedTools",
+      "value": "denied"
+     },
+     "plain": "merge a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr merge 12"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr view (CI checks)",
+     "operation": "read-pr-checks",
+     "permitted": {
+      "rule": "Bash(gh pr view*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "read a PR and its CI results",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr view 12 --json statusCheckRollup"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [d65ac616e4]",
+      "value": "reporting rule (security-architecture §4)"
+     },
+     "expect": null,
+     "group": "Paperclip",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: paperclip 2026.1023.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#responsibilities",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "post Task comment / status (paperclip-issue-update.sh)",
+     "operation": "paperclip-report",
+     "permitted": {
+      "note": "SEC-01: leading-wildcard allow rule, open security item",
+      "rule": "Bash(*paperclip-issue-update.sh*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "report on its Task",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 12",
+      "value": "paperclip: approved"
+     },
+     "runtime_verified": {
+      "source": "external: board-rnd/knowledge-delivery/evidence/SOU-88.json (not verified from this repository) [25aa87ae1f]",
+      "value": "yes: SOU-88 answer posted by the agent"
+     },
+     "sample": "bash \"<skills>/paperclip/scripts/paperclip-issue-update.sh\" --issue-id SOU-1 --status in_review"
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "n/a (delivery question, KD-BD-2)"
+     },
+     "expect": null,
+     "group": "Knowledge",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#task-hygiene",
+      "value": "yes"
+     },
+     "kind": "builtin",
+     "label": "read Company OS documents at runtime",
+     "operation": "read-company-os",
+     "permitted": {
+      "rule": null,
+      "source": "external: board-rnd/knowledge-governance/proposals.md (not verified from this repository) [4e8a586ad3]",
+      "value": "none (outside the Task Workspace)"
+     },
+     "plain": "read company rules and workflows directly",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "external: board-rnd/knowledge-delivery/evidence/SOU-88.json (not verified from this repository) [1663ad4622]",
+      "value": "no: refused (SOU-88)"
+     },
+     "sample": null
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "n/a (built-in tool)"
+     },
+     "expect": null,
+     "group": "Knowledge",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md#visual-design-and-refinement",
+      "value": "yes"
+     },
+     "kind": "builtin",
+     "label": "open images with Read (vision review)",
+     "operation": "view-images",
+     "permitted": {
+      "rule": null,
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [aac8cddce9]",
+      "value": "built-in Read, Task Workspace only"
+     },
+     "plain": "look at images in its workspace",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    },
+    {
+     "approved": {
+      "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [8d14ff57b6]",
+      "value": "open: KD-BD-8 audit"
+     },
+     "expect": "refused",
+     "group": "Paperclip",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "paperclip-permission",
+     "label": "create agents / skills in Paperclip (admin)",
+     "operation": "create-agents",
+     "permitted": {
+      "rule": null,
+      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
+      "value": "declared nothing"
+     },
+     "plain": "create new agents or skills",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    }
+   ],
+   "profile": "claude-workspace-write",
+   "source": "no pause recorded",
+   "status": "active"
+  },
+  "game-designer": {
+   "adapter": "claude_local",
+   "department": "game",
+   "operations": [
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --version",
+     "operation": "godot-version",
+     "permitted": {
+      "rule": "Bash(godot --version)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "check the Godot version",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "godot --version"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --headless --import",
+     "operation": "godot-import",
+     "permitted": {
+      "rule": "Bash(godot --headless --path . --import)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "import project assets (headless)",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [45715288fd]",
+      "value": "yes: agents run it (role not named in source)"
+     },
+     "sample": "godot --headless --path . --import"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --headless --quit",
+     "operation": "godot-smoke",
+     "permitted": {
+      "rule": "Bash(godot --headless --path . --quit)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "smoke-check that the project loads",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [45715288fd]",
+      "value": "yes: agents run it (role not named in source)"
+     },
+     "sample": "godot --headless --path . --quit"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --write-movie (one frame)",
+     "operation": "godot-frame",
+     "permitted": {
+      "rule": "Bash(godot --path . --write-movie .godot/* --quit-after *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "render a frame to look at",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [9665a149f4]",
+      "value": "yes: available, opaque only; transparent capture untested (role not named)"
+     },
+     "sample": "godot --path . --write-movie .godot/shot.png --quit-after 2"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot_console QA screenshot runner (Deckbound)",
+     "operation": "godot-qa-screenshot",
+     "permitted": {
+      "rule": "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "render the default scene at three screen sizes",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [9665a149f4]",
+      "value": "yes: available, opaque only (role not named)"
+     },
+     "sample": "godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-designer/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "push the Task Branch",
+     "operation": "push-task-branch",
+     "permitted": {
+      "rule": "Bash(git push -u origin SOU-*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "push its own Task Branch",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push -u origin SOU-99-example"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr create",
+     "operation": "open-pr",
+     "permitted": {
+      "rule": "Bash(gh pr create*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "open a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr create --base main --head SOU-99-example --title t --body b"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (ADR-009: merging stays with the Board)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-designer/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "push to main",
+     "operation": "push-main",
+     "permitted": {
+      "rule": "Bash(git push origin main*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write disallowedTools",
+      "value": "denied"
+     },
+     "plain": "push to main",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push origin main"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (Board only)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-designer/AGENTS.md#task-hygiene",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr merge",
+     "operation": "merge-pr",
+     "permitted": {
+      "rule": "Bash(gh pr merge*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write disallowedTools",
+      "value": "denied"
+     },
+     "plain": "merge a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr merge 12"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr view (CI checks)",
+     "operation": "read-pr-checks",
+     "permitted": {
+      "rule": "Bash(gh pr view*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "read a PR and its CI results",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr view 12 --json statusCheckRollup"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [d65ac616e4]",
+      "value": "reporting rule (security-architecture §4)"
+     },
+     "expect": null,
+     "group": "Paperclip",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: paperclip 2026.1023.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-designer/AGENTS.md#credentials",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "post Task comment / status (paperclip-issue-update.sh)",
+     "operation": "paperclip-report",
+     "permitted": {
+      "note": "SEC-01: leading-wildcard allow rule, open security item",
+      "rule": "Bash(*paperclip-issue-update.sh*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "report on its Task",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 12",
+      "value": "paperclip: approved"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "bash \"<skills>/paperclip/scripts/paperclip-issue-update.sh\" --issue-id SOU-1 --status in_review"
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "n/a (delivery question, KD-BD-2)"
+     },
+     "expect": null,
+     "group": "Knowledge",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-designer/AGENTS.md#task-hygiene",
+      "value": "yes"
+     },
+     "kind": "builtin",
+     "label": "read Company OS documents at runtime",
+     "operation": "read-company-os",
+     "permitted": {
+      "rule": null,
+      "source": "external: board-rnd/knowledge-governance/proposals.md (not verified from this repository) [4e8a586ad3]",
+      "value": "none (outside the Task Workspace)"
+     },
+     "plain": "read company rules and workflows directly",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    },
+    {
+     "approved": {
+      "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [8d14ff57b6]",
+      "value": "open: KD-BD-8 audit"
+     },
+     "expect": "refused",
+     "group": "Paperclip",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/game-designer/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "paperclip-permission",
+     "label": "create agents / skills in Paperclip (admin)",
+     "operation": "create-agents",
+     "permitted": {
+      "rule": null,
+      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
+      "value": "declared canCreateSkills=true"
+     },
+     "plain": "create new agents or skills",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    }
+   ],
+   "profile": "claude-workspace-write",
+   "source": "no pause recorded",
+   "status": "active"
+  },
+  "gameplay-programmer": {
+   "adapter": "cursor",
+   "department": "game",
+   "operations": [
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [e1b8f6ed5e]",
+      "value": "Board 2026-11-21, with conditions; not installed (OQ-046)"
+     },
+     "expect": null,
+     "group": "Reverse engineering",
+     "installed": {
+      "source": "dependencies/registry.yaml [add9971d93]",
+      "value": "no"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/gameplay-programmer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "mcp",
+     "label": "REA MCP (static analysis)",
+     "operation": "rea-mcp",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "study how a permitted target works (static only)",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "no"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 192",
+      "value": "rea: approved"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "no"
+     },
+     "sample": "mcp__rea"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/gameplay-programmer/AGENTS.md#responsibilities",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "push the Task Branch",
+     "operation": "push-task-branch",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "push its own Task Branch",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push -u origin SOU-99-example"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/gameplay-programmer/AGENTS.md#responsibilities",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr create",
+     "operation": "open-pr",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "open a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr create --base main --head SOU-99-example --title t --body b"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (ADR-009: merging stays with the Board)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/gameplay-programmer/AGENTS.md#constraints",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "push to main",
+     "operation": "push-main",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "push to main",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push origin main"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (Board only)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/gameplay-programmer/AGENTS.md#constraints",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr merge",
+     "operation": "merge-pr",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "merge a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr merge 12"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [d65ac616e4]",
+      "value": "reporting rule (security-architecture §4)"
+     },
+     "expect": null,
+     "group": "Paperclip",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: paperclip 2026.1023.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/gameplay-programmer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "post Task comment / status (paperclip-issue-update.sh)",
+     "operation": "paperclip-report",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "report on its Task",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 12",
+      "value": "paperclip: approved"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "bash \"<skills>/paperclip/scripts/paperclip-issue-update.sh\" --issue-id SOU-1 --status in_review"
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "n/a (delivery question, KD-BD-2)"
+     },
+     "expect": null,
+     "group": "Knowledge",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/gameplay-programmer/AGENTS.md#task-hygiene",
+      "value": "yes"
+     },
+     "kind": "builtin",
+     "label": "read Company OS documents at runtime",
+     "operation": "read-company-os",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "read company rules and workflows directly",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "external: board-rnd/knowledge-delivery/cursor_security.md (not verified from this repository) [40d6224e27]",
+      "value": "yes (unconfined): Cursor reads outside the worktree"
+     },
+     "sample": null
+    },
+    {
+     "approved": {
+      "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [8d14ff57b6]",
+      "value": "open: KD-BD-8 audit"
+     },
+     "expect": "refused",
+     "group": "Paperclip",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/game/agents/gameplay-programmer/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "paperclip-permission",
+     "label": "create agents / skills in Paperclip (admin)",
+     "operation": "create-agents",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "create new agents or skills",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    }
+   ],
+   "profile": "cursor-workspace-write",
+   "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [c578c4b388]; external: board-rnd/knowledge-governance/BOARD_REVIEW_R3.md (not verified from this repository) [9528da1eb3]; external: board-rnd/knowledge-delivery/cursor_security.md (not verified from this repository) [fb21fe4b0a]",
+   "status": "paused 2026-11-22T17:51Z — security gate (KD-BD-4)"
+  },
+  "producer": {
+   "adapter": "claude_local",
+   "department": "company",
+   "operations": [
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (ADR-009: merging stays with the Board)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/producer/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "push to main",
+     "operation": "push-main",
+     "permitted": {
+      "rule": "Bash(git push*)",
+      "source": "config/paperclip/agents.json profile claude-read-only disallowedTools",
+      "value": "denied"
+     },
+     "plain": "push to main",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push origin main"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (Board only)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/producer/AGENTS.md#constraints",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr merge",
+     "operation": "merge-pr",
+     "permitted": {
+      "rule": null,
+      "source": "config/paperclip/agents.json (no matching rule)",
+      "value": "no allow rule"
+     },
+     "plain": "merge a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr merge 12"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [26118ea481]",
+      "value": "Board decision 2026-11-22, SOU-39"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/producer/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "gh pr view (CI checks)",
+     "operation": "read-pr-checks",
+     "permitted": {
+      "rule": "Bash(gh pr view*)",
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "read a PR and its CI results",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr view 12 --json statusCheckRollup"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [f319ddb073]",
+      "value": "no (read-only profile)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/producer/AGENTS.md#constraints",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "write a file through `cat >`",
+     "operation": "write-file-via-shell",
+     "permitted": {
+      "note": "SEC-01: redirect writes are expected to be denied in -p default mode; untested",
+      "rule": "Bash(cat *)",
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "write files",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown (SEC-01 lab test not run)"
+     },
+     "sample": "cat > notes.md <<EOF"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [d65ac616e4]",
+      "value": "reporting rule (security-architecture §4)"
+     },
+     "expect": null,
+     "group": "Paperclip",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: paperclip 2026.1023.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/producer/AGENTS.md#credentials",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "post Task comment / status (paperclip-issue-update.sh)",
+     "operation": "paperclip-report",
+     "permitted": {
+      "note": "SEC-01: leading-wildcard allow rule, open security item",
+      "rule": "Bash(*paperclip-issue-update.sh*)",
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "report on its Task",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 12",
+      "value": "paperclip: approved"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "bash \"<skills>/paperclip/scripts/paperclip-issue-update.sh\" --issue-id SOU-1 --status in_review"
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "n/a (delivery question, KD-BD-2)"
+     },
+     "expect": null,
+     "group": "Knowledge",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/producer/AGENTS.md#task-hygiene",
+      "value": "yes"
+     },
+     "kind": "builtin",
+     "label": "read Company OS documents at runtime",
+     "operation": "read-company-os",
+     "permitted": {
+      "rule": null,
+      "source": "external: board-rnd/knowledge-governance/proposals.md (not verified from this repository) [4e8a586ad3]",
+      "value": "none (outside the Task Workspace)"
+     },
+     "plain": "read company rules and workflows directly",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    },
+    {
+     "approved": {
+      "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [8d14ff57b6]",
+      "value": "open: KD-BD-8 audit"
+     },
+     "expect": "refused",
+     "group": "Paperclip",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/producer/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "paperclip-permission",
+     "label": "create agents / skills in Paperclip (admin)",
+     "operation": "create-agents",
+     "permitted": {
+      "rule": null,
+      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
+      "value": "declared canCreateAgents=true, canCreateSkills=true"
+     },
+     "plain": "create new agents or skills",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    }
+   ],
+   "profile": "claude-read-only",
+   "source": "no pause recorded",
+   "status": "active"
+  },
+  "project-manager": {
+   "adapter": "claude_local",
+   "department": "company",
+   "operations": [
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (ADR-009: merging stays with the Board)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/project-manager/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "push to main",
+     "operation": "push-main",
+     "permitted": {
+      "rule": "Bash(git push*)",
+      "source": "config/paperclip/agents.json profile claude-read-only disallowedTools",
+      "value": "denied"
+     },
+     "plain": "push to main",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push origin main"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (Board only)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/project-manager/AGENTS.md#task-hygiene",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr merge",
+     "operation": "merge-pr",
+     "permitted": {
+      "rule": null,
+      "source": "config/paperclip/agents.json (no matching rule)",
+      "value": "no allow rule"
+     },
+     "plain": "merge a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr merge 12"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [26118ea481]",
+      "value": "Board decision 2026-11-22, SOU-39"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/project-manager/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "gh pr view (CI checks)",
+     "operation": "read-pr-checks",
+     "permitted": {
+      "rule": "Bash(gh pr view*)",
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "read a PR and its CI results",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr view 12 --json statusCheckRollup"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [f319ddb073]",
+      "value": "no (read-only profile)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/project-manager/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "write a file through `cat >`",
+     "operation": "write-file-via-shell",
+     "permitted": {
+      "note": "SEC-01: redirect writes are expected to be denied in -p default mode; untested",
+      "rule": "Bash(cat *)",
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "write files",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown (SEC-01 lab test not run)"
+     },
+     "sample": "cat > notes.md <<EOF"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [d65ac616e4]",
+      "value": "reporting rule (security-architecture §4)"
+     },
+     "expect": null,
+     "group": "Paperclip",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: paperclip 2026.1023.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/project-manager/AGENTS.md#credentials",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "post Task comment / status (paperclip-issue-update.sh)",
+     "operation": "paperclip-report",
+     "permitted": {
+      "note": "SEC-01: leading-wildcard allow rule, open security item",
+      "rule": "Bash(*paperclip-issue-update.sh*)",
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "report on its Task",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 12",
+      "value": "paperclip: approved"
+     },
+     "runtime_verified": {
+      "source": "external: board-rnd/knowledge-delivery/evidence/SOU-92.json (not verified from this repository) [1f5fe56847]",
+      "value": "partial: partial: SOU-92 the agent reported it could not find the script path"
+     },
+     "sample": "bash \"<skills>/paperclip/scripts/paperclip-issue-update.sh\" --issue-id SOU-1 --status in_review"
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "n/a (delivery question, KD-BD-2)"
+     },
+     "expect": null,
+     "group": "Knowledge",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/project-manager/AGENTS.md#planning-and-triage-duties",
+      "value": "yes"
+     },
+     "kind": "builtin",
+     "label": "read Company OS documents at runtime",
+     "operation": "read-company-os",
+     "permitted": {
+      "rule": null,
+      "source": "external: board-rnd/knowledge-governance/proposals.md (not verified from this repository) [4e8a586ad3]",
+      "value": "none (outside the Task Workspace)"
+     },
+     "plain": "read company rules and workflows directly",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "external: board-rnd/knowledge-delivery/evidence/SOU-92.json (not verified from this repository) [1b0754209c]",
+      "value": "no: refused (SOU-92)"
+     },
+     "sample": null
+    },
+    {
+     "approved": {
+      "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [8d14ff57b6]",
+      "value": "open: KD-BD-8 audit"
+     },
+     "expect": "refused",
+     "group": "Paperclip",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/project-manager/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "paperclip-permission",
+     "label": "create agents / skills in Paperclip (admin)",
+     "operation": "create-agents",
+     "permitted": {
+      "rule": null,
+      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
+      "value": "declared canCreateAgents=true, canCreateSkills=true"
+     },
+     "plain": "create new agents or skills",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    }
+   ],
+   "profile": "claude-read-only",
+   "source": "no pause recorded",
+   "status": "active"
+  },
+  "qa-engineer": {
+   "adapter": "claude_local",
+   "department": "company",
+   "operations": [
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [05388b56b4]",
+      "value": "Board decision 2026-11-21, OQ-048 / SOU-31"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --version",
+     "operation": "godot-version",
+     "permitted": {
+      "rule": "Bash(godot --version)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "check the Godot version",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "godot --version"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [05388b56b4]",
+      "value": "Board decision 2026-11-21, OQ-048 / SOU-31"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --headless --import",
+     "operation": "godot-import",
+     "permitted": {
+      "rule": "Bash(godot --headless --path . --import)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "import project assets (headless)",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [45715288fd]",
+      "value": "yes: agents run it (role not named in source)"
+     },
+     "sample": "godot --headless --path . --import"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [05388b56b4]",
+      "value": "Board decision 2026-11-21, OQ-048 / SOU-31"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --headless --quit",
+     "operation": "godot-smoke",
+     "permitted": {
+      "rule": "Bash(godot --headless --path . --quit)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "smoke-check that the project loads",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [45715288fd]",
+      "value": "yes: agents run it (role not named in source)"
+     },
+     "sample": "godot --headless --path . --quit"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [05388b56b4]",
+      "value": "Board decision 2026-11-21, OQ-048 / SOU-31"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --write-movie (one frame)",
+     "operation": "godot-frame",
+     "permitted": {
+      "rule": "Bash(godot --path . --write-movie .godot/* --quit-after *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "render a frame to look at",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [9665a149f4]",
+      "value": "yes: available, opaque only; transparent capture untested (role not named)"
+     },
+     "sample": "godot --path . --write-movie .godot/shot.png --quit-after 2"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [7ff5980e0b]",
+      "value": "Board decision 2026-11-21, SOU-34"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot_console QA screenshot runner (Deckbound)",
+     "operation": "godot-qa-screenshot",
+     "permitted": {
+      "rule": "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "render the default scene at three screen sizes",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [9665a149f4]",
+      "value": "yes: available, opaque only (role not named)"
+     },
+     "sample": "godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --"
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "no (registry status candidate)"
+     },
+     "expect": null,
+     "group": "Testing",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: playwright-mcp configured in Claude Code as `npx -y @playwright/mcp@latest --headless --isolated`"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "mcp",
+     "label": "Playwright MCP",
+     "operation": "playwright-mcp",
+     "permitted": {
+      "rule": null,
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "plain": "drive a browser for UI tests",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "no"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 155",
+      "value": "playwright-mcp: candidate"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "no"
+     },
+     "sample": "mcp__playwright"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [0f3bd95fa5]",
+      "value": "registry approved; condition: the Board starts the stack"
+     },
+     "expect": null,
+     "group": "Testing",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: docker-desktop Docker CLI 27.5.1 on the Windows company machine"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "docker compose run --rm test",
+     "operation": "docker-test",
+     "permitted": {
+      "rule": "Bash(docker compose run --rm test*)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "run the project's containerised test command",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 210",
+      "value": "docker-desktop: approved"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "docker compose run --rm test"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "push the Task Branch",
+     "operation": "push-task-branch",
+     "permitted": {
+      "rule": "Bash(git push -u origin SOU-*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "push its own Task Branch",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push -u origin SOU-99-example"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "gh pr create",
+     "operation": "open-pr",
+     "permitted": {
+      "rule": "Bash(gh pr create*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "open a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr create --base main --head SOU-99-example --title t --body b"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (ADR-009: merging stays with the Board)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "push to main",
+     "operation": "push-main",
+     "permitted": {
+      "rule": "Bash(git push origin main*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write disallowedTools",
+      "value": "denied"
+     },
+     "plain": "push to main",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push origin main"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (Board only)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md#task-hygiene",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr merge",
+     "operation": "merge-pr",
+     "permitted": {
+      "rule": "Bash(gh pr merge*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write disallowedTools",
+      "value": "denied"
+     },
+     "plain": "merge a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr merge 12"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md#responsibilities",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr view (CI checks)",
+     "operation": "read-pr-checks",
+     "permitted": {
+      "rule": "Bash(gh pr view*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "read a PR and its CI results",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr view 12 --json statusCheckRollup"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [d65ac616e4]",
+      "value": "reporting rule (security-architecture §4)"
+     },
+     "expect": null,
+     "group": "Paperclip",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: paperclip 2026.1023.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md#credentials",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "post Task comment / status (paperclip-issue-update.sh)",
+     "operation": "paperclip-report",
+     "permitted": {
+      "note": "SEC-01: leading-wildcard allow rule, open security item",
+      "rule": "Bash(*paperclip-issue-update.sh*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "report on its Task",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 12",
+      "value": "paperclip: approved"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "bash \"<skills>/paperclip/scripts/paperclip-issue-update.sh\" --issue-id SOU-1 --status in_review"
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "n/a (delivery question, KD-BD-2)"
+     },
+     "expect": null,
+     "group": "Knowledge",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md#task-hygiene",
+      "value": "yes"
+     },
+     "kind": "builtin",
+     "label": "read Company OS documents at runtime",
+     "operation": "read-company-os",
+     "permitted": {
+      "rule": null,
+      "source": "external: board-rnd/knowledge-governance/proposals.md (not verified from this repository) [4e8a586ad3]",
+      "value": "none (outside the Task Workspace)"
+     },
+     "plain": "read company rules and workflows directly",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "n/a (built-in tool)"
+     },
+     "expect": null,
+     "group": "Knowledge",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "builtin",
+     "label": "open images with Read (vision review)",
+     "operation": "view-images",
+     "permitted": {
+      "rule": null,
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [aac8cddce9]",
+      "value": "built-in Read, Task Workspace only"
+     },
+     "plain": "look at images in its workspace",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [aac8cddce9]",
+      "value": "yes: capability audit: qa-engineer opens images"
+     },
+     "sample": null
+    },
+    {
+     "approved": {
+      "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [8d14ff57b6]",
+      "value": "open: KD-BD-8 audit"
+     },
+     "expect": "refused",
+     "group": "Paperclip",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/qa/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "paperclip-permission",
+     "label": "create agents / skills in Paperclip (admin)",
+     "operation": "create-agents",
+     "permitted": {
+      "rule": null,
+      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
+      "value": "declared canCreateSkills=true"
+     },
+     "plain": "create new agents or skills",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    }
+   ],
+   "profile": "claude-workspace-write",
+   "source": "no pause recorded",
+   "status": "active"
+  },
+  "ui-designer": {
+   "adapter": "claude_local",
+   "department": "company",
+   "operations": [
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --version",
+     "operation": "godot-version",
+     "permitted": {
+      "rule": "Bash(godot --version)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "check the Godot version",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "godot --version"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --headless --import",
+     "operation": "godot-import",
+     "permitted": {
+      "rule": "Bash(godot --headless --path . --import)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "import project assets (headless)",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [45715288fd]",
+      "value": "yes: agents run it (role not named in source)"
+     },
+     "sample": "godot --headless --path . --import"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --headless --quit",
+     "operation": "godot-smoke",
+     "permitted": {
+      "rule": "Bash(godot --headless --path . --quit)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "smoke-check that the project loads",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [45715288fd]",
+      "value": "yes: agents run it (role not named in source)"
+     },
+     "sample": "godot --headless --path . --quit"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot --write-movie (one frame)",
+     "operation": "godot-frame",
+     "permitted": {
+      "rule": "Bash(godot --path . --write-movie .godot/* --quit-after *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "render a frame to look at",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [9665a149f4]",
+      "value": "yes: available, opaque only; transparent capture untested (role not named)"
+     },
+     "sample": "godot --path . --write-movie .godot/shot.png --quit-after 2"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [2b66a9c35e]",
+      "value": "Board decision 2026-11-21, SOU-49"
+     },
+     "expect": null,
+     "group": "Godot",
+     "installed": {
+      "source": "docs/architecture/security-architecture.md [89619eee66]",
+      "value": "yes"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "godot_console QA screenshot runner (Deckbound)",
+     "operation": "godot-qa-screenshot",
+     "permitted": {
+      "rule": "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "render the default scene at three screen sizes",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml (no id contains 'godot')",
+      "value": "no registry entry"
+     },
+     "runtime_verified": {
+      "source": "docs/roadmap/ai-art-animation/01-capability-audit.md [9665a149f4]",
+      "value": "yes: available, opaque only (role not named)"
+     },
+     "sample": "godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [57957a7b55]",
+      "value": "security review 2026-11-04, approved with conditions (GAM-35)"
+     },
+     "expect": null,
+     "group": "Design references",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: ui-ux-pro-max-skill 2.15.0 core skill only"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "ui-ux-pro-max search.py",
+     "operation": "uiux-search",
+     "permitted": {
+      "rule": "Bash(python ~/.claude/skills/ui-ux-pro-max/scripts/search.py *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "look up UI styles, palettes and UX rules",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "no"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 433",
+      "value": "ui-ux-pro-max-skill: integrated"
+     },
+     "runtime_verified": {
+      "source": "external: board-rnd/knowledge-delivery/skills_memory_inventory.md (not verified from this repository) [fbeb1897e9]",
+      "value": "no: no agent run in SOU logs"
+     },
+     "sample": "python ~/.claude/skills/ui-ux-pro-max/scripts/search.py dashboard"
+    },
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [d4893d12fa]",
+      "value": "security review 2026-11-04, approved (GAM-19)"
+     },
+     "expect": null,
+     "group": "Design references",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: google-design-md 0.4.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "design.md lint",
+     "operation": "design-md",
+     "permitted": {
+      "rule": "Bash(design.md *)",
+      "source": "config/paperclip/agents.json extraAllowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "check design tokens in DESIGN.md",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 571",
+      "value": "google-design-md: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "design.md lint DESIGN.md"
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "no (registry status candidate)"
+     },
+     "expect": null,
+     "group": "Testing",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: playwright-mcp configured in Claude Code as `npx -y @playwright/mcp@latest --headless --isolated`"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md#responsibilities",
+      "value": "yes"
+     },
+     "kind": "mcp",
+     "label": "Playwright MCP",
+     "operation": "playwright-mcp",
+     "permitted": {
+      "rule": null,
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "plain": "drive a browser for UI tests",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "no"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 155",
+      "value": "playwright-mcp: candidate"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "no"
+     },
+     "sample": "mcp__playwright"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "push the Task Branch",
+     "operation": "push-task-branch",
+     "permitted": {
+      "rule": "Bash(git push -u origin SOU-*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "push its own Task Branch",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push -u origin SOU-99-example"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "gh pr create",
+     "operation": "open-pr",
+     "permitted": {
+      "rule": "Bash(gh pr create*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "open a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr create --base main --head SOU-99-example --title t --body b"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (ADR-009: merging stays with the Board)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "bash",
+     "label": "push to main",
+     "operation": "push-main",
+     "permitted": {
+      "rule": "Bash(git push origin main*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write disallowedTools",
+      "value": "denied"
+     },
+     "plain": "push to main",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push origin main"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (Board only)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md#task-hygiene",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr merge",
+     "operation": "merge-pr",
+     "permitted": {
+      "rule": "Bash(gh pr merge*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write disallowedTools",
+      "value": "denied"
+     },
+     "plain": "merge a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr merge 12"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr view (CI checks)",
+     "operation": "read-pr-checks",
+     "permitted": {
+      "rule": "Bash(gh pr view*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "read a PR and its CI results",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr view 12 --json statusCheckRollup"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [d65ac616e4]",
+      "value": "reporting rule (security-architecture §4)"
+     },
+     "expect": null,
+     "group": "Paperclip",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: paperclip 2026.1023.0"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md#credentials",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "post Task comment / status (paperclip-issue-update.sh)",
+     "operation": "paperclip-report",
+     "permitted": {
+      "note": "SEC-01: leading-wildcard allow rule, open security item",
+      "rule": "Bash(*paperclip-issue-update.sh*)",
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
+      "value": "allowed by exact rule"
+     },
+     "plain": "report on its Task",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 12",
+      "value": "paperclip: approved"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "bash \"<skills>/paperclip/scripts/paperclip-issue-update.sh\" --issue-id SOU-1 --status in_review"
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "n/a (delivery question, KD-BD-2)"
+     },
+     "expect": null,
+     "group": "Knowledge",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md#task-hygiene",
+      "value": "yes"
+     },
+     "kind": "builtin",
+     "label": "read Company OS documents at runtime",
+     "operation": "read-company-os",
+     "permitted": {
+      "rule": null,
+      "source": "external: board-rnd/knowledge-governance/proposals.md (not verified from this repository) [4e8a586ad3]",
+      "value": "none (outside the Task Workspace)"
+     },
+     "plain": "read company rules and workflows directly",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    },
+    {
+     "approved": {
+      "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [8d14ff57b6]",
+      "value": "open: KD-BD-8 audit"
+     },
+     "expect": "refused",
+     "group": "Paperclip",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/company/agents/ui-designer/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "paperclip-permission",
+     "label": "create agents / skills in Paperclip (admin)",
+     "operation": "create-agents",
+     "permitted": {
+      "rule": null,
+      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
+      "value": "declared canCreateSkills=true"
+     },
+     "plain": "create new agents or skills",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    }
+   ],
+   "profile": "claude-workspace-write",
+   "source": "no pause recorded",
+   "status": "active"
+  },
+  "web-engineer": {
+   "adapter": "cursor",
+   "department": "web",
+   "operations": [
+    {
+     "approved": {
+      "source": "dependencies/registry.yaml [0f3bd95fa5]",
+      "value": "registry approved; condition: the Board starts the stack"
+     },
+     "expect": null,
+     "group": "Testing",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: docker-desktop Docker CLI 27.5.1 on the Windows company machine"
+     },
+     "instructed": {
+      "source": "knowledge/departments/web/agents/web-engineer/AGENTS.md#tools-and-skills",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "docker compose run --rm test",
+     "operation": "docker-test",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "run the project's containerised test command",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 210",
+      "value": "docker-desktop: approved"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "docker compose run --rm test"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/web/agents/web-engineer/AGENTS.md#responsibilities",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "push the Task Branch",
+     "operation": "push-task-branch",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "push its own Task Branch",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push -u origin SOU-99-example"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [108c4cf6f1]",
+      "value": "workspace-write profile, 2026-11-03"
+     },
+     "expect": null,
+     "group": "Git and review",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: github-cli 2.97.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/web/agents/web-engineer/AGENTS.md#responsibilities",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr create",
+     "operation": "open-pr",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "open a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 297",
+      "value": "github-cli: integrated"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr create --base main --head SOU-99-example --title t --body b"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (ADR-009: merging stays with the Board)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/web/agents/web-engineer/AGENTS.md#constraints",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "push to main",
+     "operation": "push-main",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "push to main",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "git push origin main"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [167a12d2e0]",
+      "value": "no (Board only)"
+     },
+     "expect": "refused",
+     "group": "Git and review",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/web/agents/web-engineer/AGENTS.md#constraints",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "gh pr merge",
+     "operation": "merge-pr",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "merge a pull request",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "gh pr merge 12"
+    },
+    {
+     "approved": {
+      "source": "docs/architecture/security-architecture.md [d65ac616e4]",
+      "value": "reporting rule (security-architecture §4)"
+     },
+     "expect": null,
+     "group": "Paperclip",
+     "installed": {
+      "source": "dependencies/registry.yaml verifiedVersion (first clause)",
+      "value": "verified version: paperclip 2026.1023.0"
+     },
+     "instructed": {
+      "source": "knowledge/departments/web/agents/web-engineer/AGENTS.md#credentials",
+      "value": "yes"
+     },
+     "kind": "bash",
+     "label": "post Task comment / status (paperclip-issue-update.sh)",
+     "operation": "paperclip-report",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "report on its Task",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml line 12",
+      "value": "paperclip: approved"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": "bash \"<skills>/paperclip/scripts/paperclip-issue-update.sh\" --issue-id SOU-1 --status in_review"
+    },
+    {
+     "approved": {
+      "source": "no cited source",
+      "value": "n/a (delivery question, KD-BD-2)"
+     },
+     "expect": null,
+     "group": "Knowledge",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/web/agents/web-engineer/AGENTS.md#task-hygiene",
+      "value": "yes"
+     },
+     "kind": "builtin",
+     "label": "read Company OS documents at runtime",
+     "operation": "read-company-os",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "read company rules and workflows directly",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "external: board-rnd/knowledge-delivery/cursor_security.md (not verified from this repository) [40d6224e27]",
+      "value": "yes (unconfined): Cursor reads outside the worktree"
+     },
+     "sample": null
+    },
+    {
+     "approved": {
+      "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [8d14ff57b6]",
+      "value": "open: KD-BD-8 audit"
+     },
+     "expect": "refused",
+     "group": "Paperclip",
+     "installed": {
+      "source": "no cited source",
+      "value": "unknown"
+     },
+     "instructed": {
+      "source": "knowledge/departments/web/agents/web-engineer/AGENTS.md (no heading mentions it)",
+      "value": "no"
+     },
+     "kind": "paperclip-permission",
+     "label": "create agents / skills in Paperclip (admin)",
+     "operation": "create-agents",
+     "permitted": {
+      "rule": null,
+      "source": "Cursor CLI ignores --allowedTools; sandbox disabled (security gate KD-BD-4)",
+      "value": "not enforced (Cursor sandbox disabled)"
+     },
+     "plain": "create new agents or skills",
+     "production_validated": {
+      "source": "no cited evidence",
+      "value": "n/a"
+     },
+     "registered": {
+      "source": "dependencies/registry.yaml",
+      "value": "n/a (not a dependency)"
+     },
+     "runtime_verified": {
+      "source": "no cited evidence",
+      "value": "unknown"
+     },
+     "sample": null
+    }
+   ],
+   "profile": "cursor-workspace-write",
+   "source": "external: board-rnd/knowledge-governance/decision_register.md (not verified from this repository) [c578c4b388]; external: board-rnd/knowledge-governance/BOARD_REVIEW_R3.md (not verified from this repository) [c8644ea32c]; external: board-rnd/knowledge-delivery/cursor_security.md (not verified from this repository) [fb21fe4b0a]",
+   "status": "paused 2026-11-22T17:51Z — security gate (KD-BD-4)"
+  }
+ },
+ "schema": "capability-catalog.v1",
+ "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+ "sources": {
+  "origin": "working tree (not in the source commit yet)",
+  "path": "config/paperclip/capability-sources.json",
+  "sha256": "bda346808893521365a72046685429a9f0a18684970cc6f506505f8dce118912"
+ },
+ "task_notes": {
+  "*": [
+   {
+    "source": "knowledge/company/standards/task-contract.md [adfc31fbf9]",
+    "text": "a Task is released only with every Task-contract field (goal, acceptance criteria, write set, read set, blockers, assignee, reviewer, approval, size)"
+   },
+   {
+    "source": "knowledge/company/standards/task-contract.md [ebd4289980]",
+    "text": "assignee must be an agent whose role and permission profile can do the work"
+   }
+  ],
+  "director": [
+   {
+    "source": "docs/architecture/security-architecture.md [f319ddb073]",
+    "text": "read-only profile: cannot write files (but see the `cat` finding)"
+   }
+  ],
+  "game-artist": [
+   {
+    "source": "knowledge/departments/game/agents/game-artist/AGENTS.md [8a5ce123d5]",
+    "text": "art Tasks must state lane, target size and background, reference traits and acceptance criteria, or the artist blocks"
+   },
+   {
+    "source": "knowledge/departments/game/agents/game-artist/AGENTS.md [7899d3021e]",
+    "text": "tool commands only in the exact `~/…` unquoted form; other forms are refused"
+   },
+   {
+    "source": "knowledge/departments/game/agents/game-artist/AGENTS.md [a617d85566]",
+    "text": "Godot commands one standalone command each, no extra flags, redirection or pipes"
+   },
+   {
+    "source": "knowledge/departments/game/agents/game-artist/AGENTS.md [41fb4a7f9c]",
+    "text": "region edits only with the approved inpaint/img2img on the project's own art"
+   },
+   {
+    "source": "knowledge/departments/game/workflows/asset-production.md [80926c98ce]",
+    "text": "not approved: outside reference images, image-prompt adapters, LoRA, ControlNet, FLUX inpainting"
+   },
+   {
+    "source": "knowledge/departments/game/agents/game-artist/AGENTS.md [a505917a77]",
+    "text": "a method that needs a non-allowed command is reported UNVERIFIED and blocked, not improvised"
+   }
+  ],
+  "producer": [
+   {
+    "source": "docs/architecture/security-architecture.md [f319ddb073]",
+    "text": "read-only profile: cannot write files (but see the `cat` finding)"
+   }
+  ],
+  "project-manager": [
+   {
+    "source": "docs/architecture/security-architecture.md [f319ddb073]",
+    "text": "read-only profile: cannot write files (but see the `cat` finding)"
+   }
+  ]
+ },
+ "views": {
+  "director": {
+   "coordinated": "*",
+   "kind": "management"
+  },
+  "game-artist": {
+   "coordinated": [],
+   "kind": "execution"
+  },
+  "game-designer": {
+   "coordinated": [
+    "game-artist",
+    "ui-designer",
+    "gameplay-programmer",
+    "qa-engineer"
+   ],
+   "kind": "design"
+  },
+  "gameplay-programmer": {
+   "coordinated": [],
+   "kind": "execution"
+  },
+  "producer": {
+   "coordinated": "*",
+   "kind": "management"
+  },
+  "project-manager": {
+   "coordinated": "*",
+   "kind": "management"
+  },
+  "qa-engineer": {
+   "coordinated": [
+    "game-artist",
+    "ui-designer",
+    "gameplay-programmer",
+    "web-engineer"
+   ],
+   "kind": "qa"
+  },
+  "ui-designer": {
+   "coordinated": [],
+   "kind": "execution"
+  },
+  "web-engineer": {
+   "coordinated": [],
+   "kind": "execution"
+  }
+ }
+}

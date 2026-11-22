@@ -38,8 +38,11 @@ def matching_live():
             continue
         cfg = bp.adapter_block(prof, spec, CONF["rules"], "SOU", "C:/ws", "agent")["config"]
         cfg["env"] = {s: {"type": "secret_ref", "secretId": "s-1"} for s in spec.get("secrets") or []}
+        cfg["paperclipSkillSync"] = {"desiredSkills": []}
         full[slug] = {"adapterType": prof["adapter"], "adapterConfig": cfg,
-                      "runtimeConfig": copy.deepcopy(spec.get("runtime") or CONF["runtime"])}
+                      "runtimeConfig": copy.deepcopy(spec.get("runtime") or CONF["runtime"]),
+                      "permissions": {k: bool((spec.get("permissions") or {}).get(k, False))
+                                      for k in ("canCreateAgents", "canCreateSkills")}}
     return full, {s: b for s, b in bodies.items() if s in full}
 
 
@@ -114,6 +117,8 @@ class Drift(unittest.TestCase):
                 return [COMPANY]
             if path == "/companies/c-1/agents":
                 return [{"id": s, "urlKey": s} for s in full]
+            if path == "/companies/c-1":
+                return {**COMPANY, "requireBoardApprovalForNewAgents": True}
             if path.startswith("/agents/") and "instructions-bundle" in path:
                 return {"content": bodies[path.split("/")[2]]}
             return full[path.split("/")[2]]
@@ -136,6 +141,127 @@ class Drift(unittest.TestCase):
         with mock.patch.object(cad.urllib.request, "urlopen", side_effect=err401),                 mock.patch.object(cad.board_auth, "headers", return_value={}):
             with self.assertRaisesRegex(SystemExit, "paperclipai auth login"):
                 cad.http_get("/companies")
+
+
+grp = load("gen-role-packages")
+MANIFEST = json.loads(grp.read_text(os.path.join(REPO, "config", "paperclip", "knowledge-manifest.json")))
+SETTINGS_REPO = os.path.join(REPO, "config", "paperclip", "agent-settings", "game-artist.settings.json")
+PACKAGE = grp.read_text(os.path.join(REPO, grp.OUT_DIR, "game-artist", "AGENTS.md"))
+SKILL = MANIFEST["skills"]["studio-art-identity-and-refinement"]
+
+
+def skill_hashes():
+    return {f"{SKILL['dir']}/{f}": grp.sha256(grp.read_text(os.path.join(REPO, SKILL["dir"], f)).replace("\r\n", "\n"))
+            for f in ("SKILL.md", SKILL["reference_file"])}
+
+
+class Extended(unittest.TestCase):
+    """The knowledge-delivery categories (ADR-024) on fixtures; nothing reaches Paperclip."""
+
+    def rows(self, full=None, bodies=None, company=None, skills=None, files=None):
+        f, b = matching_live()
+        full = full or f
+        bodies = bodies or b
+        return cad.extended(CONF, MANIFEST, company or {"requireBoardApprovalForNewAgents": True}, full, bodies,
+                            si.role_bodies(), skills or {}, lambda p: (files or {}).get(p), bp, grp)
+
+    def pick(self, rows, cat, role):
+        return [r for r in rows if r["category"] == cat and r["role"] == role]
+
+    def test_baseline_has_no_extended_drift(self):
+        rows = self.rows()
+        self.assertEqual([r for r in rows if r["status"] == "drift"], [])
+        dep = self.pick(rows, "instructions.deployment", "game-artist")[0]
+        self.assertTrue(dep["detail"].startswith("legacy-role-body; equals the role file"))
+        self.assertTrue(any(r["category"] == "unverified.runtime" for r in rows))
+        self.assertTrue(any(r["role"] == "code-reviewer" and "absent" in r["detail"] for r in rows))
+
+    def test_legacy_drift_still_reported(self):
+        full, bodies = matching_live()
+        bodies["game-artist"] = "older role text"
+        dep = self.pick(self.rows(full, bodies), "instructions.deployment", "game-artist")[0]
+        self.assertEqual(dep["status"], "drift")
+        self.assertIn("legacy-role-body; differs from the role file", dep["detail"])
+
+    def test_generated_package_detected_by_header(self):
+        full, bodies = matching_live()
+        bodies["game-artist"] = PACKAGE
+        rows = self.rows(full, bodies)
+        dep = self.pick(rows, "instructions.deployment", "game-artist")[0]
+        self.assertEqual(dep["status"], "ok", dep)
+        self.assertTrue(dep["detail"].startswith("generated-package; equals the committed package"))
+        head = grp.parse_header(PACKAGE)
+        src = self.pick(rows, "instructions.source", "game-artist")[0]["detail"]
+        self.assertIn(head["source_commit"], src)
+        self.assertIn(head["package_sha256"], src)
+        bodies["game-artist"] = PACKAGE.replace("Never force-push", "Force-push", 1)
+        dep = self.pick(self.rows(full, bodies), "instructions.deployment", "game-artist")[0]
+        self.assertEqual(dep["status"], "drift")
+        self.assertIn("header hash does not match", dep["detail"])
+
+    def test_settings_file_memory_policy(self):
+        full, bodies = matching_live()
+        full["game-artist"]["adapterConfig"]["extraArgs"] += ["--settings", "X:/ws/agent-settings/game-artist.settings.json"]
+        good = grp.read_text(SETTINGS_REPO)
+        rows = self.rows(full, bodies, files={"X:/ws/agent-settings/game-artist.settings.json": good})
+        mem = self.pick(rows, "memory.policy", "game-artist")[0]
+        self.assertEqual(mem["status"], "ok")
+        self.assertIn("autoMemoryEnabled=false", mem["detail"])
+        self.assertIn("--settings X:/ws/agent-settings/game-artist.settings.json",
+                      self.pick(rows, "adapter.config", "game-artist")[0]["detail"])
+        changed = json.dumps({**json.loads(good), "autoMemoryEnabled": True})
+        mem = self.pick(self.rows(full, bodies, files={"X:/ws/agent-settings/game-artist.settings.json": changed}),
+                        "memory.policy", "game-artist")[0]
+        self.assertEqual((mem["status"], "differs from" in mem["detail"]), ("drift", True))
+        mem = self.pick(self.rows(full, bodies, files={}), "memory.policy", "game-artist")[0]
+        self.assertEqual((mem["status"], "missing" in mem["detail"]), ("drift", True))
+
+    def test_assigned_skill_revision(self):
+        full, bodies = matching_live()
+        full["game-artist"]["adapterConfig"]["paperclipSkillSync"] = {"desiredSkills": ["company/studio-art-identity-and-refinement"]}
+        ok = self.pick(self.rows(full, bodies, skills={"game-artist": {"files": skill_hashes()}}),
+                       "skills.assigned", "game-artist")[0]
+        self.assertEqual(ok["status"], "ok", ok)
+        changed = {k: "0" * 64 for k in skill_hashes()}
+        bad = self.pick(self.rows(full, bodies, skills={"game-artist": {"files": changed}}), "skills.assigned", "game-artist")[0]
+        self.assertEqual(bad["status"], "drift")
+        unread = self.pick(self.rows(full, bodies, skills={}), "skills.assigned", "game-artist")[0]
+        self.assertEqual(unread["status"], "unverified")
+        full["director"]["adapterConfig"]["paperclipSkillSync"] = {"desiredSkills": ["company/studio-art-identity-and-refinement"]}
+        other = self.pick(self.rows(full, bodies), "skills.assigned", "director")[0]
+        self.assertEqual(other["status"], "drift")
+
+    def test_adapter_permissions_and_company(self):
+        full, bodies = matching_live()
+        full["game-artist"]["permissions"]["canCreateSkills"] = True
+        full["director"]["adapterConfig"]["dangerouslySkipPermissions"] = True
+        rows = self.rows(full, bodies, company={"requireBoardApprovalForNewAgents": False})
+        drifts = {(r["category"], r["role"]) for r in rows if r["status"] == "drift"}
+        self.assertEqual(drifts, {("adapter.permissions", "game-artist"), ("adapter.config", "director"),
+                                  ("adapter.company", "*")})
+
+    def test_offline_fixture_mode_in_main(self):
+        import tempfile
+        full, bodies = matching_live()
+        bodies["game-artist"] = PACKAGE
+        q = "?path=AGENTS.md"
+        fx = {"get": {"/companies": [COMPANY], "/companies/c-1": {**COMPANY, "requireBoardApprovalForNewAgents": True},
+                      "/companies/c-1/agents": [{"id": s, "urlKey": s} for s in full]}, "files": {}}
+        for s in full:
+            fx["get"][f"/agents/{s}"] = full[s]
+            fx["get"][f"/agents/{s}/instructions-bundle/file{q}"] = {"content": bodies[s]}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "fx.json")
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(fx, f)
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                code = cad.main(["--company", "SOU", "--fixtures", path], get=None)
+        text = out.getvalue()
+        self.assertNotIn("game-artist: AGENTS.md differs", text)  # an intact package is judged by instructions.deployment
+        self.assertIn("generated-package; equals the committed package", text)
+        self.assertIn("Extended: 0 drift", text)
+        self.assertEqual(code, 0, text)
 
 
 if __name__ == "__main__":
