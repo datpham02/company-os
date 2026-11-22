@@ -293,6 +293,7 @@
         "Bash(godot --path . --write-movie .godot/* --quit-after *)",
         "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)",
         "Bash(python -I ~/game-studio-workspace/tools/comfy-draft.py *)",
+        "Bash(python -I ~/game-studio-workspace/tools/comfy-edit.py *)",
         "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)"
       ],
       "runtime": {
