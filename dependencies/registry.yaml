@@ -390,7 +390,7 @@ dependencies:
     verifiedVersion: "birefnet_finetuned_toonout.pth 885,046,394 bytes, SHA256 as pinned, kept in rnd/models/_sources; converted by the Board to toonout_birefnet.safetensors (SHA256 4a034286212c162306eb9d71d80978b5028b06eeedb3b5a69a41fa006c948482) by stripping the training prefix module._orig_mod. from all 754 keys, tensors unchanged; key set and shapes equal to BiRefNet; smoke test 2.1 s, clean mask"
     install:
       strategy: external-service
-      reference: "rnd/download_tier1.sh (Board only) into rnd/models/background_removal"
+      reference: "rnd/download_tier1.sh (Board only): the published .pth into rnd/models/_sources, then the Board converts it to rnd/models/background_removal/toonout_birefnet.safetensors (key-prefix strip, tensors unchanged)"
     integrationStatus: evaluating   # D2 tier 1, spike S7, R&D only
     usedBy: []
     compatibility: "The published .pth (PyTorch pickle container, read only with weights_only=True) is not accepted by the core loader because of a training key prefix; the converted safetensors file loads in core LoadBackgroundRemovalModel."
