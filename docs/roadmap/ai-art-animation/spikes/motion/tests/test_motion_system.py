@@ -809,6 +809,10 @@ class BoardCodeReviewTests(unittest.TestCase):
         cases = {
             "out-of-range event frame": (lambda s, m: m["events"][1].update(frame=500), "motion.events[1].frame"),
             "invalid phase range": (lambda s, m: m["phases"][2].update(start=50, end=40), "motion.phases[2]"),
+            # Board review 2026-11-23: an empty windup (start == end) must be invalid input, never reach run_checks'
+            # min() over the windup interval (which would raise on an empty slice).
+            "empty windup phase": (lambda s, m: [p.update(end=p["start"]) for p in m["phases"] if p["name"] == "windup"],
+                                   "(windup)"),
             "missing attachment asset": (lambda s, m: s["attachments"]["hammer"].update(asset="nope"), "structure.attachments.hammer.asset"),
             "missing contact point": (lambda s, m: s["contacts"]["foot_k"].pop("toe"), "structure.contacts.foot_k.toe"),
             "unknown anatomy profile": (lambda s, m: s["anatomy"].update(profile="../profiles/nope.json"), "structure.anatomy.profile"),
@@ -859,11 +863,16 @@ class BoardCodeReviewTests(unittest.TestCase):
             self.assertIn(word, g["threshold_status"])
 
     def test_benchmark_C_outcome(self):
-        """Actual motion benchmark: C as committed. Projection artefacts warn (advisory), nothing blocks except the
-        artistic review; with a bound review and approval it is accepted (warns never block)."""
+        """Actual motion benchmark: C as committed has an empty `recovery` phase [93, 93), which is invalid input
+        since the empty-phase fix (Board review 2026-11-23), so it is blocked and the reason names that phase.
+        With the empty phase removed, projection artefacts warn (advisory) and nothing blocks except the artistic
+        review; with a bound review and approval it is accepted (warns never block)."""
         with open(os.path.join(DATA, "attack_hammer_C.motion.json")) as fh:
             mC = json.load(fh)
         s, _ = load()
+        self.assertTrue(any("recovery" in p and "empty phases" in p for p in mo.input_problems(s, mC)),
+                        mo.input_problems(s, mC))
+        mC = dict(mC, phases=[p for p in mC["phases"] if p["start"] < p["end"]])
         rep = validate_with_review(s, mC)
         self.assertEqual(rep["verdict"], "accepted", rep["summary"]["blocked_by"] + rep["summary"]["rejected_by"])
         self.assertTrue(rep["summary"]["warnings"])

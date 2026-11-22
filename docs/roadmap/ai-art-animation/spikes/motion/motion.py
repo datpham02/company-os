@@ -422,8 +422,11 @@ def input_problems(s, m):
             bad(f"motion.keys[{i}].ease", f"{k.get('ease')!r} is not one of {sorted(EASE)}")
     for i, ph in enumerate(m.get("phases", [])):
         a, b = ph.get("start"), ph.get("end")
-        if not (isinstance(a, int) and isinstance(b, int) and 0 <= a <= b <= n):
-            bad(f"motion.phases[{i}] ({ph.get('name')})", f"range [{a}, {b}) must satisfy 0 <= start <= end <= {n}")
+        # Empty phases (start == end) are rejected: no schema field declares a phase optional and the measurements
+        # (e.g. min() over the windup interval in run_checks) need at least one frame (Board review 2026-11-23).
+        if not (isinstance(a, int) and isinstance(b, int) and 0 <= a < b <= n):
+            bad(f"motion.phases[{i}] ({ph.get('name')})",
+                f"range [{a}, {b}) must satisfy 0 <= start < end <= {n} (empty phases are not supported)")
     for i, e in enumerate(m.get("events", [])):
         f = e.get("frame")
         if not (isinstance(f, int) and 0 <= f < n):
