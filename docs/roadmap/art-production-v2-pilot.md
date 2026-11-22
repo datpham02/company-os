@@ -36,10 +36,10 @@ The art Task merges before the asset exists in the game, and the integration Tas
 | Stage | Deckbound registry status | Reached by |
 |---|---|---|
 | Art-ready | `approved` | Art Task (SOU-64 to SOU-69, L0) approved and merged |
-| Integration-ready | `integrated` | SOU-61 (or the Board's smaller pilot integration Task) approved and merged |
+| Integration-ready | `integrated` | SOU-61 (or the Board's smaller pilot integration Task) approved and merged; for the Scrivener, SOU-77 (rig) as well |
 | Verified | `verified` | `qa`'s verdict on that integration Task names the asset as verified |
 
-Every pilot art Task names its integration Task (SOU-61, or the replacement the Board creates); in-context checks are deferred only to it and stay `UNVERIFIED` until it validates them. **An asset counts as production-accepted in G8 only when it is `verified`.** A failed deferred check becomes an L0 fix Task, counted once as integration rework (§4.4).
+Every pilot art Task names its integration Task (SOU-61, or the replacement the Board creates; the Scrivener's rig checks go to SOU-77); in-context checks are deferred only to it and stay `UNVERIFIED` until it validates them. **An asset counts as production-accepted in G8 only when it is `verified`.** A failed deferred check becomes an L0 fix Task, counted once as integration rework (§4.4).
 
 ### 3.1 Contextual spec checks: static evidence or integration
 Classified 2026-11-22 from the Deckbound specs. "Static" means provable with the approved art tools at art-ready; everything else needs a named integration Task and stays `UNVERIFIED` until that Task validates it. An unverifiable check is never marked passed.
@@ -49,6 +49,7 @@ Classified 2026-11-22 from the Deckbound specs. "Static" means provable with the
 | SOU-66 | Dimensions, naming, size and memory, provenance, originality; subject inside the central 60% and readable at reduced contrast | Yes (`art-ops info`, `grade --contrast` + `resize` previews, review) | — |
 | SOU-66 | Readability under the compact-face **text overlay**; text **4.5:1** in the reduced-contrast mockup | **No**: art-ops cannot render text or composite a card frame | **SOU-73** (card integration, `ui-designer`; Board decision 2026-11-22), blocked by SOU-66, SOU-50, SOU-61 |
 | SOU-66 | Editable source `art_src/cards/*.kra` | Not producible by agents (no Krita); PR #20 made Krita optional | Spec line replaced: source = generated, reproducible from provenance and the staged workflow JSON (SOU-66 description) |
+| SOU-64 (rig) | Parts rotate without gaps in the engine; draw order and overlap; `idle` and `action_tear_page` timing and `release` marker; binding swap; pivot | No: needs the Skeleton2D rig | **SOU-77** (Scrivener rig integration, `gameplay-programmer`, Board decision 2026-11-22: a separate Task, not an extension of SOU-61) |
 | SOU-64, SOU-65, SOU-68 | Readability over the real background; scale against the other slice assets; animation timing in context | No | **SOU-61** |
 | SOU-67 | Greyscale distinguishability; dimensions, alpha, frame order | Yes (`grade --saturation 0`, `info`) | — |
 | SOU-67 | Colour-blind simulation; glyph at about 83 px on a phone; fray VFX over the slot and not hiding the telegraph | No (no colour-blind filter; device and in-scene checks) | **A named integration Task is mandatory before SOU-67 is released.** None exists yet; until the Board names one, SOU-67 is not released |
@@ -66,7 +67,8 @@ Classified 2026-11-22 from the Deckbound specs. "Static" means provable with the
 | SOU-68 | Combat background, flooded hall | L1 | `game-artist` | `qa`, `director`, Board |
 | SOU-69 | Combat UI composition (decorative UI art; layout in existing M1 UI work) | L1 | `game-artist` (R7) | `qa`, `director`, `ui-designer`, Board |
 | **SOU-72** (L0, §4.4) | `enemy_attacker` hit state, 2 frames | L0 | `game-artist` | `qa`, `game-designer`, Board |
-| SOU-61 | Swap-in to the game: integration and every check deferred by SOU-64, SOU-65, SOU-68 | Integration | `gameplay-programmer` (R7) | `qa`, `game-artist` (visual result), Board |
+| SOU-77 | The Scrivener's Skeleton2D rig from SOU-64's atlas, standalone scene; validates the rig checks deferred by SOU-64 | Integration | `gameplay-programmer` | `qa`, `game-artist` (visual result), Board |
+| SOU-61 | Swap-in to the game: integration and every combat-context check deferred by SOU-64, SOU-65, SOU-68; instances SOU-77's rig | Integration | `gameplay-programmer` (R7) | `qa`, `game-artist` (visual result), Board |
 | **SOU-73** | Card integration for `card_art_sample`: text-overlay readability and 4.5:1 (checks deferred by SOU-66). Evidence by the existing UI rule (handoff-templates, evidence table): engine frames from the allowed Godot commands stay in the Task Workspace (`.godot/`), listed by path, recaptured by `qa`; not committed, no new permission | Integration (UI) | `ui-designer` | `qa`, `game-artist`, Board |
 
 ### 4.2 Blocker relations (Paperclip, not prose)
@@ -76,11 +78,12 @@ Classified 2026-11-22 from the Deckbound specs. "Static" means provable with the
 | SOU-65 | SOU-71 (the enemies follow the main character's chosen direction) |
 | SOU-69 | SOU-68 (the UI is composed against the chosen background) |
 | SOU-72 (L0 sample) | SOU-65 |
-| SOU-61 | SOU-52, SOU-54, SOU-56, SOU-64, SOU-65, SOU-68 (its scope is the Scrivener, the two commons and the background only) |
+| SOU-77 | SOU-64 |
+| SOU-61 | SOU-52, SOU-54, SOU-56, SOU-64, SOU-65, SOU-68, SOU-77 (its scope is the Scrivener, the two commons and the background only) |
 | SOU-73 | SOU-66, SOU-50, SOU-61 |
 SOU-66, SOU-67 and SOU-68 have no art blockers. A cancelled Task has its relations moved to its replacement first (task-contract §6). **Schedule note:** SOU-61 also waits for the M1 gameplay chain (SOU-52, SOU-54), so the integrated slice that G8 PASS requires depends on M1 progress; the Board may split a smaller pilot integration Task that is not blocked by SOU-54, if it wants G8 earlier.
 
-SOU-67 and SOU-69 are released only after the Board names their integration Task (§3.1). Release order (WIP 1 per agent): SOU-66 (G7(b)) → SOU-71 → SOU-68 → SOU-64 → SOU-65 → SOU-67 → SOU-69 → SOU-72 → SOU-61 → SOU-73.
+SOU-67 and SOU-69 are released only after the Board names their integration Task (§3.1). Release order (WIP 1 per agent): SOU-66 (G7(b)) → SOU-71 → SOU-68 → SOU-76 → SOU-64 → SOU-77 → SOU-65 → SOU-67 → SOU-69 → SOU-72 → SOU-61 → SOU-73.
 
 ### 4.3 Budgets and stop conditions
 Written into each Task description (R6). Defaults; the Board may set others per Task.
@@ -152,7 +155,7 @@ G8 is **NOT EVALUATED** until every Task of §4.1 has a final outcome and every 
    - F2: more than half of the non-excluded production art Tasks are human-assisted;
    - F3: no production art Task reached art-ready.
 2. Otherwise **PASS** if all of:
-   - P1: a **vertical slice is verified**: the Scrivener (SOU-64), at least one common enemy (SOU-65) and the combat background (SOU-68), through SOU-61 or the Board's pilot integration Task, with `qa`'s verdict;
+   - P1: a **vertical slice is verified**: the Scrivener (SOU-64), at least one common enemy (SOU-65) and the combat background (SOU-68), through SOU-61 or the Board's pilot integration Task (the Scrivener also through SOU-77's rig checks), with `qa`'s verdict;
    - P2: the L2 direction (SOU-71) was accepted by its deciding stage;
    - P3: at least 4 of the 6 production art Tasks (or two thirds of the non-excluded ones, rounded up) are art-ready;
    - P4: the L0 sample is art-ready;
@@ -253,7 +256,32 @@ The Director's follow-up (SOU-75, card prompt guidance) was created through the 
 | SOU-71-F06 | The author could not change the Task status; one disposition-repair run | Lifecycle (OQ-048) | Not counted |
 | SOU-71-F07 | B is about 5 heads with the book at the chest, against Art Bible §5; low value separation on `#1B2026`; hidden face | Artistic, carried into the production contract | Not counted |
 
-**Before SOU-64 is released:** SOU-76 (Game Artist, documents only; reviewers Director, QA, Board) synchronizes Art Bible §5 and the Scrivener spec with B: proportions and book placement, AI-compatible source deliverables instead of a mandatory Krita file, one reconciled atlas limit and memory budget, the lantern/book/hand arrangement for `action_tear_page`, the production requirements as checkable lines, and the integration owner for rotation, overlap and animation checks once the Board names it. SOU-64 is blocked by SOU-76 and carries the Board's production requirements in its description.
+**Before SOU-64 is released:** SOU-76 (Game Artist, documents only; reviewers Director, QA, Board) synchronizes Art Bible §5 and the Scrivener spec with B: proportions and book placement, AI-compatible source deliverables instead of a mandatory Krita file, one reconciled atlas limit and memory budget, the lantern/book/hand arrangement for `action_tear_page`, the production requirements as checkable lines, and the integration owner for rotation, overlap and animation checks: **SOU-77** (Board decision 2026-11-22, option 1: a separate rig Task blocked only by SOU-64, so the rig is proven before the M1 gameplay chain; SOU-61 is blocked by SOU-77 and instances its rig). SOU-64 is blocked by SOU-76 and carries the Board's production requirements in its description.
+
+### Pilot Task result: SOU-68 (combat background, flooded hall, L1), done 2026-11-22
+**Lifecycle:** release → Game Artist handoff (art-ready, PR #24) → QA changes requested (value range unmeasured, file size, checklist) → fix 55019e4 → **review race: Paperclip blocked the Task with a Board-owned recovery** → Board restore and explicit QA wake → QA approved → Director approved with a coherence exception → Board approved; deckbound PR #24 merged at 6c8e5dd (reviewed head 55019e4, CI green) via the Board-authorized admin-merge exception; the PR body's file size corrected by the Board at merge.
+
+| Item | Record |
+|---|---|
+| Asset | `bg_combat_flooded_hall`, 2640 x 1080, opaque, 1,309,779 bytes (budget 3.5 MB); FLUX schnell seed 2202 + `art-ops` resize and grade |
+| Generated images | 5 of the 32 maximum; refine rounds 2 of 2 |
+| Review rounds | QA 2 (changes requested, approved); Director 1 (approved, coherence exception: teal floor variation, condition checked in SOU-61); Board 1 |
+| First-pass acceptance | No |
+| Scores (Director) | readability 1, art direction 2, craft 2, coherence 1 (exception), production 2, evidence 1 |
+| Board value measurement | CIE L\* with Pillow on the export: mean 6.6, p50 5.6, p95 12.8, p99 17.5 (Water black 5.6, Stone dark 12.0, Stone mid 27.9); 0.33% of pixels above Stone mid (lantern and reflection only). The value rule is met; the image is darker than the Director's by-eye reading, so SOU-61's device check covers readability on a phone |
+| Deferred to SOU-61 (UNVERIFIED) | readability of the Scrivener, enemies and telegraphs over the background (right-wall block edges, Bind-accent separation); scale and 16:9 / 20:9 / 22:9 crops |
+| Runs | 7: Game Artist 3 (261.4 + 0 + 46.0 s), QA 3 (36.0 + 16.4 + 24.1 s), Director 1 (155.0 s); **538.9 s** |
+| Reported cost | **$0.218** for the one run that reports it (9f03d1a1); the other six report no cost: **UNAVAILABLE** |
+| Tokens (all 7 runs) | input 441,816 · output 3,987 · cache read 3,943,677 |
+| Human intervention (Board) | Release; one lifecycle repair (recovery resolve plus reviewer wake, three attempts); measurement of the value range; PR body correction; merge-exception decision and approval |
+
+| ID | Finding | Class | G8 tally |
+|---|---|---|---|
+| SOU-68-F01 | No approved tool measures the value range: `art-ops` has no statistics command (mean luminance, percentiles against the Art Bible §3 anchors), so the value rule was judged by eye and measured only by the Board | Tool capability gap | **Counts once** (2D read-only image inspection / an `art-ops` `stats` command) |
+| SOU-68-F02 | Handoff/review race: QA's changes-requested run ended at 01:55 and the fix handoff landed at 01:56; Paperclip's one retry started no reviewer run and it moved the Task to `blocked` with a Board-owned recovery (`execution_review_participant_recovery`). `PATCH status` and `recovery-actions/resolve` (outcome `restored`) alone re-blocked it at once; resolve followed by an explicit reviewer wake restored the review | Lifecycle (OQ-048 family) | Not counted |
+| SOU-68-F03 | The Director could not observe CI (no authenticated `gh` in its runtime; `curl` and web fetch refused); recurrence of SOU-71-F05 | Review-evidence gap | Not counted (already recorded) |
+| SOU-68-F04 | The author could not correct the PR body (`gh pr edit` refused); the wrong file size stayed in the PR until the Board fixed it | Permission gap (procedural) | Not counted |
+| SOU-68-F05 | QA's round-2 re-review took 24 s; its verdict was accurate, and the Board re-checked CI, head and write set independently | Review depth (observation) | Not counted |
 
 ### Incident 2026-11-22: SOU-66 first release
 - **Classification:** runtime permission and lifecycle failure, **not an artistic capability failure**. No image was generated, so it says nothing about art quality, and it is not counted in G8's tool-capability tally. It is counted in the pilot's cost and human-intervention records.
