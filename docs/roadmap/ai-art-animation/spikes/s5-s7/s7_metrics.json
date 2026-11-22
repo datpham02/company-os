@@ -1,0 +1,200 @@
+[
+ {
+  "seed": "6101",
+  "key": {
+   "leftover_bg": 0.14,
+   "soft_edge": 0.04,
+   "shadow_band": 26.1
+  },
+  "birefnet": {
+   "leftover_bg": 0.14,
+   "soft_edge": 98.44,
+   "shadow_band": 25.0
+  },
+  "toonout": {
+   "leftover_bg": 0.08,
+   "soft_edge": 78.92,
+   "shadow_band": 24.9
+  }
+ },
+ {
+  "seed": "6102",
+  "key": {
+   "leftover_bg": 0.03,
+   "soft_edge": 0.06,
+   "shadow_band": 18.0
+  },
+  "birefnet": {
+   "leftover_bg": 0.01,
+   "soft_edge": 97.86,
+   "shadow_band": 2.8
+  },
+  "toonout": {
+   "leftover_bg": 1.17,
+   "soft_edge": 78.08,
+   "shadow_band": 3.3
+  }
+ },
+ {
+  "seed": "6103",
+  "key": {
+   "leftover_bg": 0.03,
+   "soft_edge": 0.04,
+   "shadow_band": 42.8
+  },
+  "birefnet": {
+   "leftover_bg": 0.03,
+   "soft_edge": 98.53,
+   "shadow_band": 33.4
+  },
+  "toonout": {
+   "leftover_bg": 0.04,
+   "soft_edge": 61.98,
+   "shadow_band": 34.1
+  }
+ },
+ {
+  "seed": "6104",
+  "key": {
+   "leftover_bg": 0.01,
+   "soft_edge": 0.09,
+   "shadow_band": 2.6
+  },
+  "birefnet": {
+   "leftover_bg": 0.0,
+   "soft_edge": 97.84,
+   "shadow_band": 1.3
+  },
+  "toonout": {
+   "leftover_bg": 0.01,
+   "soft_edge": 71.36,
+   "shadow_band": 1.3
+  }
+ },
+ {
+  "seed": "6111",
+  "key": {
+   "leftover_bg": 2.95,
+   "soft_edge": 0.06,
+   "shadow_band": 68.2
+  },
+  "birefnet": {
+   "leftover_bg": 0.02,
+   "soft_edge": 96.73,
+   "shadow_band": 1.2
+  },
+  "toonout": {
+   "leftover_bg": 0.05,
+   "soft_edge": 68.29,
+   "shadow_band": 0.6
+  }
+ },
+ {
+  "seed": "6114",
+  "key": {
+   "leftover_bg": 5.5,
+   "soft_edge": 0.06,
+   "shadow_band": 69.2
+  },
+  "birefnet": {
+   "leftover_bg": 0.02,
+   "soft_edge": 97.09,
+   "shadow_band": 30.3
+  },
+  "toonout": {
+   "leftover_bg": 0.02,
+   "soft_edge": 62.62,
+   "shadow_band": 30.1
+  }
+ },
+ {
+  "seed": "6123",
+  "key": {
+   "leftover_bg": 0.03,
+   "soft_edge": 0.16,
+   "shadow_band": 80.2
+  },
+  "birefnet": {
+   "leftover_bg": 0.04,
+   "soft_edge": 95.94,
+   "shadow_band": 3.5
+  },
+  "toonout": {
+   "leftover_bg": 0.09,
+   "soft_edge": 56.39,
+   "shadow_band": 3.4
+  }
+ },
+ {
+  "seed": "6124",
+  "key": {
+   "leftover_bg": 5.44,
+   "soft_edge": 0.1,
+   "shadow_band": 68.3
+  },
+  "birefnet": {
+   "leftover_bg": 0.02,
+   "soft_edge": 99.43,
+   "shadow_band": 41.5
+  },
+  "toonout": {
+   "leftover_bg": 0.09,
+   "soft_edge": 57.32,
+   "shadow_band": 44.2
+  }
+ },
+ {
+  "seed": "6115",
+  "key": {
+   "leftover_bg": 5.78,
+   "soft_edge": 0.08,
+   "shadow_band": 76.7
+  },
+  "birefnet": {
+   "leftover_bg": 0.03,
+   "soft_edge": 95.43,
+   "shadow_band": 28.4
+  },
+  "toonout": {
+   "leftover_bg": 0.03,
+   "soft_edge": 62.78,
+   "shadow_band": 28.0
+  }
+ },
+ {
+  "seed": "6116",
+  "key": {
+   "leftover_bg": 4.14,
+   "soft_edge": 0.05,
+   "shadow_band": 51.2
+  },
+  "birefnet": {
+   "leftover_bg": 0.04,
+   "soft_edge": 96.18,
+   "shadow_band": 7.0
+  },
+  "toonout": {
+   "leftover_bg": 0.04,
+   "soft_edge": 59.73,
+   "shadow_band": 20.7
+  }
+ },
+ {
+  "seed": "6127",
+  "key": {
+   "leftover_bg": 24.76,
+   "soft_edge": 0.29,
+   "shadow_band": 63.8
+  },
+  "birefnet": {
+   "leftover_bg": 0.03,
+   "soft_edge": 97.44,
+   "shadow_band": 3.9
+  },
+  "toonout": {
+   "leftover_bg": 0.11,
+   "soft_edge": 65.33,
+   "shadow_band": 3.3
+  }
+ }
+]
