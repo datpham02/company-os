@@ -239,6 +239,126 @@ class RestoreFailure(Case):
         self.assertEqual(os.listdir(os.path.join(ce.comfy_input_dir(), "edit")), [])
 
 
+class Matte(Case):
+    """matte: BiRefNet mask -> alpha snap -> leftover-backdrop check (the server is faked)."""
+
+    def setUp(self):
+        super().setUp()
+        model = ce.matte_model_path()
+        os.makedirs(os.path.dirname(model))
+        with open(model, "wb") as f:
+            f.write(b"fake model")
+        self.saved_sha = ce.MATTE_MODEL["sha256"]
+        ce.MATTE_MODEL["sha256"] = ce.sha256(model)
+        self.mask_px = None
+        ce.fetch_image = self.fake_mask
+
+    def tearDown(self):
+        ce.MATTE_MODEL["sha256"] = self.saved_sha
+        super().tearDown()
+
+    def fake_mask(self, _img):
+        buf = io.BytesIO()
+        Image.fromarray(self.mask_px, "L").save(buf, "PNG")
+        return buf.getvalue()
+
+    def figure(self, rel="art_src/fig.png", hole=False, bg=(240, 238, 230)):
+        """A dark 'figure' block on a flat light backdrop; with hole, a backdrop-coloured pocket inside it
+        (the SOU-81 lantern halo: backdrop enclosed by the figure)."""
+        a = np.zeros((160, 128, 3), "uint8"); a[:] = bg
+        a[40:140, 30:100] = (40, 50, 60)
+        if hole:
+            a[70:100, 50:80] = bg
+        Image.fromarray(a, "RGB").save(os.path.join(self.ws, rel))
+        return a
+
+    def files(self):
+        d = os.path.join(self.staging, "hero")
+        return sorted(os.listdir(d)) if os.path.isdir(d) else []
+
+    def test_cut_out_snapped_and_recorded(self):
+        src = self.figure()
+        m = np.full((160, 128), 3, "uint8"); m[40:140, 30:100] = 251; m[40, 30:100] = 120
+        self.mask_px = m
+        self.go("matte", "--asset", "hero", "--input", "art_src/fig.png")
+        rec = self.records()[0]
+        self.assertEqual((rec["template"], rec["check"], rec["licence"]), ("matte", "passed", "MIT"))
+        self.assertEqual(rec["backdrop"], [240, 238, 230]); self.assertEqual(rec["backdrop_source"], "top corners")
+        self.assertEqual(rec["leftover_backdrop_pct"], 0.0)
+        with Image.open(os.path.join(self.staging, "hero", rec["workflow"].replace(".workflow.json", ".png"))) as im:
+            out = np.asarray(im.convert("RGBA"))
+        self.assertTrue((out[41:140, 30:100, 3] == 255).all())        # 251 snapped to 255
+        self.assertTrue((out[:40, :, 3] == 0).all())                   # 3 floored to 0
+        self.assertTrue((out[40, 30:100, 3] == 120).all())             # edge alpha kept
+        self.assertTrue((out[..., :3] == src).all())                   # colour untouched
+        wf = self.workflows[0]
+        self.assertEqual(wf["21"]["class_type"], "RemoveBackground")
+        self.assertEqual(wf["20"]["inputs"]["bg_removal_name"], "birefnet.safetensors")
+        self.assertTrue(rec["raw_mask"] in self.files())
+        self.assertEqual(os.listdir(os.path.join(ce.comfy_input_dir(), "edit")), [])
+        self.assertEqual(os.listdir(ce.comfy_output_dir()), [])
+
+    def test_enclosed_backdrop_pocket_fails_loudly(self):
+        self.figure(hole=True)
+        m = np.zeros((160, 128), "uint8"); m[40:140, 30:100] = 255      # model kept the pocket opaque
+        self.mask_px = m
+        msg = self.refused("matte", "--asset", "hero", "--input", "art_src/fig.png")
+        self.assertIn("leftover backdrop", msg)
+        files = self.files()
+        self.assertEqual(len(files), 1); self.assertTrue(files[0].endswith("_rejected.png"))   # no cut-out, no provenance
+        self.assertEqual(os.listdir(os.path.join(ce.comfy_input_dir(), "edit")), [])
+        self.assertEqual(os.listdir(ce.comfy_output_dir()), [])
+
+    def test_enclosed_pocket_cleared_by_the_model_passes(self):
+        self.figure(hole=True)
+        m = np.zeros((160, 128), "uint8"); m[40:140, 30:100] = 255; m[70:100, 50:80] = 0
+        self.mask_px = m
+        self.go("matte", "--asset", "hero", "--input", "art_src/fig.png")
+        self.assertEqual(self.records()[0]["leftover_backdrop_pct"], 0.0)
+
+    def test_max_leftover_threshold(self):
+        self.figure(hole=True)
+        m = np.zeros((160, 128), "uint8"); m[40:140, 30:100] = 255; m[70:100, 50:78] = 0   # 2 px wide strip kept
+        self.mask_px = m   # 60 of 6160 opaque px = 0.974%
+        self.assertIn("above --max-leftover 0.5", self.refused("matte", "--asset", "hero", "--input", "art_src/fig.png"))
+        self.go("matte", "--asset", "hero", "--input", "art_src/fig.png", "--max-leftover", "1")
+        self.assertEqual(self.records()[0]["leftover_backdrop_pct"], 0.974)
+
+    def test_refusals(self):
+        self.figure()
+        self.mask_px = np.zeros((160, 128), "uint8")
+        self.assertIn("no figure", self.refused("matte", "--asset", "hero", "--input", "art_src/fig.png"))
+        for args, words in ((["--snap", "100"], "--snap"), (["--floor", "200"], "--floor"),
+                            (["--max-leftover", "5"], "--max-leftover"), (["--backdrop", "0", "0", "300"], "--backdrop")):
+            self.assertIn(words, self.refused("matte", "--asset", "hero", "--input", "art_src/fig.png", *args))
+        self.assertIn("asset id", self.refused("matte", "--asset", "../x", "--input", "art_src/fig.png"))
+        self.noise("art_src/t.png", (128, 128))                        # random alpha: already transparent
+        self.assertIn("transparency", self.refused("matte", "--asset", "hero", "--input", "art_src/t.png"))
+        Image.new("RGB", (32, 128), (255, 255, 255)).save(os.path.join(self.ws, "art_src", "small.png"))
+        self.assertIn("64-4096", self.refused("matte", "--asset", "hero", "--input", "art_src/small.png"))
+        self.noise("docs/fig.png", (128, 128), alpha=False)
+        self.assertIn("assets/slice/ or art_src/", self.refused("matte", "--asset", "hero", "--input", "docs/fig.png"))
+
+    def test_backdrop_must_be_flat_or_given(self):
+        a = self.figure()
+        a[:8, :8] = (0, 0, 0)                                          # one dark top corner
+        Image.fromarray(a, "RGB").save(os.path.join(self.ws, "art_src", "fig.png"))
+        m = np.zeros((160, 128), "uint8"); m[40:140, 30:100] = 255
+        self.mask_px = m
+        self.assertIn("flat", self.refused("matte", "--asset", "hero", "--input", "art_src/fig.png"))
+        self.go("matte", "--asset", "hero", "--input", "art_src/fig.png", "--backdrop", "240", "238", "230")
+        self.assertEqual(self.records()[0]["backdrop_source"], "given")
+
+    def test_model_missing_or_changed_is_refused_before_any_run(self):
+        self.figure()
+        ce.MATTE_MODEL["sha256"] = "0" * 64
+        self.assertIn("pinned SHA256", self.refused("matte", "--asset", "hero", "--input", "art_src/fig.png"))
+        os.remove(ce.matte_model_path())
+        self.assertIn("not installed", self.refused("matte", "--asset", "hero", "--input", "art_src/fig.png"))
+        self.assertEqual(self.workflows, [])
+        self.assertEqual(os.listdir(ce.comfy_input_dir()), [])
+
+
 class Restore(unittest.TestCase):
     def test_feathered_mask_exact_at_zero(self):
         rng = np.random.default_rng(3)

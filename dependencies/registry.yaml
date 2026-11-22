@@ -370,14 +370,14 @@ dependencies:
     license: "MIT (ZhengPeng7/BiRefNet and the Comfy-Org repackage)"
     required: false
     versionConstraint: "pinned: birefnet.safetensors SHA256 9ab37426bf4de0567af6b5d21b16151357149139362e6e8992021b8ce356a154"
-    verifiedVersion: "birefnet.safetensors 444,473,596 bytes, SHA256 as pinned; smoke test: RemoveBackground on an 832x1216 image in 4.0 s, clean mask, cast shadow excluded"
+    verifiedVersion: "birefnet.safetensors 444,473,596 bytes, SHA256 as pinned; smoke test: RemoveBackground on an 832x1216 image in 4.0 s, clean mask, cast shadow excluded; production (2026-11-22): comfy-edit.py matte on the 11 SOU-81 images, leftover backdrop 0.003-0.137%"
     install:
       strategy: external-service
-      reference: "rnd/download_tier1.sh (Board only) into rnd/models/background_removal"
-    integrationStatus: evaluating   # D2 tier 1, spike S7
-    usedBy: []
+      reference: "rnd/download_tier1.sh (Board only) into rnd/models/background_removal; production copy (Board, 2026-11-22): tools/ComfyUI_windows_portable/ComfyUI/models/background_removal/birefnet.safetensors, SHA256 checked; comfy-edit.py checks it before every matte run"
+    integrationStatus: integrated   # Board decision 2026-11-22 after spike S7: comfy-edit.py matte
+    usedBy: [game-artist]
     compatibility: "ComfyUI core LoadBackgroundRemovalModel / RemoveBackground (birefnet config)."
-    notes: "security review: 2026-11-22, safetensors, official hash match, MIT; production candidate if S7 passes."
+    notes: "security review: 2026-11-22, safetensors, official hash match, MIT. S7 passed; production use through comfy-edit.py matte only (Board 2026-11-22)."
 
   - id: toonout
     name: ToonOut (BiRefNet fine-tuned for anime-style cut-outs) — R&D only

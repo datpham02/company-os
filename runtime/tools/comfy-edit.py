@@ -1,4 +1,4 @@
-"""Edit the project's own art with the studio's local ComfyUI: img2img and masked inpainting (Phase 2A stage 1).
+"""Edit the project's own art with the studio's local ComfyUI: img2img, masked inpainting and matting.
 
 Board decision 2026-11-22 (early 2A after SOU-64's tool capability failure): input images are allowed through
 this wrapper only; `comfy-draft.py` stays text-to-image (D1). Run from the Task Workspace root:
@@ -7,6 +7,18 @@ this wrapper only; `comfy-draft.py` stays text-to-image (D1). Run from the Task 
          --prompt "..." --denoise 0.15-0.75 [--seed N] [--count 1-4] [--steps N] [--backdrop R G B]
   python -I ~/game-studio-workspace/tools/comfy-edit.py inpaint --asset <id> --model sdxl --input <png>
          --mask <png> --prompt "..." [--denoise 0.3-1.0] [--seed N] [--count 1-4] [--steps N] [--backdrop R G B]
+  python -I ~/game-studio-workspace/tools/comfy-edit.py matte --asset <id> --input <png>
+         [--snap 128-255] [--floor 0-127] [--max-leftover 0-2] [--backdrop R G B]
+
+img2img and inpaint are Phase 2A stage 1. `matte` (Board decision 2026-11-22, after spike S7) cuts a figure out
+of an opaque generation on a flat backdrop with BiRefNet (core RemoveBackground node, MIT, registry entry
+`birefnet`). It replaces `art-ops key` for figures; `key` stays for flat non-figure assets. The model's alpha is
+snapped (>= --snap becomes 255, <= --floor becomes 0; BiRefNet leaves figure interiors about 1% translucent),
+then the leftover-backdrop check runs: opaque pixels (alpha >= 128) within LEFTOVER_DIST of the backdrop colour,
+as a percentage of opaque pixels. Above --max-leftover the run fails and keeps only a `_rejected` image for
+review (a kept shadow, an enclosed backdrop pocket such as a lantern halo). The backdrop colour is the median of
+the two top corners unless --backdrop is given; a backdrop that is not flat there is refused. The model file's
+SHA256 is checked against the pinned value on every run.
 
 It re-runs itself with ComfyUI's embedded Python (Pillow, NumPy) and uses art-ops.py (installed next to it)
 for the path boundary, so inputs follow the same rules as art-ops.
@@ -26,8 +38,9 @@ Prerequisites enforced here (roadmap 2A):
 
 Inputs: PNG under staging/art/<asset_id>/ or under the Task Workspace's assets/slice/ or art_src/ (project art
 with recorded provenance, never another game's, studio's or artist's work: the latter is policy). Sides
-256-2048 px, multiples of 16. Transparent inputs are flattened onto --backdrop (default 128 128 128) for the
-model; the restored inpaint result keeps the original alpha outside the mask.
+256-2048 px, multiples of 16 (matte: 64-4096 px, any size, fully opaque). Transparent inputs are flattened onto
+--backdrop (default 128 128 128) for the model; the restored inpaint result keeps the original alpha outside the
+mask.
 """
 import argparse
 import datetime
@@ -77,6 +90,13 @@ MODELS = {
 SUPPORTED = {("img2img", "sdxl"), ("img2img", "flux"), ("inpaint", "sdxl")}
 DENOISE = {"img2img": (0.15, 0.75), "inpaint": (0.3, 1.0)}
 MIN_SIDE, MAX_EDIT_SIDE, SIDE_STEP = 256, 2048, 16
+
+# matte: one pinned model (registry entry `birefnet`), installed by the Board into the production models folder.
+MATTE_MODEL = {"file": "birefnet.safetensors", "licence": "MIT", "registry": "birefnet",
+               "sha256": "9ab37426bf4de0567af6b5d21b16151357149139362e6e8992021b8ce356a154"}
+MATTE_MIN_SIDE, MATTE_MAX_SIDE = 64, 4096
+LEFTOVER_DIST = 40          # colour distance to the backdrop that counts as leftover backdrop (spike S7 metric)
+CORNER = 8                  # corner patch size for the backdrop estimate
 
 
 def fail(msg):
@@ -219,6 +239,126 @@ def restore_outside(original_rgba, edited_rgb, mask_l):
     return Image.fromarray(out, "RGBA"), changed_outside
 
 
+# ---------- matte ----------
+
+def matte_model_path():
+    return os.path.join(COMFY_DIR, "ComfyUI", "models", "background_removal", MATTE_MODEL["file"])
+
+
+def check_matte_model():
+    path = matte_model_path()
+    if not os.path.isfile(path) or os.path.islink(path):
+        fail(f"the matte model is not installed at {path}; the Board installs it (registry entry "
+             f"{MATTE_MODEL['registry']})")
+    if sha256(path) != MATTE_MODEL["sha256"]:
+        fail(f"{MATTE_MODEL['file']} does not match the pinned SHA256; refusing to run")
+
+
+def estimate_backdrop(rgb):
+    """Median colour of the two top corner patches; refused when those pixels are not one flat colour."""
+    h, w = rgb.shape[:2]
+    k = max(1, min(CORNER, h // 2, w // 2))
+    px = np.concatenate([rgb[:k, :k].reshape(-1, 3), rgb[:k, -k:].reshape(-1, 3)]).astype(float)
+    bg = np.median(px, axis=0)
+    if np.sqrt(((px - bg) ** 2).sum(-1)).max() > LEFTOVER_DIST:
+        fail("the top corners are not one flat backdrop colour; generate on a flat plain backdrop or give "
+             "--backdrop R G B")
+    return [int(round(v)) for v in bg]
+
+
+def snap_alpha(mask_l, snap, floor):
+    a = np.asarray(mask_l).astype(np.uint8).copy()
+    a[a >= snap] = 255
+    a[a <= floor] = 0
+    return a
+
+
+def matte_metrics(rgb, alpha, backdrop):
+    opaque = alpha >= 128
+    n = int(opaque.sum())
+    near = np.sqrt(((rgb.astype(float) - np.asarray(backdrop, float)) ** 2).sum(-1)) < LEFTOVER_DIST
+    soft = (alpha > 0) & (alpha < 255)
+    return {"opaque_pixels": n,
+            "leftover_backdrop_pct": round(100.0 * int((opaque & near).sum()) / max(1, n), 3),
+            "soft_edge_pct": round(100.0 * int(soft.sum()) / max(1, n), 3)}
+
+
+def matte_workflow(image_name, prefix):
+    return {
+        "10": {"class_type": "LoadImage", "inputs": {"image": image_name}},
+        "20": {"class_type": "LoadBackgroundRemovalModel", "inputs": {"bg_removal_name": MATTE_MODEL["file"]}},
+        "21": {"class_type": "RemoveBackground", "inputs": {"bg_removal_model": ["20", 0], "image": ["10", 0]}},
+        "22": {"class_type": "MaskToImage", "inputs": {"mask": ["21", 0]}},
+        "9": {"class_type": "SaveImage", "inputs": {"images": ["22", 0], "filename_prefix": prefix}},
+    }
+
+
+def run_matte(a):
+    validate_matte(a)
+    in_path = check_input(a.input, "--input")
+    original = art_ops.load(a.input)
+    w, h = original.size
+    if not (MATTE_MIN_SIDE <= w <= MATTE_MAX_SIDE and MATTE_MIN_SIDE <= h <= MATTE_MAX_SIDE):
+        fail(f"--input is {w}x{h}; matte needs {MATTE_MIN_SIDE}-{MATTE_MAX_SIDE} px per side")
+    rgba = np.asarray(original.convert("RGBA"))
+    if (rgba[..., 3] < 255).any():
+        fail("--input already has transparency; matte works on the opaque generation (its flat backdrop)")
+    rgb = np.ascontiguousarray(rgba[..., :3])
+    backdrop = list(a.backdrop) if a.backdrop is not None else estimate_backdrop(rgb)
+    check_matte_model()
+
+    version = ensure_server()
+    out_dir = os.path.join(STAGING_ROOT, a.asset)
+    os.makedirs(out_dir, exist_ok=True)
+    run_id = uuid.uuid4().hex[:12]
+    rel_dir = f"edit/{a.asset}/{run_id}"
+    run_in = os.path.join(comfy_input_dir(), "edit", a.asset, run_id)
+    os.makedirs(run_in)                                      # fresh; fails if it already exists
+    prefix = f"matte_{a.asset}_{run_id}"
+    stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    name = f"{a.asset}_matte_{stamp}_{run_id}"
+    try:
+        Image.fromarray(rgb, "RGB").save(os.path.join(run_in, "input.png"))
+        wf = matte_workflow(f"{rel_dir}/input.png", prefix)
+        images = run_prompt(wf)
+        if len(images) != 1:
+            fail(f"expected one mask, got {len(images)}")
+        mask = Image.open(io.BytesIO(fetch_image(images[0]))).convert("L")
+        if mask.size != original.size:
+            fail(f"model mask {mask.size} differs from the input {original.size}")
+        alpha = snap_alpha(mask, a.snap, a.floor)
+        m = matte_metrics(rgb, alpha, backdrop)
+        if m["opaque_pixels"] == 0:
+            fail("the model found no figure (no pixel with alpha >= 128); nothing written")
+        cut = Image.fromarray(np.dstack([rgb, alpha]), "RGBA")
+        if m["leftover_backdrop_pct"] > a.max_leftover:
+            rejected = os.path.join(out_dir, f"{name}_rejected.png")
+            cut.save(rejected)
+            fail(f"leftover backdrop {m['leftover_backdrop_pct']}% of opaque pixels is above --max-leftover "
+                 f"{a.max_leftover}% (backdrop {backdrop}): a kept shadow or an enclosed backdrop pocket. "
+                 f"No cut-out written; review image {rejected}")
+        mask_png = os.path.join(out_dir, f"{name}_mask.png")
+        mask.save(mask_png)
+        png = os.path.join(out_dir, f"{name}.png")
+        cut.save(png)
+        print(png)
+        record = {"asset": a.asset, "tool": f"ComfyUI {version} via comfy-edit.py", "template": "matte",
+                  "model": MATTE_MODEL["file"], "model_sha256": MATTE_MODEL["sha256"],
+                  "licence": MATTE_MODEL["licence"], "registry": MATTE_MODEL["registry"],
+                  "size": list(original.size), "input": a.input, "input_sha256": sha256(in_path),
+                  "backdrop": backdrop, "backdrop_source": "given" if a.backdrop is not None else "top corners",
+                  "snap": a.snap, "floor": a.floor, "max_leftover_pct": a.max_leftover, "check": "passed",
+                  **m, "raw_mask": os.path.basename(mask_png), "workflow": f"{name}.workflow.json",
+                  "created": stamp, "run_id": run_id}
+        with open(os.path.join(out_dir, f"{name}.workflow.json"), "w", encoding="utf-8") as f:
+            json.dump(wf, f, indent=1)
+        with open(os.path.join(out_dir, f"{name}.provenance.json"), "w", encoding="utf-8") as f:
+            json.dump(record, f, indent=1)
+        print(f"provenance {name}: " + json.dumps(record, ensure_ascii=False))
+    finally:
+        cleanup(run_in, prefix)
+
+
 # ---------- workflows (fixed templates, built in code) ----------
 
 def workflow(template, model, image_name, mask_name, prompt, negative, seed, steps, denoise, prefix):
@@ -256,6 +396,14 @@ def comfy_output_dir():
 def parse(argv):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = ap.add_subparsers(dest="template", required=True)
+    m = sub.add_parser("matte")
+    m.add_argument("--asset", required=True)
+    m.add_argument("--input", required=True)
+    m.add_argument("--snap", type=int, default=250, help="alpha at or above this becomes 255")
+    m.add_argument("--floor", type=int, default=8, help="alpha at or below this becomes 0")
+    m.add_argument("--max-leftover", type=float, default=0.5,
+                   help="percent of opaque pixels allowed near the backdrop colour")
+    m.add_argument("--backdrop", type=int, nargs=3, default=None)
     for t in ("img2img", "inpaint"):
         s = sub.add_parser(t)
         s.add_argument("--asset", required=True)
@@ -271,6 +419,19 @@ def parse(argv):
         s.add_argument("--steps", type=int, default=None)
         s.add_argument("--backdrop", type=int, nargs=3, default=[128, 128, 128])
     return ap.parse_args(argv)
+
+
+def validate_matte(a):
+    if not art_ops.ASSET_ID.match(a.asset):
+        fail("--asset must be an asset id (a-z, 0-9, _ or -)")
+    if not 128 <= a.snap <= 255:
+        fail("--snap must be between 128 and 255")
+    if not 0 <= a.floor <= 127:
+        fail("--floor must be between 0 and 127")
+    if not 0 <= a.max_leftover <= 2:
+        fail("--max-leftover must be between 0 and 2 (percent)")
+    if a.backdrop is not None and not all(0 <= v <= 255 for v in a.backdrop):
+        fail("--backdrop components must be 0-255")
 
 
 def validate(a):
@@ -293,6 +454,8 @@ def validate(a):
 
 def main(argv=None):
     a = parse(argv)
+    if a.template == "matte":
+        return run_matte(a)
     validate(a)
     in_path = check_input(a.input, "--input")
     original = art_ops.load(a.input)
