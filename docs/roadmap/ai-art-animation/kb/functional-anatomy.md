@@ -9,13 +9,14 @@ Knowledge base for agents that rig and animate humanoid and creature characters 
 
 **Evidence labels.** Every number carries a source id in brackets, for example `[CDC_ROM]`. Source ids are listed in section 15.
 - A number with a source id was read by the compiler in that source (sometimes in an abstract only, which is noted).
-- **(unverified)** means the number is common textbook or practitioner knowledge that the compiler could not confirm in a source actually read during this research. Treat it as a placeholder to be checked before it becomes a hard limit.
+- **(unverified)** means the number is common textbook or practitioner knowledge that the compiler could not confirm in a source actually read during this research. Treat it as a placeholder to be checked before it is used as a reference.
 - **(derived)** means arithmetic on sourced numbers (for example 2:1 ratio applied to 180 degrees).
 - **(heuristic)** means a studio rule of thumb for animation, not a measurement. All "artistic stylisation allowance" content is heuristic: no source measures what looks believable.
+- "Verified" says only that the *number* was read in the cited source. It says nothing about what the number measures (statistic, segment frame, task, population) or whether it may gate a motion. Each value in `human_joint_table.json` and in the anatomy profiles carries a per-tier `provenance` record (kind, segment frame, statistic, population, task, active/passive, read level, confidence, gate eligibility; Board decision KA-BD-6, 2026-11-23). No value is gate-eligible today: a validator may only warn on them (KA-BD-5).
 
 **Three ROM columns.**
-- *Clinical ROM*: normative maximum range in healthy adults, usually measured with a goniometer from anatomical position. This is the hard physical ceiling for a realistic human.
-- *Functional ROM*: the range actually used to complete everyday (or athletic, where noted) tasks. This is where most animation lives; keyframes should spend most of their time inside it.
+- *Clinical ROM*: a normative reference, not a limit. The values are means of passive goniometry in healthy adults [CDC_ROM] or textbook typical values whose method is not stated [LUTT], measured from anatomical position. Roughly half of healthy adults exceed a mean, and active everyday tasks reach past several of these values, so treat them as plausibility references, never as a physical ceiling.
+- *Functional ROM*: the motion observed or required in the cited tasks and populations (everyday, or athletic where noted). Each value is a single-study observation, not an envelope and never a limit. This is where most animation lives; keyframes should spend most of their time inside it.
 - *Artistic stylisation allowance*: how far past (or short of) clinical range a stylised animation can go before it reads as broken.
 
 **Big caveats on the numbers.**
@@ -113,13 +114,15 @@ Clinical ROM is measured from anatomical position. A rig bound at relaxed neutra
 - **Rig local coordinate system**: minimum 3 bones (`spine_lumbar`, `spine_lower_thoracic`, `chest`), better 4-5. Y up the spine. Positive X = flexion (forward bend). Distribute: flexion/extension mostly lumbar; axial rotation mostly thoracic (because lumbar rotation is largely prevented [OS96]); lateral flexion spread across all.
 - **Neutral pose**: anatomical: upright with normal curves. Relaxed: same; slouch adds thoracic flexion.
 - **Movement definitions**: flexion = forward bend; extension = backward bend; lateral flexion = side bend; rotation = twist [OS95].
-- **Range of motion** (thoracolumbar combined, relative to pelvis)
-| Movement | Clinical | Functional | Artistic allowance (heuristic) |
+- **Range of motion** (thoracolumbar combined; the clinical source does not state its reference frame)
+| Movement | Clinical (normative reference) | Functional | Artistic allowance (heuristic) |
 |---|---|---|---|
-| Flexion | 0-50 [LUTT lists 45-50]; Esola measured mean lumbar contribution 41.6 during a 111-degree total forward bend [ESOLA1996] | ADLs needed up to 59 total trunk flexion-extension excursion [GATES2016] | large; squash-and-stretch on the torso is the most forgiving region if volume is preserved |
-| Extension | 0-25 [LUTT] | 0-15 (unverified) | ~35; more makes the character look broken backward unless it is a dramatic arch with the hips forward |
-| Lateral flexion (each side) | 0-25 [LUTT] | 0-23 trunk lean across ADLs [GATES2016] | ~40 for toon |
-| Rotation (each side) | 0-30 [LUTT] | 0-32 trunk axial rotation across ADLs [GATES2016] (likely includes some pelvis motion) | ~45 total chest vs pelvis for wind-ups; beyond that reads as a twisted rag |
+| Flexion | 0-50 [LUTT lists 45-50]; Esola measured mean lumbar contribution 41.6 during a 111-degree total forward bend [ESOLA1996] | no functional spinal range in the sources read (see the Gates note below the table) | large; squash-and-stretch on the torso is the most forgiving region if volume is preserved |
+| Extension | 0-25 [LUTT] | 0-15 (heuristic placeholder; no source) | ~35; more makes the character look broken backward unless it is a dramatic arch with the hips forward |
+| Lateral flexion (each side) | 0-25 [LUTT] | no functional spinal range in the sources read | ~40 for toon |
+| Rotation (each side) | 0-30 [LUTT] | no functional spinal range in the sources read | ~45 total chest vs pelvis for wind-ups; beyond that reads as a twisted rag |
+
+  **Gates 2016 trunk values are reference observations, not spinal ranges** [GATES2016]. The paper reports the thorax relative to the lab (globe coordinate system), so its trunk angles include pelvis and hip motion. Each value is an excursion (maximum minus minimum) during one task, not an angle from anatomical zero and not a per-side value: 59 flexion-extension while lifting a 9.1 kg box from the floor with a squat and a back-straight instruction; 23 lateral bending and 32 axial rotation during seated perineal care (n = 5, which the authors flag as possibly unrepresentative). They are stored as `reference_observations` in `human_joint_table.json` and are not used as a functional range, a limit or a gate.
 - **Parent-child**: parent = pelvis (`hips`, usually the root or child of root); children: neck chain, both clavicles.
 - **Coupled movements**:
   - **Lumbopelvic rhythm** [ESOLA1996]: in forward bending the lumbar spine leads early and the hips dominate late. Mean lumbar-to-hip ratios were 1.9 (0-30 degrees of bend), 0.9 (30-60), 0.4 (60-90). Total 111 = 41.6 lumbar + 69.4 hip. Rig rule: for a trunk-bend target T, distribute using these phase ratios; never achieve a deep bend with spine alone.
@@ -174,11 +177,11 @@ Clinical ROM is measured from anatomical position. A rig bound at relaxed neutra
 - **Range of motion** (humerothoracic, i.e. includes scapular contribution unless noted)
 | Movement | Clinical | Functional | Artistic allowance (heuristic) |
 |---|---|---|---|
-| Flexion (forward raise) | 0-170: CDC means 168.8 M / 172.0 F age 20-44 [CDC_ROM]; LUTT 180 | 0-121 average needed for 10 ADL tasks [NAMDARI2012]; humeral elevation 0-108 across 8 ADLs [GATES2016] | to ~180 with scapula/torso help; beyond reads as dislocated |
+| Flexion (forward raise) | 0-170: CDC means 168.8 M / 172.0 F age 20-44 [CDC_ROM]; LUTT 180 | 0-121 average needed for 10 ADL tasks [NAMDARI2012]; Gates reports a peak humeral elevation of 108 in any plane (ISB globe system), which is not flexion [GATES2016] | to ~180 with scapula/torso help; beyond reads as dislocated |
 | Extension (backward) | 0-50 [LUTT] | 0-46 [NAMDARI2012] | ~60 |
 | Abduction | 0-180 [LUTT] | 0-128 [NAMDARI2012] | ~180 with clear clavicle lift |
 | Adduction / cross-body | 0-50 [LUTT]; cross-body (horizontal) adduction is a different measure | cross-body adduction 116 [NAMDARI2012] | |
-| Lateral (external) rotation | 0-90 at 90 abduction [LUTT] | 0-59 at 90 abduction [NAMDARI2012]; 55 [GATES2016] | throwers' cocking can be pushed to ~110 (unverified for real athletes) |
+| Lateral (external) rotation | 0-90 at 90 abduction [LUTT] | 0-59 at 90 abduction [NAMDARI2012]; Gates 55 is globe-system axial rotation while grasping a box on a fixed shelf, not at 90 abduction [GATES2016] | throwers' cocking can be pushed to ~110 (unverified for real athletes) |
 | Medial (internal) rotation | 0-90 at 90 abduction [LUTT] | 79 for hand-to-back-pocket [GATES2016]; 102 arm-at-side measure [NAMDARI2012] (different position, exceeds the abducted clinical value) | |
 | Glenohumeral-only elevation | ~120 of the 180 total (derived from 2:1) | | |
 - **Parent-child**: parent = clavicle/scapula; child = upper arm segment / elbow.
@@ -225,7 +228,7 @@ Clinical ROM is measured from anatomical position. A rig bound at relaxed neutra
 | Movement | Clinical | Functional | Artistic allowance (heuristic) |
 |---|---|---|---|
 | Flexion | 0-145: CDC means 144.6 M / 150.0 F age 20-44 [CDC_ROM]; LUTT 140 | 30-130 (100-degree arc) [MORREY1981, via JBJS commentary]; drinking needed 121, box-to-head-height 120 [GATES2016] | to ~155 in toon if the forearm mesh compresses visibly into the biceps |
-| Extension / hyperextension | 0 to about 1 (M) and 5 (F) degrees beyond straight: CDC "extension" means 0.8 M / 4.7 F [CDC_ROM] (interpreted as hyperextension; the page does not define the sign) | rarely past 0 in tasks; some tasks (reaching a desk phone) needed more extension than the 30-degree Morrey limit [MORREY1981 commentary] | never visibly bend backward; allow at most ~5 hyperextension on female/flexible characters |
+| Extension / hyperextension | 0 to about 1 (M) and 5 (F) degrees beyond straight: CDC "extension" means 0.8 M / 4.7 F [CDC_ROM] (interpreted as hyperextension; the page does not define the sign) | rarely past 0 in tasks; some tasks (reaching a desk phone) needed more extension than the lower end (30) of the Morrey "most activities" arc [MORREY1981 commentary] | never visibly bend backward; allow at most ~5 hyperextension on female/flexible characters |
 - **Parent-child**: parent = upper arm; child = forearm (radius/ulna) and through it the wrist.
 - **Coupled movements**: none mechanical; biceps flexion also supinates [OS115], so strong lifts with palm up read correctly with slight supination.
 - **Functional movements**: reach (extension to 0-30), lift (flexion under load), push (extension), pull (flexion), throw/punch (fast extension then decelerate before lock), hammer swing.

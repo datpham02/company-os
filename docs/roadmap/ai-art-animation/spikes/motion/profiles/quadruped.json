@@ -2,16 +2,22 @@
  "schema": "anatomy-profile.v1",
  "id": "quadruped",
  "body_type": "quadruped (digitigrade or plantigrade)",
- "status": "provisional: values pending the verified research tables",
+ "status": "provisional: values are heuristic design references (stored under 'clinical'); no source",
  "joints": {
   "spine": {
    "type": "gliding-series",
    "movements": {
     "flex": {
-     "clinical": [
-      -30,
-      40
-     ]
+     "clinical": [-30, 40],
+     "provenance": {
+      "clinical": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "design reference for a non-human body stored under the key 'clinical' for validator compatibility; there is no non-human source in the KB"
+      }
+     }
     }
    },
    "notes": "flexion/extension drives the gallop"
@@ -19,10 +25,16 @@
   "neck": {
    "movements": {
     "flex": {
-     "clinical": [
-      -60,
-      60
-     ]
+     "clinical": [-60, 60],
+     "provenance": {
+      "clinical": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "design reference for a non-human body stored under the key 'clinical' for validator compatibility; there is no non-human source in the KB"
+      }
+     }
     }
    }
   },
@@ -30,25 +42,34 @@
    "type": "chain",
    "movements": {
     "flex": {
-     "clinical": [
-      -90,
-      90
-     ]
+     "clinical": [-90, 90],
+     "provenance": {
+      "clinical": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "design reference for a non-human body stored under the key 'clinical' for validator compatibility; there is no non-human source in the KB"
+      }
+     }
     }
    }
   },
-  "scapula_front": {
-   "type": "gliding (no clavicle in most quadrupeds)",
-   "notes": "the scapula slides along the ribcage; the true shoulder is low on the chest"
-  },
+  "scapula_front": {"type": "gliding (no clavicle in most quadrupeds)", "notes": "the scapula slides along the ribcage; the true shoulder is low on the chest"},
   "shoulder_front": {
    "type": "ball",
    "movements": {
     "flex": {
-     "clinical": [
-      -60,
-      80
-     ]
+     "clinical": [-60, 80],
+     "provenance": {
+      "clinical": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "design reference for a non-human body stored under the key 'clinical' for validator compatibility; there is no non-human source in the KB"
+      }
+     }
     }
    }
   },
@@ -57,10 +78,16 @@
    "preferred_bend": "points backward (caudal)",
    "movements": {
     "flex": {
-     "clinical": [
-      0,
-      140
-     ]
+     "clinical": [0, 140],
+     "provenance": {
+      "clinical": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "design reference for a non-human body stored under the key 'clinical' for validator compatibility; there is no non-human source in the KB"
+      }
+     }
     }
    }
   },
@@ -69,10 +96,16 @@
    "preferred_bend": "folds backward (the 'wrist' bends like a knee seen from behind)",
    "movements": {
     "flex": {
-     "clinical": [
-      0,
-      130
-     ]
+     "clinical": [0, 130],
+     "provenance": {
+      "clinical": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "design reference for a non-human body stored under the key 'clinical' for validator compatibility; there is no non-human source in the KB"
+      }
+     }
     }
    }
   },
@@ -80,10 +113,16 @@
    "type": "ball",
    "movements": {
     "flex": {
-     "clinical": [
-      -40,
-      100
-     ]
+     "clinical": [-40, 100],
+     "provenance": {
+      "clinical": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "design reference for a non-human body stored under the key 'clinical' for validator compatibility; there is no non-human source in the KB"
+      }
+     }
     }
    }
   },
@@ -92,10 +131,16 @@
    "preferred_bend": "points forward (cranial), like a human knee",
    "movements": {
     "flex": {
-     "clinical": [
-      0,
-      120
-     ]
+     "clinical": [0, 120],
+     "provenance": {
+      "clinical": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "design reference for a non-human body stored under the key 'clinical' for validator compatibility; there is no non-human source in the KB"
+      }
+     }
     }
    }
   },
@@ -104,19 +149,20 @@
    "preferred_bend": "points backward (the 'reversed knee' is the ankle)",
    "movements": {
     "flex": {
-     "clinical": [
-      0,
-      120
-     ]
+     "clinical": [0, 120],
+     "provenance": {
+      "clinical": {
+       "kind": "heuristic",
+       "source_ids": [],
+       "confidence": null,
+       "gate_eligible": false,
+       "note": "design reference for a non-human body stored under the key 'clinical' for validator compatibility; there is no non-human source in the KB"
+      }
+     }
     }
    }
   }
  },
- "gaits": [
-  "walk (4-beat)",
-  "trot (diagonal pairs)",
-  "canter",
-  "gallop (spine flex/extension)"
- ],
+ "gaits": ["walk (4-beat)", "trot (diagonal pairs)", "canter", "gallop (spine flex/extension)"],
  "notes": "never mirror human limits onto the hind leg: the backward-pointing joint is the ankle (hock), not a backward knee"
 }

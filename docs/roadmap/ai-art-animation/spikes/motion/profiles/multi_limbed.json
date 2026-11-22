@@ -2,23 +2,24 @@
  "schema": "anatomy-profile.v1",
  "id": "multi_limbed",
  "body_type": "insect/arachnid/multi-legged",
- "status": "provisional: values pending the verified research tables",
+ "status": "provisional: values are heuristic design references (stored under 'clinical'); no source",
  "limb_template": {
-  "segments": [
-   "coxa",
-   "femur",
-   "tibia",
-   "tarsus"
-  ],
+  "segments": ["coxa", "femur", "tibia", "tarsus"],
   "joints": {
    "coxa": {
     "type": "pivot",
     "movements": {
      "swing": {
-      "clinical": [
-       -40,
-       40
-      ]
+      "clinical": [-40, 40],
+      "provenance": {
+       "clinical": {
+        "kind": "heuristic",
+        "source_ids": [],
+        "confidence": null,
+        "gate_eligible": false,
+        "note": "design reference for a non-human body stored under the key 'clinical' for validator compatibility; there is no non-human source in the KB"
+       }
+      }
      }
     }
    },
@@ -26,10 +27,16 @@
     "type": "hinge",
     "movements": {
      "lift": {
-      "clinical": [
-       -30,
-       70
-      ]
+      "clinical": [-30, 70],
+      "provenance": {
+       "clinical": {
+        "kind": "heuristic",
+        "source_ids": [],
+        "confidence": null,
+        "gate_eligible": false,
+        "note": "design reference for a non-human body stored under the key 'clinical' for validator compatibility; there is no non-human source in the KB"
+       }
+      }
      }
     }
    },
@@ -37,23 +44,22 @@
     "type": "hinge",
     "movements": {
      "flex": {
-      "clinical": [
-       20,
-       150
-      ]
+      "clinical": [20, 150],
+      "provenance": {
+       "clinical": {
+        "kind": "heuristic",
+        "source_ids": [],
+        "confidence": null,
+        "gate_eligible": false,
+        "note": "design reference for a non-human body stored under the key 'clinical' for validator compatibility; there is no non-human source in the KB"
+       }
+      }
      }
     }
    }
   }
  },
- "limb_count": [
-  6,
-  8
- ],
- "gaits": [
-  "tripod (insects: 3 legs down at a time)",
-  "alternating tetrapod (spiders)",
-  "metachronal wave"
- ],
+ "limb_count": [6, 8],
+ "gaits": ["tripod (insects: 3 legs down at a time)", "alternating tetrapod (spiders)", "metachronal wave"],
  "notes": "balance = support polygon of the planted legs; at least 3 non-collinear contacts while walking"
 }
