@@ -47,7 +47,7 @@ Path boundary (enforced by this script; everything else is policy, see security-
 - Limits: inputs up to MAX_INPUT_PIXELS (colour key: MAX_KEY_PIXELS), outputs up to MAX_SIDE per side,
   at most MAX_FILES images per command. `resize --fit cover` crops before it resamples, so no
   intermediate image is larger than the target. Masks: at most MAX_SHAPES shapes, MAX_POLY_POINTS points
-  per polygon, grow/shrink/feather up to MAX_MASK_RADIUS.
+  per polygon, at most MAX_INPUT_PIXELS pixels, grow/shrink/feather up to MAX_MASK_RADIUS.
 """
 import argparse
 import bisect
@@ -464,6 +464,8 @@ def cmd_mask(a):
             w, h = im.size
     else:
         w, h = _size(*a.size, what="mask")
+    if w * h > MAX_INPUT_PIXELS:
+        fail(f"mask {w}x{h} exceeds {MAX_INPUT_PIXELS} pixels (the input limit)")
     m = Image.new("L", (w, h), 0)
     d = ImageDraw.Draw(m)
     for x, y, rw, rh in a.rect:

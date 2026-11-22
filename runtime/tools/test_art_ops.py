@@ -534,6 +534,7 @@ class MaskComposeDiff(ArtOpsCase):
         self.refused("mask", self.st("m.png"), "--size", "4", "4", "--polygon", "0", "0", "1", "1")
         self.refused("mask", self.st("m.png"), "--size", "4", "4", "--rect", "0", "0", "1", "1", "--grow", "65")
         self.refused("mask", self.st("m.png"), "--size", "4", "4", "--rect", "0", "0", "0", "1")
+        self.refused("mask", self.st("m.png"), "--size", "8192", "8192", "--rect", "0", "0", "1", "1")   # over the pixel limit
         self.refused("mask", self.st("m.png"), "--size", "8", "8", "--from-alpha", self.st("x.png"))   # size mismatch
         many = []
         for _ in range(art_ops.MAX_SHAPES + 1):
