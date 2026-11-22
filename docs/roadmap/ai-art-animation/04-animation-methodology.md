@@ -40,7 +40,7 @@ makes motion.**
 1. Motion design      motion spec (intent, phases, key poses, timing curves, COM, contacts, arcs, events)
 2. Structure          structure spec (skeleton, proportions, pivots, attachments, contacts) - locked
 3. Blocking           deterministic solver poses a proxy skeleton from 1+2; automatic checks; QA renders
-                      -> the Board/director judge MOTION here, before any new artwork exists
+                      -> the Board/director judge MOTION here, before any new artwork exists (layered-rig technique; other techniques per §3)
 4. Art supply         artwork for the structure: layered body parts with completed occlusion, one master asset
                       per rigid object (generation + repair tools, Phase 3 tools)
 5. Skinning/binding   art bound to the same structure (rigid parts, partial mesh deformation where it helps)
@@ -131,7 +131,7 @@ are not a selection rule.
 ## 6. Benchmark rework (hammer attacker)
 
 One complete attack before anything else: idle → anticipation → wind-up → swing → impact → follow-through →
-recovery → return to idle. No seed batches before the motion spec passes.
+recovery → return to idle. No seed batches before the motion spec passes (layered-rig benchmark; pose-conditioned and frame techniques may generate during blocking, §3).
 
 **Acceptance criteria (blocking pass, proxies):**
 1. All 8 phases present with the durations in the spec; total length and the impact frame as specified.
@@ -148,7 +148,7 @@ recovery → return to idle. No seed batches before the motion spec passes.
 9. Evidence: real-time and slow-motion playback, a sequential frame contact sheet, trajectory plot (hammer head,
    hand, COM), a timing graph (angles over time), contact and attachment check output.
 
-**Art pass (after blocking approval):** body as layered parts on the same structure (generated and repaired parts with
+**Art pass (after blocking approval, layered-rig technique):** body as layered parts on the same structure (generated and repaired parts with
 completed occlusion), one master hammer asset with a grip point, bound to the structure; the same checks plus
 silhouette comparison against the master and part identity (Gate A).
 
