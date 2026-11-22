@@ -2,7 +2,7 @@
 
 - **Status:** `PROPOSED` (2026-11-22, Art Production v2, Phase 1).
 - **Used by:** `game-artist` (the role file carries the compact version), `ui-designer` (§7), reviewers through the [rubric](quality-rubric.md).
-- **Tools:** only those the role file and the permission layer allow. §8 maps each step to the tools that exist today and lists the gaps; a gap is not permission to improvise a tool.
+- **Tools:** only those the role file and the permission layer allow. §9 maps each step to the tools that exist today and lists the gaps; a gap is not permission to improvise a tool.
 
 These are the internal phases of one art Task (steps 3–6 of [asset-production.md](../../workflows/asset-production.md#steps)). Their depth depends on the [lane](complexity-lanes.md).
 
@@ -33,9 +33,11 @@ These are the internal phases of one art Task (steps 3–6 of [asset-production.
 Critique the **actual image**, not the prompt or the intent. Open the file (Read) and look.
 1. **Inspect** at target size and, for craft, enlarged. Compare side by side with the references and with the previous round.
 2. **List issues** precisely, most important first. Each issue has: location (region, frame, layer), what is wrong, why it matters visually or for gameplay, and the expected correction. For example: "frame 3, left hand: merges with the sword hilt at 64 px; separate by one value step". Not "make it better".
-3. **Fix the listed issues only.** Preserve what was approved: identity, silhouette, palette, everything not named in an issue. Prefer the smallest change that fixes the issue (regenerate with the same seed and an adjusted prompt, crop, re-key, trim, grade, re-assemble) over starting again.
-4. **Compare before and after** at target size. A fix that introduces a new defect, or drifts the identity, is a regression: revert to the previous version.
+3. **Fix the listed issues only.** Lock the entity's identity, not a source image or a source pose (see *What to lock* below). In a targeted refinement of an approved asset, also preserve everything not named in an issue, including the silhouette and palette, and prefer the smallest change that fixes the issue (inpaint the region, low-denoise img2img, crop, re-key, trim, grade, re-assemble, or regenerate) over starting again. A reused seed is one candidate to test, never a guarantee of identity and never a requirement.
+4. **Compare before and after** at target size. A fix that introduces a new defect, or breaks an identity invariant, is a regression: revert to the previous version. A new pose, view or state that differs from the source in pixels or silhouette is not a regression by itself.
 5. **Stop** when the acceptance criteria and the rubric's hard gates are met, or when the iteration budget is spent. Report what remains. Never call your own work approved.
+
+**What to lock.** Before refining or redrawing, write three lists from the brief and the reference sheet (ask when they are missing): **identity invariants** (what makes the entity itself in any pose, view or state: proportion ratios, signature shapes and silhouette language, palette ramps, costume parts and their counts, line and rendering rules, face and mark identifiers); **pose-specific properties** the Task may change (silhouette outline, limb angles, facing, camera, expression, grip, cloth and state, overlap order); **replaceable representations** (the source image, a view, a pose, a bind state, the part split). A new action pose, alternate view, transformation state, new bind pose or rig-ready / animation-driven art is not required to keep the source silhouette: it follows the Task's pose requirement and is judged against the identity invariants, reporting which pose-specific properties changed. Choose seeds by the generation method and the evidence, and record each seed used, its result and why it was kept or rejected. When no approved tool can carry the invariants into the new pose, say so and block (type `permission` or `decision`); do not fake the pose by editing the old one.
 
 ## 6. Technical preflight (before handoff)
 Check and list in the Run summary, with the command output where a command exists:
@@ -77,6 +79,6 @@ Each line is the order of decisions; do not polish a later step before the earli
 | Operations | `art-ops.py`: `info`, `crop`, `resize` (`--filter lanczos\|nearest`), `key`, `trim`, `canvas`, `sheet`, `grade`, `contact` (`--bg`); `mask` (rectangles, ellipses, polygons, from alpha or a colour; grow, shrink, invert, feather), `compose` (alpha over at a position, opacity, through a mask: exact base outside the mask), `diff` (heat map, changed pixels, per-channel delta, changes outside a mask) | No palette quantise or palette report; no byte-budget export |
 | Target-size review | `art-ops.py resize` to the display size, then `contact --cell W H` with the cell at least that size (contact only shrinks, never enlarges); `--bg R G B` for a flat target background | No compositing over a textured or in-scene background: needs an engine frame, else `UNVERIFIED` |
 | Enlarged review | `resize --filter nearest` (pixel art) or the default Lanczos (painted art) | — |
-| Before/after | `contact` with both versions side by side | No pixel diff |
+| Before/after | `contact` with both versions side by side; `art-ops.py diff` for changed pixels and a heat map (`--mask` reports changes outside the mask) | No automatic acceptance threshold for a diff |
 | In-engine | The five Godot commands of the role file; Deckbound's screenshot runner | Other resolutions and states need a project fixture or Board evidence |
 | Effects | PixelFX `list.mjs`, `render.mjs`, where the project licence allows MIT with attribution | — |

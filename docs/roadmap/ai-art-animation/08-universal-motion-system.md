@@ -32,8 +32,10 @@
              engine adapter (Godot first: Skeleton2D/Bone2D/Polygon2D, Line2D, Joint2D,
              GPUParticles2D, canvas shaders) -> runtime
 ```
-Principles: composition over inheritance (a new creature = a new profile, never a core change); deterministic
-tools own geometry, timing, contacts and continuity; generative models own artwork only; every component reports
+Principles: composition over inheritance (a new creature = a new profile, never a core change); the method is
+selected per entity (§5); deterministic tools own geometry, timing, contacts and continuity wherever the selected
+method needs them; generative models own artwork and may also own pose or frame synthesis under structural
+conditioning and gates; every component reports
 validation metrics; intentional non-physical behaviour is declared as a fictional rule, not flagged as an error.
 
 ## 2. Knowledge research plan (status)
@@ -168,7 +170,8 @@ Universal checks added for a 2D card game (`director` review):
 | mirror safety | soft | handedness of weapons and asymmetric props after mirroring |
 | key and bone budget | soft | keys/bones per clip within the runtime budget |
 `director` receives a **review card** per preview package: frame numbers to look at, what to compare, the metrics
-per frame - because the reviewer cannot open media itself.
+per frame. `director` can open still images committed in the Task Workspace (smoke test SOU-91, 2026-11-22: it opened and
+judged a PNG); whether it can play GIF or MP4 previews is untested.
 
 **Done and verified today:** 18 automated tests (`tests/test_motion_system.py`): solver tests (rest reproduction,
 degrees, local vs global inheritance, isolated elbow sweep without shoulder motion/flips/length change, weapon
@@ -181,7 +184,7 @@ reproduced) - fixed; knees now follow the anatomical preferred bend.
 | # | Benchmark | Intent | Components | Acceptance (summary) |
 |---|---|---|---|---|
 | 1 | Humanoid combat + idle | idle loop, light attack, hit reaction (receiver), mirrored facing | skeleton, attachment, interaction_contact | loop seam ≤ 0.002 L; contact frame = damage event; reaction starts ≤ 2 frames after contact; card-scale readability; mirror safety |
-| 2 | Heavy humanoid (**current**) | heavy overhead smash | skeleton, attachment, flexible appendage | done: B 17/17 hard, C as reference; hybrid next |
+| 2 | Heavy humanoid (**current**) | heavy overhead smash | skeleton, attachment, flexible appendage | technical checks: B passed 17 of 17 hard checks (planar set; it does not detect weapon-ground penetration, foreshortening or temporal coverage between key poses); no visual acceptance recorded; C as reference; hybrid C+B is the next candidate, not a fixed method (§5) |
 | 3 | Quadruped locomotion | walk → trot → gallop | skeleton, gait, chain (tail) | footfall order exact; duty factor within ±0.05 of the gait table; foot slip ≤ 0.01 L in contact; spine flex/extension phase-locked in gallop |
 | 4 | Flying creature | take-off, flap, glide | wing, skeleton, chain | elbow-wrist fold coupling; downstroke/upstroke duration ratio ≤ 0.8; body bob opposite to the wing stroke, amplitude 0.02-0.08 L |
 | 5 | Multi-legged | spider skitter | skeleton, gait (8) | ≥ 3 non-collinear supports every frame; tetrapod order exact; no leg crossing |
@@ -256,7 +259,7 @@ GDNative-Ropesim would need a dependency review.
 | Reference scarcity for non-humans (animal mocap NC or absent) | creature motion falls to B/procedural; more effort | Muybridge-derived tables; procedural gaits; effort raised in U2-U3 |
 | Motion-to-art coupling (joint gaps, texture stretch, far-arm reveal) | correct motion looks broken on the real art | skeleton-overlay-on-art previews from U1; art pass rules for overlaps |
 | Style drift between reference realism and project art | realistic motion on stylised art | stylisation tier per project; timing redistribution (§5) |
-| Reviewer evidence gap (`director` cannot open media) | judgements from numbers only | review cards with per-frame metrics; or a reviewer with preview access (Board decision) |
+| Reviewer evidence gap (`director` opens still images, smoke test SOU-91, 2026-11-22; GIF/MP4 playback untested) | motion-feel judgements without watched playback | review cards with per-frame metrics; or a reviewer with preview access (Board decision) |
 | Runtime size of baked keys for many units | memory/build size | measure in U1; key reduction per clip |
 | Single builder until K4/U5 (know-how in sessions) | bus factor | KB + skills packaged after K4; regression suite in CI |
 
@@ -274,3 +277,5 @@ GDNative-Ropesim would need a dependency review.
 | U-G | OpenStax: stop using it as a source (CC BY-NC-SA, AI-ingestion clause); keep only facts already cross-checked elsewhere; ask OpenStax/legal if the Board wants it | approve |
 | U-H | Functional ROM is informative, not a limit; clinical (realistic) or stylized (stylised) tier gates per character; character overrides must state why; the tier is recorded in the profile and printed in every QA report | approve |
 | U-J | Reviewer evidence: review cards with per-frame metrics for `director`, or give a reviewer preview access | review cards now; access is a separate Board decision |
+
+Board answers (2026-11-22 20:30 GMT+7, reconciled 2026-11-23) are recorded in the [README decision log](README.md#decision-log-after-approval): U-F deferred, U-B pending, U-H amended by KA-BD-5/6; the recommendation column above is unchanged.

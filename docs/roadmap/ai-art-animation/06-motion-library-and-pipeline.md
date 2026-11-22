@@ -86,8 +86,8 @@ source trial and its licence check. A source whose licence is not "production-ok
 | Self-intersection (forearm through the face zone in held poses) | soft | humanoids | passing in front during a fast swing is allowed |
 | Centre of mass inside support | soft (hard for held poses) | bipeds | lunges and jumps marked in the spec are exempt |
 | Weight transfer (COM back in wind-up, forward at impact) | soft | attacks | thresholds per category |
-| Timing ratios (wind-up : swing : recovery) | soft | attacks | KB rule 8 ranges; weapon mass scales them |
-| Contact speed ≥ 80 % of peak | soft | strikes | KB rule 8 |
+| Timing ratios (wind-up : swing : recovery) | soft | heavy overhead strikes; other action categories need their own ranges | [kb §20.1](kb/animation-fundamentals.md#201-phases-and-relative-timing) ratios (`[derived]`, player heavy attack at 30 fps); weapon mass scales them |
+| Contact speed ≥ 80 % of peak | soft | heavy-weapon strikes | [kb §7](kb/animation-fundamentals.md#7-force-and-momentum) weapon tip speed (`[derived]`) |
 | Motion arcs (no reversal inside the swing) | soft | strikes | |
 | Silhouette change at key poses | soft | all | readability at 270 px |
 | Appeal, intent, style | artistic judgement | all | `director`, on real-time + slow-motion previews, never on stills alone |
@@ -99,13 +99,16 @@ rules (scapula ratio, elbow ranges, face zone) apply only when the structure dec
 
 Evidence per method (rnd/motion/review, review_B, review_C): real-time and slow GIF, sequential sheet, key sheet,
 trajectories, joint-angle graph with limit bands, skeleton overlay, checks.json; plus a phase-matched comparison
-sheet `review_C/compare_A_B_C.png`. Checks are the v2 set (20 checks incl. KB rules).
+sheet `review_C/compare_A_B_C.png`. Checks are the v2 set (20 checks incl. KB rules). A/B/C name the methods of this section only. A pass count shows
+that the checks ran, not that the motion is good: neither set detects weapon-ground penetration, foreshortening or temporal coverage between key poses
+(later R&D in `rnd/motion/`, not reviewed by `director`, found weapon-ground penetration in a planar strike that no
+planar check flagged).
 
-| Method | How | Checks | Main result |
+| Method | How | Technical checks (passed of run) | Main result |
 |---|---|---|---|
-| A | hand-authored keys, arm IK (v1) | v1: 13/13 (v2 set not applicable: no wrist, no limits) | **rejected by the Board**: forearm across the face, elbow kept bent, arm-only swing |
-| B | knowledge-guided FK keys, kinetic chain, PCHIP, broken tangent at contact, KB rules | **20/20** | intent met: extended arm at impact (172°), contact speed 0.97 of peak, wind-up elbow 124°, weight back 65 px / forward 103 px; poses still found by iteration |
-| C | CMU 79_01 "chopping wood" (2nd chop) → 3D FK → orthographic 3/4 projection (yaw 25°) → retarget (target bone lengths, chest-frame arm directions, clavicle → shoulder shift) → contact cleanup + hip clamp → KB wrist rule | 15/20 | most natural body: deep back arch and coil in the wind-up (COM 102 px back), whole-body drive, contact at full speed; **fails the intent**: a chop lands at chest/waist height with bent arms (impact elbow interior 105°, COM not forward), 2D projection produces impossible-looking back-arm elbow angles, and the clip does not start from the character's idle |
+| A | hand-authored keys, arm IK (v1) | v1 set: 13 of 13 (v2 set not applicable: no wrist, no limits) | visual review: **rejected by the Board**: forearm across the face, elbow kept bent, arm-only swing |
+| B | knowledge-guided FK keys, kinetic chain, PCHIP, broken tangent at contact, KB rules | v2 set: 20 of 20 | intent measures met: extended arm at impact (172°), contact speed 0.97 of peak, wind-up elbow 124°, weight back 65 px / forward 103 px; poses still found by iteration; visual review: no acceptance recorded |
+| C | CMU 79_01 "chopping wood" (2nd chop) → 3D FK → orthographic 3/4 projection (yaw 25°) → retarget (target bone lengths, chest-frame arm directions, clavicle → shoulder shift) → contact cleanup + hip clamp → KB wrist rule | v2 set: 15 of 20 | most natural body: deep back arch and coil in the wind-up (COM 102 px back), whole-body drive, contact at full speed; **fails the intent**: a chop lands at chest/waist height with bent arms (impact elbow interior 105°, COM not forward), 2D projection produces impossible-looking back-arm elbow angles, and the clip does not start from the character's idle |
 
 | Criterion (Board list) | A | B | C |
 |---|---|---|---|
@@ -130,10 +133,11 @@ Scores are the Board operator's first assessment on the rendered previews, corre
    and weapon orientation come from KB rules - the hybrid is necessary, not optional.
 3. 3D → 2D projection needs cleanup (far-arm elbow flips, depth for draw order) and a transition from the
    character's idle into the clip.
-4. The QA set caught every problem it was built for in all three methods; the artistic verdict still needs the
+4. The QA set flagged the problems its checks measure in all three methods; it cannot show that nothing else is wrong
+   (see the pass-count note above), and the artistic verdict still needs the
    previews.
 
-**Recommendation:** the studio method is **C + B as a hybrid** - a hypothesis until a hybrid clip exists (acceptance in 08 §8; `director`). B's soft finding (the arm rises behind the trunk at low elevation early in the wind-up) is real: the hybrid raises the arms through the front/side and lets the trunk arch supply the lean. Method: reference-driven body and timing (C) from a clip that
+**Recommendation:** reference-driven motion (C) plus knowledge adjustment (B) is one candidate for biped strike motion when a reference passes the reference-selection gate (08 §5); it was shown on a planar rig only and is a hypothesis until a hybrid clip exists (acceptance in 08 §8; `director`). It is not the studio method: the technique is selected per entity structure, art direction, motion intent and production requirements (08 §5). B's soft finding (the arm rises behind the trunk at low elevation early in the wind-up) is real: the hybrid raises the arms through the front/side and lets the trunk arch supply the lean. Method: reference-driven body and timing (C) from a clip that
 matches the intent, character-specific adjustment by KB rules where the reference is silent or mismatched (B: wrist,
 weapon, impact extension, weight-forward at contact), the same QA. Next step: search a better-matching commercially
 usable reference (a downward strike to the ground; CC0 packs, other CMU trials) and add the "adjustment" layer

@@ -9,6 +9,7 @@ One page per spike (initiative package 03 §3; Board decision D1): question, met
 | [S1 object insertion with SDXL base](#s1--object-insertion-with-sdxl-base) | 2026-11-22 | **Failed** (Verified negative, one input) |
 | [S2 scripted Godot rig from JSON](#s2--scripted-godot-rig-from-json) | 2026-11-22 | **Passed (mechanics)**; engine-vs-reference numeric match not measured |
 | [S3 engine capture with alpha](#s3--engine-capture-with-alpha) | 2026-11-22 | **Passed windowed; headless (dummy renderer) crashes** |
+| S4 animation quality | 2026-11-22 | No spike page and no go/no-go verdict; the animation rounds are recorded in [04 §1](../04-animation-methodology.md#1-root-cause-analysis) |
 | [S5 insertion, SDXL + Fooocus patch](#s5--object-insertion-sdxl--fooocus-inpaint-patch-rd-only) | 2026-11-22 | **Failed** (open 1/12; next 1/4 and 3/4 on two valid subjects; visible seams; R&D only) |
 | [S6 FLUX.2 klein 4B](#s6--flux2-klein-4b-fit-insertion-completion-identity) | 2026-11-22 | Fit **passed**; insertion **failed**; completion **partial** (confounded); identity attacker 4/5, frayer 4/5, **Scrivener 2/5** (`director`) |
 | [S7 cut-out: key vs BiRefNet vs ToonOut](#s7--cut-out-colour-key-vs-birefnet-vs-toonout) | 2026-11-22 | **BiRefNet passed** (leftover backdrop 0.03% median vs 2.95%) |
