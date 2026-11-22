@@ -7,8 +7,11 @@ contact requirements, reference, anatomy profile and validation results. A pose 
 as a motion (posecheck.validate_data, rules.py) as a two-frame static clip of category "pose.static": structural
 invariants (bone lengths, attachment, grip, reachability, weapon vs ground), anatomical references (warn at most on a
 planar rig), the static balance approximation (warn at most; not_applicable when needs.balanced is false). Action
-rules are not_applicable. Thresholds come from the acceptance block of the spec's from_motion (or the spec's own
-"acceptance"); a missing threshold is unknown, never a default. Artistic review items are advisory for poses.
+rules are not_applicable. Structural thresholds come from the rule registry (a spec can only tighten them); other
+thresholds from the acceptance block of the spec's from_motion (or the spec's own "acceptance"); a missing threshold is
+unknown, never a default. Roles come from the registry's acceptance profile "pose_library" (artistic review items are
+advisory for poses), not from a motion-level roles entry. The pose's required contacts (needs.contacts, default: every
+contact of the structure) are declared as planted; needs.contacts [] declares "contacts": "none".
 It is NOT proof of animation quality (stated in every entry).
 """
 import json
@@ -21,24 +24,34 @@ import posecheck as pc  # noqa: E402
 import rules as ru  # noqa: E402
 
 
-def static_motion(pose, acceptance):
+def static_motion(pose, acceptance, contacts):
     acc = dict(acceptance)
-    acc["roles"] = dict(acc.get("roles", {}), **{rid: "advisory" for rid in pc.ART_ITEMS})
-    return {"schema": "motion.v2", "id": "pose", "category": "pose.static", "fps": 60, "interpolation": "eased",
-            "keys": [{"frame": 0, "ease": "lin", "pose": pose}, {"frame": 1, "ease": "lin", "pose": json.loads(json.dumps(pose))}],
-            "phases": [], "events": [], "constraints": [], "acceptance": acc}
+    acc["profile"] = "pose_library"
+    m = {"schema": "motion.v2", "id": "pose", "category": "pose.static", "fps": 60, "interpolation": "eased",
+         "keys": [{"frame": 0, "ease": "lin", "pose": pose}, {"frame": 1, "ease": "lin", "pose": json.loads(json.dumps(pose))}],
+         "phases": [], "events": [], "constraints": [{"type": "contact", "contact": c, "frames": [0, 2]} for c in contacts],
+         "acceptance": acc}
+    if not contacts:
+        m["contacts"] = "none"
+    return m
+
+
+def required_contacts(s, needs):
+    return list(needs.get("contacts", list((s.get("contacts") or {}).keys())))
 
 
 def validate_pose(s, base_dir, pose, needs, acceptance):
-    rep = pc.validate_data(s, static_motion(pose, acceptance), base_dir)
+    contacts = required_contacts(s, needs)
+    rep = pc.validate_data(s, static_motion(pose, acceptance, contacts), base_dir)
     if not needs.get("balanced", True):
         for i, f in enumerate(rep["findings"]):
             if f["rule_id"] == "phys.com_inside_support":
                 rep["findings"][i] = ru.finding(f["rule_id"], state="not_applicable", reason="pose spec: needs.balanced is false",
                                                 value=f["value"], role=f["role"])
-        rep["summary"] = ru.acceptance(rep["findings"])
+        keep = {k: rep["summary"][k] for k in ("exceptions_requested", "acceptance_overrides") if k in rep["summary"]}
+        rep["summary"] = dict(ru.acceptance(rep["findings"]), **keep)
         rep["verdict"] = rep["summary"]["verdict"]
-    sol = mo.Solver(s, static_motion(pose, acceptance))
+    sol = mo.Solver(s, static_motion(pose, acceptance, contacts))
     return rep, sol.solve(0)
 
 
@@ -63,7 +76,7 @@ def main(sp, specp, out):
         verdict = rep["verdict"]
         entry = {"schema": "pose-library-entry.v2", "id": p["id"], "structure": s["id"], "anatomy_profile": s["anatomy"]["profile"],
                  "limit_tier": rep["limit_tier"], "action_context": p["context"], "reference": p.get("reference", ""),
-                 "contacts_required": p.get("needs", {}).get("contacts", ["foot_k", "foot_f"]),
+                 "contacts_required": required_contacts(s, p.get("needs", {})),
                  "joint_transforms": pose,
                  "validation": {"verdict": verdict, "counts": rep["summary"]["counts"], "blocked_by": rep["summary"]["blocked_by"],
                                 "rejected_by": rep["summary"]["rejected_by"], "findings": rep["findings"]},

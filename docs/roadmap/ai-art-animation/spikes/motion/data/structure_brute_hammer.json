@@ -4,6 +4,7 @@
  "note": "Measured on the Deckbound attacker master (SOU-81 image 6115, 832x1216), verified by the skeleton overlay. Faces right (+x). Angles in degrees, positive = clockwise on screen (y down). The hammer arm is folded in the rest pose (elbow interior angle about 25 deg).",
  "artwork": "../../godot-spikes/s4/art/attacker.png",
  "units": "px (master canvas)",
+ "representation": "planar_2d",
  "joints": {
   "pelvis": {
    "parent": null,
