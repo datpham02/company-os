@@ -311,6 +311,125 @@ dependencies:
     compatibility: "Uses GH_TOKEN/GITHUB_TOKEN env for auth in automation."
     notes: "Used for PR creation and status checks."
 
+  - id: comfyui-rnd
+    name: ComfyUI R&D environment (separate copy for AI art spikes)
+    category: game-development
+    source:
+      repository: https://github.com/comfyanonymous/ComfyUI   # same build as `comfyui` (v0.46.0, commit a277b5b), copied, not re-downloaded
+    license: "GPL-3.0 (ComfyUI); embedded CPython and packages as in comfyui-embedded-python"
+    required: false
+    versionConstraint: "pinned: commit a277b5b (identical to the production `comfyui` entry)"
+    verifiedVersion: "copy of tools/ComfyUI_windows_portable without models, input, output, user and logs (5.33 GB), at ~/game-studio-workspace/rnd/ComfyUI_rnd; git status clean at a277b5b; models only through extra_model_paths.yaml from ~/game-studio-workspace/rnd/models/ plus production checkpoints read-only"
+    install:
+      strategy: external-service
+      reference: "Board only: robocopy of the production portable folder (models excluded) into rnd/ComfyUI_rnd; started by the Board on 127.0.0.1:8189 with --offline; never by agents"
+    integrationStatus: evaluating   # Board decisions D2/D3 2026-11-22 (AI art initiative, docs/roadmap/ai-art-animation)
+    usedBy: []
+    compatibility: "Spikes of the AI art initiative only (S5-S7 tier 1). No agent allow rule points at it. Production ComfyUI (port 8188) is unchanged."
+    notes: "security review: 2026-11-22, a277b5b copy, passed (same code as the reviewed `comfyui` entry; loopback and --offline required; one extra custom node, `comfyui-inpaint-nodes`, reviewed separately). Free-space floor: C: keeps >= 40 GB free, checked before each install (D3)."
+
+  - id: flux2-klein-4b
+    name: FLUX.2 [klein] 4B (diffusion model, distilled) and FLUX.2 VAE
+    category: game-development
+    source:
+      repository: https://huggingface.co/black-forest-labs/FLUX.2-klein-4B   # official; files taken from the Comfy-Org repackage https://huggingface.co/Comfy-Org/Flux-2-Klein-4B, whose diffusion file has the same SHA256 as the official one
+    license: "Apache-2.0 (Hugging Face license tag and LICENSE.md, black-forest-labs/FLUX.2-klein-4B; the 9B variant is non-commercial and is NOT included)"
+    required: false
+    versionConstraint: "pinned: flux-2-klein-4b.safetensors SHA256 ec3d4e733a771f61c052fb4856c48b336c55eaf2c65487c2a1faeb9bbda7a343; flux2-vae.safetensors SHA256 868fe7b343cc8f3a19dbcfcafbc3d5f888802be3f89bd81b65b3621a066ce8f3"
+    verifiedVersion: "flux-2-klein-4b.safetensors 7,751,105,712 bytes and flux2-vae.safetensors 336,211,292 bytes, SHA256 as pinned, downloaded 2026-11-22 into rnd/models; smoke test on the R&D ComfyUI: 768x768, 4 steps, cfg 1 in 23.1 s, no out-of-memory on the RTX 3060 12 GB / 16 GB RAM"
+    install:
+      strategy: external-service
+      reference: "rnd/download_tier1.sh (Board only): Hugging Face download, SHA256 check, into rnd/models/diffusion_models and rnd/models/vae"
+    integrationStatus: evaluating   # D2 tier 1, spike S6
+    usedBy: []
+    compatibility: "Native ComfyUI 0.46 support (UNETLoader, CLIPLoader type flux2 with the Qwen3-4B text encoder, EmptyFlux2LatentImage); R&D ComfyUI only."
+    notes: "security review: 2026-11-22, safetensors (no pickle), official publisher hash match, Apache-2.0; no network use, no agent-facing text. R&D only until spike S6 and a Board decision."
+
+  - id: qwen3-4b-text-encoder
+    name: Qwen3-4B text encoder for FLUX.2 klein (qwen_3_4b.safetensors)
+    category: game-development
+    source:
+      repository: https://huggingface.co/Comfy-Org/Flux-2-Klein-4B   # split_files/text_encoders/qwen_3_4b.safetensors; base model https://huggingface.co/Qwen/Qwen3-4B
+    license: "Apache-2.0 (Qwen/Qwen3-4B license tag; Comfy-Org repackage tagged Apache-2.0)"
+    required: false
+    versionConstraint: "pinned: qwen_3_4b.safetensors SHA256 6c671498573ac2f7a5501502ccce8d2b08ea6ca2f661c458e708f36b36edfc5a"
+    verifiedVersion: "qwen_3_4b.safetensors 8,044,982,048 bytes, SHA256 as pinned, downloaded 2026-11-22 into rnd/models/text_encoders; loaded in the klein smoke test"
+    install:
+      strategy: external-service
+      reference: "rnd/download_tier1.sh (Board only) into rnd/models/text_encoders"
+    integrationStatus: evaluating   # D2 tier 1, spike S6
+    usedBy: []
+    compatibility: "Loaded by CLIPLoader (type flux2); 8.04 GB bf16; the fp4 variant was not taken (Ampere has no FP4 compute)."
+    notes: "security review: 2026-11-22, safetensors, hash pinned to the Hugging Face LFS oid, Apache-2.0. The repackage is by Comfy-Org, not by Qwen; its hash is pinned, and the licence follows the Qwen3-4B base."
+
+  - id: birefnet
+    name: BiRefNet (background removal / dichotomous segmentation)
+    category: game-development
+    source:
+      repository: https://huggingface.co/ZhengPeng7/BiRefNet   # file from https://huggingface.co/Comfy-Org/BiRefNet (background_removal/birefnet.safetensors), same SHA256 as the official model.safetensors
+    license: "MIT (ZhengPeng7/BiRefNet and the Comfy-Org repackage)"
+    required: false
+    versionConstraint: "pinned: birefnet.safetensors SHA256 9ab37426bf4de0567af6b5d21b16151357149139362e6e8992021b8ce356a154"
+    verifiedVersion: "birefnet.safetensors 444,473,596 bytes, SHA256 as pinned; smoke test: RemoveBackground on an 832x1216 image in 4.0 s, clean mask, cast shadow excluded"
+    install:
+      strategy: external-service
+      reference: "rnd/download_tier1.sh (Board only) into rnd/models/background_removal"
+    integrationStatus: evaluating   # D2 tier 1, spike S7
+    usedBy: []
+    compatibility: "ComfyUI core LoadBackgroundRemovalModel / RemoveBackground (birefnet config)."
+    notes: "security review: 2026-11-22, safetensors, official hash match, MIT; production candidate if S7 passes."
+
+  - id: toonout
+    name: ToonOut (BiRefNet fine-tuned for anime-style cut-outs) — R&D only
+    category: game-development
+    source:
+      repository: https://huggingface.co/joelseytre/toonout   # revision cbf720eca394edcde66b861a8a8c20fbabe9c748; paper arXiv 2509.06839
+    license: "MIT (model card); training dataset joelseytre/toonout CC-BY 4.0"
+    required: false
+    versionConstraint: "pinned: birefnet_finetuned_toonout.pth SHA256 8c7f8a0bc24400f4caade76622f75ff22ca1e93e169add9d2b70093e2487fbe5 at revision cbf720e"
+    verifiedVersion: "birefnet_finetuned_toonout.pth 885,046,394 bytes, SHA256 as pinned, kept in rnd/models/_sources; converted by the Board to toonout_birefnet.safetensors (SHA256 4a034286212c162306eb9d71d80978b5028b06eeedb3b5a69a41fa006c948482) by stripping the training prefix module._orig_mod. from all 754 keys, tensors unchanged; key set and shapes equal to BiRefNet; smoke test 2.1 s, clean mask"
+    install:
+      strategy: external-service
+      reference: "rnd/download_tier1.sh (Board only) into rnd/models/background_removal"
+    integrationStatus: evaluating   # D2 tier 1, spike S7, R&D only
+    usedBy: []
+    compatibility: "The published .pth (PyTorch pickle container, read only with weights_only=True) is not accepted by the core loader because of a training key prefix; the converted safetensors file loads in core LoadBackgroundRemovalModel."
+    notes: "security review: 2026-11-22, pickle container loaded only with weights_only=True; MIT stated on the card, licence text not in the repository. **R&D only (Board decision D2): outputs are not production candidates until a licence text is in this registry.**"
+
+  - id: fooocus-inpaint-patch
+    name: Fooocus inpaint patch for SDXL (inpaint_v26.fooocus.patch + fooocus_inpaint_head.pth) — R&D only
+    category: game-development
+    source:
+      repository: https://huggingface.co/lllyasviel/fooocus_inpaint   # revision 74bbcc070e55219adb9b6c3b0d035b34e3697d1d
+    license: "Tagged 'openrail' on Hugging Face with no licence text (checked 2026-11-22)"
+    required: false
+    versionConstraint: "pinned: inpaint_v26.fooocus.patch SHA256 f8657a025104e22d70f9c060635d8e8c2196f433871a2f68dc40abd2171f0d59; fooocus_inpaint_head.pth SHA256 32f7f838e0c6d8f13437ba8411e77a4688d77a2e34df8857e4ef4d51f6b97692"
+    verifiedVersion: "inpaint_v26.fooocus.patch 1,323,362,033 bytes and fooocus_inpaint_head.pth 52,602 bytes, SHA256 as pinned, in rnd/models/inpaint; smoke test with SDXL base (MaskedFill neutral, VAEEncodeInpaintConditioning, ApplyFooocusInpaint, 24 steps) ran in 65.2 s"
+    install:
+      strategy: external-service
+      reference: "rnd/download_tier1.sh (Board only) into rnd/models/inpaint"
+    integrationStatus: evaluating   # D2 tier 1, spike S5, R&D only
+    usedBy: []
+    compatibility: "Loaded by comfyui-inpaint-nodes (patch: comfy.utils.load_torch_file safe_load; head: torch.load weights_only=True). Applies to the SDXL base checkpoint."
+    notes: "security review: 2026-11-22, both files loaded without arbitrary code execution (safe_load / weights_only). **R&D only (Board decision D2): no licence text; outputs are not production candidates.**"
+
+  - id: comfyui-inpaint-nodes
+    name: ComfyUI inpaint nodes (Acly) — R&D ComfyUI only
+    category: game-development
+    source:
+      repository: https://github.com/Acly/comfyui-inpaint-nodes   # commit 5b7681746fe19e563113d27366ba85236bc1ba5b (v1.4.4, 2026-10-04)
+    license: "GPL-3.0 (tool code, not shipped in any game)"
+    required: false
+    versionConstraint: "pinned: commit 5b7681746fe19e563113d27366ba85236bc1ba5b"
+    verifiedVersion: "cloned at 5b7681746fe19e563113d27366ba85236bc1ba5b into rnd/ComfyUI_rnd/ComfyUI/custom_nodes/comfyui-inpaint-nodes; imports in 0.0 s on the R&D ComfyUI; 10 INPAINT_ nodes registered"
+    install:
+      strategy: external-service
+      reference: "git clone + checkout of the pinned commit into rnd/ComfyUI_rnd/ComfyUI/custom_nodes (Board only); no pip install (its imports, torch, numpy, kornia 0.9.0, are already in the embedded Python; OpenCV fills are not used)"
+    integrationStatus: evaluating   # D2 tier 1, spike S5
+    usedBy: []
+    compatibility: "R&D ComfyUI only; production ComfyUI keeps no custom nodes."
+    notes: "security review: 2026-11-22, code read: ~880 lines Python; no network, subprocess, eval/exec or os.system; model files loaded with safe_load / weights_only; registers the models/inpaint folder; custom node code runs inside the R&D ComfyUI process (same OS user)."
+
   - id: ui-ux-pro-max-skill
     name: UI/UX Pro Max Skill
     category: web-design

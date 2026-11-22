@@ -40,6 +40,10 @@ Board answer 2026-11-22: "Duyệt D1–D9" (approve D1–D9 as recommended below
 | D8 | Benchmark suite B1–B5 (original subjects; Scrivener = B2; flat cel style for B1/B5; B4 frame-based), the sampling rule (3 subjects × 4 seeds, median and worst), the repair-cost record, and quality gates A–G as amended (identity against the reference sheet, Gate B reveal check, Gate D rubric, Gate F manual pixel edits = 0, gates count only after ≥ 90% defect recall) | Approve |
 | D9 | Deckbound: SOU-64 stays parked as B2 (a tool failure, not an art failure); SOU-77 waits for M3 and is seeded by S2; other pilot Tasks continue on current tools; G8 of Art Production v2 records SOU-64 as a tool capability failure | Approve |
 
+## Decision log after approval
+- **2026-11-22, D3 (Board: "Chốt và cài tier 1")**: drive C: keeps **at least 40 GB free**, checked before every install. After the Board's cleanup C: had 200.8 GB free (from 84 GB); after tier 1, 178 GB.
+- **2026-11-22, tier 1 installed (D2)** in the R&D ComfyUI `~/game-studio-workspace/rnd/ComfyUI_rnd` (copy of the production build a277b5b, port 8189, `--offline`, models in `rnd/models/` outside the production tree; stopped when no spike runs, so it does not compete with production for the 16 GB RAM). Weights, SHA256-checked against Hugging Face: FLUX.2 klein 4B + Qwen3-4B text encoder + FLUX.2 VAE (Apache-2.0), BiRefNet (MIT), and **R&D only** ToonOut (converted to safetensors by stripping a training key prefix) and the Fooocus inpaint patch; custom node `comfyui-inpaint-nodes` at 5b76817 (GPL-3.0, code reviewed). Registry entries with `integrationStatus: evaluating`. Smoke tests: klein 23.1 s at 768² without out-of-memory, BiRefNet 4.0 s, ToonOut 2.1 s, Fooocus + SDXL 65.2 s. Quality is judged in spikes S5–S7.
+
 ## Review record
 `director` (SOU-78, 2026-11-22) approved for Board decision with these amendments, all applied:
 - Labels: klein 9B non-commercial marked (U) consistently; klein 4B fit marked unverified (S6); See-through "strong on anime, painterly and pixel untested"; removal "one production case"; capture "opaque, alpha in S3"; S1 reported as 0/10 with SOU-64 run 2.
