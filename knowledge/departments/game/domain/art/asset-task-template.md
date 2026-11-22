@@ -46,7 +46,15 @@ Reviewers (Paperclip review stages): qa<, game-designer when readability is at s
 - Output: <format, dimensions, frames, cell size, pivot, loop, file naming>
 - Budget: <file size, texture size, frame count>
 - Licence rule: <project rule, e.g. original or CC0 only; AI-made art allowed under the Board decision of 2026-11-22>
-- Approved tools for this Task: <comfy-draft.py, art-ops.py, PixelFX (licence permitting), Godot capture>
+- Approved tools for this Task (role → permitted operation → project restriction; list only what this Task needs). The permitted operations are the role's exact allow rules (see the role file; the generated Capability Catalog is meant to become the canonical source):
+  - `game-artist` → `comfy-draft.py` (concept drafts, approved models only) → <project restriction, e.g. own designs only>
+  - `game-artist` → `comfy-edit.py img2img` (low-denoise variation of the project's own art) → <restriction>
+  - `game-artist` → `comfy-edit.py inpaint` (repaint one masked region; outside-mask pixels restored) → <restriction>
+  - `game-artist` → `comfy-edit.py matte` (cut a figure from a flat backdrop) → <restriction>
+  - `game-artist` → `art-ops.py` (info, crop, resize, key, trim, canvas, sheet, grade, contact, mask, compose, diff) → <restriction>
+  - `game-artist` → PixelFX list/render → <licence permitting, e.g. not in Lamplight Vigil>
+  - `game-artist` → Godot capture commands → <project only>
+  - Not available to agents: R&D-only tools (R&D ComfyUI, FLUX.2 klein, SAM 3.1, ViTPose, ToonOut, Fooocus inpaint patch, Krita); do not list them.
 - Iteration budget: <default 2 critique-and-refine rounds>
 - Integration Task for in-context checks: <Task key, or none — then nothing may be deferred and the asset can reach art-ready only>
 - Open questions for art direction: <or none>

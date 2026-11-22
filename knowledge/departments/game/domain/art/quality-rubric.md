@@ -13,7 +13,7 @@ Any failed or unverified hard gate means `changes_requested` (or `blocked` when 
 | Technical contract | Dimensions, frames, alpha, naming, directory and variants match the Task and the project's asset spec |
 | Critical readability | What the player must notice is identifiable at the target size, on the target background, in the required states |
 | Evidence | The handoff has the evidence the lane requires ([complexity-lanes.md](complexity-lanes.md)), in the evidence folder for its Task type (committed for art and integration Tasks; in the Task Workspace for game-UI Tasks) and openable by the reviewer ([handoff-templates.md](handoff-templates.md#review-evidence-where-it-lives-and-how-reviewers-open-it)); staging paths, paths outside the workspace and written descriptions are not visual evidence |
-| Scope | Only files in the write set changed; no application code, import settings, shaders or shared pipeline code by `game-artist`; artwork production scripts only inside the write set |
+| Scope | Only files in the write set changed; no application code, import settings, shaders or shared pipeline code (reusable across Tasks, workflows or projects) by `game-artist`; task-local artwork production scripts only inside the write set, any number of outputs |
 
 Missing evidence is `UNVERIFIED`, not a pass.
 

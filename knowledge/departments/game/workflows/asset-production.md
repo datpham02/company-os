@@ -18,7 +18,7 @@ The asset request (step 1) with its proposed [lane](../domain/art/complexity-lan
 | `game-designer` (or the Board, or `producer` for non-design requests) | Writes the asset request: gameplay purpose, readability, acceptance criteria, proposed lane; decides an L2 direction ([game-rules.md §2](../domain/game-rules.md#2-design-authority)) |
 | `project-manager` | Turns the request into Tasks, assigns, sets review and approval stages, routes rework |
 | `game-artist` | Research, exploration, selection, production, critique and refinement, preflight, handoff |
-| `gameplay-programmer` | Engine-side integration and technical-art implementation: engine-side work and shared pipeline code (artwork production scripts for the Task's own assets are `game-artist` art work, inside its write set) |
+| `gameplay-programmer` | Engine-side integration and technical-art implementation: engine-side work and shared pipeline code (task-local artwork production scripts that produce the Task's own assets, any number of them, are `game-artist` art work inside its write set; shared pipeline code is code meant as a reusable capability across Tasks, workflows or projects) |
 | `qa` | Independent review against the acceptance criteria; files defects |
 | Board Operator | Approval and merge (ADR-009) |
 
