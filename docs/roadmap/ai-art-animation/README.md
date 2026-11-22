@@ -1,0 +1,53 @@
+# AI-Native Game Art & Animation Production Pipeline: Board Review Package
+
+- **Status:** **Board decisions D1–D9 approved as recommended (2026-11-22)**. The package itself adds no tool, model, agent or permission; each install, permission or role still follows its own approved decision and review.
+- **Scope:** studio-wide capability (not a Deckbound feature). Deckbound and the Scrivener are the first benchmark only.
+- **Prepared by:** Claude Code for the Board (Board decision 2026-11-22: Claude Code audits, researches and runs spikes; `director` reviews as design authority, because its read-only runtime has no web search or script execution).
+- **Review:** `director` review SOU-78 (2026-11-22): "approve for Board decision" with amendments to D2, D3, D4, D8, the benchmarks, gates and spike order; **all amendments are applied in this revision** (see [§ Review record](#review-record)).
+- **Parts:** [01 Capability audit](01-capability-audit.md) · [02 Technology research and evaluation matrix](02-technology-research.md) · [03 Architecture, benchmarks, spikes, roadmap, agents, budget, risks, gates](03-architecture-and-plan.md)
+
+## Executive summary
+
+1. **Where the studio is.** Concept, text-to-image, image-to-image, masked repainting, masks, compositing, engine import and opaque frame capture work today (Verified). Inserting new objects, character consistency, part segmentation, occlusion reconstruction, meshing, weights, rigging, animation authoring and animation QA do not (audit §3). The Scrivener (SOU-64) failed exactly there: separately generated parts do not match, and SDXL base cannot add a lantern (0/10 attempts on one input: SOU-64 run 2 and Board spike S1).
+2. **The gap is mostly models and glue, not engines.** The studio's ComfyUI already has the nodes for SAM 3, background removal, layered decomposition, instruction editing, ControlNet, LoRA training and video (Verified); weights, licences, RAM and disk are what is missing.
+3. **Credible paths exist, none is turnkey.** FLUX.2 [klein] 4B (Apache-2.0; fit on this machine unverified, spike S6) for insertion, completion and reference editing; See-through for occlusion-completed part layers (strong on anime-style characters, painterly and pixel untested, with a training-data provenance question); our own scripted mesh/weights/rig/clip pipeline compiled to Godot; video models only as motion reference (Experimental, research §2).
+4. **Recommended strategy:** data-first, engine-agnostic platform (layer manifest, rig and clip schemas derived from spike output; CLIs with fixed contracts; engine adapters), proven by **small spikes before building** (14 spikes in 4 tiers; S1 is done; S2–S4 need nothing new, and S4, animation quality, is the first go/no-go), on a **layered hybrid rig** (partial skeletal + swaps + baked secondary motion), with **one canonical master per character** (parts cut from it, never generated alone), measured on a **5-character benchmark suite** in two painted styles plus pixel art, with **repair cost recorded** for every result.
+5. **Main constraints:** 16 GB RAM and 85 GB free disk (more than the 12 GB GPU); licence traps (all FLUX.1-dev derivatives, InsightFace, RMBG-2.0 and others excluded); no technical-artist role; lifecycle friction when tools fail (OQ-048).
+6. **Effort:** about 47–71 Board-operator days to an end-to-end validated character and a reusable platform, re-estimated after each milestone; local compute only; one likely hardware purchase (RAM); Spine only if justified later.
+
+## Capability status by label
+
+| Label | Items |
+|---|---|
+| **Verified** | text-to-image (SDXL, FLUX schnell); img2img; masked repaint/removal with exact outside-mask restore (removal: one production case); masks, compose, diff, trim; engine import and opaque frame capture; vision review of stills; provenance records; ComfyUI core node inventory; SDXL base cannot insert objects (negative, one input) |
+| **Experimental** (spike planned) | animation quality from preset clips (S4); object insertion (S5, S6); character consistency (S6, LoRA); matting (S7); layer decomposition and occlusion completion (S8, S9); scripted Godot rig (S2); auto mesh and weights (S10); render capture with alpha (S3); layer, mesh and motion QA checks (S11a, S11b); video motion reference (S12); dual Godot/Spine export (S13) |
+| **Proposed** | Studio Art Platform architecture, schemas, CLIs, engine adapters, project profiles, R&D environment, benchmark suite, gates B–D/F–G with the Gate D rubric, repair-cost ledger, `technical-artist`/`animator` roles |
+| **Unknown** | whether occlusion completion is authoritative enough for unattended use; whether automatic weights reach commercial quality; whether a vision model can judge animation appeal; See-through generalisation to painterly and pixel styles; Windows/RAM behaviour of 20B models; Spine runtime terms for agent-generated data |
+
+## Required Board decisions
+
+Board answer 2026-11-22: "Duyệt D1–D9" (approve D1–D9 as recommended below).
+
+| # | Decision | Recommendation |
+|---|---|---|
+| D1 | Approve the approach: Claude Code runs M0–M3 research and spikes for the Board; `director` reviews each one-page spike result (question, method, n, median and worst, repair cost, artefacts, verdict); no new agent yet | Approve |
+| D2 | Approve a separate **R&D ComfyUI** environment with models **outside the production ComfyUI tree**, and the tier-1 install list for spikes only: FLUX.2 klein 4B + text encoder, BiRefNet, and **R&D-only** Acly inpaint nodes + Fooocus patch and ToonOut (licence text missing or unverified: their outputs are not production candidates until the licence text is in the registry); each with the registry security review; production ComfyUI unchanged | Approve tier 1 now; tiers 2–3 after M1 results |
+| D3 | Hardware: RAM 16 → 64 GB; a storage plan (another drive or cleanup) and a free-space floor **before tier 1** (tier 1 needs ~20 GB beside production on 85 GB free) | Approve RAM before S12/Qwen 20B; decide storage before tier 1 |
+| D4 | **Training-data provenance policy** for third-party models (See-through trained on scraped Live2D models; SDXL on LAION). Tiered: See-through allowed **for the S8 evaluation only**; production use decided after S8/S9 together with their originality results; prefer the modular chain (S9) if it meets the same thresholds. A blanket exclusion would also exclude SDXL | Approve the tiered policy |
+| D5 | Licence policy: commercial-only weights; SAM 3 custom licence → legal check, else SAM 2.1; no FLUX.1-dev derivatives, InsightFace, RMBG-2.0; GPL node packs are tools, not shipped code | Approve |
+| D6 | Spine: no purchase now; revisit after S2/S10 with a legal reading of the runtime terms | Approve deferral |
+| D7 | Roles: propose `technical-artist` only after two characters pass M3 and a playbook exists, and `animator` only if M4 shows motion needs its own loop; each with scope, runtime, model, permissions and cost (scopes in 03 §5) | Approve deferral |
+| D8 | Benchmark suite B1–B5 (original subjects; Scrivener = B2; flat cel style for B1/B5; B4 frame-based), the sampling rule (3 subjects × 4 seeds, median and worst), the repair-cost record, and quality gates A–G as amended (identity against the reference sheet, Gate B reveal check, Gate D rubric, Gate F manual pixel edits = 0, gates count only after ≥ 90% defect recall) | Approve |
+| D9 | Deckbound: SOU-64 stays parked as B2 (a tool failure, not an art failure); SOU-77 waits for M3 and is seeded by S2; other pilot Tasks continue on current tools; G8 of Art Production v2 records SOU-64 as a tool capability failure | Approve |
+
+## Review record
+`director` (SOU-78, 2026-11-22) approved for Board decision with these amendments, all applied:
+- Labels: klein 9B non-commercial marked (U) consistently; klein 4B fit marked unverified (S6); See-through "strong on anime, painterly and pixel untested"; removal "one production case"; capture "opaque, alpha in S3"; S1 reported as 0/10 with SOU-64 run 2.
+- Licences: Fooocus patch and ToonOut R&D-only until their licence text is in the registry (D2).
+- Strategy: schemas v0 from spike output, v1 at M2/M3; S4 moved to the first go/no-go; S9 given S8's absolute thresholds; S11 split into S11a (layers, M2, before Gate B) and S11b (mesh and motion, M3/M5); S6 reports insertion, completion and identity separately; LoRA trains only on an approved master, its parts and approved edits, never to create the identity; S2 uses the Scrivener part list and seeds SOU-77.
+- Measurement: repair-cost record for every result; sampling rule 3 × 4 with median and worst; Gate F needs zero manual pixel edits and a repair ceiling set at M2; gates count only after ≥ 90% recall on their defect class.
+- Art direction: one canonical master per character; reveal budgets and a Gate B reveal check; style-drift check on completed regions; originality check covers completed regions and swaps with the completing tool recorded; Gate A identity against the reference sheet; Gate D rubric; roster line-up (R11); second painted style (flat cel) for Gate G; B4 frame-based; facing criteria for B1/B5; B2 hidden-parts and draw-order criteria; B3 silhouette line-up; Gate B no halo or baked shadow at 270 px.
+- Decisions: D3 storage before tier 1; D4 tiered; D8 as amended; role scopes for `technical-artist` and `animator`.
+
+## What this package does not do
+It installs nothing, grants no permission, creates no agent, buys nothing, and changes no approved Deckbound decision. Each later step returns to the Board with its evidence.
