@@ -2,7 +2,7 @@
 
 One page per spike (initiative package 03 §3; Board decision D1): question, method, n, median and worst, repair cost, artefacts, verdict. Engine spikes run in the R&D area `~/game-studio-workspace/rnd/` (outside every repository); the scripts that reproduce them are kept here (`s1_spike_insert.py`, `s2/`, `s3/`). **S1 ran on the production ComfyUI server** with its already-installed SDXL base (no install; before the R&D ComfyUI of decision D2 exists); its temporary input folder `ComfyUI/input/spike/<run>/` and outputs were deleted after the run. From tier 1 on, model spikes run only in the R&D ComfyUI.
 
-**Review status (decision D1):** `director` requested documentation fixes on 2026-11-22 (SOU-80: artefacts lines, S1 question/method mismatch, median and worst, S3 CI wording); applied here and returned for acceptance. `gameplay-programmer` review of S2 is still open and is due before S8 starts.
+**Review status (decision D1):** `director`: changes requested, then **accepted** (SOU-80, 2026-11-22). The S2 follow-ups below go into the S8–S10 Task descriptions when they are written. `gameplay-programmer` review of S2 is still open and is due before S8 starts.
 
 | Spike | Date | Verdict |
 |---|---|---|
