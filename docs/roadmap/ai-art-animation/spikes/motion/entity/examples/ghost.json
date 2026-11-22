@@ -56,5 +56,22 @@
    "pins"
   ],
   "artistic": "readable silhouette, consistent drift"
- }
+ },
+ "environment": {
+  "gravity": [
+   0,
+   1
+  ],
+  "medium": "air"
+ },
+ "characteristic_length": {
+  "value_px": null,
+  "basis": "body length"
+ },
+ "structural_assumptions": [
+  "periodic",
+  "cloth",
+  "mesh",
+  "card_scene"
+ ]
 }

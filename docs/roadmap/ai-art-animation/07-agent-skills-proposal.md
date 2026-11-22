@@ -22,5 +22,9 @@ pass.
 | **animation-polishing** | blocking approved | motion + review findings | KB §12-13, 19 | springs (secondary), events | overlap and follow-through on loose parts → hold timing → stylisation within limits → events (hit-stop as runtime) | polished `motion.v2` | polish breaks a hard check; baked hit-stop decelerates contact | contact speed; overlap present; no new pops |
 | **motion-qa** | any motion handed off | motion + structure | 06 §4 | `motion.py` | run checks → classify hard/soft/artistic → render evidence → verdict | QA report + evidence | evidence missing; judging from stills | hard checks; soft findings; real-time and slow previews watched |
 
+**Order (`director`, SOU-87):** motion-qa (the evidence contract) → animation-reference-research (licence gate) → motion-design (with the reference-selection gate of 08 §5) → motion-retargeting → body-mechanics; creature, gait, chain and wing skills wait until those tools exist.
+
+**Review cards:** every skill that hands work to `director` attaches a review card per preview package (frame numbers to look at, what to compare, per-frame metrics), because the reviewer cannot open media. **Stable anchors:** skills cite KB sections by stable anchors (not section numbers), because the K4 review will renumber the KB.
+
 **Packaging:** each skill becomes a `SKILL.md` with these sections plus links to the KB sections, stored with the
 studio knowledge (not in a project repository), after Board approval and a `director` review of the KB content.

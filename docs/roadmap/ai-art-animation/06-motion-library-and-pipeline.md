@@ -110,17 +110,17 @@ sheet `review_C/compare_A_B_C.png`. Checks are the v2 set (20 checks incl. KB ru
 | Criterion (Board list) | A | B | C |
 |---|---|---|---|
 | Naturalness | 1 | 3 | **4** (body), 2 (impact) |
-| Anatomy | 1 | 4 | 3 (projection artefacts on the far arm) |
+| Anatomy | 1 | 4 | 2 (`director`: impossible-looking far-arm elbows are a hard anatomical failure in 2D, whatever the 3D source) |
 | Weight | 2 | 3 | **4** |
 | Anticipation | 2 | 3 | **5** |
 | Arm extension at impact | 1 | **5** | 2 (source is a waist-height chop) |
 | Weapon trajectory | 3 | **4** | 3 (wrist by rule; source has no usable hand data) |
-| Ground contact | 4 | 5 | 5 (after cleanup) |
+| Ground contact | 4 | 5 | 5 (scores the cleanup tool, not the method) |
 | Impact | 2 | **4** | 2 |
 | Recovery | 2 | 4 | 3 |
 | Automation effort | low (but wrong) | high (per-pose design by iteration) | **low per clip once the reader/retarget exist**; reference selection is the expensive step |
-| Reusability | none | medium (KB rules + spec are reusable; poses are not) | **high** (map file per character type + clip; same code) |
-Scores are the Board operator's first assessment on the rendered previews; `director` scores them in review.
+| Reusability | none | medium (KB rules + spec are reusable; poses are not) | **high, conditional on a matching reference existing** (map file per character type + clip; same code) |
+Scores are the Board operator's first assessment on the rendered previews, corrected by `director` (SOU-87). Distances are reported in pixels of the 832 x 1216 master; in characteristic length L (leg length 210 px) the main numbers are: B weight back 0.31 L / forward 0.49 L; C weight back 0.49 L.
 
 **Findings**
 1. Reference-driven motion gives the body mechanics that hand-authored keys lacked (coil, arch, timing), at low
@@ -133,7 +133,7 @@ Scores are the Board operator's first assessment on the rendered previews; `dire
 4. The QA set caught every problem it was built for in all three methods; the artistic verdict still needs the
    previews.
 
-**Recommendation:** the studio method is **C + B as a hybrid**: reference-driven body and timing (C) from a clip that
+**Recommendation:** the studio method is **C + B as a hybrid** - a hypothesis until a hybrid clip exists (acceptance in 08 §8; `director`). B's soft finding (the arm rises behind the trunk at low elevation early in the wind-up) is real: the hybrid raises the arms through the front/side and lets the trunk arch supply the lean. Method: reference-driven body and timing (C) from a clip that
 matches the intent, character-specific adjustment by KB rules where the reference is silent or mismatched (B: wrist,
 weapon, impact extension, weight-forward at contact), the same QA. Next step: search a better-matching commercially
 usable reference (a downward strike to the ground; CC0 packs, other CMU trials) and add the "adjustment" layer

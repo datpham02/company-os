@@ -35,5 +35,24 @@
    "limb_intersection",
    "ground_contact"
   ]
- }
+ },
+ "environment": {
+  "gravity": [
+   0,
+   1
+  ],
+  "medium": "air"
+ },
+ "characteristic_length": {
+  "value_px": null,
+  "basis": "leg length"
+ },
+ "structural_assumptions": [
+  "articulated",
+  "legged",
+  "grounded",
+  "periodic",
+  "card_scene",
+  "layered_2d"
+ ]
 }

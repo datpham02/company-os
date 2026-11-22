@@ -41,5 +41,24 @@
    "recovery_time",
    "parabola_fit"
   ]
- }
+ },
+ "environment": {
+  "gravity": [
+   0,
+   1
+  ],
+  "medium": "air"
+ },
+ "characteristic_length": {
+  "value_px": null,
+  "basis": "diameter"
+ },
+ "structural_assumptions": [
+  "deformable",
+  "mesh",
+  "grounded",
+  "airborne",
+  "periodic",
+  "card_scene"
+ ]
 }

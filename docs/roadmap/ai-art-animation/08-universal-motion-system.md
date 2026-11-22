@@ -9,6 +9,8 @@
 - **Evidence base:** research files in [kb/](kb/) (animation fundamentals, Spine/Godot workflow, functional anatomy,
   biomechanics and existing systems, universal motion) and [05](05-motion-reference-and-licensing.md) (motion data
   licences); working R&D code in `rnd/motion/` (mirrored in [spikes/motion/](spikes/motion/)).
+- **Review:** `director` (SOU-87, 2026-11-22): *accept for Board presentation*, with amendments now applied in this
+  revision; the two high-severity items are presented as **conditions** (§5 reference-selection gate, §8 order).
 
 ## 1. Capability architecture
 
@@ -55,7 +57,10 @@ everything else optional: identity and movement identity, topology, anatomy prof
 materials (elasticity, damping, friction), components (type, name, params, `attach_to` socket), locomotion modes,
 contacts (always / phase / never), attachments, collision approximations, environment interactions, cross-entity
 interactions, references (with licence), artistic characteristics, gameplay events and timing budgets, allowed
-methods, **fictional rules** (each names the validators it replaces), validation (physical / fictional / artistic).
+methods, **environment** (gravity vector, medium: air / water / none - physical context, not fiction),
+**characteristic_length** (the unit for every threshold: leg length for legged bodies, body length or diameter
+otherwise), **fictional rules** (only for behaviour that contradicts the declared environment; each names the
+validators it replaces), validation (physical / fictional / artistic).
 
 Examples (validated by `entity.py plan`, 0 structural errors): brute with hammer, dragon (skeleton + gait + wings +
 undulating tail + flexible tip + armour plates + fire particles), slime, ghost (no gravity, phasing), golem, giant
@@ -71,7 +76,9 @@ per-joint settings (free/limited/locked, stiffness, preferred bend), contact sch
 
 ## 4. Composable motion components
 
-Registry: `rnd/motion/entity/components.json` (17 entries today; the research lists 23 incl. hinge, spring, chain,
+Registry: `rnd/motion/entity/components.json` (18 entries incl. the `interaction_contact` stub; every validator is
+tagged with its structural assumption - bilateral, legged, grounded, trunk, articulated, periodic - so a snake, slime
+or jellyfish never inherits a check that assumes legs or a trunk; the research lists 23 incl. hinge, spring, chain,
 floating as separate presets). Each entry: applicable entities, inputs, parameters, outputs, methods, hard and soft
 constraints, validators, implementation status, runtime option. Build-vs-reuse verdicts (kb/universal-motion §2, §5):
 
@@ -100,13 +107,27 @@ and refine. `entity.py plan` makes steps 1, 2, 5, 6 and 7 checkable.
 
 | Situation | Preferred method | Why |
 |---|---|---|
-| a matching, commercially usable reference exists (mocap, Muybridge-derived tables) | reference retarget + KB adjustment (C+B) | real coordination and timing; adjust what the source cannot give (S4 finding) |
+| a reference passes the **reference-selection gate** (below) | reference retarget + KB adjustment (C+B) | real coordination and timing; adjust what the source cannot give (S4 finding) |
 | big articulated action with no reference | knowledge-guided FK keys + validators (B) | deterministic, checkable |
 | repeating locomotion | procedural gait scheduler | parameters scale to N legs, speeds |
 | secondary motion (tails, cloth, chains, lanterns) | procedural springs/Verlet, baked | cheap, stable |
 | impacts, magic, elements | particles + shaders + short frame sequences | runtime features exist |
 | pixel art, effects with changing shapes | frame-by-frame (generated + validated) | rotation blurs pixels |
 | AI motion generation (video → motion) | not now | licences (SMPL, SuperAnimal NC), accounts, RAM |
+| idle / breathing loops | layered oscillators (breath, sway, secondary springs) | loop seam by construction; cheap |
+| transitions and hit reactions | blend from any pose to a reaction key set, return to idle within tolerance | every card unit needs them |
+| facing (opponent side) | mirror policy per entity (mirror allowed / mirror forbidden for handed props) | asymmetric weapons and props |
+
+**Reference-selection gate (condition, `director` high):** before a reference is used, the motion spec records a
+written acceptance for this request and the result of checking the reference against it: target height of the
+contact (e.g. ground vs chest), limb extension at contact, grip type (one/two hands, handed side), start pose
+compatible with the entity's idle (or a planned transition), facing, phase durations within the category ratios,
+and licence (production-OK, with the CMU acknowledgement line stored). A reference that fails any item is rejected
+or explicitly adjusted; the S4 chop-instead-of-smash result is the failure this gate prevents.
+
+**Hybrid adjustment covers timing, not only poses:** after retargeting, phase durations are redistributed to the
+action category's ratios (longer anticipation hold, short contact, exaggerated recovery), then a stylisation pass
+bounded by the entity's ROM tier; the source's realism never overrides the project's timing or style.
 
 ## 6. Reference library strategy
 
@@ -115,6 +136,10 @@ Kenney), Muybridge plates (US public domain; we store our own traced phase table
 Open Access items marked CC0. R&D only: NC datasets (Bandai Namco, LaFAN1, AMASS, SMPL family, SuperAnimal).
 Store derived data (motion.v2 keys, phase/duty tables, contact schedules) with the source pointer and licence check
 date; never commit raw third-party data. Agents have no web access, so formulas and tables live in kb/ and profiles.
+CMU asks for an acknowledgement line in products that use the data; it is stored with each licence check.
+**Production-OK sources are human-heavy:** animal mocap is non-commercial or absent, so for creatures the reference
+branch will rarely fire and most creature motion falls to knowledge-guided keys and procedural generators
+(Muybridge-derived phase tables are the main creature reference). This raises U2-U3 effort (see §9).
 
 ## 7. Entity-specific QA architecture
 
@@ -126,8 +151,24 @@ rules replace. Three tiers (implemented for skeletal entities in `posecheck.py`)
 and slow previews). Planned per family: gait sequence and duty factor (quadruped, multi-legged), support polygon
 with ≥3 contacts (insects), wing timing/fold coupling/body response (flying), wave direction and amplitude envelope
 (serpentine), area preservation and elastic recovery (soft body), pivot/linkage closure/intersection (mechanical),
-loop seam and event sync (magical, hovering). Thresholds are fractions of leg/body length, not pixels (2D units are
-arbitrary). Physical, fictional and artistic correctness are reported separately.
+loop seam and event sync (magical, hovering). Thresholds are in the profile's characteristic length (reports give
+both that and pixels). Physical, fictional and artistic correctness are reported separately; the limit tier in force
+is printed in every report.
+
+Universal checks added for a 2D card game (`director` review):
+
+| Check | Class | What |
+|---|---|---|
+| readability at display size | **hard for key poses (high)** | downscale to the card-slot resolution; key poses must differ in silhouette (difference above a threshold) |
+| loop seam | hard | every idle/loop: last frame = first frame within tolerance, no velocity pop at the seam |
+| gameplay event sync | hard | the contact frame equals the damage event frame; clip duration inside the profile's timing budget |
+| footprint and anchor | hard | motion stays inside the allotted box; the base sits on the card ground line; no drift across a loop |
+| transition continuity | hard | idle → action → idle returns within tolerance; no pops at blends |
+| draw-order stability | hard | far-limb / prop layer swaps only at declared frames (projection cleanup becomes a validator) |
+| mirror safety | soft | handedness of weapons and asymmetric props after mirroring |
+| key and bone budget | soft | keys/bones per clip within the runtime budget |
+`director` receives a **review card** per preview package: frame numbers to look at, what to compare, the metrics
+per frame - because the reviewer cannot open media itself.
 
 **Done and verified today:** 18 automated tests (`tests/test_motion_system.py`): solver tests (rest reproduction,
 degrees, local vs global inheritance, isolated elbow sweep without shoulder motion/flips/length change, weapon
@@ -139,36 +180,42 @@ reproduced) - fixed; knees now follow the anatomical preferred bend.
 
 | # | Benchmark | Intent | Components | Acceptance (summary) |
 |---|---|---|---|---|
-| 1 | Humanoid combat | light attack + hit reaction | skeleton, attachment | tier A/B hard pass; director on previews |
+| 1 | Humanoid combat + idle | idle loop, light attack, hit reaction (receiver), mirrored facing | skeleton, attachment, interaction_contact | loop seam ≤ 0.002 L; contact frame = damage event; reaction starts ≤ 2 frames after contact; card-scale readability; mirror safety |
 | 2 | Heavy humanoid (**current**) | heavy overhead smash | skeleton, attachment, flexible appendage | done: B 17/17 hard, C as reference; hybrid next |
-| 3 | Quadruped locomotion | walk → trot → gallop | skeleton, gait, chain (tail) | footfall order, duty factor, no slip, spine flex in gallop |
-| 4 | Flying creature | take-off, flap, glide | wing, skeleton, chain | fold coupling, downstroke > upstroke, body bob |
-| 5 | Multi-legged | spider skitter | skeleton, gait (8) | ≥3 supports, tetrapod order, no leg crossing |
-| 6 | Serpentine / tentacle | slither, strike | chain (wave) | wave head→tail, amplitude envelope, lengths |
-| 7 | Soft body | slime hop | deformable, ballistic | area ±10 %, recovery, parabola |
-| 8 | Mechanical | robot arm / door linkage | hinge, linkage | pivots, closure, no intersection |
-| 9 | Rigid object + attachment | lantern carried, sword thrown | attachment, pendulum, ballistic | grip, detach event, settle |
-| 10 | Magical/abstract | ghost drift, artifact spin | hover, shader, particles | loop seam, readability, fictional rules |
-| 11 | Environmental | foliage, banner, chain | spring, cloth, rope | wind response, no jitter |
-| 12 | Hybrid | dragon | gait + wing + chain + particles | composition works without core changes |
+| 3 | Quadruped locomotion | walk → trot → gallop | skeleton, gait, chain (tail) | footfall order exact; duty factor within ±0.05 of the gait table; foot slip ≤ 0.01 L in contact; spine flex/extension phase-locked in gallop |
+| 4 | Flying creature | take-off, flap, glide | wing, skeleton, chain | elbow-wrist fold coupling; downstroke/upstroke duration ratio ≤ 0.8; body bob opposite to the wing stroke, amplitude 0.02-0.08 L |
+| 5 | Multi-legged | spider skitter | skeleton, gait (8) | ≥ 3 non-collinear supports every frame; tetrapod order exact; no leg crossing |
+| 6 | Serpentine / tentacle | slither, strike | chain (wave) | wave travels head → tail; amplitude envelope rising toward the tail; segment length error ≤ 0.001 L |
+| 7 | Soft body | slime hop | deformable, ballistic | area within ±10 %; elastic recovery ≤ 12 frames; airborne path fits a parabola (R² ≥ 0.98) |
+| 8 | Mechanical | robot arm / door linkage | hinge, linkage | pivot drift 0; linkage closure error ≤ 0.001 L; no part intersection |
+| 9 | Rigid object + attachment | lantern carried, sword thrown | attachment, pendulum, ballistic | grip error 0 until detach; detach at the declared frame; pendulum settles ≤ 1.5 s |
+| 10 | Magical/abstract | ghost drift, artifact spin | hover, shader, particles | loop seam ≤ 0.002 L; card-scale readability; fictional rules declared |
+| 11 | Environmental | foliage, banner, chain | spring, cloth, rope | wind response lag 2-10 frames; no frame-to-frame jitter above 0.002 L |
+| 12 | Hybrid | dragon | gait + wing + chain + particles | composition without core changes; gait and wing phase-locked; tail driven by the body (lag 2-8 frames); fire particles start at the declared frame |
+Thresholds are starting values in characteristic length L (§3), to be tuned in each spike; every benchmark also
+carries the `director` preview list (review card).
 Each benchmark records intent, structure, references (with licence), expected behaviour, technical constraints,
 artistic criteria, previews (real-time, slow, sheet, trajectories), QA method, automation cost and reusability.
 
-**Spike order (do not run all at once):** finish #2 (hybrid C+B, idle transition) → **#5/#3 gait scheduler**
-(proves shared clock, phase tables, contacts across leg counts) → **#6 chain presets** (one component for tail,
-tentacle, snake, fish) → **#4 wing** (oscillator on a socket) → #12 dragon composes the three. Then #7, #9, #10.
+**Spike order (condition, `director` high; do not run all at once):** finish #2 as the hybrid C+B - **a hypothesis
+until a hybrid clip exists**, with its own acceptance: B's impact numbers (elbow ≥ 150° interior, contact ≥ 0.8 of
+peak speed), C's wind-up coil (COM back ≥ 0.15 L), an idle-to-clip transition, no projection artefacts, and the arm
+raised through the front/side (fixing B's soft finding) → **#1 light attack + hit reaction + idle loop** (every card
+unit needs idle, attack, hit, death; proves transitions, loops, event sync, card-scale readability and mirroring) →
+**#5/#3 gait scheduler** → **#6 chain presets** → **#4 wing** → #12 dragon composes the three. Then #7, #9, #10.
 
 ## 9. Implementation roadmap
 
 | Phase | Content | Estimate (Board-operator days, excl. agent time) |
 |---|---|---|
 | U0 | review of this package + KB by `director`; Board decisions | 1 |
-| U1 | heavy humanoid hybrid C+B; Godot adapter for motion.v2 (bake to AnimationPlayer); art pass prerequisites | 4–6 |
-| U2 | gait scheduler + quadruped/spider benchmarks; component validators | 5–8 |
+| U1 | heavy humanoid hybrid C+B (gated reference, timing redistribution); Godot adapter for motion.v2 (bake to AnimationPlayer); art pass prerequisites incl. skeleton-overlay-on-art previews; measure baked-key size | 4–6 |
+| U1b | benchmark #1: idle loop, light attack, hit reaction, interaction handshake, card-scale readability, mirroring; new universal checks (§7) | 3–5 |
+| U2 | gait scheduler + quadruped/spider benchmarks; component validators (creature motion mostly B/procedural: references scarce) | 6–10 |
 | U3 | chain presets + wing + dragon composition | 5–8 |
 | U4 | soft body, rope/cloth, attachments/throws, magical (particles/shaders) | 6–10 |
 | U5 | Agent Skills packaging, pose and motion libraries, regression suite in CI | 3–5 |
-Total about 24–38 days, highly uncertain after U2; each phase re-estimates from its spike.
+Total about 28–45 days, highly uncertain after U2; each phase re-estimates from its spike.
 
 ## 10. Agent responsibility proposal
 
@@ -180,7 +227,11 @@ of how much motion work recurs per project. Skills ([07](07-agent-skills-proposa
 creature motion analysis, animal locomotion, creature rigging, procedural locomotion, physical motion design, object
 and mechanical animation, soft body, secondary motion, environmental animation, magical motion design, cross-entity
 interaction, entity-specific QA - each with trigger, inputs, knowledge, tools, steps, outputs, failure conditions and
-review checklist, packaged only after K4.
+review checklist, packaged only after K4. **Skills first** (`director`): motion-qa (the evidence contract),
+animation-reference-research (licence gate), motion-design (with the §5 selection gate), then motion-retargeting and
+body-mechanics; creature skills wait until the gait and chain tools exist. Known weakness: the Board operator builds
+and first-scores the motion (evaluation bias); mitigated by the validators and by review cards that give `director`
+per-frame metrics.
 
 ## 11. Budget and resources
 
@@ -202,16 +253,24 @@ GDNative-Ropesim would need a dependency review.
 | Licences: SMPL/SuperAnimal NC, Spine Editor licence, unknown OpenSim model licences, VRM spec licence | blocked reuse | use only production-OK sources; legal check before any Spine export |
 | Scope growth (each amendment widened scope) | delay | spike order in §8; one benchmark proven before the next |
 | Artistic judgement still human-like (director) | Board load | director reviews on previews; validators remove mechanical errors first |
+| Reference scarcity for non-humans (animal mocap NC or absent) | creature motion falls to B/procedural; more effort | Muybridge-derived tables; procedural gaits; effort raised in U2-U3 |
+| Motion-to-art coupling (joint gaps, texture stretch, far-arm reveal) | correct motion looks broken on the real art | skeleton-overlay-on-art previews from U1; art pass rules for overlaps |
+| Style drift between reference realism and project art | realistic motion on stylised art | stylisation tier per project; timing redistribution (§5) |
+| Reviewer evidence gap (`director` cannot open media) | judgements from numbers only | review cards with per-frame metrics; or a reviewer with preview access (Board decision) |
+| Runtime size of baked keys for many units | memory/build size | measure in U1; key reduction per clip |
+| Single builder until K4/U5 (know-how in sessions) | bus factor | KB + skills packaged after K4; regression suite in CI |
 
 ## 13. Required Board decisions
 
 | # | Decision | Recommendation |
 |---|---|---|
-| U-A | Adopt this architecture (composition, component registry, entity profiles; human anatomy as one domain) | approve |
-| U-B | Adopt existing conventions: Godot SkeletonProfileHumanoid names/axes, VRM minimum humanoid, de Leva mass tables, Unreal-style joint settings; no Spine export without a legal check | approve |
+| U-A | Adopt this architecture (composition, component registry, entity profiles; human anatomy as one domain), with validator assumption tags | approve (`director`: approve with the tags - applied) |
+| U-B | Adopt existing conventions: Godot SkeletonProfileHumanoid names/axes, VRM minimum humanoid, de Leva mass tables, Unreal-style joint settings; no Spine export without a legal check | approve (`director`: naming and mass tables only) |
 | U-C | Reference policy: production-OK sources only (CMU original, CC0 packs, Muybridge-derived tables, Smithsonian CC0); NC datasets and SuperAnimal/SMPL R&D-only; Kirin rejected | approve |
-| U-D | Spike order: hybrid #2 → gait #5/#3 → chain #6 → wing #4 → dragon #12 | approve |
+| U-D | Spike order: hybrid #2 → **#1 + idle** → gait #5/#3 → chain #6 → wing #4 → dragon #12 (condition) | approve (`director` amendment) |
+| U-I | Reference-selection gate (§5) mandatory before any reference is used (condition) | approve (`director` high) |
 | U-E | KB content review by `director` (K4) before any skill packaging | approve |
 | U-F | Optional dependency review of GDNative-Ropesim (MIT) when the rope spike starts | later |
 | U-G | OpenStax: stop using it as a source (CC BY-NC-SA, AI-ingestion clause); keep only facts already cross-checked elsewhere; ask OpenStax/legal if the Board wants it | approve |
-| U-H | Functional ROM is informative, not a limit; clinical (realistic) or stylized (stylised) tier gates per character; character overrides must state why | approve |
+| U-H | Functional ROM is informative, not a limit; clinical (realistic) or stylized (stylised) tier gates per character; character overrides must state why; the tier is recorded in the profile and printed in every QA report | approve |
+| U-J | Reviewer evidence: review cards with per-frame metrics for `director`, or give a reviewer preview access | review cards now; access is a separate Board decision |

@@ -51,5 +51,22 @@
    "settle_time",
    "socket_attachment"
   ]
- }
+ },
+ "environment": {
+  "gravity": [
+   0,
+   1
+  ],
+  "medium": "air"
+ },
+ "characteristic_length": {
+  "value_px": 110,
+  "basis": "chain length"
+ },
+ "structural_assumptions": [
+  "attachment",
+  "rigid",
+  "interaction",
+  "periodic"
+ ]
 }

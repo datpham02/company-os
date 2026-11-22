@@ -4,144 +4,695 @@
  "note": "A component is a reusable unit of motion. Entities compose components; the core never changes to add a creature. 'validators' name checks in the QA registry; 'implemented' marks those that exist today.",
  "components": {
   "articulated_skeleton": {
-   "applies_to": ["humanoid", "stylized humanoid", "heavy humanoid", "non-human biped", "quadruped", "bird", "reptile", "insect", "robot"],
-   "inputs": ["structure.v2 (joints, chains, legs, contacts)", "anatomy profile (biological) or joint spec (mechanical)"],
-   "params": ["limit_tier: clinical|functional|stylized", "bend preferences", "mass model"],
-   "outputs": ["bone transforms per frame"],
-   "methods": ["fk_keyframe", "ik_baked", "mocap_retarget", "procedural"],
-   "hard": ["bone length", "joint ranges for the tier", "bend direction", "no flip through a fold", "reachability"],
-   "soft": ["coupled rules (e.g. scapulohumeral)", "proximal-to-distal sequencing", "balance per phase"],
-   "validators": ["bone_lengths_constant", "range", "bend_direction", "no_flip_through_fold", "reachability", "scapulohumeral_coupling", "proximal_to_distal_sequence"],
+   "applies_to": [
+    "humanoid",
+    "stylized humanoid",
+    "heavy humanoid",
+    "non-human biped",
+    "quadruped",
+    "bird",
+    "reptile",
+    "insect",
+    "robot"
+   ],
+   "inputs": [
+    "structure.v2 (joints, chains, legs, contacts)",
+    "anatomy profile (biological) or joint spec (mechanical)"
+   ],
+   "params": [
+    "limit_tier: clinical|functional|stylized",
+    "bend preferences",
+    "mass model"
+   ],
+   "outputs": [
+    "bone transforms per frame"
+   ],
+   "methods": [
+    "fk_keyframe",
+    "ik_baked",
+    "mocap_retarget",
+    "procedural"
+   ],
+   "hard": [
+    "bone length",
+    "joint ranges for the tier",
+    "bend direction",
+    "no flip through a fold",
+    "reachability"
+   ],
+   "soft": [
+    "coupled rules (e.g. scapulohumeral)",
+    "proximal-to-distal sequencing",
+    "balance per phase"
+   ],
+   "validators": [
+    "bone_lengths_constant",
+    "range",
+    "bend_direction",
+    "no_flip_through_fold",
+    "reachability",
+    "scapulohumeral_coupling",
+    "proximal_to_distal_sequence",
+    "readability",
+    "footprint_anchor",
+    "transition_continuity",
+    "draw_order_stability",
+    "mirror_safety",
+    "key_budget",
+    "loop_seam",
+    "event_sync"
+   ],
    "implemented": true,
    "runtime": "Godot Skeleton2D/Bone2D + Polygon2D weights (baked FK keys); Spine later",
    "limits": "2D projection ambiguities (shoulder front/back near overhead; far-limb flips)"
   },
   "legged_gait": {
-   "applies_to": ["biped", "quadruped", "insect (6)", "arachnid (8)", "multi-limbed"],
-   "inputs": ["limb list with contacts", "gait pattern (footfall order, duty factor)", "speed"],
-   "params": ["stride length", "duty factor", "phase offsets per limb", "body bob"],
-   "outputs": ["foot targets + contact intervals", "root motion"],
-   "methods": ["procedural", "mocap_retarget", "fk_keyframe"],
-   "hard": ["no foot slide while in contact", "min support contacts (3 for insects)"],
-   "soft": ["footfall order matches the gait", "limb intersection avoided"],
-   "validators": ["ground_contact", "support_polygon", "gait_sequence", "limb_intersection"],
+   "applies_to": [
+    "biped",
+    "quadruped",
+    "insect (6)",
+    "arachnid (8)",
+    "multi-limbed"
+   ],
+   "inputs": [
+    "limb list with contacts",
+    "gait pattern (footfall order, duty factor)",
+    "speed"
+   ],
+   "params": [
+    "stride length",
+    "duty factor",
+    "phase offsets per limb",
+    "body bob"
+   ],
+   "outputs": [
+    "foot targets + contact intervals",
+    "root motion"
+   ],
+   "methods": [
+    "procedural",
+    "mocap_retarget",
+    "fk_keyframe"
+   ],
+   "hard": [
+    "no foot slide while in contact",
+    "min support contacts (3 for insects)"
+   ],
+   "soft": [
+    "footfall order matches the gait",
+    "limb intersection avoided"
+   ],
+   "validators": [
+    "ground_contact",
+    "support_polygon",
+    "gait_sequence",
+    "limb_intersection"
+   ],
    "implemented": "partial (contacts, foot slide)"
   },
   "wing": {
-   "applies_to": ["bird", "bat", "dragon", "insect (rigid wings)"],
-   "inputs": ["wing chain (shoulder, elbow, wrist, digits/membrane)"],
-   "params": ["beat frequency", "downstroke/upstroke ratio", "fold coupling"],
-   "outputs": ["wing bone transforms", "membrane deformation"],
-   "methods": ["fk_keyframe", "procedural"],
-   "hard": ["wing joints within limits", "fold coupling (elbow drives wrist)"],
-   "soft": ["downstroke faster than upstroke", "body responds to each beat (bob)"],
-   "validators": ["range", "coupled_fold", "beat_timing", "body_response"], "implemented": false
+   "applies_to": [
+    "bird",
+    "bat",
+    "dragon",
+    "insect (rigid wings)"
+   ],
+   "inputs": [
+    "wing chain (shoulder, elbow, wrist, digits/membrane)"
+   ],
+   "params": [
+    "beat frequency",
+    "downstroke/upstroke ratio",
+    "fold coupling"
+   ],
+   "outputs": [
+    "wing bone transforms",
+    "membrane deformation"
+   ],
+   "methods": [
+    "fk_keyframe",
+    "procedural"
+   ],
+   "hard": [
+    "wing joints within limits",
+    "fold coupling (elbow drives wrist)"
+   ],
+   "soft": [
+    "downstroke faster than upstroke",
+    "body responds to each beat (bob)"
+   ],
+   "validators": [
+    "range",
+    "coupled_fold",
+    "beat_timing",
+    "body_response"
+   ],
+   "implemented": false
   },
   "undulating_body": {
-   "applies_to": ["serpent", "eel/fish", "worm", "dragon tail", "tentacle"],
-   "inputs": ["segment chain"],
-   "params": ["wavelength", "amplitude envelope (head to tail)", "speed", "mode: lateral|concertina|sidewinding|caudal"],
-   "outputs": ["segment rotations (travelling wave)"],
-   "methods": ["procedural"],
-   "hard": ["segment length constant"],
-   "soft": ["wave travels head-to-tail", "amplitude grows toward the tail"],
-   "validators": ["bone_lengths_constant", "wave_direction", "amplitude_envelope"], "implemented": false
+   "applies_to": [
+    "serpent",
+    "eel/fish",
+    "worm",
+    "dragon tail",
+    "tentacle"
+   ],
+   "inputs": [
+    "segment chain"
+   ],
+   "params": [
+    "wavelength",
+    "amplitude envelope (head to tail)",
+    "speed",
+    "mode: lateral|concertina|sidewinding|caudal"
+   ],
+   "outputs": [
+    "segment rotations (travelling wave)"
+   ],
+   "methods": [
+    "procedural"
+   ],
+   "hard": [
+    "segment length constant"
+   ],
+   "soft": [
+    "wave travels head-to-tail",
+    "amplitude grows toward the tail"
+   ],
+   "validators": [
+    "bone_lengths_constant",
+    "wave_direction",
+    "amplitude_envelope"
+   ],
+   "implemented": false
   },
   "flexible_appendage": {
-   "applies_to": ["tail", "tentacle", "antenna", "ears", "hair strands"],
-   "inputs": ["chain + driver (parent motion)"],
-   "params": ["stiffness", "damping", "gravity", "follow delay"],
-   "outputs": ["chain rotations (follow-through)"],
-   "methods": ["procedural (spring chain)", "physics"],
-   "hard": ["lengths constant"], "soft": ["lag behind the driver", "settles"],
-   "validators": ["bone_lengths_constant", "settle_time"], "implemented": "partial (spring() in the S4 tools)",
+   "applies_to": [
+    "tail",
+    "tentacle",
+    "antenna",
+    "ears",
+    "hair strands"
+   ],
+   "inputs": [
+    "chain + driver (parent motion)"
+   ],
+   "params": [
+    "stiffness",
+    "damping",
+    "gravity",
+    "follow delay"
+   ],
+   "outputs": [
+    "chain rotations (follow-through)"
+   ],
+   "methods": [
+    "procedural (spring chain)",
+    "physics"
+   ],
+   "hard": [
+    "lengths constant"
+   ],
+   "soft": [
+    "lag behind the driver",
+    "settles"
+   ],
+   "validators": [
+    "bone_lengths_constant",
+    "settle_time"
+   ],
+   "implemented": "partial (spring() in the S4 tools)",
    "runtime": "Skeleton2D jiggle modification or baked springs"
   },
   "rigid_attachment": {
-   "applies_to": ["weapon", "shield", "armour plate", "held object", "lantern", "hat"],
-   "inputs": ["master asset with grip/pivot points", "parent bone"],
-   "params": ["grip transform", "detach/attach events"],
-   "outputs": ["object transform"],
-   "methods": ["transform"],
-   "hard": ["one instance", "geometry rigid", "grip error ~0"],
-   "soft": ["plausible grip for the action"],
-   "validators": ["grip", "weapon_rigid", "instances"], "implemented": true
+   "applies_to": [
+    "weapon",
+    "shield",
+    "armour plate",
+    "held object",
+    "lantern",
+    "hat"
+   ],
+   "inputs": [
+    "master asset with grip/pivot points",
+    "parent bone"
+   ],
+   "params": [
+    "grip transform",
+    "detach/attach events"
+   ],
+   "outputs": [
+    "object transform"
+   ],
+   "methods": [
+    "transform"
+   ],
+   "hard": [
+    "one instance",
+    "geometry rigid",
+    "grip error ~0"
+   ],
+   "soft": [
+    "plausible grip for the action"
+   ],
+   "validators": [
+    "grip",
+    "weapon_rigid",
+    "instances"
+   ],
+   "implemented": true
   },
   "hinge_linkage": {
-   "applies_to": ["robot", "machine", "door", "chest lid", "drawbridge", "golem plates"],
-   "inputs": ["parts", "pivots", "linkage graph (four-bar, gears, pistons)"],
-   "params": ["limits", "gear ratios", "sync"],
-   "outputs": ["part transforms"],
-   "methods": ["fk_keyframe", "procedural (linkage solve)"],
-   "hard": ["pivot fixed", "linkage closure", "no part interpenetration"],
-   "soft": ["mechanical synchronisation", "ease consistent with mass"],
-   "validators": ["pivot", "linkage_closure", "intersection"], "implemented": false
+   "applies_to": [
+    "robot",
+    "machine",
+    "door",
+    "chest lid",
+    "drawbridge",
+    "golem plates"
+   ],
+   "inputs": [
+    "parts",
+    "pivots",
+    "linkage graph (four-bar, gears, pistons)"
+   ],
+   "params": [
+    "limits",
+    "gear ratios",
+    "sync"
+   ],
+   "outputs": [
+    "part transforms"
+   ],
+   "methods": [
+    "fk_keyframe",
+    "procedural (linkage solve)"
+   ],
+   "hard": [
+    "pivot fixed",
+    "linkage closure",
+    "no part interpenetration"
+   ],
+   "soft": [
+    "mechanical synchronisation",
+    "ease consistent with mass"
+   ],
+   "validators": [
+    "pivot",
+    "linkage_closure",
+    "intersection"
+   ],
+   "implemented": false
   },
   "pendulum": {
-   "applies_to": ["lantern on a hook", "hanging sign", "chandelier", "pendant"],
-   "inputs": ["pivot attached to a parent", "length"], "params": ["damping", "gravity", "driver acceleration"],
-   "outputs": ["angle per frame"], "methods": ["procedural (baked spring/pendulum)", "physics"],
-   "hard": ["length constant", "pivot attached"], "soft": ["lags the driver, decays"],
-   "validators": ["attachment", "settle_time"], "implemented": "partial (S4 lantern spring)"
+   "applies_to": [
+    "lantern on a hook",
+    "hanging sign",
+    "chandelier",
+    "pendant"
+   ],
+   "inputs": [
+    "pivot attached to a parent",
+    "length"
+   ],
+   "params": [
+    "damping",
+    "gravity",
+    "driver acceleration"
+   ],
+   "outputs": [
+    "angle per frame"
+   ],
+   "methods": [
+    "procedural (baked spring/pendulum)",
+    "physics"
+   ],
+   "hard": [
+    "length constant",
+    "pivot attached"
+   ],
+   "soft": [
+    "lags the driver, decays"
+   ],
+   "validators": [
+    "attachment",
+    "settle_time"
+   ],
+   "implemented": "partial (S4 lantern spring)"
   },
   "rope_chain": {
-   "applies_to": ["rope", "chain", "cords", "vines"], "inputs": ["anchors", "segment count"],
-   "params": ["segment length", "stiffness", "damping", "gravity"], "outputs": ["polyline per frame"],
-   "methods": ["procedural (Verlet/PBD)", "physics (Godot joints)"],
-   "hard": ["segment length (within tolerance)", "anchors attached"], "soft": ["no jitter", "sag under gravity"],
-   "validators": ["segment_length", "anchor", "jitter"], "implemented": false
+   "applies_to": [
+    "rope",
+    "chain",
+    "cords",
+    "vines"
+   ],
+   "inputs": [
+    "anchors",
+    "segment count"
+   ],
+   "params": [
+    "segment length",
+    "stiffness",
+    "damping",
+    "gravity"
+   ],
+   "outputs": [
+    "polyline per frame"
+   ],
+   "methods": [
+    "procedural (Verlet/PBD)",
+    "physics (Godot joints)"
+   ],
+   "hard": [
+    "segment length (within tolerance)",
+    "anchors attached"
+   ],
+   "soft": [
+    "no jitter",
+    "sag under gravity"
+   ],
+   "validators": [
+    "segment_length",
+    "anchor",
+    "jitter"
+   ],
+   "implemented": false
   },
   "cloth": {
-   "applies_to": ["cape", "robe hem", "banner", "flag"], "inputs": ["mesh or strip", "pinned vertices"],
-   "params": ["stiffness", "damping", "wind"], "outputs": ["vertex positions or bone chain"],
-   "methods": ["procedural (spring strips)", "mesh deformation", "physics"],
-   "hard": ["pinned vertices fixed"], "soft": ["follows the body with lag", "no tearing"],
-   "validators": ["pins", "triangle_flip", "lag"], "implemented": false
+   "applies_to": [
+    "cape",
+    "robe hem",
+    "banner",
+    "flag"
+   ],
+   "inputs": [
+    "mesh or strip",
+    "pinned vertices"
+   ],
+   "params": [
+    "stiffness",
+    "damping",
+    "wind"
+   ],
+   "outputs": [
+    "vertex positions or bone chain"
+   ],
+   "methods": [
+    "procedural (spring strips)",
+    "mesh deformation",
+    "physics"
+   ],
+   "hard": [
+    "pinned vertices fixed"
+   ],
+   "soft": [
+    "follows the body with lag",
+    "no tearing"
+   ],
+   "validators": [
+    "pins",
+    "triangle_flip",
+    "lag"
+   ],
+   "implemented": false
   },
   "deformable_body": {
-   "applies_to": ["slime", "jelly", "soft creature", "squash-stretch props"], "inputs": ["outline/mesh", "anchor contact"],
-   "params": ["elasticity", "damping", "volume preservation weight"], "outputs": ["mesh deformation"],
-   "methods": ["mesh deformation (spring lattice)", "shader"],
-   "hard": ["no triangle flips"], "soft": ["area roughly preserved (squash widens)", "elastic recovery"],
-   "validators": ["triangle_flip", "area_preservation", "recovery_time"], "implemented": "partial (triangle flip check in S4)"
+   "applies_to": [
+    "slime",
+    "jelly",
+    "soft creature",
+    "squash-stretch props"
+   ],
+   "inputs": [
+    "outline/mesh",
+    "anchor contact"
+   ],
+   "params": [
+    "elasticity",
+    "damping",
+    "volume preservation weight"
+   ],
+   "outputs": [
+    "mesh deformation"
+   ],
+   "methods": [
+    "mesh deformation (spring lattice)",
+    "shader"
+   ],
+   "hard": [
+    "no triangle flips"
+   ],
+   "soft": [
+    "area roughly preserved (squash widens)",
+    "elastic recovery"
+   ],
+   "validators": [
+    "triangle_flip",
+    "area_preservation",
+    "recovery_time"
+   ],
+   "implemented": "partial (triangle flip check in S4)"
   },
   "ballistic": {
-   "applies_to": ["projectile", "thrown weapon", "debris", "jump arc"], "inputs": ["launch point, velocity"],
-   "params": ["gravity", "drag", "spin"], "outputs": ["position/rotation per frame"], "methods": ["procedural"],
-   "hard": ["parabolic path (constant gravity) unless a fictional rule says otherwise"], "soft": ["spin consistent with throw"],
-   "validators": ["parabola_fit", "event_on_contact"], "implemented": false
+   "applies_to": [
+    "projectile",
+    "thrown weapon",
+    "debris",
+    "jump arc"
+   ],
+   "inputs": [
+    "launch point, velocity"
+   ],
+   "params": [
+    "gravity",
+    "drag",
+    "spin"
+   ],
+   "outputs": [
+    "position/rotation per frame"
+   ],
+   "methods": [
+    "procedural"
+   ],
+   "hard": [
+    "parabolic path (constant gravity) unless a fictional rule says otherwise"
+   ],
+   "soft": [
+    "spin consistent with throw"
+   ],
+   "validators": [
+    "parabola_fit",
+    "event_on_contact"
+   ],
+   "implemented": false
   },
   "hover_float": {
-   "applies_to": ["ghost", "spirit", "magical artifact", "drone", "floating island"], "inputs": ["base height"],
-   "params": ["bob amplitude/period", "drift", "tilt response"], "outputs": ["root transform"], "methods": ["procedural"],
-   "hard": [], "soft": ["periodic, readable", "no ground contact (intentional)"],
-   "validators": ["loop_seam", "no_contact_expected"], "implemented": false
+   "applies_to": [
+    "ghost",
+    "spirit",
+    "magical artifact",
+    "drone",
+    "floating island"
+   ],
+   "inputs": [
+    "base height"
+   ],
+   "params": [
+    "bob amplitude/period",
+    "drift",
+    "tilt response"
+   ],
+   "outputs": [
+    "root transform"
+   ],
+   "methods": [
+    "procedural"
+   ],
+   "hard": [],
+   "soft": [
+    "periodic, readable",
+    "no ground contact (intentional)"
+   ],
+   "validators": [
+    "loop_seam",
+    "no_contact_expected"
+   ],
+   "implemented": false
   },
   "rotational": {
-   "applies_to": ["wheel", "gear", "spinning blade", "orb"], "inputs": ["pivot"], "params": ["angular speed curve"],
-   "outputs": ["rotation"], "methods": ["procedural", "fk_keyframe"],
-   "hard": ["pivot fixed"], "soft": ["spin-up/down eased"], "validators": ["pivot"], "implemented": false
+   "applies_to": [
+    "wheel",
+    "gear",
+    "spinning blade",
+    "orb"
+   ],
+   "inputs": [
+    "pivot"
+   ],
+   "params": [
+    "angular speed curve"
+   ],
+   "outputs": [
+    "rotation"
+   ],
+   "methods": [
+    "procedural",
+    "fk_keyframe"
+   ],
+   "hard": [
+    "pivot fixed"
+   ],
+   "soft": [
+    "spin-up/down eased"
+   ],
+   "validators": [
+    "pivot"
+   ],
+   "implemented": false
   },
   "particle_emission": {
-   "applies_to": ["fire", "smoke", "sparks", "magic", "dust", "water spray"], "inputs": ["emitter attachment", "events"],
-   "params": ["rate, lifetime, velocity, gravity, colour ramp"], "outputs": ["particles (engine runtime)"],
-   "methods": ["engine particles"],
-   "hard": ["emitter attached to its socket"], "soft": ["readability at game scale", "style matches the art direction"],
-   "validators": ["socket_attachment", "event_sync"], "implemented": false,
+   "applies_to": [
+    "fire",
+    "smoke",
+    "sparks",
+    "magic",
+    "dust",
+    "water spray"
+   ],
+   "inputs": [
+    "emitter attachment",
+    "events"
+   ],
+   "params": [
+    "rate, lifetime, velocity, gravity, colour ramp"
+   ],
+   "outputs": [
+    "particles (engine runtime)"
+   ],
+   "methods": [
+    "engine particles"
+   ],
+   "hard": [
+    "emitter attached to its socket"
+   ],
+   "soft": [
+    "readability at game scale",
+    "style matches the art direction"
+   ],
+   "validators": [
+    "socket_attachment",
+    "event_sync"
+   ],
+   "implemented": false,
    "runtime": "Godot GPUParticles2D/CPUParticles2D (no custom simulator)"
   },
   "shader_deformation": {
-   "applies_to": ["water surface", "heat haze", "energy", "grass/leaves sway", "ghost wobble"], "inputs": ["sprite/mesh"],
-   "params": ["amplitude, frequency, mask"], "outputs": ["vertex/UV offsets at runtime"], "methods": ["shader"],
-   "hard": [], "soft": ["loop seamless", "does not break silhouette readability"], "validators": ["loop_seam", "silhouette"],
-   "implemented": false, "runtime": "Godot CanvasItem shaders"
+   "applies_to": [
+    "water surface",
+    "heat haze",
+    "energy",
+    "grass/leaves sway",
+    "ghost wobble"
+   ],
+   "inputs": [
+    "sprite/mesh"
+   ],
+   "params": [
+    "amplitude, frequency, mask"
+   ],
+   "outputs": [
+    "vertex/UV offsets at runtime"
+   ],
+   "methods": [
+    "shader"
+   ],
+   "hard": [],
+   "soft": [
+    "loop seamless",
+    "does not break silhouette readability"
+   ],
+   "validators": [
+    "loop_seam",
+    "silhouette"
+   ],
+   "implemented": false,
+   "runtime": "Godot CanvasItem shaders"
   },
   "fluid_energy": {
-   "applies_to": ["fluids", "smoke", "fire", "elemental bodies", "magic energy"], "inputs": ["shape/flow intent"],
-   "params": ["flow direction, turbulence, dissipation"], "outputs": ["particles + shader + frame sequences"],
-   "methods": ["particles", "shader", "frame-by-frame (generated)"],
-   "hard": [], "soft": ["consistent flow direction", "readability", "fictional rules respected"],
-   "validators": ["event_sync", "readability"], "implemented": false
+   "applies_to": [
+    "fluids",
+    "smoke",
+    "fire",
+    "elemental bodies",
+    "magic energy"
+   ],
+   "inputs": [
+    "shape/flow intent"
+   ],
+   "params": [
+    "flow direction, turbulence, dissipation"
+   ],
+   "outputs": [
+    "particles + shader + frame sequences"
+   ],
+   "methods": [
+    "particles",
+    "shader",
+    "frame-by-frame (generated)"
+   ],
+   "hard": [],
+   "soft": [
+    "consistent flow direction",
+    "readability",
+    "fictional rules respected"
+   ],
+   "validators": [
+    "event_sync",
+    "readability"
+   ],
+   "implemented": false
+  },
+  "interaction_contact": {
+   "applies_to": [
+    "attacker and receiver",
+    "grab / carry",
+    "projectile and target",
+    "cloth on a body",
+    "lantern on a hand"
+   ],
+   "inputs": [
+    "entity A contact event (frame, point)",
+    "entity B reaction clip or response"
+   ],
+   "params": [
+    "reaction delay frames (default <= 2)",
+    "hit-stop (runtime)",
+    "knockback direction/magnitude",
+    "attach/detach events"
+   ],
+   "outputs": [
+    "synchronised events and reaction timing across two entities"
+   ],
+   "methods": [
+    "transform",
+    "fk_keyframe",
+    "procedural"
+   ],
+   "hard": [
+    "the receiver's reaction starts within the declared delay after the contact frame",
+    "contact frame = damage event frame"
+   ],
+   "soft": [
+    "reaction direction consistent with the hit direction",
+    "knockback magnitude consistent with the attacker's weight"
+   ],
+   "validators": [
+    "contact_handshake",
+    "event_sync"
+   ],
+   "implemented": false,
+   "runtime": "AnimationPlayer method-call tracks + game events (no physics)"
   }
  },
  "methods": {
@@ -155,5 +706,157 @@
   "frame-by-frame (generated)": "image frames (pixel art, effects)",
   "shader": "runtime shader animation",
   "engine particles": "runtime particle systems"
+ },
+ "validator_assumptions": {
+  "vocabulary": [
+   "articulated",
+   "bilateral",
+   "legged",
+   "grounded",
+   "trunk",
+   "humanoid_arm",
+   "attachment",
+   "rigid",
+   "interaction",
+   "card_scene",
+   "layered_2d",
+   "mirrorable",
+   "periodic",
+   "wing",
+   "chain",
+   "cloth",
+   "mesh",
+   "deformable",
+   "airborne"
+  ],
+  "note": "structural assumption carried by each validator (director review SOU-87): an entity receives a validator only when it declares all of its tags",
+  "bone_lengths_constant": [
+   "articulated"
+  ],
+  "range": [
+   "articulated"
+  ],
+  "bend_direction": [
+   "articulated",
+   "legged"
+  ],
+  "no_flip_through_fold": [
+   "articulated",
+   "bilateral"
+  ],
+  "reachability": [
+   "articulated"
+  ],
+  "scapulohumeral_coupling": [
+   "articulated",
+   "trunk",
+   "humanoid_arm"
+  ],
+  "proximal_to_distal_sequence": [
+   "articulated",
+   "trunk"
+  ],
+  "ground_contact": [
+   "grounded"
+  ],
+  "support_polygon": [
+   "grounded",
+   "legged"
+  ],
+  "gait_sequence": [
+   "legged"
+  ],
+  "limb_intersection": [
+   "legged"
+  ],
+  "balance_static": [
+   "grounded"
+  ],
+  "weight_transfer": [
+   "grounded"
+  ],
+  "grip": [
+   "attachment"
+  ],
+  "weapon_rigid": [
+   "attachment",
+   "rigid"
+  ],
+  "instances": [],
+  "range_wing": [
+   "wing"
+  ],
+  "coupled_fold": [
+   "wing"
+  ],
+  "beat_timing": [
+   "periodic"
+  ],
+  "body_response": [
+   "periodic"
+  ],
+  "wave_direction": [
+   "chain"
+  ],
+  "amplitude_envelope": [
+   "chain"
+  ],
+  "settle_time": [],
+  "pivot": [
+   "rigid"
+  ],
+  "linkage_closure": [
+   "rigid"
+  ],
+  "intersection": [
+   "rigid"
+  ],
+  "segment_length": [
+   "chain"
+  ],
+  "anchor": [],
+  "jitter": [],
+  "pins": [
+   "cloth"
+  ],
+  "triangle_flip": [
+   "mesh"
+  ],
+  "lag": [],
+  "area_preservation": [
+   "deformable"
+  ],
+  "recovery_time": [
+   "deformable"
+  ],
+  "parabola_fit": [
+   "airborne"
+  ],
+  "event_on_contact": [],
+  "loop_seam": [
+   "periodic"
+  ],
+  "no_contact_expected": [],
+  "socket_attachment": [],
+  "event_sync": [],
+  "readability": [],
+  "silhouette": [],
+  "footprint_anchor": [
+   "card_scene"
+  ],
+  "transition_continuity": [],
+  "draw_order_stability": [
+   "layered_2d"
+  ],
+  "mirror_safety": [
+   "mirrorable"
+  ],
+  "key_budget": [],
+  "contact_handshake": [
+   "interaction"
+  ],
+  "attachment": [
+   "attachment"
+  ]
  }
 }
