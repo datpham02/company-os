@@ -67,7 +67,7 @@ UNVERIFIED: <check — why>, or none
 ```md
 Verdict: <approved | changes requested>
 Stage judged: <art-ready | integration-ready>
-CI: <statusCheckRollup result>
+CI: <statusCheckRollup result at the head commit> | verified by qa at <head commit> (read-only reviewers) | UNVERIFIED (no GitHub access)
 Hard gates: licence/provenance <pass|fail|UNVERIFIED> · originality <…> · technical contract <…> · readability at target size <…> · evidence <…> · write set <…>
 Scores (0–2, with observation): readability <n — …> · art direction <n — …> · craft <n — …> · coherence <n — …> · production <n — …> · evidence <n — …>
 Deferred (art-ready only): <UNVERIFIED — deferred to <integration Task key>: <check>>, or none · Verified (integration-ready only): <assets>; not verified: <asset — open check>
