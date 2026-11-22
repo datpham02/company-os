@@ -1,6 +1,6 @@
 # AI-Native Game Art & Animation Production Pipeline: Board Review Package
 
-- **Status:** `PROPOSED` for Board review (2026-11-22). No tool, model, agent or permission is added by this package.
+- **Status:** **Board decisions D1–D9 approved as recommended (2026-11-22)**. The package itself adds no tool, model, agent or permission; each install, permission or role still follows its own approved decision and review.
 - **Scope:** studio-wide capability (not a Deckbound feature). Deckbound and the Scrivener are the first benchmark only.
 - **Prepared by:** Claude Code for the Board (Board decision 2026-11-22: Claude Code audits, researches and runs spikes; `director` reviews as design authority, because its read-only runtime has no web search or script execution).
 - **Review:** `director` review SOU-78 (2026-11-22): "approve for Board decision" with amendments to D2, D3, D4, D8, the benchmarks, gates and spike order; **all amendments are applied in this revision** (see [§ Review record](#review-record)).
@@ -25,6 +25,8 @@
 | **Unknown** | whether occlusion completion is authoritative enough for unattended use; whether automatic weights reach commercial quality; whether a vision model can judge animation appeal; See-through generalisation to painterly and pixel styles; Windows/RAM behaviour of 20B models; Spine runtime terms for agent-generated data |
 
 ## Required Board decisions
+
+Board answer 2026-11-22: "Duyệt D1–D9" (approve D1–D9 as recommended below).
 
 | # | Decision | Recommendation |
 |---|---|---|
