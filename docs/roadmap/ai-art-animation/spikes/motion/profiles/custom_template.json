@@ -1,0 +1,15 @@
+{
+ "schema": "anatomy-profile.v1",
+ "id": "custom_template",
+ "body_type": "custom non-human",
+ "status": "template",
+ "required": [
+  "joints with type, dof, movements and ranges per tier",
+  "preferred bends",
+  "contacts",
+  "mass model",
+  "coupled rules (or none, stated)",
+  "reference for the design"
+ ],
+ "notes": "do not inherit humanoid_base unless the creature really has a human-like limb; state every exception"
+}

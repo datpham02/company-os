@@ -1,0 +1,157 @@
+{
+ "schema": "pose-library-entry.v1",
+ "id": "step_forward",
+ "structure": "brute_hammer",
+ "anatomy_profile": "../profiles/heavy_humanoid.json",
+ "limit_tier": "stylized",
+ "action_context": "a step with the front foot, weight transferring forward",
+ "reference": "KB weight transfer",
+ "contacts_required": [
+  "foot_k",
+  "foot_f"
+ ],
+ "joint_transforms": {
+  "root": [
+   20,
+   18
+  ],
+  "chains": {
+   "trunk": [
+    6,
+    0,
+    2
+   ],
+   "arm_f": [
+    0,
+    0,
+    0
+   ],
+   "arm_b": [
+    10,
+    0
+   ]
+  },
+  "shift": {
+   "arm_f": [
+    0,
+    0
+   ]
+  },
+  "feet": {
+   "foot_k": [
+    0,
+    0
+   ],
+   "foot_f": [
+    42,
+    0
+   ]
+  }
+ },
+ "validation": {
+  "static_hard_pass": true,
+  "checks": [
+   {
+    "tier": "A",
+    "class": "hard",
+    "id": "bone_lengths",
+    "pass": true,
+    "value": null
+   },
+   {
+    "tier": "A",
+    "class": "hard",
+    "id": "range:trunk.spine",
+    "pass": true,
+    "value": 6.0
+   },
+   {
+    "tier": "A",
+    "class": "hard",
+    "id": "range:trunk.neck",
+    "pass": true,
+    "value": 4.4
+   },
+   {
+    "tier": "A",
+    "class": "hard",
+    "id": "range:trunk.head",
+    "pass": true,
+    "value": 1.9
+   },
+   {
+    "tier": "A",
+    "class": "hard",
+    "id": "range:arm_f.elbow",
+    "pass": true,
+    "value": 155.2
+   },
+   {
+    "tier": "A",
+    "class": "hard",
+    "id": "range:arm_f.wrist",
+    "pass": true,
+    "value": -46.4
+   },
+   {
+    "tier": "A",
+    "class": "hard",
+    "id": "range:arm_b.elbow",
+    "pass": true,
+    "value": 16.5
+   },
+   {
+    "tier": "A",
+    "class": "soft",
+    "id": "shoulder_behind:shoulder_f",
+    "pass": true,
+    "value": -48.2
+   },
+   {
+    "tier": "A",
+    "class": "hard",
+    "id": "range:knee_k",
+    "pass": true,
+    "value": 33.9
+   },
+   {
+    "tier": "A",
+    "class": "hard",
+    "id": "bend:knee_k",
+    "pass": true,
+    "value": 1
+   },
+   {
+    "tier": "A",
+    "class": "hard",
+    "id": "range:knee_f",
+    "pass": true,
+    "value": 33.4
+   },
+   {
+    "tier": "A",
+    "class": "hard",
+    "id": "bend:knee_f",
+    "pass": true,
+    "value": 1
+   },
+   {
+    "tier": "A",
+    "class": "hard",
+    "id": "reachability",
+    "pass": true,
+    "value": []
+   },
+   {
+    "tier": "B",
+    "class": "hard",
+    "id": "balance_static",
+    "pass": true,
+    "value": 449.2
+   }
+  ]
+ },
+ "known_limitations": [
+  "static validation is not proof of animation quality"
+ ]
+}

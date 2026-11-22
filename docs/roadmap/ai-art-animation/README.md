@@ -4,7 +4,7 @@
 - **Scope:** studio-wide capability (not a Deckbound feature). Deckbound and the Scrivener are the first benchmark only.
 - **Prepared by:** Claude Code for the Board (Board decision 2026-11-22: Claude Code audits, researches and runs spikes; `director` reviews as design authority, because its read-only runtime has no web search or script execution).
 - **Review:** `director` review SOU-78 (2026-11-22): "approve for Board decision" with amendments to D2, D3, D4, D8, the benchmarks, gates and spike order; **all amendments are applied in this revision** (see [§ Review record](#review-record)).
-- **Parts:** [01 Capability audit](01-capability-audit.md) · [02 Technology research and evaluation matrix](02-technology-research.md) · [03 Architecture, benchmarks, spikes, roadmap, agents, budget, risks, gates](03-architecture-and-plan.md)
+- **Parts:** [01 Capability audit](01-capability-audit.md) · [02 Technology research and evaluation matrix](02-technology-research.md) · [03 Architecture, benchmarks, spikes, roadmap, agents, budget, risks, gates](03-architecture-and-plan.md) · [04 Animation methodology](04-animation-methodology.md) · [05 Motion reference and licensing](05-motion-reference-and-licensing.md) · [06 Motion library, pipeline and QA](06-motion-library-and-pipeline.md) · [07 Agent Skills proposal](07-agent-skills-proposal.md) · [08 Universal motion system](08-universal-motion-system.md) · [Knowledge base](kb/) · [Motion spike tools](spikes/motion/)
 
 ## Executive summary
 

@@ -1,0 +1,59 @@
+{
+ "schema": "anatomy-profile.v1",
+ "id": "multi_limbed",
+ "body_type": "insect/arachnid/multi-legged",
+ "status": "provisional: values pending the verified research tables",
+ "limb_template": {
+  "segments": [
+   "coxa",
+   "femur",
+   "tibia",
+   "tarsus"
+  ],
+  "joints": {
+   "coxa": {
+    "type": "pivot",
+    "movements": {
+     "swing": {
+      "clinical": [
+       -40,
+       40
+      ]
+     }
+    }
+   },
+   "femur": {
+    "type": "hinge",
+    "movements": {
+     "lift": {
+      "clinical": [
+       -30,
+       70
+      ]
+     }
+    }
+   },
+   "tibia": {
+    "type": "hinge",
+    "movements": {
+     "flex": {
+      "clinical": [
+       20,
+       150
+      ]
+     }
+    }
+   }
+  }
+ },
+ "limb_count": [
+  6,
+  8
+ ],
+ "gaits": [
+  "tripod (insects: 3 legs down at a time)",
+  "alternating tetrapod (spiders)",
+  "metachronal wave"
+ ],
+ "notes": "balance = support polygon of the planted legs; at least 3 non-collinear contacts while walking"
+}

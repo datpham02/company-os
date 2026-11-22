@@ -1,0 +1,97 @@
+{
+ "schema": "anatomy-profile.v1",
+ "id": "heavy_humanoid",
+ "extends": "humanoid_base",
+ "body_type": "heavy humanoid (brute, ogre)",
+ "status": "provisional: values pending the verified research tables",
+ "overrides": {
+  "joints": {
+   "elbow": {
+    "movements": {
+     "flex": {
+      "clinical": [
+       0,
+       135
+      ],
+      "functional": [
+       20,
+       125
+      ],
+      "stylized": [
+       -5,
+       150
+      ]
+     }
+    },
+    "why": "soft-tissue contact of large forearm/biceps limits flexion"
+   },
+   "hip": {
+    "movements": {
+     "flex": {
+      "clinical": [
+       -20,
+       100
+      ],
+      "functional": [
+       -10,
+       90
+      ],
+      "stylized": [
+       -30,
+       115
+      ]
+     }
+    },
+    "why": "belly mass limits hip flexion"
+   },
+   "spine": {
+    "movements": {
+     "flex": {
+      "clinical": [
+       -20,
+       60
+      ],
+      "functional": [
+       -15,
+       45
+      ],
+      "stylized": [
+       -35,
+       75
+      ]
+     }
+    },
+    "why": "thick trunk"
+   },
+   "neck": {
+    "movements": {
+     "flex": {
+      "clinical": [
+       -35,
+       30
+      ],
+      "functional": [
+       -20,
+       25
+      ],
+      "stylized": [
+       -45,
+       40
+      ]
+     }
+    },
+    "why": "short neck, head set low between the shoulders"
+   }
+  },
+  "timing": {
+   "mass_scale": 1.4,
+   "note": "heavier body: longer anticipation/recovery, same or shorter swing"
+  },
+  "stance": {
+   "width_hip_ratio": [
+    1.2,
+    1.8
+   ]
+  }
+ }
+}

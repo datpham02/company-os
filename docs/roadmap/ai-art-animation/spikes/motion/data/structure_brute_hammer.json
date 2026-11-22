@@ -1,0 +1,523 @@
+{
+ "schema": "structure.v2",
+ "id": "brute_hammer",
+ "note": "Measured on the Deckbound attacker master (SOU-81 image 6115, 832x1216), verified by the skeleton overlay. Faces right (+x). Angles in degrees, positive = clockwise on screen (y down). The hammer arm is folded in the rest pose (elbow interior angle about 25 deg).",
+ "artwork": "../../godot-spikes/s4/art/attacker.png",
+ "units": "px (master canvas)",
+ "joints": {
+  "pelvis": {
+   "parent": null,
+   "rest": [
+    420,
+    740
+   ]
+  },
+  "chest": {
+   "parent": "pelvis",
+   "rest": [
+    432,
+    565
+   ]
+  },
+  "neck": {
+   "parent": "chest",
+   "rest": [
+    448,
+    455
+   ]
+  },
+  "head": {
+   "parent": "neck",
+   "rest": [
+    458,
+    385
+   ]
+  },
+  "shoulder_f": {
+   "parent": "chest",
+   "rest": [
+    300,
+    445
+   ]
+  },
+  "elbow_f": {
+   "parent": "shoulder_f",
+   "rest": [
+    178,
+    540
+   ]
+  },
+  "wrist_f": {
+   "parent": "elbow_f",
+   "rest": [
+    258,
+    385
+   ]
+  },
+  "hand_f": {
+   "parent": "wrist_f",
+   "rest": [
+    232,
+    310
+   ]
+  },
+  "shoulder_b": {
+   "parent": "chest",
+   "rest": [
+    566,
+    470
+   ]
+  },
+  "elbow_b": {
+   "parent": "shoulder_b",
+   "rest": [
+    596,
+    612
+   ]
+  },
+  "hand_b": {
+   "parent": "elbow_b",
+   "rest": [
+    586,
+    736
+   ]
+  },
+  "hip_k": {
+   "parent": "pelvis",
+   "rest": [
+    372,
+    772
+   ]
+  },
+  "knee_k": {
+   "parent": "hip_k",
+   "rest": [
+    337,
+    880
+   ]
+  },
+  "ankle_k": {
+   "parent": "knee_k",
+   "rest": [
+    304,
+    972
+   ]
+  },
+  "hip_f": {
+   "parent": "pelvis",
+   "rest": [
+    482,
+    772
+   ]
+  },
+  "knee_f": {
+   "parent": "hip_f",
+   "rest": [
+    520,
+    880
+   ]
+  },
+  "ankle_f": {
+   "parent": "knee_f",
+   "rest": [
+    546,
+    972
+   ]
+  }
+ },
+ "bones": {
+  "spine": {
+   "from": "pelvis",
+   "to": "chest",
+   "width": 120
+  },
+  "neck": {
+   "from": "chest",
+   "to": "neck",
+   "width": 70
+  },
+  "head": {
+   "from": "neck",
+   "to": "head",
+   "width": 92
+  },
+  "upperarm_f": {
+   "from": "shoulder_f",
+   "to": "elbow_f",
+   "width": 74
+  },
+  "forearm_f": {
+   "from": "elbow_f",
+   "to": "wrist_f",
+   "width": 62
+  },
+  "hand_f": {
+   "from": "wrist_f",
+   "to": "hand_f",
+   "width": 58
+  },
+  "upperarm_b": {
+   "from": "shoulder_b",
+   "to": "elbow_b",
+   "width": 50
+  },
+  "forearm_b": {
+   "from": "elbow_b",
+   "to": "hand_b",
+   "width": 42
+  },
+  "thigh_k": {
+   "from": "hip_k",
+   "to": "knee_k",
+   "width": 58
+  },
+  "shin_k": {
+   "from": "knee_k",
+   "to": "ankle_k",
+   "width": 46
+  },
+  "thigh_f": {
+   "from": "hip_f",
+   "to": "knee_f",
+   "width": 58
+  },
+  "shin_f": {
+   "from": "knee_f",
+   "to": "ankle_f",
+   "width": 46
+  }
+ },
+ "chains": {
+  "trunk": {
+   "joints": [
+    "pelvis",
+    "chest",
+    "neck",
+    "head"
+   ],
+   "channels": [
+    "spine",
+    "neck",
+    "head"
+   ],
+   "base": "root"
+  },
+  "arm_f": {
+   "joints": [
+    "shoulder_f",
+    "elbow_f",
+    "wrist_f",
+    "hand_f"
+   ],
+   "channels": [
+    "shoulder",
+    "elbow",
+    "wrist"
+   ],
+   "base": "chest",
+   "shift": true
+  },
+  "arm_b": {
+   "joints": [
+    "shoulder_b",
+    "elbow_b",
+    "hand_b"
+   ],
+   "channels": [
+    "shoulder",
+    "elbow"
+   ],
+   "base": "chest",
+   "shift": true
+  }
+ },
+ "joint_limits": {
+  "note": "limits on the TOTAL relative angle of a joint (child bone direction minus parent bone direction), degrees",
+  "trunk.spine": [
+   -40,
+   40
+  ],
+  "trunk.neck": [
+   -30,
+   30
+  ],
+  "trunk.head": [
+   -30,
+   30
+  ],
+  "arm_f.elbow": [
+   -160,
+   160
+  ],
+  "arm_f.wrist": [
+   -80,
+   80
+  ],
+  "arm_b.elbow": [
+   -150,
+   150
+  ]
+ },
+ "legs": {
+  "leg_k": {
+   "joints": [
+    "hip_k",
+    "knee_k",
+    "ankle_k"
+   ],
+   "contact": "foot_k",
+   "bend": "+x"
+  },
+  "leg_f": {
+   "joints": [
+    "hip_f",
+    "knee_f",
+    "ankle_f"
+   ],
+   "contact": "foot_f",
+   "bend": "+x"
+  }
+ },
+ "masses": {
+  "spine": 0.44,
+  "neck": 0.03,
+  "head": 0.07,
+  "upperarm_f": 0.04,
+  "forearm_f": 0.03,
+  "hand_f": 0.01,
+  "upperarm_b": 0.03,
+  "forearm_b": 0.02,
+  "thigh_k": 0.1,
+  "shin_k": 0.045,
+  "thigh_f": 0.1,
+  "shin_f": 0.045,
+  "hammer": 0.06
+ },
+ "contacts": {
+  "foot_k": {
+   "joint": "ankle_k",
+   "ground_y": 972,
+   "toe": [
+    -40,
+    18
+   ],
+   "heel": [
+    16,
+    18
+   ],
+   "tolerance_px": 2
+  },
+  "foot_f": {
+   "joint": "ankle_f",
+   "ground_y": 972,
+   "toe": [
+    44,
+    18
+   ],
+   "heel": [
+    -14,
+    18
+   ],
+   "tolerance_px": 2
+  }
+ },
+ "attachments": {
+  "hammer": {
+   "asset": "hammer_master",
+   "parent_bone": "hand_f",
+   "grip_joint": "hand_f",
+   "count": 1,
+   "rest_axis_deg": -52.8
+  }
+ },
+ "objects": {
+  "hammer_master": {
+   "kind": "rigid",
+   "note": "Local frame: grip at the origin, +x along the handle toward the head. Measured on the master: grip (232,310), head centre (352,152), handle end (150,405).",
+   "grip_point": [
+    0,
+    0
+   ],
+   "points": {
+    "head": [
+     198,
+     0
+    ],
+    "butt": [
+     -125,
+     0
+    ],
+    "head_top": [
+     198,
+     -62
+    ],
+    "head_bottom": [
+     198,
+     62
+    ]
+   },
+   "shape": {
+    "handle": [
+     [
+      -125,
+      -11
+     ],
+     [
+      170,
+      -11
+     ],
+     [
+      170,
+      11
+     ],
+     [
+      -125,
+      11
+     ]
+    ],
+    "head": [
+     [
+      164,
+      -64
+     ],
+     [
+      236,
+      -64
+     ],
+     [
+      236,
+      64
+     ],
+     [
+      164,
+      64
+     ]
+    ]
+   }
+  }
+ },
+ "proxy": {
+  "back": [
+   "upperarm_b",
+   "forearm_b"
+  ],
+  "body": [
+   "thigh_k",
+   "shin_k",
+   "thigh_f",
+   "shin_f",
+   "spine",
+   "neck",
+   "head"
+  ],
+  "front": [
+   "upperarm_f",
+   "forearm_f",
+   "hand_f"
+  ],
+  "torso": [
+   "shoulder_f",
+   "shoulder_b",
+   "hip_f",
+   "hip_k"
+  ],
+  "head_circle": {
+   "joint": "head",
+   "r": 50
+  },
+  "object_before_front": true
+ },
+ "anatomy": {
+  "profile": "../profiles/heavy_humanoid.json",
+  "facing": "+x",
+  "map": {
+   "trunk.spine": {
+    "joint": "spine",
+    "movement": "flex",
+    "sign": 1,
+    "zero": 0
+   },
+   "trunk.neck": {
+    "joint": "neck",
+    "movement": "flex",
+    "sign": 1,
+    "zero": 0
+   },
+   "trunk.head": {
+    "joint": "head",
+    "movement": "flex",
+    "sign": 1,
+    "zero": 0
+   },
+   "arm_f.elbow": {
+    "joint": "elbow",
+    "movement": "flex",
+    "sign": "abs",
+    "zero": 0,
+    "flip_policy": "through_neutral"
+   },
+   "arm_f.wrist": {
+    "joint": "wrist",
+    "movement": "flex",
+    "sign": 1,
+    "zero": 0
+   },
+   "arm_b.elbow": {
+    "joint": "elbow",
+    "movement": "flex",
+    "sign": "abs",
+    "zero": 0,
+    "flip_policy": "through_neutral"
+   }
+  },
+  "derived": {
+   "shoulder_f": {
+    "joint": "shoulder",
+    "movement": "flex",
+    "from": [
+     "chest",
+     "pelvis",
+     "shoulder_f",
+     "elbow_f"
+    ]
+   },
+   "knee_k": {
+    "joint": "knee",
+    "movement": "flex",
+    "bend": "forward_of_line",
+    "from": [
+     "hip_k",
+     "knee_k",
+     "ankle_k"
+    ]
+   },
+   "knee_f": {
+    "joint": "knee",
+    "movement": "flex",
+    "bend": "forward_of_line",
+    "from": [
+     "hip_f",
+     "knee_f",
+     "ankle_f"
+    ]
+   }
+  },
+  "limit_tier": "stylized",
+  "overrides": {
+   "elbow": {
+    "movements": {
+     "flex": {
+      "stylized": [
+       -5,
+       160
+      ]
+     }
+    },
+    "why": "the master art holds the hammer with the elbow flexed about 155 deg (measured on the overlay)"
+   }
+  }
+ },
+ "measurement_notes": [
+  "knee_k moved 3 px forward (334 -> 337): the art's near-straight back leg measured 1.3 px behind the hip-ankle line, inside measurement error but on the anatomically wrong side"
+ ]
+}

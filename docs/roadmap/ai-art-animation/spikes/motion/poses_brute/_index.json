@@ -1,0 +1,68 @@
+[
+ {
+  "id": "relaxed_standing_hammer_raised",
+  "context": "idle / ready with the hammer held up (the master art pose)",
+  "static_hard_pass": true,
+  "soft_fail": []
+ },
+ {
+  "id": "combat_stance_dip",
+  "context": "anticipation dip before a heavy overhead strike",
+  "static_hard_pass": true,
+  "soft_fail": []
+ },
+ {
+  "id": "overhead_raise",
+  "context": "lifting a heavy tool overhead (elbow extending)",
+  "static_hard_pass": true,
+  "soft_fail": []
+ },
+ {
+  "id": "windup_top",
+  "context": "top of the wind-up: weight on the back foot, hammer dropped behind the head",
+  "static_hard_pass": true,
+  "soft_fail": []
+ },
+ {
+  "id": "swing_mid",
+  "context": "mid swing: elbow leads, shoulder raised, hips forward",
+  "static_hard_pass": true,
+  "soft_fail": []
+ },
+ {
+  "id": "impact_extended",
+  "context": "impact of a heavy downward strike: arm nearly straight, weight on the front leg",
+  "static_hard_pass": true,
+  "soft_fail": []
+ },
+ {
+  "id": "follow_through_low",
+  "context": "follow-through after a ground strike",
+  "static_hard_pass": true,
+  "soft_fail": []
+ },
+ {
+  "id": "recovery_hang",
+  "context": "recovery: the hammer hangs, momentum carried",
+  "static_hard_pass": true,
+  "soft_fail": []
+ },
+ {
+  "id": "crouch_deep",
+  "context": "crouch / brace (both feet planted)",
+  "static_hard_pass": true,
+  "soft_fail": []
+ },
+ {
+  "id": "step_forward",
+  "context": "a step with the front foot, weight transferring forward",
+  "static_hard_pass": true,
+  "soft_fail": []
+ },
+ {
+  "id": "invalid_knee_backward_demo",
+  "context": "NEGATIVE example: pelvis lifted beyond the legs' reach (must fail)",
+  "static_hard_pass": false,
+  "soft_fail": []
+ }
+]

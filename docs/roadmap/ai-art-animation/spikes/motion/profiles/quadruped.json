@@ -1,0 +1,122 @@
+{
+ "schema": "anatomy-profile.v1",
+ "id": "quadruped",
+ "body_type": "quadruped (digitigrade or plantigrade)",
+ "status": "provisional: values pending the verified research tables",
+ "joints": {
+  "spine": {
+   "type": "gliding-series",
+   "movements": {
+    "flex": {
+     "clinical": [
+      -30,
+      40
+     ]
+    }
+   },
+   "notes": "flexion/extension drives the gallop"
+  },
+  "neck": {
+   "movements": {
+    "flex": {
+     "clinical": [
+      -60,
+      60
+     ]
+    }
+   }
+  },
+  "tail": {
+   "type": "chain",
+   "movements": {
+    "flex": {
+     "clinical": [
+      -90,
+      90
+     ]
+    }
+   }
+  },
+  "scapula_front": {
+   "type": "gliding (no clavicle in most quadrupeds)",
+   "notes": "the scapula slides along the ribcage; the true shoulder is low on the chest"
+  },
+  "shoulder_front": {
+   "type": "ball",
+   "movements": {
+    "flex": {
+     "clinical": [
+      -60,
+      80
+     ]
+    }
+   }
+  },
+  "elbow_front": {
+   "type": "hinge",
+   "preferred_bend": "points backward (caudal)",
+   "movements": {
+    "flex": {
+     "clinical": [
+      0,
+      140
+     ]
+    }
+   }
+  },
+  "carpus": {
+   "type": "hinge-like",
+   "preferred_bend": "folds backward (the 'wrist' bends like a knee seen from behind)",
+   "movements": {
+    "flex": {
+     "clinical": [
+      0,
+      130
+     ]
+    }
+   }
+  },
+  "hip": {
+   "type": "ball",
+   "movements": {
+    "flex": {
+     "clinical": [
+      -40,
+      100
+     ]
+    }
+   }
+  },
+  "stifle": {
+   "type": "hinge",
+   "preferred_bend": "points forward (cranial), like a human knee",
+   "movements": {
+    "flex": {
+     "clinical": [
+      0,
+      120
+     ]
+    }
+   }
+  },
+  "hock": {
+   "type": "hinge",
+   "preferred_bend": "points backward (the 'reversed knee' is the ankle)",
+   "movements": {
+    "flex": {
+     "clinical": [
+      0,
+      120
+     ]
+    }
+   }
+  }
+ },
+ "gaits": [
+  "walk (4-beat)",
+  "trot (diagonal pairs)",
+  "canter",
+  "gallop (spine flex/extension)"
+ ],
+ "notes": "never mirror human limits onto the hind leg: the backward-pointing joint is the ankle (hock), not a backward knee"
+}

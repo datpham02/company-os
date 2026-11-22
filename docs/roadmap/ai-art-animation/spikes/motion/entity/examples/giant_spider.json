@@ -1,0 +1,39 @@
+{
+ "id": "giant_spider",
+ "identity": {
+  "role": "enemy",
+  "movement_identity": "fast skittering, eight legs in an alternating tetrapod gait"
+ },
+ "topology": "skeletal (8 legs)",
+ "anatomy": "../../profiles/multi_limbed.json",
+ "components": [
+  {
+   "type": "articulated_skeleton",
+   "name": "body",
+   "params": {
+    "legs": 8,
+    "segments": [
+     "coxa",
+     "femur",
+     "tibia",
+     "tarsus"
+    ]
+   }
+  },
+  {
+   "type": "legged_gait",
+   "name": "skitter",
+   "params": {
+    "pattern": "alternating tetrapod"
+   }
+  }
+ ],
+ "validation": {
+  "physical": [
+   "support_polygon",
+   "gait_sequence",
+   "limb_intersection",
+   "ground_contact"
+  ]
+ }
+}

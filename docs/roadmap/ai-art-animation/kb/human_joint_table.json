@@ -1,0 +1,208 @@
+{
+  "meta": {
+    "title": "Human joint table for code-driven rigs",
+    "compiled": "2026-11-22",
+    "units": "degrees",
+    "convention": "Each movement is the named anatomical motion measured from anatomical position (0). [min,max] are angles of that motion; negative min means motion past neutral in the opposite direction (e.g. elbow flexion min -5 = 5 deg hyperextension). Bilateral motions (lateral flexion, rotation, deviation) are per side.",
+    "humerothoracic_note": "Shoulder values are humerothoracic (arm vs trunk) and include scapular motion. Split with the scapulohumeral rhythm if the rig has a scapula/clavicle bone.",
+    "status_values": "verified = number read in a cited source; derived = arithmetic on cited numbers; unverified = not confirmed in a source read during this research; null = no value",
+    "companion_doc": "anatomy.md"
+  },
+  "joints": {
+    "neck": {
+      "type": "composite: C0-C1 condylar rocking + C1-C2 pivot + subaxial plane facets",
+      "dof": 3,
+      "movements": {
+        "flexion": {"clinical": [0, 60], "functional": [0, 40], "status": {"clinical": "verified", "functional": "unverified"}, "source_ids": ["LUTT"], "note": "Other charts list ~45 flexion (unverified)."},
+        "extension": {"clinical": [0, 75], "functional": [0, 40], "status": {"clinical": "verified", "functional": "unverified"}, "source_ids": ["LUTT"]},
+        "lateral_flexion": {"clinical": [0, 45], "functional": [0, 20], "status": {"clinical": "verified", "functional": "unverified"}, "source_ids": ["LUTT"]},
+        "axial_rotation": {"clinical": [0, 80], "functional": [0, 60], "status": {"clinical": "verified", "functional": "unverified"}, "source_ids": ["LUTT"]}
+      },
+      "coupled_rules": [
+        "About half or more of neck axial rotation occurs at C1-C2; C0-C1 mainly nods (unverified share).",
+        "Subaxial cervical lateral bending couples with same-side axial rotation [LIEBSCH2025].",
+        "All cervical motions decline with age [YOUDAS1992]."
+      ]
+    },
+    "thoracolumbar_spine": {
+      "type": "chain of plane facet joints + intervertebral discs",
+      "dof": 3,
+      "movements": {
+        "flexion": {"clinical": [0, 50], "functional": [0, 59], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["LUTT", "GATES2016", "ESOLA1996"], "note": "LUTT lists 45-50. Gates 59 is total trunk flexion-extension excursion across ADLs. Esola: lumbar contributed 41.6 of a 111 total forward bend."},
+        "extension": {"clinical": [0, 25], "functional": [0, 15], "status": {"clinical": "verified", "functional": "unverified"}, "source_ids": ["LUTT"]},
+        "lateral_flexion": {"clinical": [0, 25], "functional": [0, 23], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["LUTT", "GATES2016"]},
+        "axial_rotation": {"clinical": [0, 30], "functional": [0, 32], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["LUTT", "GATES2016"], "note": "Lumbar rotation largely prevented; thoracic carries most twist [OS96]. Gates trunk rotation may include pelvis."}
+      },
+      "coupled_rules": [
+        "Lumbopelvic rhythm in forward bending: lumbar-to-hip ratio 1.9 (0-30 deg), 0.9 (30-60), 0.4 (60-90) [ESOLA1996].",
+        "Distribute bend across segments; no single spine bone should hold most of the bend (heuristic).",
+        "Lateral bending and axial rotation are coupled; lumbar direction inconsistent, do not hard-code [LIEBSCH2025]."
+      ]
+    },
+    "scapula": {
+      "type": "compound girdle: sternoclavicular saddle + acromioclavicular plane + scapulothoracic glide",
+      "dof": 3,
+      "movements": {
+        "upward_rotation": {"clinical": [0, 60], "functional": [0, 33], "status": {"clinical": "derived", "functional": "derived"}, "source_ids": ["INMAN_via_OUHSC", "BRAMAN2009", "GATES2016"], "note": "60 = 180 total elevation / 3 under 2:1. ~50 under Braman 2.3:1. Functional 33 = Gates 108 humeral elevation / 3.3."},
+        "downward_rotation": {"clinical": [0, 10], "functional": [0, 5], "status": {"clinical": "unverified", "functional": "unverified"}, "source_ids": []},
+        "elevation": {"clinical": [0, 45], "functional": [0, 20], "status": {"clinical": "unverified", "functional": "unverified"}, "source_ids": [], "note": "Expressed as clavicle elevation angle."},
+        "depression": {"clinical": [0, 10], "functional": [0, 5], "status": {"clinical": "unverified", "functional": "unverified"}, "source_ids": []},
+        "protraction": {"clinical": [0, 30], "functional": [0, 20], "status": {"clinical": "unverified", "functional": "unverified"}, "source_ids": [], "note": "Expressed as clavicle yaw."},
+        "retraction": {"clinical": [0, 30], "functional": [0, 20], "status": {"clinical": "unverified", "functional": "unverified"}, "source_ids": []}
+      },
+      "coupled_rules": [
+        "Scapulohumeral rhythm ~2:1 glenohumeral:scapular after a ~30 deg setting phase [INMAN_via_OUHSC][OUHSC_SCAP].",
+        "In vivo ratio 2.3 raising, 2.7 lowering; scapula upward-rotates ~0.43 deg per deg of GH elevation [BRAMAN2009].",
+        "Posterior tilt and upward rotation increase to max elevation; scapula internally rotates up to ~125 deg GH elevation then externally [BRAMAN2009].",
+        "Validator band (heuristic): if humerothoracic elevation E > 30, scapular upward rotation in [(E-30)/3.5, (E-30)/1.5]."
+      ]
+    },
+    "shoulder": {
+      "type": "ball-and-socket (glenohumeral); values humerothoracic",
+      "dof": 3,
+      "movements": {
+        "flexion": {"clinical": [0, 170], "functional": [0, 121], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["CDC_ROM", "LUTT", "NAMDARI2012", "GATES2016"], "note": "CDC means 168.8 M / 172.0 F (20-44 y); LUTT 180. Gates humeral elevation 0-108."},
+        "extension": {"clinical": [0, 50], "functional": [0, 46], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["LUTT", "NAMDARI2012"]},
+        "abduction": {"clinical": [0, 180], "functional": [0, 128], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["LUTT", "NAMDARI2012"]},
+        "adduction": {"clinical": [0, 50], "functional": null, "status": {"clinical": "verified", "functional": null}, "source_ids": ["LUTT"], "note": "Cross-body (horizontal) adduction functional 116 [NAMDARI2012] is a different measure."},
+        "horizontal_adduction": {"clinical": null, "functional": [0, 116], "status": {"clinical": null, "functional": "verified"}, "source_ids": ["NAMDARI2012"]},
+        "lateral_rotation": {"clinical": [0, 90], "functional": [0, 59], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["LUTT", "NAMDARI2012", "GATES2016"], "note": "Measured at 90 deg abduction. Gates 55."},
+        "medial_rotation": {"clinical": [0, 90], "functional": [0, 79], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["LUTT", "GATES2016", "NAMDARI2012"], "note": "Gates 79 hand-to-back-pocket. Namdari 102 measured arm at side (different position)."}
+      },
+      "coupled_rules": [
+        "Split humerothoracic elevation ~2:1 between glenohumeral and scapula (see scapula).",
+        "Glenohumeral-only elevation ~120 of 180 (derived).",
+        "Lateral humeral rotation needed for full abduction (unverified).",
+        "Use swing-twist cone limits, not independent Euler limits (heuristic)."
+      ]
+    },
+    "elbow": {
+      "type": "hinge (humeroulnar)",
+      "dof": 1,
+      "movements": {
+        "flexion": {"clinical": [-5, 145], "functional": [30, 130], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["CDC_ROM", "LUTT", "MORREY1981", "GATES2016"], "note": "CDC flexion means 144.6 M / 150.0 F; CDC 'extension' means 0.8 M / 4.7 F read here as hyperextension (sign undefined on page). Gates: drinking needed 121; some tasks need near-full extension."}
+      },
+      "coupled_rules": [
+        "Biceps flexes and supinates; strong palm-up lifts show slight supination [OS115].",
+        "At impact keep 5-15 deg flexion, not locked (heuristic).",
+        "IK soft-limit reach at <=0.99 chain length (heuristic)."
+      ]
+    },
+    "forearm": {
+      "type": "pivot (proximal and distal radioulnar)",
+      "dof": 1,
+      "movements": {
+        "pronation": {"clinical": [0, 80], "functional": [0, 50], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["CDC_ROM", "LUTT", "MORREY1981", "GATES2016"], "note": "From mid-position. CDC 76.9 M / 82.0 F. Gates ADLs peaked at 13."},
+        "supination": {"clinical": [0, 85], "functional": [0, 50], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["CDC_ROM", "LUTT", "MORREY1981", "GATES2016"], "note": "CDC 85.0 M / 90.6 F. Gates 53."}
+      },
+      "coupled_rules": [
+        "Palm rotation = forearm pronation/supination + humeral rotation; check each against its own limit (unverified total).",
+        "Wrist joint carries no axial twist; put twist on forearm twist bones near the wrist (heuristic)."
+      ]
+    },
+    "wrist": {
+      "type": "condyloid (radiocarpal) + midcarpal plane joints",
+      "dof": 2,
+      "movements": {
+        "flexion": {"clinical": [0, 60], "functional": [0, 54], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["LUTT", "RYU1991", "GATES2016"], "note": "Ryu: 54 max used; ~40 suffices for most tasks. Gates 38. Other charts list up to 80-90 (unverified)."},
+        "extension": {"clinical": [0, 60], "functional": [0, 60], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["LUTT", "RYU1991", "GATES2016"], "note": "Ryu 60 max, ~40 suffices. Gates 40."},
+        "radial_deviation": {"clinical": [0, 20], "functional": [0, 17], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["LUTT", "RYU1991", "GATES2016"], "note": "Gates 28."},
+        "ulnar_deviation": {"clinical": [0, 30], "functional": [0, 40], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["LUTT", "RYU1991", "GATES2016"], "note": "Functional exceeds LUTT clinical; LUTT is conservative. Gates 38."}
+      },
+      "coupled_rules": [
+        "Limit (flexion, deviation) jointly as an ellipse, not a box (heuristic).",
+        "Dart-thrower path: extension+radial to flexion+ulnar (unverified).",
+        "Grip strongest with slight wrist extension (unverified)."
+      ]
+    },
+    "hip": {
+      "type": "ball-and-socket",
+      "dof": 3,
+      "movements": {
+        "flexion": {"clinical": [0, 130], "functional": [0, 101], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["CDC_ROM", "LUTT", "HYODO2017", "WIKI_GAIT"], "note": "CDC 130.4 M / 133.8 F (passive). LUTT 100 (likely knee-straight). Walking ~30 at heel contact."},
+        "extension": {"clinical": [0, 18], "functional": [0, 10], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["CDC_ROM", "LUTT", "WIKI_GAIT"], "note": "CDC 17.4 M / 18.1 F; LUTT 30. Gait 10-15 before toe-off."},
+        "abduction": {"clinical": [0, 40], "functional": [0, 20], "status": {"clinical": "verified", "functional": "unverified"}, "source_ids": ["LUTT"]},
+        "adduction": {"clinical": [0, 20], "functional": [0, 17], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["LUTT", "HYODO2017"]},
+        "lateral_rotation": {"clinical": [0, 50], "functional": [0, 20], "status": {"clinical": "verified", "functional": "unverified"}, "source_ids": ["LUTT"]},
+        "medial_rotation": {"clinical": [0, 40], "functional": [0, 20], "status": {"clinical": "verified", "functional": "unverified"}, "source_ids": ["LUTT"]}
+      },
+      "coupled_rules": [
+        "Hips dominate late forward bending (lumbar:hip 0.4 at 60-90 deg) [ESOLA1996].",
+        "Hamstrings (hip ext + knee flex) and rectus femoris (hip flex + knee ext) couple hip and knee [OS116, inferred].",
+        "Hip extension ligament-limited near vertical [OS96].",
+        "Knee direction within ~15-20 deg of foot direction in squats/landings (heuristic)."
+      ]
+    },
+    "knee": {
+      "type": "modified hinge (axial rotation only when flexed)",
+      "dof": 1,
+      "movements": {
+        "flexion": {"clinical": [0, 140], "functional": [0, 135], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["CDC_ROM", "LUTT", "ROWE2000", "HYODO2017", "WIKI_GAIT"], "note": "CDC 137.7 M / 141.9 F; LUTT 150. Rowe: gait <90, stairs/chairs 90-120, bath ~135. Hyodo crouch 149. Walking swing ~60. CDC 'extension' 1.0 M / 1.6 F, sign undefined."},
+        "tibial_axial_rotation": {"clinical": [0, 30], "functional": [0, 10], "status": {"clinical": "unverified", "functional": "unverified"}, "source_ids": ["OS96"], "note": "Existence in flexion only is verified [OS96]; magnitudes unverified."}
+      },
+      "coupled_rules": [
+        "Screw-home: tibia externally rotates on femur over last ~20 deg of extension; reverses at start of flexion (popliteus) [OS96][OUHSC_KNEE]. Magnitude ~10-15 deg unverified.",
+        "Never locked under load after landing contact; flexion increases for several frames (heuristic).",
+        "Gastrocnemius couples knee flexion and ankle plantarflexion [OS116, inferred]."
+      ]
+    },
+    "ankle": {
+      "type": "hinge (talocrural)",
+      "dof": 1,
+      "movements": {
+        "dorsiflexion": {"clinical": [0, 13], "functional": [0, 10], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["CDC_ROM", "WIKI_GAIT"], "note": "CDC 12.7 M / 13.8 F; commonly quoted ~20 (unverified). LUTT page lists 30 (likely swapped). Deep squats need more (unverified)."},
+        "plantarflexion": {"clinical": [0, 55], "functional": [0, 20], "status": {"clinical": "verified", "functional": "verified"}, "source_ids": ["CDC_ROM", "WIKI_GAIT"], "note": "CDC 54.6 M / 62.1 F. Gait 15-20 before push-off."}
+      },
+      "coupled_rules": [
+        "Talocrural joint allows only dorsi/plantarflexion; side motion blocked by malleoli [OS96].",
+        "Inversion/eversion belong to the subtalar bone, never the ankle hinge [OS95][OS96].",
+        "With knee straight, gastrocnemius reduces dorsiflexion (unverified magnitude).",
+        "Landing: dorsiflexion increases after contact (heuristic)."
+      ]
+    },
+    "subtalar": {
+      "type": "plane/gliding intertarsal complex (subtalar + transverse tarsal) acting as one oblique axis",
+      "dof": 1,
+      "movements": {
+        "inversion": {"clinical": [0, 30], "functional": [0, 10], "status": {"clinical": "unverified", "functional": "unverified"}, "source_ids": [], "note": "Inversion > eversion is verified [OS95]. Milgrom 1985 means 22-32 by technique (snippet only)."},
+        "eversion": {"clinical": [0, 15], "functional": [0, 5], "status": {"clinical": "unverified", "functional": "unverified"}, "source_ids": []}
+      },
+      "coupled_rules": [
+        "Inversion range exceeds eversion [OS95].",
+        "Weight-bearing subtalar pronation couples with internal tibial rotation, supination with external (unverified)."
+      ]
+    }
+  },
+  "sources": {
+    "OS95": {"title": "OpenStax Anatomy and Physiology 2e, 9.5 Types of Body Movements", "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/9-5-types-of-body-movements", "licence": "CC BY-NC-SA 4.0 as stated on page; no LLM training/ingestion without OpenStax permission", "read_ok": true},
+    "OS94": {"title": "OpenStax A&P 2e, 9.4 Synovial Joints", "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/9-4-synovial-joints", "licence": "CC BY-NC-SA 4.0 (as OS95)", "read_ok": true},
+    "OS96": {"title": "OpenStax A&P 2e, 9.6 Anatomy of Selected Synovial Joints", "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/9-6-anatomy-of-selected-synovial-joints", "licence": "CC BY-NC-SA 4.0 (as OS95)", "read_ok": true},
+    "OS115": {"title": "OpenStax A&P 2e, 11.5 Muscles of the Pectoral Girdle and Upper Limbs", "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/11-5-muscles-of-the-pectoral-girdle-and-upper-limbs", "licence": "CC BY-NC-SA 4.0 (as stated on page)", "read_ok": true},
+    "OS116": {"title": "OpenStax A&P 2e, 11.6 Appendicular Muscles of the Pelvic Girdle and Lower Limbs", "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/11-6-appendicular-muscles-of-the-pelvic-girdle-and-lower-limbs", "licence": "CC BY-NC-SA 4.0 (assumed same as other chapters)", "read_ok": true},
+    "CDC_ROM": {"title": "CDC Joint Range of Motion Study, reference values", "url": "https://archive.cdc.gov/www_cdc_gov/ncbddd/jointrom/index.html", "licence": "US government work (assumed public domain)", "read_ok": true},
+    "SOUCIE2011": {"title": "Soucie JM et al. Range of motion measurements: reference values and a database for comparison studies. Haemophilia 2011;17(3):500-507 (abstract)", "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=TITLE:%22Range%20of%20motion%20measurements:%20reference%20values%22&resultType=core&format=json", "licence": "subscription; abstract only", "read_ok": true},
+    "LUTT": {"title": "WikEM Joint ROM table (attributes Luttgens & Hamilton 1997)", "url": "https://wikem.org/wiki/Joint_ROM_(Table)", "licence": "not stated on page", "read_ok": true},
+    "GATES2016": {"title": "Gates DH et al. Range of motion requirements for upper-limb activities of daily living. Am J Occup Ther 2016", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4690598", "licence": "Copyright AOTA; PMC access", "read_ok": true},
+    "NAMDARI2012": {"title": "Namdari S et al. Defining functional shoulder range of motion for activities of daily living. J Shoulder Elbow Surg 2012;21(9):1177-83 (abstract)", "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=TITLE:%22Defining%20functional%20shoulder%20range%20of%20motion%22&resultType=core&format=json", "licence": "abstract only", "read_ok": true},
+    "MORREY1981": {"title": "Morrey BF, Askew LJ, Chao EY. A biomechanical study of normal functional elbow motion. JBJS Am 1981;63:872-7 (via JBJS OrthoBuzz commentary)", "url": "https://orthobuzz.jbjs.org/2016/10/26/jbjs-classics-biomechanics-of-the-normal-elbow/", "licence": "commentary page; original not read", "read_ok": true},
+    "RYU1991": {"title": "Ryu J et al. Functional ranges of motion of the wrist joint. J Hand Surg Am 1991;16(3):409-19 (abstract)", "url": "https://mayoclinic.elsevierpure.com/en/publications/functional-ranges-of-motion-of-the-wrist-joint/", "licence": "abstract only", "read_ok": true},
+    "HYODO2017": {"title": "Hyodo K et al. Hip, knee, and ankle kinematics during activities of daily living. Braz J Phys Ther 2017;21(3):159-166 (abstract)", "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=PMCID:PMC5537477&resultType=core&format=json", "licence": "open access (licence not stated in record)", "read_ok": true},
+    "ROWE2000": {"title": "Rowe PJ et al. Knee joint kinematics in gait and other functional activities measured using flexible electrogoniometry. Gait Posture 2000;12(2):143-155 (abstract)", "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:10998612%20AND%20SRC:MED&resultType=core&format=json", "licence": "abstract only", "read_ok": true},
+    "HEMMERICH2006": {"title": "Hemmerich A et al. Hip, knee, and ankle kinematics of high range of motion activities of daily living. J Orthop Res 2006", "url": "https://zendy.io/title/10.1002/jor.20114", "licence": "not read", "read_ok": false},
+    "ESOLA1996": {"title": "Esola MA et al. Analysis of lumbar spine and hip motion during forward bending. Spine 1996;21(1):71-78 (abstract)", "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=EXT_ID:9122766%20AND%20SRC:MED&resultType=core&format=json", "licence": "abstract only", "read_ok": true},
+    "BRAMAN2009": {"title": "Braman JP et al. In vivo assessment of scapulohumeral rhythm during unconstrained overhead reaching. J Shoulder Elbow Surg 2009;18(6):960-7 (abstract)", "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=PMCID:PMC2841046&resultType=core&format=json", "licence": "abstract only", "read_ok": true},
+    "OUHSC_SCAP": {"title": "Univ. of Oklahoma HSC kinesiology notes: shoulder elevation / scapulohumeral rhythm", "url": "https://ouhsc.edu/bserdac/dthompso/web/namics/scapryme.htm", "licence": "not stated", "read_ok": true},
+    "INMAN_via_OUHSC": {"title": "Inman, Saunders & Abbott 1944 2:1 scapulohumeral ratio, as reported by OUHSC_SCAP", "url": "https://ouhsc.edu/bserdac/dthompso/web/namics/scapryme.htm", "licence": "secondary report; original not read", "read_ok": false},
+    "OUHSC_KNEE": {"title": "Univ. of Oklahoma HSC: Biomechanics of the knee (arthrokinematics)", "url": "https://ouhsc.edu/bserdac/dthompso/web/namics/kneeak.htm", "licence": "not stated", "read_ok": true},
+    "WIKI_GAIT": {"title": "Wikipedia: Lower-limb walking pattern", "url": "https://en.wikipedia.org/wiki/Lower-limb_walking_pattern", "licence": "CC BY-SA 4.0", "read_ok": true},
+    "YOUDAS1992": {"title": "Youdas JW et al. Normal range of motion of the cervical spine: an initial goniometric study. Phys Ther 1992;72(11):770-80 (abstract, no numbers)", "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=TITLE:%22Normal%20range%20of%20motion%20of%20the%20cervical%20spine%3A%20an%20initial%20goniometric%20study%22&resultType=core&format=json", "licence": "abstract only", "read_ok": true},
+    "LIEBSCH2025": {"title": "Liebsch C, Wilke HJ. Coupled motions of the spine under standardized in vitro conditions: systematic review and meta-analysis (2025, abstract)", "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=%22coupled%20motion%22%20lumbar%20spine%20lateral%20bending%20axial%20rotation%20systematic%20review&resultType=core&format=json&pageSize=5", "licence": "abstract only", "read_ok": true},
+    "PHYSIOPEDIA_ROM": {"title": "Physiopedia: Range of Motion Normative Values", "url": "https://www.physio-pedia.com/Range_of_Motion_Normative_Values", "licence": "n/a", "read_ok": false},
+    "MCCLURE2001": {"title": "McClure PW et al. Direct 3-dimensional measurement of scapular kinematics during dynamic movements in vivo. JSES 2001", "url": "https://pages.uoregon.edu/biomech/obl/articles/2001_mcclure_jses2001.pdf", "licence": "n/a (PDF not extractable here)", "read_ok": false},
+    "WILLMORE2016": {"title": "Scapulohumeral rhythm review (PMC4935167)", "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4935167", "licence": "n/a (reCAPTCHA)", "read_ok": false},
+    "QUT_PODIATRY": {"title": "QUT podiatry anatomy app: ankle and subtalar ROM", "url": "https://podiatry-anatomy-app.qut.edu.au/content/joints/stj-rom.html", "licence": "n/a (HTTP 403)", "read_ok": false},
+    "NEUMANN": {"title": "Neumann DA. Kinesiology of the Musculoskeletal System (Elsevier) - publisher description only", "url": "https://shop.elsevier.com/books/neumann-s-kinesiology-of-the-musculoskeletal-system/neumann/978-0-323-71859-2", "licence": "commercial book; not read", "read_ok": false},
+    "MATTESI": {"title": "Mattesi M. FORCE: Drawing Human Anatomy (CRC Press) - publisher description only", "url": "https://routledge.com/9780415733977", "licence": "commercial book; not read", "read_ok": false},
+    "WILLIAMS": {"title": "Williams R. The Animator's Survival Kit - public reviews/contents only", "url": "https://en.wikipedia.org/wiki/The_Animator%27s_Survival_Kit", "licence": "commercial book; not read", "read_ok": false}
+  }
+}

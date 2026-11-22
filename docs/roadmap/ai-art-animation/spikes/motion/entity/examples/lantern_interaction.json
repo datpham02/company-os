@@ -1,0 +1,55 @@
+{
+ "id": "lantern_interaction",
+ "identity": {
+  "role": "prop interaction",
+  "movement_identity": "a lantern swings from the carrier's hand"
+ },
+ "topology": "interaction",
+ "components": [
+  {
+   "type": "rigid_attachment",
+   "name": "hook",
+   "params": {
+    "parent": "carrier.hand_b"
+   }
+  },
+  {
+   "type": "pendulum",
+   "name": "lantern",
+   "attach_to": "hook.end",
+   "params": {
+    "length_px": 110,
+    "damping": 0.12
+   }
+  },
+  {
+   "type": "particle_emission",
+   "name": "flame",
+   "attach_to": "lantern.wick"
+  }
+ ],
+ "interactions": [
+  {
+   "type": "attach",
+   "a": "carrier.hand_b",
+   "b": "hook",
+   "events": [
+    "pickup",
+    "drop"
+   ]
+  },
+  {
+   "type": "driven_by",
+   "a": "lantern",
+   "b": "carrier.chest",
+   "note": "pendulum driven by the carrier's acceleration"
+  }
+ ],
+ "validation": {
+  "physical": [
+   "attachment",
+   "settle_time",
+   "socket_attachment"
+  ]
+ }
+}
