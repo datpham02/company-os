@@ -35,17 +35,17 @@ Use a fully explicit, human-scoped Task metadata fixture, not a free-form prompt
 | **INVOKED / READ** | Operation called or skill/knowledge read | **UNVERIFIED**; requires session event, not a `usedBy` field |
 | **EFFECTIVELY_USED** | Reviewed artifact changed/improved under a stated criterion | **UNVERIFIED** in all offline previews; independent outcome review is required |
 
-The first two stages are **catalog-snapshot declarations**, not dynamic permissions. The other stages are intentionally unverified, even when a JSON receipt contains plausible text. A native knowledge file has `SOURCE_PRESENT_ONLY` when it exists; this is not proof that an Agent can discover or read it. The `allowed-tools` field in Claude frontmatter does not enforce Paperclip permissions.
+Each stage uses one JSON shape, `{ "status": ..., "evidence": ... }`, for both operation and knowledge requirements. The Markdown preview prints every stage’s status and evidence, as well as `receipt_chain_complete` next to `report_verification`. Router `restrictions` and `external_skill_candidates` are copied unchanged into JSON and rendered in Markdown. The first two stages are **catalog-snapshot declarations**, not dynamic permissions. The other stages are intentionally unverified, even when a JSON receipt contains plausible text. A native knowledge file has `SOURCE_PRESENT_ONLY` when it exists; this is not proof that an Agent can discover or read it. The `allowed-tools` field in Claude frontmatter does not enforce Paperclip permissions.
 
 ## Usage evidence (A5)
 
 A second optional JSON input is an **unverified claims ledger**, schema `capability-evidence-reports.v1`, with receipts identified by `operation:<catalog-id>` or `knowledge:<repo-path>`. Accepted stages: `DISCOVERED`, `ACCESSED`, `READ` (knowledge only), `INVOKED` (operation only), `APPLIED`, `REVIEWED`. Each receipt references a specific log entry or artifact. `APPLIED` and `REVIEWED` also require `artifact_ref` and `criterion`. The tool rejects unknown references, stage mix-ups and duplicates.
 
-The preview tracks:
+The preview tracks receipt **claims only**:
 
 `suggested → DISCOVERED claim → ACCESSED claim → READ/INVOKED claim → APPLIED claim → independent REVIEWED claim`
 
-It reports missing steps; it **never** converts a claim, checked-in file, or forged `REVIEWED` receipt into verified access/invocation or `EFFECTIVELY_USED`. For real Pilot 1 evidence, a reviewer must independently examine log identity, Task scope, artifact diff and whether the cited criterion was actually applied. Evidence refs in the example fixture are **fictional** and must not be mistaken for actual session evidence.
+The `receipt_chain_complete` boolean means only that all expected *reported* stages (including REVIEWED) were provided. It is printed alongside `report_verification: UNVERIFIED` and never grants permission. The example receipt fixture deliberately omits `REVIEWED` and therefore has `receipt_chain_complete: false`. It reports missing steps; it **never** converts a claim, checked-in file, or forged `REVIEWED` receipt into verified access/invocation or `EFFECTIVELY_USED`. For real Pilot 1 evidence, a reviewer must independently examine log identity, Task scope, artifact diff and whether the cited criterion was actually applied. Evidence refs in the example fixture are **fictional** and must not be mistaken for actual session evidence.
 
 ## Offline CLI and examples
 
