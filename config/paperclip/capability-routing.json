@@ -1,0 +1,46 @@
+{
+  "schema": "capability-routing.v1",
+  "source": "config/paperclip/generated/catalog/capability-catalog.json",
+  "note": "Offline preview only: this map does not assign skills, launch Agents, grant permissions or authorize generation.",
+  "task_types": {
+    "sealwarden-doc-review": {
+      "role": "game-artist",
+      "operations": [],
+      "knowledge": [
+        "knowledge/departments/game/skills/studio-art-identity-and-refinement/SKILL.md",
+        "knowledge/departments/game/workflows/asset-production.md"
+      ],
+      "restrictions": ["TEXT_REVIEW_ONLY", "NO_IMAGE_GENERATION"]
+    },
+    "pixel-vfx": {
+      "role": "game-artist",
+      "operations": ["pixelfx-list", "pixelfx-render"],
+      "knowledge": ["knowledge/departments/game/workflows/asset-production.md"],
+      "restrictions": ["CHECK_PROJECT_ASSET_LICENSE", "NO_RENDER_WITHOUT_TASK_AUTHORIZATION"]
+    },
+    "ui-design": {
+      "role": "ui-designer",
+      "operations": ["uiux-search", "design-md"],
+      "knowledge": ["knowledge/company/standards/task-contract.md"],
+      "restrictions": ["VERIFY_USER_SCOPE_SKILL_ACCESS"]
+    },
+    "godot-smoke": {
+      "role": "qa-engineer",
+      "operations": ["godot-version", "godot-import", "godot-smoke"],
+      "knowledge": ["knowledge/company/standards/task-contract.md"],
+      "restrictions": ["NO_COMMAND_EXECUTION_IN_PREVIEW"]
+    },
+    "web-qa-browser": {
+      "role": "qa-engineer",
+      "operations": ["playwright-mcp"],
+      "knowledge": ["knowledge/company/standards/task-contract.md"],
+      "restrictions": ["NO_CANDIDATE_ACTIVATION"]
+    },
+    "gameplay-reverse-engineering": {
+      "role": "gameplay-programmer",
+      "operations": ["rea-mcp"],
+      "knowledge": ["knowledge/company/standards/task-contract.md"],
+      "restrictions": ["CURSOR_PAUSED", "BOARD_APPROVED_TARGET_ONLY", "NO_EXECUTION"]
+    }
+  }
+}
