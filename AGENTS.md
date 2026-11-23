@@ -29,7 +29,7 @@ The fastest orientation for an AI agent is [docs/guides/ai-agent-onboarding.md](
 5. You MUST NOT change an `Accepted` ADR silently. Propose a new ADR that supersedes it.
 6. You MUST NOT label anything `IMPLEMENTED` unless the code exists in this repository and has been verified.
 7. You MUST NOT commit secrets, local absolute paths of a specific machine, or Runtime data (logs, run state, worktrees) to this repository ([ADR-010](docs/decisions/ADR-010-runtime-data-outside-repository.md)).
-8. You MUST NOT commit or push unless the human explicitly asks.
+8. You MUST NOT commit or push unless the human explicitly asks. A Board or Board-Operator instruction that explicitly requests Draft PR delivery under [knowledge/company/policies/pull-request-delivery.md](knowledge/company/policies/pull-request-delivery.md) counts as that ask **only** for the named write set and feature branch; it never authorizes merge, installs, permission changes, or commits outside the write set. Board approval of investigation alone is not enough.
 9. You SHOULD keep documents modular and update cross-references when you add or move a document.
 
 ## 4. Where to make changes

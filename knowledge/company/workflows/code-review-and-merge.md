@@ -3,7 +3,7 @@
 - **ID:** `code-review-and-merge` · **Owner:** `qa` (review), Board Operator (approval and merge) · **Board gate:** yes (ADR-009)
 
 ## Trigger
-A code Task moves to `in_review` with an open PR.
+A code Task moves to `in_review` with an open PR. After an explicit Board/human delivery ask ([pull-request-delivery.md](../policies/pull-request-delivery.md) §0), authors open a **Draft** PR on a feature branch within the write set; the Board (or author) marks it ready for review when evidence is complete.
 
 ## Required inputs
 PR URL; Task acceptance criteria; Run summary with test results.
