@@ -1,0 +1,13 @@
+{
+  "schema": "task-capability-input.v1",
+  "task_id": "A6-UI-DESIGN",
+  "task_type": "ui-design",
+  "role": "ui-designer",
+  "operations": [
+    {"id": "uiux-search", "required": true},
+    {"id": "design-md", "required": true}
+  ],
+  "knowledge": [
+    {"path": "knowledge/company/standards/task-contract.md", "required": true}
+  ]
+}
