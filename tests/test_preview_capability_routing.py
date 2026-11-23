@@ -40,6 +40,19 @@ class RouterTests(unittest.TestCase):
         }}
         self.save(router.ROUTING_PATH, self.route)
         self.save(router.CATALOG_PATH, self.cat)
+        self.external = {
+            "schema": "external-skill-candidates.v1",
+            "sources": [{"id": "ccgs", "repository": "Donchitos/Claude-Code-Game-Studios",
+                         "commit": "abc0de79d6ceb0b5d7aa693945849b3937afbe6a",
+                         "integration": "candidate", "mode": "harvest_reference_only", "license": "MIT"}],
+            "skills": [{"id": "ccgs/art-bible", "source_id": "ccgs",
+                        "path": ".claude/skills/art-bible/SKILL.md", "role": "game-artist",
+                        "task_types": ["vfx"], "review_state": "candidate",
+                        "proposal": "EVALUATE_ADAPT_ONLY", "value": "Art reference checklist",
+                        "dependencies": ["project.yaml"],
+                        "blockers": ["requires review"], "migration": "adapt later"}]
+        }
+        self.save(router.EXTERNAL_SKILLS_PATH, self.external)
 
     def test_declared_only_without_runtime_or_knowledge_delivery_claims(self):
         result = router.resolve(self.repo, "vfx")
@@ -74,6 +87,62 @@ class RouterTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             router.resolve(self.repo, "vfx")
 
+    def test_external_discovery_never_activates_skill(self):
+        result = router.resolve(self.repo, "vfx")
+        ext = result["external_skill_candidates"]
+        self.assertEqual(len(ext), 1)
+        self.assertEqual(ext[0]["status"], "CANDIDATE_NOT_ACTIVE")
+        self.assertFalse(ext[0]["execution_authorized"])
+        self.assertFalse(ext[0]["knowledge_delivered"])
+        self.assertIn("abc0de79d6ce", ext[0]["source"])
+        self.assertIn("external-skill: ccgs/art-bible", router.task_block(result))
+
+    def test_deferred_external_skill_never_activates(self):
+        self.external["skills"][0]["review_state"] = "deferred"
+        self.save(router.EXTERNAL_SKILLS_PATH, self.external)
+        self.assertEqual(router.resolve(self.repo, "vfx")["external_skill_candidates"][0]["status"],
+                         "DEFERRED_NOT_ACTIVE")
+
+    def test_unpinned_upstream_rejected(self):
+        self.external["sources"][0]["commit"] = "main"
+        self.save(router.EXTERNAL_SKILLS_PATH, self.external)
+        with self.assertRaises(ValueError):
+            router.resolve(self.repo, "vfx")
+
+    def test_external_traversal_and_unapproved_promotion_rejected(self):
+        self.external["skills"][0]["path"] = "../../danger/SKILL.md"
+        self.save(router.EXTERNAL_SKILLS_PATH, self.external)
+        with self.assertRaises(ValueError):
+            router.resolve(self.repo, "vfx")
+        self.external["skills"][0]["path"] = ".claude/skills/art-bible/SKILL.md"
+        self.external["skills"][0]["review_state"] = "integrated"
+        self.save(router.EXTERNAL_SKILLS_PATH, self.external)
+        with self.assertRaises(ValueError):
+            router.resolve(self.repo, "vfx")
+
+    def test_ui_ux_review_is_advisory_only(self):
+        self.cat["roles"]["ui-designer"] = {"status": "active", "operations": []}
+        self.route["task_types"]["ui-review"] = {
+            "role": "ui-designer", "operations": [], "knowledge": []
+        }
+        self.external["skills"].append({
+            "id": "ccgs/ux-review", "source_id": "ccgs",
+            "path": ".claude/skills/ux-review/SKILL.md",
+            "role": "ui-designer", "task_types": ["ui-review"],
+            "review_state": "deferred", "proposal": "DEFER_NATIVE_STUDIO_SKILL_PREFERRED",
+            "value": "Read-only quality rubric", "dependencies": ["project.yaml"],
+            "blockers": ["upstream config"], "migration": "adapt checklist"
+        })
+        self.save(router.CATALOG_PATH, self.cat)
+        self.save(router.ROUTING_PATH, self.route)
+        self.save(router.EXTERNAL_SKILLS_PATH, self.external)
+        result = router.resolve(self.repo, "ui-review")
+        self.assertEqual(result["capabilities"], [])
+        self.assertFalse(result["execution_authorized"])
+        self.assertEqual(result["external_skill_candidates"][0]["id"], "ccgs/ux-review")
+        self.assertEqual(result["external_skill_candidates"][0]["status"], "DEFERRED_NOT_ACTIVE")
+        self.assertIn("external-skill: ccgs/ux-review", router.task_block(result))
+
     def test_real_godot_smoke_shaped_row_is_blocked_as_unregistered(self):
         operation = row(
             "godot-smoke", approved="Board decision 2026-11-21, OQ-048 / SOU-31",
@@ -104,7 +173,7 @@ class RouterTests(unittest.TestCase):
             "web-qa-browser": {"playwright-mcp": "BLOCKED"},
             "gameplay-reverse-engineering": {"rea-mcp": "BLOCKED"},
         }
-        self.assertEqual(set(routing["task_types"]), set(expected))
+        self.assertEqual(set(routing["task_types"]), set(expected) | {"combat-design", "skill-quality-review", "ui-review"})
         self.assertEqual(catalog["schema"], "capability-catalog.v1")
         for task_type, expected_ops in expected.items():
             with self.subTest(task_type=task_type):
@@ -115,6 +184,25 @@ class RouterTests(unittest.TestCase):
                 if task_type == "godot-smoke":
                     self.assertTrue(all(x["reason"] == "UNREGISTERED_DEPENDENCY"
                                         for x in result["capabilities"]))
+
+    def test_live_external_manifest_defers_upstream_ux_review(self):
+        manifest = router.read_json(ROOT, router.EXTERNAL_SKILLS_PATH)
+        matches = [s for s in manifest["skills"] if s["id"] == "ccgs/ux-review"]
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]["review_state"], "deferred")
+        self.assertEqual(matches[0]["proposal"], "DEFER_NATIVE_STUDIO_SKILL_PREFERRED")
+        routes = router.read_json(ROOT, router.ROUTING_PATH)
+        native = "knowledge/departments/game/skills/studio-ui-ux-review/SKILL.md"
+        self.assertIn(native, routes["task_types"]["ui-review"]["knowledge"])
+        result = router.resolve(ROOT, "ui-review")
+        upstream = [s for s in result["external_skill_candidates"] if s["id"] == "ccgs/ux-review"]
+        self.assertEqual(len(upstream), 1)
+        self.assertEqual(upstream[0]["status"], "DEFERRED_NOT_ACTIVE")
+        self.assertFalse(upstream[0]["execution_authorized"])
+        self.assertFalse(upstream[0]["knowledge_delivered"])
+        refs = [k for k in result["knowledge"] if k["path"] == native]
+        self.assertEqual(len(refs), 1)
+        self.assertIn("UNVERIFIED", refs[0]["agent_delivery"])
 
     def test_unknown_task_type_rejected(self):
         with self.assertRaises(ValueError):

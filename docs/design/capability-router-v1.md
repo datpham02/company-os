@@ -34,6 +34,10 @@ The Markdown output is a **proposed** `## Required capabilities` block for a Tas
 6. Knowledge files are checked for presence **in this checkout only**. Agent delivery remains `UNVERIFIED` until an Agent run demonstrates it can read them; KD deployment P1–P4 remains on hold.
 7. No generated command is executed, no skill is installed/assigned, no Agent wakes, and no model/image generation takes place.
 
+## External skill candidates (separate gated source)
+
+A curated, pinned [External Skill Discovery v1](external-skill-discovery-v1.md) manifest adds `external_skill_candidates` for applicable Task types. This is an **offline advisory shortlist**, not a dynamic online registry or automatic skill invocation. Entries are `CANDIDATE_NOT_ACTIVE` or `DEFERRED_NOT_ACTIVE` only, and the repository is never cloned, installed or executed. The Board must separately approve any adapted Studio Skill and its delivery.
+
 ## Evidence needed before claiming activation
 
 A subsequent permitted Agent Task should record `capability ID`, source/skill read receipt, actual tool invocation (if any), rule applied, artifact/result, and reviewer observation of its effect. Static role routing and operator-side preview cannot satisfy this test. Claude Code Pilot 1, linked in Issue #113, remains independent and pending quota restoration.

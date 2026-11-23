@@ -10,37 +10,116 @@
         "knowledge/departments/game/skills/studio-art-identity-and-refinement/SKILL.md",
         "knowledge/departments/game/workflows/asset-production.md"
       ],
-      "restrictions": ["TEXT_REVIEW_ONLY", "NO_IMAGE_GENERATION"]
+      "restrictions": [
+        "TEXT_REVIEW_ONLY",
+        "NO_IMAGE_GENERATION"
+      ]
     },
     "pixel-vfx": {
       "role": "game-artist",
-      "operations": ["pixelfx-list", "pixelfx-render"],
-      "knowledge": ["knowledge/departments/game/workflows/asset-production.md"],
-      "restrictions": ["CHECK_PROJECT_ASSET_LICENSE", "NO_RENDER_WITHOUT_TASK_AUTHORIZATION"]
+      "operations": [
+        "pixelfx-list",
+        "pixelfx-render"
+      ],
+      "knowledge": [
+        "knowledge/departments/game/workflows/asset-production.md"
+      ],
+      "restrictions": [
+        "CHECK_PROJECT_ASSET_LICENSE",
+        "NO_RENDER_WITHOUT_TASK_AUTHORIZATION"
+      ]
     },
     "ui-design": {
       "role": "ui-designer",
-      "operations": ["uiux-search", "design-md"],
-      "knowledge": ["knowledge/company/standards/task-contract.md"],
-      "restrictions": ["VERIFY_USER_SCOPE_SKILL_ACCESS"]
+      "operations": [
+        "uiux-search",
+        "design-md"
+      ],
+      "knowledge": [
+        "knowledge/company/standards/task-contract.md"
+      ],
+      "restrictions": [
+        "VERIFY_USER_SCOPE_SKILL_ACCESS"
+      ]
     },
     "godot-smoke": {
       "role": "qa-engineer",
-      "operations": ["godot-version", "godot-import", "godot-smoke"],
-      "knowledge": ["knowledge/company/standards/task-contract.md"],
-      "restrictions": ["NO_COMMAND_EXECUTION_IN_PREVIEW"]
+      "operations": [
+        "godot-version",
+        "godot-import",
+        "godot-smoke"
+      ],
+      "knowledge": [
+        "knowledge/company/standards/task-contract.md"
+      ],
+      "restrictions": [
+        "NO_COMMAND_EXECUTION_IN_PREVIEW"
+      ]
     },
     "web-qa-browser": {
       "role": "qa-engineer",
-      "operations": ["playwright-mcp"],
-      "knowledge": ["knowledge/company/standards/task-contract.md"],
-      "restrictions": ["NO_CANDIDATE_ACTIVATION"]
+      "operations": [
+        "playwright-mcp"
+      ],
+      "knowledge": [
+        "knowledge/company/standards/task-contract.md"
+      ],
+      "restrictions": [
+        "NO_CANDIDATE_ACTIVATION"
+      ]
     },
     "gameplay-reverse-engineering": {
       "role": "gameplay-programmer",
-      "operations": ["rea-mcp"],
-      "knowledge": ["knowledge/company/standards/task-contract.md"],
-      "restrictions": ["CURSOR_PAUSED", "BOARD_APPROVED_TARGET_ONLY", "NO_EXECUTION"]
+      "operations": [
+        "rea-mcp"
+      ],
+      "knowledge": [
+        "knowledge/company/standards/task-contract.md"
+      ],
+      "restrictions": [
+        "CURSOR_PAUSED",
+        "BOARD_APPROVED_TARGET_ONLY",
+        "NO_EXECUTION"
+      ]
+    },
+    "combat-design": {
+      "role": "game-designer",
+      "operations": [],
+      "knowledge": [
+        "knowledge/company/standards/task-contract.md"
+      ],
+      "restrictions": [
+        "DESIGN_REVIEW_ONLY",
+        "NO_SUBAGENT_ORCHESTRATION",
+        "NO_CODE_OR_ASSET_WRITES"
+      ]
+    },
+    "skill-quality-review": {
+      "role": "project-manager",
+      "operations": [],
+      "knowledge": [
+        "knowledge/company/standards/task-contract.md"
+      ],
+      "restrictions": [
+        "STATIC_REVIEW_ONLY",
+        "NO_EXTERNAL_SCRIPTS",
+        "NO_SKILL_INSTALL"
+      ]
+    },
+    "ui-review": {
+      "role": "ui-designer",
+      "operations": [],
+      "knowledge": [
+        "knowledge/company/standards/task-contract.md",
+        "knowledge/departments/game/skills/studio-ui-ux-review/SKILL.md"
+      ],
+      "restrictions": [
+        "READ_ONLY_UX_REVIEW",
+        "NO_DESIGN_FILE_WRITES",
+        "DO_NOT_REPLACE_BOARD_REVIEW",
+        "NO_UPSTREAM_SKILL_EXECUTION",
+        "NATIVE_SKILL_NOT_ASSIGNED_AGENT_DELIVERY_UNVERIFIED"
+      ]
     }
   }
 }
