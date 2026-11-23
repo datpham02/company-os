@@ -3,7 +3,7 @@ from pathlib import Path
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = ROOT / "knowledge/company/skills/studio-ui-ux-review"
+SKILL_DIR = ROOT / "knowledge/departments/game/skills/studio-ui-ux-review"
 
 
 class StudioUiUxReviewContract(unittest.TestCase):
