@@ -31,11 +31,14 @@ A Task MUST NOT be released (moved out of `backlog`) unless it has every field b
 | Acceptance criteria | Description `## Acceptance criteria` | Checkable statements |
 | **Write set** | Description `## Write set` (also accepted: `## Files owned …`) | Files or folders the Task may change (globs allowed) |
 | Read set | Description `## Read set` | Documents to read. Text the agent cannot reach (other issues, G-8) is pasted or committed to the project repository first |
+| Capability preview (optional; PROPOSED) | Description `## Required capabilities` | Human-reviewed operation IDs / knowledge references from [Capability Router v1 preview](../../../docs/design/capability-router-v1.md). This preview is not a grant or a release requirement until a separate Board decision |
 | Blocked by | Paperclip blocker relations | Not only prose |
 | Assignee | Paperclip assignee | An agent whose role and permission profile can do the work |
 | Reviewer | Execution policy `review` stage | A non-author agent, on a different provider where possible ([provider-allocation.md](../policies/provider-allocation.md)) |
 | Approval | Execution policy `approval` stage | Board Operator, for anything that changes code or a governed artefact |
 | Size | — | Fits one PR and one working session. Default limit: about 10 files or 400 changed lines; the project may set its own |
+
+**Capability preview is advisory, not enforced:** The read-only router produces catalog citations and proposed `capability:` / `read-set:` entries. It does not add a mandatory Paperclip field, assign a skill, expand an Agent's read permissions, or approve an operation. Agents must report actual reads, invocations and applied criteria separately; unavailable sources require a blocker. This is a proposed extension pending Board review, not a change to the existing Task release gate.
 
 Agent-created Tasks are created in `backlog`, **unassigned**, with the intended assignee written in the description (G-9). The Board, or an agent granted `tasks:assign`, assigns them and adds the review and approval stages and the blockers before release (G-10).
 
