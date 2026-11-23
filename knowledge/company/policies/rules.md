@@ -15,7 +15,7 @@ These rules apply to **every agent on every Run** and to the Board Operator's au
 2. One Task, one Task Branch. Do not mix unrelated changes.
 3. Before your Run ends, post a comment: what you did, what is left, links (branch, commits, PR), and any risks.
 4. Move code changes to `in_review`, never directly to `done`.
-5. Finish every Board-approved task that produces repository changes with a **Draft** GitHub Pull Request on a dedicated feature branch, and return the PR URL to the Board. Do not merge. Required PR sections and audit/research rules: [pull-request-delivery.md](pull-request-delivery.md).
+5. When the Board or human **explicitly** authorizes repository delivery for a task (see [pull-request-delivery.md](pull-request-delivery.md) §0), finish with a **Draft** GitHub Pull Request on a dedicated feature branch, within the Task write set only, and return the PR URL. Do not merge. Root [AGENTS.md](../../../AGENTS.md) §3 rule 8 still governs commit/push; this rule does not override it. Investigation-only Board approval does not authorize commits.
 6. If blocked or outside your authority, set the Task to `blocked` and post the blocker lines from [task-contract.md §6](../standards/task-contract.md#6-blocker-protocol): `Blocked`, `Type`, `Unblock owner`, `Ask`, `Check again`. @-mention the unblock owner or your manager. A blocked Task without a named owner is not allowed.
 7. Change only the files in your Task's write set. If you need more, stop and ask first.
 8. One Task `in_progress` per Agent Instance.

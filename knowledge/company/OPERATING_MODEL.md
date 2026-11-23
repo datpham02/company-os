@@ -5,7 +5,7 @@ How the studio runs day to day. Processes are defined in [workflows/](workflows/
 ## 1. Control surfaces
 - **Board Operator** uses the Paperclip web UI for goals, tasks, approvals, monitoring, and budgets, and uses GitHub to review and merge pull requests. The operator does not need to open game workspaces.
 - **Agents** are woken by Paperclip heartbeats and act through their Provider in a Task Workspace.
-- **Delivery:** Board-approved repository changes finish as a **Draft** GitHub PR (never auto-merged). Policy: [policies/pull-request-delivery.md](policies/pull-request-delivery.md).
+- **Delivery:** When the Board explicitly authorizes repository delivery, changes finish as a **Draft** GitHub PR on a feature branch (never auto-merged; write-set only). Policy: [policies/pull-request-delivery.md](policies/pull-request-delivery.md) §0–§1; root `AGENTS.md` §3 rule 8.
 
 ## 2. Work intake
 1. The Board sets studio and project goals in Paperclip.

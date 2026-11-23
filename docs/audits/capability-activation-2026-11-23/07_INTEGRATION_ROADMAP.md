@@ -5,12 +5,12 @@ Goal: make **existing** investments discoverable and used. No second orchestrato
 ## Phase 0 — Facts hygiene (read-only / doc PRs only when Board asks)
 
 1. Patch registry notes: openspec not installed; MCP playwright/hoppscotch re-verify; add **godot** entry; refresh verifiedOn.
-2. Publish this audit path as Board artifact (sandbox already): no auto-activation.
+2. Publish audit docs only when Board explicitly authorizes Draft PR delivery ([pull-request-delivery.md](../../../knowledge/company/policies/pull-request-delivery.md) §0).
 
 ## Phase 1 — Activation without new deps (P0)
 
 1. Board decision: restart Paperclip **or** keep stopped (explicit).
-2. Board decision: KD P1–P4 **or** narrower “catalog citation in Tasks only” interim.
+2. Board decision: KD P1–P4 **or** interim “catalog citation in Tasks only”.
 3. If KD approved: assign `studio-art-identity-and-refinement` to game-artist only; run drift check; no Cursor changes.
 4. Enable heartbeats only for roles Board wants live; keep Cursor paused until gate.
 5. Producer/PM Task template: require `capability:` citation from catalog operation id.
@@ -32,6 +32,6 @@ Goal: make **existing** investments discoverable and used. No second orchestrato
 
 - Do not clone Claude-Code-Game-Studios as project root.
 - Do not vendor candidates into company-os.
-- Do not grant Agents R&D Comfy :8189.
+- Do not grant Agents `comfyui-rnd`.
 - Do not reactivate impeccable.
 - Do not invent Runtime commands (Runtime still PLANNED).

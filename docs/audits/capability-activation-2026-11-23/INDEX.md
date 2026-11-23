@@ -3,8 +3,10 @@
 **Date:** 2026-11-23  
 **Mode:** Read-only · APPROVED Board Directive  
 **Repo copy:** `docs/audits/capability-activation-2026-11-23/`  
-**Local machine evidence** (JSON snapshots, collector; not committed — ADR-010): `~/.company-os-sandbox/capability-audit-2026-11-23/`  
+**Local untracked evidence** (collector JSON/scripts; ADR-010 — not committed): studio capability-audit sandbox for this date  
 **This documentation PR does not authorize implementing audit recommendations.**
+
+Versioned reports use **logical capability IDs and results only**. Machine paths, ports, PIDs and local config are excluded.
 
 | # | Deliverable | File |
 |---|---|---|
@@ -16,15 +18,14 @@
 | 5 | Duplicates / overlaps | [05_DUPLICATES_OVERLAPS.md](05_DUPLICATES_OVERLAPS.md) |
 | 6 | Prioritization P0–P3 / BLOCKED | [06_PRIORITIZATION.md](06_PRIORITIZATION.md) |
 | 7 | Minimal integration roadmap | [07_INTEGRATION_ROADMAP.md](07_INTEGRATION_ROADMAP.md) |
-| 8 | Verification test plan (T1 Sealwarden docs PASS; Agent A/B PENDING) | [08_VERIFICATION_TEST_PLAN.md](08_VERIFICATION_TEST_PLAN.md) |
+| 8 | Verification test plan (T1 **static doc checklist PASS**; Agent A/B **PENDING**) | [08_VERIFICATION_TEST_PLAN.md](08_VERIFICATION_TEST_PLAN.md) |
 | 9 | Required Board approvals | [09_BOARD_APPROVALS_REQUIRED.md](09_BOARD_APPROVALS_REQUIRED.md) |
 
-## Snapshots (machine)
+## Validation (this repo revision)
 
-- `registry_snapshot.json` — 36 deps by status  
-- `agents_snapshot.json` — profiles + agents  
-- `skills_snapshot.json` — 40 discoverable SKILL.md paths  
-- `collect.py` — read-only collector used for this audit  
+- Manual ADR-010 sanitization scan of every file in this folder (including INDEX).
+- Manual cross-link check for PR delivery policy ↔ `AGENTS.md` §3 rule 8.
+- **No GitHub CI** ran for this documentation head (none applicable / no workflow statuses).
 
 ## One-line success gap
 

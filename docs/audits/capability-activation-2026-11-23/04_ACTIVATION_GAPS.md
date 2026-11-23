@@ -22,7 +22,7 @@
 | playwright → qa | Config missing locally | R (stale note) |
 | pixelfx → VFX Tasks | Allow present; no routing/evidence of use | A |
 | Cursor role → enforced tools | Sandbox disabled; agents paused | I → not A (enforced) |
-| Paperclip issue loop | :3100 down | I → not V |
+| Paperclip issue loop | API unreachable | I → not V |
 | Candidate design repos → ui/web | Never cloned | R |
 | Godot → registry discoverability | Used but no dependency id | I→E without R |
 | Company OS docs → Agent read | Outside workspace refused | D blocked |

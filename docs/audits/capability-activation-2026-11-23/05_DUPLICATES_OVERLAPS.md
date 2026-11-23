@@ -8,7 +8,7 @@
 | Web motion/UI kits | react-bits, gsap-skills, scroll-world, canvas-ui | Front-end sugar overlap | Pick per project need after web-engineer unpause; don’t bulk-activate |
 | Cutout / matte | art-ops key vs BiRefNet matte vs ToonOut (evaluating) | Same job | Production: BiRefNet; key for flat BG; ToonOut defer |
 | Inpaint stacks | Production SDXL inpaint vs Fooocus patch / comfyui-inpaint-nodes (R&D) vs failed pose repair spikes | Confusing “more nodes = better pose” | Keep production wrappers; R&D evaluate offline only |
-| Image gen hosts | ComfyUI prod 8188 vs R&D 8189 vs (unregistered) other MCPs | Port/model confusion | Strict Agent → prod wrappers only |
+| Image gen hosts | `comfyui` (production) vs `comfyui-rnd` vs unregistered operator MCPs | Host confusion | Strict Agent → production wrappers only |
 | Orchestration | Paperclip vs Cursor Automations/skills vs personal synced Claude skills | Three control planes | Paperclip = company; Cursor/Claude user skills = operator; don’t merge |
 | Spec tools | OpenSpec candidate vs Company task-contract / OpenSpec docs | Spec authority | Decide install-or-drop; until then task-contract wins |
 | Pixel FX | pixelfx library vs hand-authored Godot/VFX | Effect source | Activate pixelfx on VFX tasks only; Lamplight license caution in registry notes |

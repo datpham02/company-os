@@ -1,11 +1,14 @@
 ﻿# 1. Complete Dependency & Capability Inventory
 
-Audit date: 2026-11-23 · Mode: read-only · Source: `dependencies/registry.yaml` (verifiedOn 2026-11-03, with later notes) + local machine spot-checks · Snapshots: `registry_snapshot.json`, `agents_snapshot.json`, `skills_snapshot.json`
+Audit date: 2026-11-23 · Mode: read-only · Source: `dependencies/registry.yaml` (verifiedOn 2026-11-03, with later notes) + local machine spot-checks  
+Local untracked snapshots (ADR-010): audit collector outputs `registry_snapshot`, `agents_snapshot`, `skills_snapshot` (not committed).
 
 Legend (activation ladder):
 **R** REGISTERED · **I** INSTALLED · **D** DISCOVERABLE · **A** ACCESSIBLE · **V** INVOKED · **E** EFFECTIVELY USED
 
 Recommendation: Keep | Activate | Evaluate | Defer | Reject
+
+Versioned columns use **logical capability IDs and results only** (no machine paths, ports, or PIDs).
 
 ---
 
@@ -15,32 +18,32 @@ Recommendation: Keep | Activate | Evaluate | Defer | Reject
 
 | id | Verified version (registry) | Local 2026-11-23 | Ladder | Evidence | Rec |
 |---|---|---|---|---|---|
-| paperclip | 2026.1023.0 | CLI present via npx history; **API :3100 NOT listening** | R→I→D→A; V/E interrupted | Production Paperclip stopped (Board standing constraint). Skill `.claude/skills/paperclip` present. | Keep; Activate only when Board restarts Paperclip |
-| claude-code | 2.1.329 | `claude.exe` on PATH | R→E (Board/operator + role adapters) | Primary adapter for most roles | Keep |
-| codex | 0.166.0 | `codex.ps1` on PATH | R→I; **not A for Agents** (`usedBy: []`, OQ-010) | Approved install, Board deferred account/use | Defer |
-| cursor-cli | 2026.10.22-27dcf5f | `agent` / `cursor-agent` on PATH | R→I→A declared; Cursor sandbox disabled; agents **paused** (KD-BD-4) | gameplay-programmer, web-engineer profiles | Keep (paused); no Activate until Cursor gate |
-| rea | approved | skill `reverse-engineer-anything` under `~/.claude/skills` | R→I→D (Claude); Agent access task-gated | Used as technical reference skill | Keep |
+| paperclip | 2026.1023.0 | CLI present; **API unreachable** | R→I→D→A; V/E interrupted | Production Paperclip stopped (Board standing constraint). Company project skill `paperclip` present. | Keep; Activate only when Board restarts Paperclip |
+| claude-code | 2.1.329 | CLI on PATH | R→E (Board/operator + role adapters) | Primary adapter for most roles | Keep |
+| codex | 0.166.0 | CLI on PATH | R→I; **not A for Agents** (`usedBy: []`, OQ-010) | Approved install, Board deferred account/use | Defer |
+| cursor-cli | 2026.10.22-27dcf5f | CLI on PATH | R→I→A declared; Cursor sandbox disabled; agents **paused** (KD-BD-4) | gameplay-programmer, web-engineer profiles | Keep (paused); no Activate until Cursor gate |
+| rea | approved | user-scope Claude skill installed | R→I→D (Claude); Agent access task-gated | Used as technical reference skill | Keep |
 | docker-desktop | approved | not re-probed this audit | R; conflict with ADR-013 for v1 | qa allow rule mentions `docker compose run` | Defer / policy conflict — do not Expand |
 
 ### Integrated (9)
 
 | id | Local | Ladder | Evidence | Rec |
 |---|---|---|---|---|
-| comfyui | `~/game-studio-workspace/tools/ComfyUI_windows_portable`; **:8188 LISTENING (PID 17660)** | R→E (via wrappers) | SOU art pilots; Board tools | Keep |
+| comfyui | production install present; **service UP** | R→E (via wrappers) | SOU art pilots; Board tools | Keep |
 | comfyui-embedded-python | present (art-ops host) | R→E | art-ops.py | Keep |
 | sd-xl-base-1-0 | production models | R→E | draft/edit/inpaint | Keep |
 | flux1-schnell-fp8 | production models | R→E (draft/img2img; **not** inpaint) | catalog + security-architecture | Keep |
 | birefnet | integrated model | R→E (matte) | G7(d) 11/11 SOU-81 | Keep |
-| pixelfx | `~/tools/pixelfx` True; allowlisted | R→I→A; **V/E weak** | catalog: no SOU agent run evidence | Activate (routing) |
-| github-cli | `gh.exe` | R→E | PR workflows | Keep |
-| ui-ux-pro-max-skill | `~/.claude/skills/ui-ux-pro-max` | R→I→A for ui-designer | `extraAllowedTools` search.py | Keep / Activate |
+| pixelfx | reviewed install present; allowlisted | R→I→A; **V/E weak** | catalog: no SOU agent run evidence | Activate (routing) |
+| github-cli | CLI on PATH | R→E | PR workflows | Keep |
+| ui-ux-pro-max-skill | user-scope Claude skill installed | R→I→A for ui-designer | `extraAllowedTools` search.py | Keep / Activate |
 | google-design-md | integrated (registry) | R→I?; Agent discovery unclear | ui-designer `design.md *` allow | Evaluate discovery path |
 
 ### Evaluating (6) — R&D only
 
 | id | Local | Ladder | Rec |
 |---|---|---|---|
-| comfyui-rnd | `~/game-studio-workspace/rnd/ComfyUI_rnd` True; **:8189 NOT listening** | R→I (offline) | Defer production; Keep R&D |
+| comfyui-rnd | R&D install present; **service DOWN** | R→I (offline) | Defer production; Keep R&D |
 | flux2-klein-4b | R&D models (prior spikes) | I offline; not Agent-permitted | Defer until Board production decision |
 | qwen3-4b-text-encoder | R&D | same | Defer |
 | toonout | R&D; spike preferred BiRefNet | not taken further | Defer / likely Reject later |
@@ -51,11 +54,11 @@ Recommendation: Keep | Activate | Evaluate | Defer | Reject
 
 | id | Cloned locally? | usedBy claim | Ladder | Rec |
 |---|---|---|---|---|
-| openspec | **MISSING** (`openspec` not on PATH) | game-designer, PM, gameplay-programmer | R only | Evaluate then install-or-drop |
-| claude-code-game-studios | **not found** under workspace/SourceGame | [] | R only; overlaps Company OS roles | Evaluate (overlap risk) → likely Defer |
+| openspec | **MISSING** (CLI not on PATH) | game-designer, PM, gameplay-programmer | R only | Evaluate then install-or-drop |
+| claude-code-game-studios | **not found** under audited trees | [] | R only; overlaps Company OS roles | Evaluate (overlap risk) → likely Defer |
 | awesome-gamedev-agent-skills | not found | gameplay-programmer, ui, designer | R only | Evaluate subset (Godot skills) |
-| playwright-mcp | registry claims Claude config 2026-11-03; **0 hits in ~/.claude.json today** | qa, ui-designer | R; config drift | Evaluate / re-verify |
-| hoppscotch-mcp | same; 0 hits | [] | R | Defer (needs backend games) |
+| playwright-mcp | registry claims Claude config 2026-11-03; **not present in Claude MCP config today** | qa, ui-designer | R; config drift | Evaluate / re-verify |
+| hoppscotch-mcp | same; not present | [] | R | Defer (needs backend games) |
 | awesome-design-md | not found | ui, web | R | Evaluate |
 | open-design | not found | ui | R | Evaluate |
 | taste-skill | not found | [] | R | Defer |
@@ -76,32 +79,32 @@ Recommendation: Keep | Activate | Evaluate | Defer | Reject
 
 ## 1.2 Unregistered / local capabilities (discovered, not in registry)
 
-| Capability | Where | Status note |
+| Capability | Logical location | Status note |
 |---|---|---|
-| Godot 4.6.3 | WinGet link `godot.exe`; Agent allow rules | **Gap:** used in Agents + catalog; **no registry id** |
+| Godot 4.6.3 | CLI on PATH; Agent allow rules | **Gap:** used in Agents + catalog; **no registry id** |
 | `studio-art-identity-and-refinement` | `knowledge/departments/game/skills/...` | Generated KD skill; not a registry dep |
 | Knowledge Delivery packages | `config/paperclip/generated/{game-artist,catalog}` | Generated; P1–P4 **not approved** |
-| Company paperclip skill | `.claude/skills/paperclip` | Project-level; Board Operator |
-| Cursor user skills (~29) | `~/.cursor/skills-cursor` | Personal/IDE; not Company Agent delivery |
-| Claude synced skills (docs/docx/pdf/…) | `~/.claude/skills/synced/...` | User Claude; not SOU Agents |
-| Cursor MCP: elevenlabs | `~/.cursor/mcp.json` | Unregistered for Company Agents |
-| Cursor session MCP plugins | figma, postman, canva, github, google-drive, x, browser, computer-use (this IDE session) | **Operator/Cursor only**; not Paperclip Agent allowlists |
-| my-game MCP: pixellab, elevenlabs | `~/.claude.json` project C:/WorkSpace/my-game | Outside Company OS Agents |
-| R&D art construction / Sealwarden V2 docs | sandbox + `rnd/art-construction/v2` | Offline Board work; not Agent-activated |
-| S2 Godot JSON→Skeleton2D spike | `rnd/godot-spikes` (scripts; images cleaned) | Proven mechanics; K5 animation skill deferred |
-| package-game-artist | `~/game-studio-workspace/package-game-artist` | Present; KD deployment not live |
+| Company paperclip skill | company-os project skill `paperclip` | Board Operator |
+| Cursor user skills (~29) | Cursor user skill root | Personal/IDE; not Company Agent delivery |
+| Claude synced skills (docs/docx/pdf/…) | Claude user synced skill pack | User Claude; not SOU Agents |
+| Cursor MCP: elevenlabs | Cursor MCP config | Unregistered for Company Agents |
+| Cursor session MCP plugins | figma, postman, canva, github, google-drive, x, browser, computer-use (operator session) | **Operator/Cursor only**; not Paperclip Agent allowlists |
+| External project MCPs (pixellab, elevenlabs) | unrelated local game project Claude config | Outside Company OS Agents |
+| R&D art construction / Sealwarden V2 docs | workspace R&D art-construction tree | Offline Board work; not Agent-activated |
+| S2 Godot JSON→Skeleton2D spike | workspace R&D godot-spikes (scripts; images cleaned) | Proven mechanics; K5 animation skill deferred |
+| package-game-artist | workspace KD package checkout | Present; KD deployment not live |
 
 ---
 
 ## 1.3 CLI / service spot-check (2026-11-23)
 
-| Tool | Present |
+| Capability id | Result |
 |---|---|
-| claude, codex, agent, cursor-agent, gh, godot, node, npx | YES |
-| openspec | **NO** |
-| Paperclip :3100 | **DOWN** |
-| ComfyUI prod :8188 | **UP** (PID 17660) |
-| ComfyUI R&D :8189 | **DOWN** |
+| claude-code, codex, cursor-cli, github-cli, godot, node/npx | PRESENT |
+| openspec | ABSENT |
+| paperclip (API) | DOWN |
+| comfyui (production) | UP |
+| comfyui-rnd | DOWN |
 
 ---
 

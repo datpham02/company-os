@@ -8,11 +8,11 @@ Availability alone is **not** enough to Activate.
 |---|---|---|---|
 | KD game-artist package + catalog views (deploy P1–P4 gate) | ADR-024, knowledge-delivery.md | Artifacts exist @ 616f6d1; P1–P4 not approved | Agents load mandatory art policy + tool checklist |
 | studio-art-identity-and-refinement skill assignment | knowledge/.../SKILL.md | File exists; sync not approved | Consistent identity/refinement behavior |
-| Paperclip runtime for Agent loop | paperclip approved | :3100 down this audit | Enables INVOKED ladder |
+| Paperclip runtime for Agent loop | paperclip approved | API unreachable this audit | Enables INVOKED ladder |
 | game-artist / role heartbeats policy decision | agents.json heartbeat false | Config fact | Closed-loop Tasks |
 | pixelfx task routing | integrated + allow | Installed; no SOU V | Cheap VFX sheets without new tools |
 | ui-ux-pro-max actual use on UI Tasks | integrated | Skill+allow present | Stops freehand UI invention |
-| Register Godot as dependency | used but no id | godot 4.6.3 on PATH | Discoverability / version pin |
+| Register Godot as dependency | used but no id | Godot CLI present (4.6.3) | Discoverability / version pin |
 
 ## P1 — High value, minor integration
 
