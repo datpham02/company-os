@@ -32,9 +32,14 @@ def read_json(repo, path):
 def block_reason(row, role_status):
     if role_status != "active":
         return "ROLE_NOT_ACTIVE: " + role_status
-    reg = row["registered"]["value"].lower()
+    reg = row["registered"]["value"].strip().lower()
+    if not reg or reg == "no registry entry":
+        return "UNREGISTERED_DEPENDENCY"
     if any(": " + s in reg for s in DENIED_REGISTRY_STATES):
         return "DEPENDENCY_NOT_APPROVED"
+    installed = row["installed"]["value"].strip().lower()
+    if not installed or installed.startswith(("no", "not installed", "unknown", "n/a")):
+        return "NOT_INSTALLED: " + (installed or "missing evidence")
     appr = row["approved"]["value"].strip().lower()
     if not appr or appr.startswith(("no ", "no (", "unknown", "open:", "n/a")):
         return "OPERATION_NOT_APPROVED"
