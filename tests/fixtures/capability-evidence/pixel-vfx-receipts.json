@@ -1,0 +1,11 @@
+{
+  "schema": "capability-evidence-reports.v1",
+  "task_id": "EXAMPLE-VFX-01",
+  "note": "ILLUSTRATIVE, UNVERIFIED. These refs are fictional placeholders, not Agent execution evidence.",
+  "receipts": [
+    {"item": "operation:pixelfx-list", "stage": "DISCOVERED", "evidence_ref": "EXAMPLE-ONLY/log:1"},
+    {"item": "operation:pixelfx-list", "stage": "ACCESSED", "evidence_ref": "EXAMPLE-ONLY/log:2"},
+    {"item": "operation:pixelfx-list", "stage": "INVOKED", "evidence_ref": "EXAMPLE-ONLY/log:3"},
+    {"item": "operation:pixelfx-list", "stage": "APPLIED", "evidence_ref": "EXAMPLE-ONLY/review:1", "artifact_ref": "EXAMPLE-ONLY/output.md", "criterion": "tile resolution consistency"}
+  ]
+}
