@@ -81,6 +81,7 @@ def resolve(repo, task_type):
             "approved": row["approved"],
             "permitted": row["permitted"],
             "registered": row["registered"],
+            "installed": row["installed"],
             "runtime_verified": row["runtime_verified"],
             "production_validated": row["production_validated"],
         })
