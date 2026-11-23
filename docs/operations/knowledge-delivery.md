@@ -14,7 +14,7 @@
 | Catalog sources | `config/paperclip/capability-sources.json` | Operations, sample commands, citations (repository quotes are verified at the commit; `external` ones are Board R&D evidence, shown as unverified here) |
 | Studio Skill | `knowledge/departments/game/skills/studio-art-identity-and-refinement/` | `SKILL.md` + `reference/seed-and-identity.md`, generated (pilot change C) |
 | Agent settings | `config/paperclip/agent-settings/game-artist.settings.json` | Skill and memory settings for game-artist (pilot change B) |
-| Single-role sync | `scripts/setup/sync-instructions.py --generated-package --role R --confirm R` | Opt-in; the default run is unchanged (pilot change A) |
+| Single-role sync | `scripts/setup/sync-instructions.py --generated-package --role R --confirm R` | Opt-in. Deploys the committed package at HEAD only. The default run skips an installed generated package instead of replacing it with the legacy role body |
 | Drift categories | `scripts/setup/check-agent-drift.py` | Read-only; adds `instructions.deployment`, `instructions.source`, `skills.assigned`, `adapter.config`, `adapter.permissions`, `adapter.company`, `memory.policy`, `unverified.runtime`; `--fixtures` for offline tests |
 
 Location: generated files sit under `config/paperclip/generated/` because they are deployable configuration for `config/paperclip/agents.json` and are read by the sync and drift scripts. The skill sits with its department ([placement rules](../../knowledge/departments/README.md#placement-rules)): it is department knowledge in a delivery form, and the company skill source registers it from that folder.
@@ -32,7 +32,11 @@ python -I -W error scripts/setup/test_sync_instructions.py
 python -I -W error scripts/setup/test_check_agent_drift.py
 ```
 
-Budget (Board item 2): core ≤ 32,000 B, command-reference block ≤ 6,000 B, combined ≤ 38,000 B. At `616f6d1`: **31,818 / 5,894 / 37,712 B**. Tokens are ESTIMATED (chars/3.6 and a piece heuristic, no tokenizer call): core 8,823-9,022, command 1,636-1,927, combined 10,460-10,949. Exact duplicate sentences in the delivered text: 0. The role file's Credentials section is not delivered because the secrets system-prompt rule and R4.1 deliver it (coverage recorded in `package.json` `mandatory_guard`).
+Budget (game-artist pilot only, not a universal role budget): core ≤ 47,000 B, command-reference ≤ 8,000 B, combined ≤ 53,000 B. The review's 40,000 / 8,000 / 48,000 came from the 43,307 B package of every role section plus the company rules. Restoring the full text of task-contract §2, §6 and §8, security-architecture §8 and game-rules §6 does not fit in 48,000 B. The cap is that measured text. Nothing mandatory was cut to land under a number. Tokens are ESTIMATED (chars/3.6 and a piece heuristic, no tokenizer call). The role file's Credentials section is `not_delivered` only because the same requirements are in the secrets system-prompt rule and R4.1; `package.json` `mandatory_guard` is a lexical substring lint, not semantic equivalence. `find_conflicts` is the same kind of lint.
+
+Delivery statuses: `always_loaded` and `command_reference` are the verified channels. `on_request` is a fallback (a human pastes text), not verified delivery. `on_demand_verified` is only the project Task Workspace paths Stage 1 could open. `skill_assigned` is not verified until a run opens the skill. Mandatory policy is in the verified channels: interim technical-art ownership, task contract §2, blocker protocol §6, reviews §8, security approval boundaries §8, and game rules §6.
+
+`--check` is reproducibility at the pinned source commit. It does not mean the knowledge is current. `--freshness` compares each unit's section hash to another revision (default `HEAD`). Unrelated files do not force a regeneration. The pinned commit and the compared revision do not have to be equal.
 
 ## 3. Backup before any live change (GET only)
 
@@ -56,7 +60,7 @@ Prerequisite for all three: the change set is merged; `gen-role-packages.py --ch
 |---|---|
 | Object | game-artist managed `AGENTS.md` (instructions bundle) |
 | Before | legacy role body (25,214 B in the R&D live inventory of 2026-11-23; differs from the role file on `main`: drift finding 1 of 2) |
-| After | `config/paperclip/generated/game-artist/AGENTS.md` (37,712 B; header `source-commit=616f6d1… package-sha256=…` as committed) |
+| After | `config/paperclip/generated/game-artist/AGENTS.md` (header `source-commit=… package-sha256=…` as committed at HEAD; the byte count is whatever `package.json` records after regeneration) |
 | Call | `PUT /api/agents/{id}/instructions-bundle/file` `{"path": "AGENTS.md", "content": <package>, "baseRevisionId": <current revision id>}` |
 
 ```
@@ -64,7 +68,9 @@ python -I scripts/setup/sync-instructions.py --company Soucean --generated-packa
 python -I scripts/setup/sync-instructions.py --company Soucean --generated-package --role game-artist --confirm game-artist --backup-dir <folder outside the repository>
 ```
 
-**Rollback A:** `python -I scripts/setup/sync-instructions.py --company Soucean --restore-from <backup>/game-artist-instructions-<time>.json --role game-artist --confirm game-artist --backup-dir <folder>`. It pushes the saved previous text back. A new bundle revision is created; Paperclip's previous revision stays in its history.
+The default run (no `--generated-package`) skips game-artist once the generated package is installed. Replacing it with the legacy role body requires `--restore-from` or another explicit migration. `--backup-dir` must be outside the repository. The script deploys `git show HEAD:config/paperclip/generated/game-artist/AGENTS.md` only when the working tree matches and `package.json` records the same hash. It stores `companyId` and `agentId` in the snapshot, aborts if `baseRevisionId` moves before the PUT, and GETs the file back. Restore refuses a snapshot whose hash, company or agent id does not match, including another agent that reused the role slug.
+
+**Rollback A:** `python -I scripts/setup/sync-instructions.py --company Soucean --restore-from <backup>/game-artist-instructions-<time>.json --role game-artist --confirm game-artist --backup-dir <folder>`. It pushes the saved previous text back. A new bundle revision is created; Paperclip's previous revision stays in its history. Set `knowledge-delivery-state.json` to `rolled_back` only after that restore, in a separate commit. Do not delete a company skill that was not created for this pilot.
 
 **Verification of A:** `check-agent-drift.py` shows `instructions.deployment game-artist generated-package; equals the committed package` and the source commit and package hash.
 
@@ -96,6 +102,8 @@ Repository file `config/paperclip/agent-settings/game-artist.settings.json`:
 
 **Rollback B:** `PATCH /api/agents/{id}` `{"adapterConfig": {"extraArgs": <the backed-up list>}}`. Then delete the machine copy if wanted. No memory or skill file is touched at any step.
 
+**Settings keys in the installed Claude Code 2.1.329 binary (string presence, 2026-11-23).** The binary contains `enabledPlugins`, `skillOverrides`, `syncClaudeAiSkills`, `disableBundledSkills` and `autoMemoryEnabled` in its settings data, and a user-facing sentence that names `skillOverrides` and `disableBundledSkills`. It also contains `CLAUDE_CODE_DISABLE_AUTO_MEMORY` as a separate environment variable, which this pilot does not set. Presence is not precedence, not a proof that reads and writes are both stopped, and not a proof the agent cannot edit the settings file. Isolation is not claimed from these flags.
+
 **Isolation claims: what is known and what P1 must show**
 
 | Claim | Status | Evidence / test |
@@ -105,8 +113,9 @@ Repository file `config/paperclip/agent-settings/game-artist.settings.json`:
 | `enabledPlugins` entries in `--settings` override `true` in `~/.claude/settings.json` per plugin | `UNVERIFIED` (merge semantics) | P1 `init.skills` has no `gamedev:*`, `context-engineering:*`, `pixelfx:*` |
 | `disableBundledSkills` removes every bundled skill | `UNVERIFIED` | P1 lists the remaining bundled skills, if any |
 | `skillOverrides: off` stops the two user skills in `~/.claude/skills` from loading | `UNVERIFIED` (the docs say "Plugin skills are not affected"; user skills are expected to be) | P1 `init.skills` lacks both |
-| `autoMemoryEnabled: false` stops auto-memory **writes** | documented; `UNVERIFIED` here | file count and newest mtime of the project memory folder before and after (names only, contents not read) |
-| `autoMemoryEnabled: false` stops auto-memory **reads** | `UNVERIFIED` | P1 `init` shows no memory paths |
+| `autoMemoryEnabled: false` stops auto-memory **writes** | key exists in Claude Code 2.1.329; effect `UNVERIFIED` | file count and newest mtime of the project memory folder before and after (names only, contents not read). A missing write is not evidence that reads were blocked |
+| `autoMemoryEnabled: false` stops auto-memory **reads** | `UNVERIFIED` (one flag does not split the two) | P1 `init` shows no memory paths. A missing read is not evidence that writes were blocked |
+| The agent cannot edit the settings file, the instructions bundle or the assigned skill | `UNVERIFIED`; `local_trusted` does not provide this | not claimed. Drift after the run is detection, not prevention |
 | Paperclip system skills still load | `VERIFIED` delivery path (`--add-dir`); behaviour with B `UNVERIFIED` | P1 status update through the paperclip skill succeeds |
 
 Isolation is not claimed from the flags alone. Until P1 passes, change B is a configuration, not proof.
@@ -143,25 +152,27 @@ Budget: **4 planned Claude runs** (P1-P4). Up to **2 automatic Paperclip repair 
 Task texts as they would be posted (the expected answers are **not** in them; they are in the evidence table below):
 
 **P1, game-artist, fresh session.** Title: `KD pilot P1: art identity questions (synthetic, no files)`.
-> Goal: answer in one Task comment; change no file.
+> Goal: answer in one Task comment; change no file. Do not print the environment or any secret.
 > ## Write set
 > none
 > ## Read set
 > your instructions and any skills you have
 > ## Acceptance criteria
-> - every answer says where in your instructions or skills it comes from
+> - every answer says where it comes from
+> - question 5 is answered from the skill supporting file, not from memory of the role text
 >
 > 1. A reviewer asks you to redraw the knight `kn-01` in a new attack pose. List what you will keep, what may change, and how you will choose the seed.
 > 2. Write the exact command you would use to repaint only the knight's left gauntlet. Do not run it.
 > 3. What do you do if the permission layer refuses that command?
 > 4. List the skills available to you in this run, by name.
+> 5. Open the supporting file of `studio-art-identity-and-refinement` and quote its retrieval mark exactly. The mark is not in your role instructions and not in this Task.
 > Then set the Task to `in_review` with your comment.
 
 **P2, game-artist, resumed session (same issue).** Comment posted on the P1 issue, then the Board wakes game-artist on it:
-> Follow-up to your answer: which supporting file did you open for question 1, and what does it say about reusing a seed? Reply in one comment; change no file.
+> Follow-up, same session: quote the `source-commit` and `package-sha256` from the first line of your instructions, and say whether this wake reused the previous session. Reply in one comment; change no file. Do not print secrets.
 
 **P3, director, control (no settings change for director).** Title: `KD pilot P3: skills in this run (synthetic)`.
-> Goal: list, in one Task comment, the skills available to you in this run, by name, and say whether any of them is about art identity or refinement. Change no file. Write set: none.
+> Goal: list, in one Task comment, the skills available to you in this run, by name. Say whether any listed skill is `studio-art-identity-and-refinement`. Do not open that skill and do not ask for its text. Change no file. Write set: none. This is a harmless name check, not an art task.
 
 **P4, game-artist, domain and conflict case.** Title: `KD pilot P4: pose brief check (synthetic, no files)`.
 > Goal: review the brief below and answer in one Task comment; change no file. Write set: none.
@@ -173,11 +184,11 @@ Task texts as they would be posted (the expected answers are **not** in them; th
 | Run | Evidence | Pass |
 |---|---|---|
 | P1 | `init.skills` names and count | Paperclip's 3 + `studio-art-identity-and-refinement` (+ any bundled skill that cannot be disabled, listed); no `anthropic-skills:*`, `gamedev:*`, `context-engineering:*`, `pixelfx:*`, `reverse-engineer-anything`, `ui-ux-pro-max` |
-| P1 | tool calls | a `Skill` call to the studio skill without the prompt naming it; a `Read` of `reference/seed-and-identity.md` with no permission error; no command run except the status update |
+| P1 | tool calls and runtime events, not the answer alone | a `Skill` or file read of `reference/seed-and-identity.md`; the quoted retrieval mark equals `KD-P1-MARK seed-evidence-not-habit` and that string is absent from the role package and from the Task text; no command run except the status update |
 | P1 | answer content vs package | identity invariants / pose-specific properties / replaceable representations; silhouette not required for a new pose; seed as one candidate to test; `comfy-edit.py inpaint` with an `art-ops mask` in the exact `~/…` form; refusal → blocker lines, no retry |
-| P1 | memory | `init` shows no memory paths; the project memory folder's file count and newest mtime are unchanged (names only) |
-| P2 | session | same session id resumed; same prompt-cache hash; skill still listed |
-| P3 | role isolation | director `init.skills` has no studio skill; director config unchanged |
+| P1 | memory, reads and writes recorded separately | `init` memory paths (read evidence) and the project memory folder's file count plus newest mtime before and after (write evidence, names only). One of these passing does not prove the other |
+| P2 | session and revision | same session id resumed; same prompt-cache hash; the quoted source commit and package hash equal the approved package header |
+| P3 | role scope | director `init.skills` has no `studio-art-identity-and-refinement`; director config unchanged; the run log shows no read of that skill's files |
 | P4 | conflict handling | contests "exact source silhouette" for a new pose and "seed guarantees identity", citing the rules; asks or blocks before producing; compared with the Stage 1 baseline (SOU-89) |
 | all | drift | `check-agent-drift.py` after each change and after P4 |
 
@@ -190,7 +201,21 @@ Task texts as they would be posted (the expected answers are **not** in them; th
 | C | `skills/sync` `remove`; delete the company skill or skill source | `skills.assigned` `desiredSkills []` |
 | Repository | revert the PR | `gen-role-packages.py --check` |
 
-## 7. Security prerequisites and gates
+## 7. Security prerequisites and the minimal gate (proposal only)
+
+P1–P4 are **not approved**. Both Cursor agents stay paused. This section does not change live permissions or authentication and does not start the 35-run SEC-01 suite.
+
+The installed company is `local_trusted`. Under that mode a local process, including an agent, can call the administrative API. If that cannot be narrowed, authenticated mode (Phase D) is a prerequisite for calling the pilot a test of enforcement. Until then the pilot can observe knowledge delivery only. It cannot show that instructions, settings or skills are protected from the agent.
+
+Minimal game-artist gate, still not executed:
+
+| Check | What would be in scope | Out of scope |
+|---|---|---|
+| SEC-01 | The pilot's own commands: art-ops, comfy-edit, git status, and the issue-update script. The leading-wildcard form `Bash(*paperclip-issue-update.sh*)` remains an open finding. One later negative probe needs its own approval | The 35-run suite |
+| SEC-02 | Whether this run's `adapterConfig` and `canCreateSkills` still match the pre-run GET. `canCreateSkills` is already drifted (live true, `agents.json` false) and stays visible. Do not flip it here | A Paperclip source change; a live permission edit |
+| Auth boundary | Board-operator calls only, existing agent credential, no new secret, tasks forbid printing env | WS-2, WS-5, Phase D |
+| Fixtures | Synthetic issues, write set none, no asset generation, no production repo write | Deckbound art |
+| Instruction and skill integrity | Drift check after the run. Rollback of change C removes only a skill this pilot created | Deleting a shared company skill that already existed |
 
 | Gate | State (2026-11-23) | Effect on the pilot |
 |---|---|---|

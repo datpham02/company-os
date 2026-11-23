@@ -612,7 +612,8 @@ This register is the single home for **unverified assumptions** (`OQ-NNN`) and *
 - **`UNVERIFIED`, to be tested by pilot runs P1-P4 (each needs Board approval):**
   1. `enabledPlugins` merge semantics: does `false` in `--settings` override `true` in `~/.claude/settings.json`, per plugin?
   2. Does `disableBundledSkills` remove every bundled skill? Do user skills in `~/.claude/skills` stop loading with `skillOverrides: off`?
-  3. Does `autoMemoryEnabled: false` stop auto-memory reads as well as writes?
+  3. Does `autoMemoryEnabled: false` stop auto-memory reads as well as writes? The key is present in the installed Claude Code 2.1.329 binary. That is not evidence either effect works, and a blocked read is not evidence of a blocked write.
+  3a. Can the agent modify `game-artist.settings.json`, the instructions bundle, or the assigned pilot skill under `local_trusted`? Unverified. Drift after the fact is not prevention.
   4. Does the agent discover and use an assigned company skill without being told its name, and can it read the skill's supporting file?
   5. Does a resumed session keep the skill and the instructions revision (same prompt-cache hash)?
   6. Company skill registration details: the `markdown` field of `POST /companies/{id}/skills` (whole `SKILL.md`?), the key format used by `desiredSkills`, `selectedPaths` semantics of `POST /companies/{id}/skill-sources`, and whether the GitHub connection can read this repository.

@@ -1,0 +1,13 @@
+{
+  "schema": "knowledge-delivery-state.v1",
+  "note": "Expected live deployment. pilot_prepared means this repository has the package and the pilot is not active. It does not authorize sync, a settings change, a skill assignment, or a run. Set pilot_active only after the Board approves that deployment. rolled_back means the live agent is back on the legacy role body and the pilot skill created for this pilot is unassigned. Do not delete a company skill that already existed.",
+  "roles": {
+    "game-artist": {
+      "state": "pilot_prepared",
+      "package": "config/paperclip/generated/game-artist/AGENTS.md",
+      "required_skills": ["studio-art-identity-and-refinement"],
+      "settings_file": "config/paperclip/agent-settings/game-artist.settings.json",
+      "skill_scope": "Knowledge Delivery pilot skill for game-artist only. Not the deferred animation skill package (K5)."
+    }
+  }
+}

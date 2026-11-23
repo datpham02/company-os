@@ -139,12 +139,34 @@ def _norm_body(s):
     return (s or "").replace("\r\n", "\n").strip()
 
 
-def extended(conf, manifest, company_full, agents_full, live_bodies, bodies, live_skills, read_local, bp, grp):
+DEPLOYMENT_STATES = ("legacy_baseline", "pilot_prepared", "pilot_active", "rolled_back")
+
+
+def load_deployment_state(repo=REPO):
+    path = os.path.join(repo, "config", "paperclip", "knowledge-delivery-state.json")
+    if not os.path.isfile(path):
+        return {"schema": "knowledge-delivery-state.v1", "roles": {}}
+    return json.loads(read_text(path))
+
+
+def extended(conf, manifest, company_full, agents_full, live_bodies, bodies, live_skills, read_local, bp, grp,
+             deployment_state=None):
     """Pure comparison. Returns rows {category, role, status, detail}; status is ok, drift, info or unverified.
     `live_skills` maps slug -> {"desired": [...], "files": {repo path: sha256 or None}} (None: could not be read).
     `read_local(path)` returns a local file's text or None."""
     rows = []
     add = lambda cat, role, st, detail: rows.append({"category": cat, "role": role, "status": st, "detail": detail})  # noqa: E731
+    state_doc = deployment_state if deployment_state is not None else load_deployment_state()
+    role_states = state_doc.get("roles") or {}
+    fresh_tree = {"src": None}
+
+    def compared_tree():
+        if fresh_tree["src"] is None:
+            try:
+                fresh_tree["src"] = grp.Source(REPO, "HEAD")
+            except grp.GenError as e:
+                fresh_tree["src"] = e
+        return fresh_tree["src"]
     for key, want in EXPECTED_COMPANY.items():
         got = (company_full or {}).get(key)
         add("adapter.company", "*", "ok" if got == want else "drift",
@@ -165,29 +187,77 @@ def extended(conf, manifest, company_full, agents_full, live_bodies, bodies, liv
                 + (f" (paused {live.get('pausedAt')}, reason {live.get('pauseReason')!r})" if live.get("pausedAt") else "")
                 + "; allow rules not enforced (Cursor sandbox disabled)")
         pilot = (manifest.get("roles") or {}).get(slug)
-        # 1-2. Deployment kind, source commit and package hash.
+        recorded = role_states.get(slug) or {}
+        role_state = recorded.get("state") or "legacy_baseline"
+        if role_state not in DEPLOYMENT_STATES:
+            add("instructions.deployment", slug, "drift", f"unknown deployment state {role_state!r}")
+            role_state = "legacy_baseline"
+        # 1-2. Deployment kind, source commit and package hash. Integrity is the header. Freshness is separate.
         body = live_bodies.get(slug) or ""
         head = grp.parse_header(body) if body else None
         pkg_path = os.path.join(REPO, grp.OUT_DIR, slug, "AGENTS.md")
+        pkg_json = os.path.join(REPO, grp.OUT_DIR, slug, "package.json")
         if head:
             committed = read_text(pkg_path) if os.path.isfile(pkg_path) else None
             same = committed is not None and _norm_body(committed) == _norm_body(body)
-            add("instructions.deployment", slug, "ok" if same and head["intact"] else "drift",
-                "generated-package" + ("" if head["intact"] else " (header hash does not match the content)")
-                + ("; equals the committed package" if same else "; differs from the committed package"))
+            intact = bool(head["intact"] and same)
+            expect_package = role_state == "pilot_active"
+            expect_legacy = role_state in ("legacy_baseline", "pilot_prepared", "rolled_back")
+            detail = ("generated-package" + ("" if head["intact"] else " (header hash does not match the content)")
+                      + ("; equals the committed package" if same else "; differs from the committed package")
+                      + f"; state {role_state}")
+            if expect_legacy:
+                detail += "; live package while state expects the legacy role body"
+            add("instructions.deployment", slug, "ok" if intact and expect_package else "drift", detail)
             add("instructions.source", slug, "info",
-                f"source commit {head['source_commit']}, package sha256 {head['package_sha256']}")
+                f"pinned source {head['source_commit']}, package sha256 {head['package_sha256']}; "
+                "this is provenance, not freshness")
         else:
             want = _norm_body(bodies.get(slug))
-            add("instructions.deployment", slug, "ok" if want and _norm_body(body) == want else "drift",
-                "legacy-role-body; " + ("equals the role file" if want and _norm_body(body) == want
-                                        else "differs from the role file (sync-instructions.py --dry-run)"))
-            add("instructions.source", slug, "info", "legacy role body: no source commit or package hash")
-        # 3. Assigned skills and their revision.
+            equals = bool(want) and _norm_body(body) == want
+            detail = ("legacy-role-body; " + ("equals the role file" if equals
+                                              else "differs from the role file (sync-instructions.py --dry-run)")
+                      + f"; state {role_state}")
+            bad = (not equals) or role_state == "pilot_active"
+            if role_state == "pilot_active":
+                detail += "; active pilot requires the generated package (legacy text is drift)"
+            add("instructions.deployment", slug, "drift" if bad else "ok", detail)
+            add("instructions.source", slug, "info", "legacy role body: no pinned source commit or package hash")
+        if os.path.isfile(pkg_json):
+            tree = compared_tree()
+            if isinstance(tree, Exception):
+                add("instructions.freshness", slug, "unverified", f"could not read HEAD ({tree})")
+            else:
+                pkg = json.loads(read_text(pkg_json))
+                stale = grp.freshness_findings(pkg, tree)
+                pinned = (pkg.get("source_commit") or "")[:12]
+                if stale:
+                    add("instructions.freshness", slug, "drift",
+                        f"stale against HEAD content (pinned source {pinned}; commit equality is not required): "
+                        + "; ".join(stale))
+                else:
+                    add("instructions.freshness", slug, "ok",
+                        f"section hashes match HEAD (pinned source {pinned}; commit equality is not required); "
+                        "unrelated files were not compared")
+        else:
+            add("instructions.freshness", slug, "info", "no generated package to compare")
+        # 3. Assigned skills. Empty desiredSkills is the legacy baseline. It is not evidence that a required skill is present.
         desired = list(((cfg.get("paperclipSkillSync") or {}).get("desiredSkills")) or [])
         repo_skills = {s["name"] for s in (pilot or {}).get("skills", [])}
+        required = list(recorded.get("required_skills") or [])
         if not desired:
-            add("skills.assigned", slug, "ok", "desiredSkills [] (baseline; Paperclip adds its own system skills per run)")
+            if role_state == "pilot_active" and required:
+                add("skills.assigned", slug, "drift",
+                    "state pilot_active: required skill(s) missing (" + ", ".join(required)
+                    + "); empty desiredSkills is not OK")
+            elif role_state == "rolled_back":
+                add("skills.assigned", slug, "ok", "state rolled_back: desiredSkills [] (pilot skill removed)")
+            else:
+                add("skills.assigned", slug, "info",
+                    f"state {role_state}: desiredSkills [] is the legacy baseline, not delivery of a required skill")
+        elif role_state == "rolled_back" and any(d.split("/")[-1] in required for d in desired):
+            add("skills.assigned", slug, "drift",
+                "state rolled_back: a pilot skill is still assigned")
         for d in desired:
             name = d.split("/")[-1]
             if name in repo_skills:
@@ -206,6 +276,12 @@ def extended(conf, manifest, company_full, agents_full, live_bodies, bodies, liv
                                                                       else "differs: " + ", ".join(diff)))
             else:
                 add("skills.assigned", slug, "drift", f"{d}: assigned but not a repository Studio Skill for this role")
+        if role_state == "pilot_active" and desired:
+            have = {d.split("/")[-1] for d in desired}
+            missing = [s for s in required if s not in have]
+            if missing:
+                add("skills.assigned", slug, "drift",
+                    "state pilot_active: required skill(s) missing (" + ", ".join(missing) + ")")
         # 4. Adapter configuration.
         args = cfg.get("extraArgs") or []
         settings_path = args[args.index("--settings") + 1] if "--settings" in args and args.index("--settings") + 1 < len(args) else None
@@ -227,7 +303,12 @@ def extended(conf, manifest, company_full, agents_full, live_bodies, bodies, liv
         if prof["adapter"] != "claude_local":
             add("memory.policy", slug, "unverified", "Cursor agent: memory and skills folders are not read by this check")
         elif settings_path is None:
-            add("memory.policy", slug, "info", "default: auto-memory on, inherited user skills and plugins (pilot change B not applied)")
+            if role_state == "pilot_active" and (pilot or {}).get("settings_file"):
+                add("memory.policy", slug, "drift",
+                    "state pilot_active: no --settings; the pilot memory policy is not applied")
+            else:
+                add("memory.policy", slug, "info",
+                    "default: auto-memory on, inherited user skills and plugins (pilot change B not applied)")
         else:
             repo_file = (pilot or {}).get("settings_file")
             text = read_local(settings_path)

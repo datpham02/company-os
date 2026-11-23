@@ -136,16 +136,18 @@ def cell_permitted(op, role, agents, profile_kind, notes):
         if a:
             where = "extraAllowedTools" if a in [x.replace("{PREFIX}", "SOU") for x in spec.get("extraAllowedTools", [])] \
                 else f"profile {spec['profile']} allowedTools"
-            out = {"value": "allowed by exact rule", "rule": a, "source": f"config/paperclip/agents.json {where}"}
+            out = {"value": "declared match (not runtime authorization)", "rule": a,
+                   "source": f"config/paperclip/agents.json {where}; declared allow rule only, not effective runtime "
+                             "configuration and not verified enforcement"}
             if op.get("note"):
                 out["note"] = op["note"]
             return out
         return {"value": "no allow rule", "rule": None, "source": "config/paperclip/agents.json (no matching rule)"}
     if op["kind"] == "paperclip-permission":
         perms = agents["agents"][role].get("permissions", {})
-        return {"value": "declared " + (", ".join(f"{k}={json.dumps(v)}" for k, v in sorted(perms.items())) or "nothing"),
-                "rule": None, "source": "config/paperclip/agents.json permissions (declaration, not enforcement; "
-                                         "live values: check-agent-drift.py)"}
+        return {"value": "declared permission " + (", ".join(f"{k}={json.dumps(v)}" for k, v in sorted(perms.items())) or "nothing"),
+                "rule": None, "source": "config/paperclip/agents.json permissions (declared only; not effective runtime "
+                                         "configuration and not verified enforcement; live values: check-agent-drift.py)"}
     return {"value": op.get("permitted_text", "unknown"), "rule": None,
             "source": notes.resolve(op["permitted_cite"]) if op.get("permitted_cite") else "no cited source"}
 
@@ -325,9 +327,12 @@ def role_block(cat, role, full=True, level="##"):
 def render_catalog(cat):
     out = header(cat, "Agent Capability Catalog")
     out += ["Columns: Registered and Installed from `dependencies/registry.yaml`; Approved from a cited decision; "
-            "Permitted is the exact allow rule built from `config/paperclip/agents.json` (deny rules first) and is never "
-            "inferred from a registry entry or a role text; Instructed from the role file; Runtime verified and "
-            "Production validated from cited evidence only. `unknown` means no cited source.", ""]
+            "Permitted is a **declared** allow-rule match for the sample command in `config/paperclip/agents.json` "
+            "(deny rules first). A match is not effective runtime configuration and not verified permission enforcement. "
+            "It is never inferred from a registry entry or a role text. Instructed is from the role file. "
+            "Runtime verified and Production validated come from cited evidence only, and external evidence stays "
+            "`UNVERIFIED` here. `unknown` means no cited source. These views are not delivered knowledge until a run "
+            "shows the agent can read them.", ""]
     for role in cat["roles"]:
         out += role_block(cat, role)
     out += rnd_section(cat) + [""] + citations_section(cat)

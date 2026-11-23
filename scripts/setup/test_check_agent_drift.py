@@ -158,12 +158,13 @@ def skill_hashes():
 class Extended(unittest.TestCase):
     """The knowledge-delivery categories (ADR-024) on fixtures; nothing reaches Paperclip."""
 
-    def rows(self, full=None, bodies=None, company=None, skills=None, files=None):
+    def rows(self, full=None, bodies=None, company=None, skills=None, files=None, state=None):
         f, b = matching_live()
         full = full or f
         bodies = bodies or b
         return cad.extended(CONF, MANIFEST, company or {"requireBoardApprovalForNewAgents": True}, full, bodies,
-                            si.role_bodies(), skills or {}, lambda p: (files or {}).get(p), bp, grp)
+                            si.role_bodies(), skills or {}, lambda p: (files or {}).get(p), bp, grp,
+                            deployment_state=state)
 
     def pick(self, rows, cat, role):
         return [r for r in rows if r["category"] == cat and r["role"] == role]
@@ -173,6 +174,10 @@ class Extended(unittest.TestCase):
         self.assertEqual([r for r in rows if r["status"] == "drift"], [])
         dep = self.pick(rows, "instructions.deployment", "game-artist")[0]
         self.assertTrue(dep["detail"].startswith("legacy-role-body; equals the role file"))
+        self.assertIn("state pilot_prepared", dep["detail"])
+        skill = self.pick(rows, "skills.assigned", "game-artist")[0]
+        self.assertEqual(skill["status"], "info")
+        self.assertIn("not delivery of a required skill", skill["detail"])
         self.assertTrue(any(r["category"] == "unverified.runtime" for r in rows))
         self.assertTrue(any(r["role"] == "code-reviewer" and "absent" in r["detail"] for r in rows))
 
@@ -186,16 +191,18 @@ class Extended(unittest.TestCase):
     def test_generated_package_detected_by_header(self):
         full, bodies = matching_live()
         bodies["game-artist"] = PACKAGE
-        rows = self.rows(full, bodies)
+        active = {"roles": {"game-artist": {"state": "pilot_active", "required_skills": []}}}
+        rows = self.rows(full, bodies, state=active)
         dep = self.pick(rows, "instructions.deployment", "game-artist")[0]
         self.assertEqual(dep["status"], "ok", dep)
         self.assertTrue(dep["detail"].startswith("generated-package; equals the committed package"))
+        self.assertIn("state pilot_active", dep["detail"])
         head = grp.parse_header(PACKAGE)
         src = self.pick(rows, "instructions.source", "game-artist")[0]["detail"]
         self.assertIn(head["source_commit"], src)
         self.assertIn(head["package_sha256"], src)
         bodies["game-artist"] = PACKAGE.replace("Never force-push", "Force-push", 1)
-        dep = self.pick(self.rows(full, bodies), "instructions.deployment", "game-artist")[0]
+        dep = self.pick(self.rows(full, bodies, state=active), "instructions.deployment", "game-artist")[0]
         self.assertEqual(dep["status"], "drift")
         self.assertIn("header hash does not match", dep["detail"])
 
@@ -259,9 +266,23 @@ class Extended(unittest.TestCase):
                 code = cad.main(["--company", "SOU", "--fixtures", path], get=None)
         text = out.getvalue()
         self.assertNotIn("game-artist: AGENTS.md differs", text)  # an intact package is judged by instructions.deployment
-        self.assertIn("generated-package; equals the committed package", text)
-        self.assertIn("Extended: 0 drift", text)
-        self.assertEqual(code, 0, text)
+        self.assertIn("state pilot_prepared", text)
+        self.assertIn("live package while state expects the legacy role body", text)
+        self.assertNotEqual(code, 0, text)
+
+    def test_active_pilot_rejects_empty_skills_and_legacy_text(self):
+        full, bodies = matching_live()
+        active = {"roles": {"game-artist": {"state": "pilot_active",
+                                            "required_skills": ["studio-art-identity-and-refinement"]}}}
+        rows = self.rows(full, bodies, state=active)
+        dep = self.pick(rows, "instructions.deployment", "game-artist")[0]
+        skill = self.pick(rows, "skills.assigned", "game-artist")[0]
+        mem = self.pick(rows, "memory.policy", "game-artist")[0]
+        self.assertEqual(dep["status"], "drift")
+        self.assertIn("active pilot requires the generated package", dep["detail"])
+        self.assertEqual(skill["status"], "drift")
+        self.assertIn("empty desiredSkills is not OK", skill["detail"])
+        self.assertEqual(mem["status"], "drift")
 
 
 if __name__ == "__main__":

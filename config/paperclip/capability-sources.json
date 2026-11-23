@@ -1,7 +1,7 @@
 {
  "schema": "capability-catalog-sources.v1",
  "_comment": "Input of scripts/setup/gen-capability-catalog.py (ADR-024, PROPOSED). It names operations, sample commands and citations only. The generator computes Registered/Installed from dependencies/registry.yaml, Permitted from the allow and deny rules that build-package.py builds from config/paperclip/agents.json, Instructed from the role files, all at the source commit; it verifies every `file` citation verbatim at that commit and fails when one does not verify. An `external` citation names Board R&D evidence outside this repository (rnd workspace, relative path); it is shown as external and is not verified by the generator.",
- "not_a_grant": "A catalog entry is not a permission grant and never grants permission. It describes what was configured, approved and observed on the dates of its sources. Permission comes only from the enforced adapter configuration and Board decisions; Cursor agents have no enforced allowlist today.",
+ "not_a_grant": "A catalog entry is not a permission grant and never grants permission. Permitted means a declared allow-rule match for a sample command, not effective runtime configuration and not verified enforcement. External evidence stays unverified. A generated view is not delivered knowledge until its distribution is verified. Permission comes only from the enforced adapter configuration and Board decisions; Cursor agents have no enforced allowlist today.",
  "cites": {
   "g8_not_started": {
    "file": "docs/roadmap/art-production-v2-pilot.md",

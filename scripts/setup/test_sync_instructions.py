@@ -46,6 +46,9 @@ class Stub:
         if method == "GET" and path.startswith("/agents/"):
             return {"id": path.split("/")[2], "adapterConfig": {"model": "x", "env": {"GH_TOKEN": {"type": "secret_ref"}}}}
         if method == "PUT":
+            slug = path.split("/")[2][3:]
+            if body:
+                self.bodies[slug] = body["content"]
             return {}
         raise AssertionError(f"unexpected call {method} {path}")
 
@@ -89,6 +92,13 @@ class DefaultUnchanged(unittest.TestCase):
 
 
 class PilotMode(unittest.TestCase):
+    def setUp(self):
+        self._show = si.git_show
+        si.git_show = self._match_head()
+
+    def tearDown(self):
+        si.git_show = self._show
+
     def refused(self, argv, msg):
         stub = Stub(stale=("game-artist",))
         with self.assertRaisesRegex(SystemExit, msg):
@@ -117,12 +127,27 @@ class PilotMode(unittest.TestCase):
         _, out = run(["--company", "Soucean", "--generated-package", "--role", "game-artist", "--confirm", "game-artist",
                       "--dry-run"], stub)
         self.assertEqual(len(out.splitlines()), 1)
-        self.assertRegex(out, r"game-artist +would update to generated package [0-9a-f]{16} \(source [0-9a-f]{12}\)")
+        self.assertRegex(out, r"game-artist +would update to committed package [0-9a-f]{16} \(pinned source [0-9a-f]{12}\)")
         self.assertTrue(all(m == "GET" for m, _, _ in stub.calls))
         self.assertFalse([p for _, p, _ in stub.calls if "gameplay-programmer" in p])
 
+    def _match_head(self):
+        with open(os.path.join(si.GENERATED_DIR, "game-artist", "AGENTS.md"), encoding="utf-8") as f:
+            work = f.read().replace("\r\n", "\n")
+        with open(os.path.join(si.GENERATED_DIR, "game-artist", "package.json"), encoding="utf-8") as f:
+            js = f.read().replace("\r\n", "\n")
+
+        def show(rel):
+            if rel.endswith("AGENTS.md"):
+                return work
+            if rel.endswith("package.json"):
+                return js
+            raise SystemExit(f"refusing: {rel} is not a committed artifact at HEAD")
+        return show
+
     def test_live_run_writes_backup_then_puts_only_the_package(self):
         stub = Stub(stale=("game-artist", "gameplay-programmer"))
+        si.git_show = self._match_head()
         with tempfile.TemporaryDirectory() as tmp:
             _, out = run(["--company", "Soucean", "--generated-package", "--role", "game-artist", "--confirm",
                           "game-artist", "--backup-dir", tmp], stub)
@@ -146,6 +171,86 @@ class PilotMode(unittest.TestCase):
                  "--confirm", "game-artist", "--backup-dir", tmp], stub2)
             puts2 = [b for m, _, b in stub2.calls if m == "PUT"]
             self.assertEqual([b["content"] for b in puts2], ["old text"])
+            self.assertIn("read-back matches", out)
+
+    def test_default_sync_does_not_replace_a_generated_package(self):
+        stub = Stub(stale=("game-artist",))
+        with open(os.path.join(si.GENERATED_DIR, "game-artist", "AGENTS.md"), encoding="utf-8") as f:
+            stub.bodies["game-artist"] = f.read()
+        _, out = run(["--company", "Soucean"], stub)
+        self.assertIn("skipped: installed text is a generated package", out)
+        self.assertFalse([c for c in stub.calls if c[0] == "PUT"])
+
+    def test_backup_dir_inside_the_repository_is_refused(self):
+        self.refused(["--company", "Soucean", "--generated-package", "--role", "game-artist", "--confirm", "game-artist",
+                      "--backup-dir", si.REPO], "outside the repository")
+
+    def test_working_tree_package_is_not_enough(self):
+        def show(rel):
+            if rel.endswith("AGENTS.md"):
+                return "local edit\n"
+            if rel.endswith("package.json"):
+                return "{}"
+            raise SystemExit("missing")
+        si.git_show = show
+        stub = Stub()
+        with self.assertRaisesRegex(SystemExit, "not the committed artifact"):
+            run(["--company", "Soucean", "--generated-package", "--role", "game-artist", "--confirm", "game-artist",
+                 "--dry-run"], stub)
+        self.assertFalse([c for c in stub.calls if c[0] == "PUT"])
+
+    def test_self_declared_hash_is_not_enough(self):
+        with open(os.path.join(si.GENERATED_DIR, "game-artist", "AGENTS.md"), encoding="utf-8") as f:
+            work = f.read()
+        with open(os.path.join(si.GENERATED_DIR, "game-artist", "package.json"), encoding="utf-8") as f:
+            pkg = json.loads(f.read())
+        pkg["package_sha256"] = "0" * 64
+
+        def show(rel):
+            if rel.endswith("AGENTS.md"):
+                return work.replace("\r\n", "\n")
+            if rel.endswith("package.json"):
+                return json.dumps(pkg)
+            raise SystemExit("missing")
+        si.git_show = show
+        stub = Stub()
+        with self.assertRaisesRegex(SystemExit, "package identity"):
+            run(["--company", "Soucean", "--generated-package", "--role", "game-artist", "--confirm", "game-artist",
+                 "--dry-run"], stub)
+        self.assertFalse([c for c in stub.calls if c[0] == "PUT"])
+
+    def test_revision_change_aborts_before_put(self):
+        class Race(Stub):
+            def __init__(self):
+                super().__init__(stale=("game-artist",))
+                self.n = 0
+
+            def __call__(self, method, path, body=None):
+                if "/instructions-bundle/file" in path and method == "GET":
+                    self.n += 1
+                    slug = path.split("/")[2][3:]
+                    return {"content": self.bodies[slug], "revision": {"id": f"rev-{self.n}"}}
+                return super().__call__(method, path, body)
+        si.git_show = self._match_head()
+        stub = Race()
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(SystemExit, "revision changed before PUT"):
+                run(["--company", "Soucean", "--generated-package", "--role", "game-artist", "--confirm", "game-artist",
+                     "--backup-dir", tmp], stub)
+        self.assertFalse([c for c in stub.calls if c[0] == "PUT"])
+
+    def test_snapshot_for_another_agent_id_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = os.path.join(tmp, "snap.json")
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump({"schema": "knowledge-delivery-snapshot.v1", "role": "game-artist", "companyId": "c-1",
+                           "agentId": "someone-else", "urlKey": "game-artist",
+                           "instructions": {"content": "x", "sha256": "e" * 64}}, f)
+            stub = Stub()
+            with self.assertRaisesRegex(SystemExit, "agentId does not match"):
+                run(["--company", "Soucean", "--restore-from", path, "--role", "game-artist", "--confirm", "game-artist",
+                     "--dry-run"], stub)
+            self.assertFalse([c for c in stub.calls if c[0] == "PUT"])
 
     def test_restore_refuses_another_roles_snapshot(self):
         with tempfile.TemporaryDirectory() as tmp:

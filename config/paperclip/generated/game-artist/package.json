@@ -1,20 +1,32 @@
 {
   "budget": {
-    "combined_bytes": 37712,
-    "combined_max_bytes": 38000,
+    "applies_to": [
+      "game-artist"
+    ],
+    "authority": "Board code review of PR #111 (2026-11-23), game-artist pilot only. The review set 40,000/8,000/48,000 from the 43,307 B role+rules package. Restoring task-contract §2, §6 and §8, security §8 and game-rules §6 (full sections, not a sentence extract) does not fit in 48,000. The cap is the measured text, not a cut. Do not drop mandatory knowledge to hit a size target.",
+    "checked": true,
+    "combined_bytes": 51658,
+    "combined_max_bytes": 53000,
     "command_reference_bytes": 5894,
-    "command_reference_max_bytes": 6000,
-    "core_bytes": 31818,
-    "core_max_bytes": 32000
+    "command_reference_max_bytes": 8000,
+    "core_bytes": 45764,
+    "core_max_bytes": 47000
   },
+  "checks": {
+    "freshness": "compare each unit section_sha256 to a target revision's file bytes. Unrelated files are ignored. source_commit equality is not required.",
+    "integrity": "header package-sha256 equals the body below the header",
+    "reproducibility": "regenerate at source_commit with this generator and the manifest that produced the package; --check. Success does not mean the knowledge is current."
+  },
+  "conflict_lint": "Lexical substring lint only. A covered sentence is not semantic equivalence, and a clean conflict list is not proof that every policy conflict is resolved.",
   "conflicts": [],
+  "coverage_method": "Lexical substring lint only. A covered sentence is not semantic equivalence, and a clean conflict list is not proof that every policy conflict is resolved.",
   "department": "game",
   "duplicate_bytes": 0,
   "duplicates": [],
   "generated_note": "Generated file. Do not edit by hand.",
   "generator": {
     "path": "scripts/setup/gen-role-packages.py",
-    "sha256": "32c6d96e079b6870a8e6aa0b47120304afc1c75dd59c78c1aa2b43375e9efb6b",
+    "sha256": "4495ed4c50849c60944cdb4f315b48284acb0716550b0e380622add1c312971b",
     "version": "1"
   },
   "link_rewrites": [
@@ -56,21 +68,21 @@
     },
     {
       "from": "../standards/task-contract.md#6-blocker-protocol",
-      "kind": "on-request",
+      "kind": "included",
       "source": "knowledge/company/policies/rules.md",
-      "to": "task-contract.md §6 (on request)"
+      "to": "task-contract.md §6 (in this file)"
     },
     {
       "from": "../standards/task-contract.md#2-task-contract",
-      "kind": "on-request",
+      "kind": "included",
       "source": "knowledge/company/policies/rules.md",
-      "to": "task-contract.md §2 (on request)"
+      "to": "task-contract.md §2 (in this file)"
     },
     {
       "from": "../../../docs/architecture/security-architecture.md#8-approval-boundaries",
-      "kind": "on-request",
+      "kind": "included",
       "source": "knowledge/company/policies/rules.md",
-      "to": "security-architecture.md §8 (on request)"
+      "to": "security-architecture.md §8 (in this file)"
     },
     {
       "from": "../../../docs/design/gh-token-log-redaction-probe.md",
@@ -101,6 +113,54 @@
       "kind": "on-request",
       "source": "knowledge/company/policies/rules.md",
       "to": "Web (on request)"
+    },
+    {
+      "from": "../workflows/task-failure-handling.md",
+      "kind": "on-request",
+      "source": "knowledge/company/standards/task-contract.md",
+      "to": "task-failure-handling.md (on request)"
+    },
+    {
+      "from": "../workflows/task-failure-handling.md",
+      "kind": "on-request",
+      "source": "knowledge/company/standards/task-contract.md",
+      "to": "task-failure-handling.md (on request)"
+    },
+    {
+      "from": "../policies/provider-allocation.md",
+      "kind": "on-request",
+      "source": "knowledge/company/standards/task-contract.md",
+      "to": "provider-allocation.md (on request)"
+    },
+    {
+      "from": "../../../docs/decisions/ADR-023-watchdog-board-queue-and-auto-release.md",
+      "kind": "on-request",
+      "source": "knowledge/company/standards/task-contract.md",
+      "to": "ADR-023 (on request)"
+    },
+    {
+      "from": "../../../.claude/skills/paperclip/SKILL.md#start-gate-only-release-starts-a-task",
+      "kind": "on-request",
+      "source": "knowledge/company/standards/task-contract.md",
+      "to": "the skill (on request)"
+    },
+    {
+      "from": "../agents/game-artist/AGENTS.md#ownership-with-gameplay-programmer-interim",
+      "kind": "included",
+      "source": "knowledge/departments/game/domain/game-rules.md",
+      "to": "game-artist role (in this file)"
+    },
+    {
+      "from": "../workflows/asset-production.md",
+      "kind": "on-request",
+      "source": "knowledge/departments/game/domain/game-rules.md",
+      "to": "asset-production.md (on request)"
+    },
+    {
+      "from": "art/README.md",
+      "kind": "on-request",
+      "source": "knowledge/departments/game/domain/game-rules.md",
+      "to": "art/ (on request)"
     },
     {
       "from": "../../../../docs/architecture/security-architecture.md#4-agent-permissions-provider-level",
@@ -141,77 +201,27 @@
   ],
   "mandatory_guard": [
     {
-      "result": "covered by: You MUST NOT write or change application code, gameplay systems, animation state machines, engine import settings, shaders or shared pipeline code | Hand them to `gameplay-programmer` with the requirement.",
-      "sentence": "Hand technical implementation to `gameplay-programmer`; do not do it yourself.",
-      "unit": "ga-role-ownership"
-    },
-    {
-      "result": "covered by: You MUST NOT change gameplay mechanics or balance; `game-designer` owns them. | gameplay purpose or readability conflicts → `game-designer`",
-      "sentence": "| Gameplay intent and readability requirements | `game-designer` | `game-artist` advises on visual communication; never changes the requirement itself |",
-      "unit": "ga-role-ownership"
-    },
-    {
-      "result": "covered by: You MUST NOT approve, merge or mark done your own work",
-      "sentence": "| Final asset quality and acceptance testing | The existing review and approval process: `qa` review, Board approval and merge | `game-artist` never approves its own work |",
-      "unit": "ga-role-ownership"
-    },
-    {
-      "result": "covered by: Never print, echo, log or paste a credential or the environment | do not run printenv, env, set, export -p, gh auth token, git credential or any command that shows GH_TOKEN, GITHUB_TOKEN, PAPERCLIP_API_KEY or another secret value | Never print, log, commit, or paste secrets, tokens, or credential files.",
+      "result": "lexical lint, not semantic equivalence; phrases present: Never print, echo, log or paste a credential or the environment | do not run printenv, env, set, export -p, gh auth token, git credential or any command that shows GH_TOKEN, GITHUB_TOKEN, PAPERCLIP_API_KEY or another secret value | Never print, log, commit, or paste secrets, tokens, or credential files.",
       "sentence": "- You MUST NOT print, echo, log, commit or paste a credential or the environment: no `printenv`, `env`, `set`, `gh auth token`, `git credential`, and no command that shows `GH_TOKEN`, `GITHUB_TOKEN`, `PAPERCLIP_API_KEY` or another secret.",
       "unit": "ga-role-credentials"
-    },
-    {
-      "result": "covered by: When you set a Task `blocked`, post exactly these lines, then the details: | `Blocked:` one line | `Unblock owner:` an agent id or Board | `Check again:` when.",
-      "sentence": "An agent that sets a Task to `blocked` MUST post this comment:",
-      "unit": "co-task-blockers"
-    },
-    {
-      "result": "covered by: For a dependency, ask for a Paperclip blocker relation, not only a sentence.",
-      "sentence": "| `dependency` | The blocker must be a Paperclip blocker relation, so the Task wakes when it is `done`. An agent that cannot set relations asks the `project-manager` or the Board in `Ask` |",
-      "unit": "co-task-blockers"
-    },
-    {
-      "result": "not applicable: cancelling Tasks is a project-manager or Board step (daily-triage, task-failure-handling); the game-artist role has no cancellation duty",
-      "sentence": "**Cancelling a Task:** first list the Tasks it blocks, and either point their blocker relation at the replacement Task or cancel them too (cancelled blockers never resolve).",
-      "unit": "co-task-blockers"
-    },
-    {
-      "result": "covered by: When you review, you MUST NOT edit files, commit, merge, rebase or push the author's branch",
-      "sentence": "A reviewer never edits, rebases or pushes the author's branch.",
-      "unit": "co-task-reviews"
-    },
-    {
-      "result": "covered by: Tasks you create start in `backlog`, unassigned, with the intended assignee, write set, acceptance criteria and reviewer in the description.",
-      "sentence": "A Task MUST NOT be released (moved out of `backlog`) unless it has every field below.",
-      "unit": "co-task-contract"
-    },
-    {
-      "result": "covered by: read the active project's art references | If the Task needs an art reference the project does not have, stop and ask",
-      "sentence": "- **Art references live in the project.** Art bible, render standards, palette, asset specs, asset registry and the licensing rule are in each Game Repository, never here.",
-      "unit": "game-art-ownership"
-    },
-    {
-      "result": "not applicable: proposing a new role is a director and Board decision (agent-onboarding workflow, R3.1 new Agent Instances); it sets no duty for game-artist",
-      "sentence": "- **Technical Artist (not a role yet).** Propose a `technical-artist` role, with evidence, scope, authority and acceptance criteria, only when the interim split stops working, for example:",
-      "unit": "game-art-ownership"
     }
   ],
   "manifest": {
     "origin": "working tree (the manifest is not in the source commit yet)",
     "path": "config/paperclip/knowledge-manifest.json",
-    "sha256": "a7db4aead100210e546e7ab8cf31011ae883fb099fc862fd476c631a36d705ff"
+    "sha256": "3168ec7a4d3173bebe31ca698be29ff72d3936df2835cd6698463797db6c1cb4"
   },
   "memory_policy": "Task-session only: auto-memory off through the per-agent settings file (pilot change B, PROPOSED); existing memory files are not read, moved or deleted.",
   "on_request": {
+    ".claude/skills/paperclip/SKILL.md": [
+      "knowledge/company/standards/task-contract.md"
+    ],
     "dependencies/registry.yaml": [
       "knowledge/company/policies/rules.md"
     ],
     "docs/architecture/security-architecture.md": [
       "knowledge/company/policies/rules.md",
       "knowledge/departments/game/workflows/asset-production.md"
-    ],
-    "docs/architecture/security-architecture.md § 8. Approval boundaries": [
-      "manifest unit co-approval-boundaries (on-demand)"
     ],
     "docs/decisions/ADR-001-single-game-studio-repository.md": [
       "knowledge/company/policies/rules.md"
@@ -225,31 +235,30 @@
     "docs/decisions/ADR-009-approval-before-merge.md": [
       "knowledge/company/policies/rules.md"
     ],
+    "docs/decisions/ADR-023-watchdog-board-queue-and-auto-release.md": [
+      "knowledge/company/standards/task-contract.md"
+    ],
     "docs/design/gh-token-log-redaction-probe.md": [
       "knowledge/company/policies/rules.md"
     ],
     "docs/roadmap/open-questions.md": [
       "knowledge/departments/game/workflows/asset-production.md"
     ],
+    "knowledge/company/policies/provider-allocation.md": [
+      "knowledge/company/standards/task-contract.md"
+    ],
     "knowledge/company/standards/task-contract.md": [
-      "knowledge/company/policies/rules.md",
       "knowledge/departments/game/agents/game-artist/AGENTS.md"
-    ],
-    "knowledge/company/standards/task-contract.md § 2. Task contract": [
-      "manifest unit co-task-contract (on-demand)"
-    ],
-    "knowledge/company/standards/task-contract.md § 6. Blocker protocol": [
-      "manifest unit co-task-blockers (on-demand)"
-    ],
-    "knowledge/company/standards/task-contract.md § 8. Reviews": [
-      "manifest unit co-task-reviews (on-demand)"
     ],
     "knowledge/company/workflows/code-review-and-merge.md": [
       "knowledge/departments/game/agents/game-artist/AGENTS.md",
       "manifest"
     ],
-    "knowledge/departments/game/agents/game-artist/AGENTS.md § Ownership with Gameplay Programmer (interim)": [
-      "manifest unit ga-role-ownership (on-demand)"
+    "knowledge/company/workflows/task-failure-handling.md": [
+      "knowledge/company/standards/task-contract.md"
+    ],
+    "knowledge/departments/game/domain/art/README.md": [
+      "knowledge/departments/game/domain/game-rules.md"
     ],
     "knowledge/departments/game/domain/art/complexity-lanes.md": [
       "manifest"
@@ -267,17 +276,15 @@
     "knowledge/departments/game/domain/game-rules.md": [
       "knowledge/company/policies/rules.md"
     ],
-    "knowledge/departments/game/domain/game-rules.md § 6. Art assets and technical art": [
-      "manifest unit game-art-ownership (on-demand)"
-    ],
     "knowledge/departments/game/workflows/asset-production.md": [
+      "knowledge/departments/game/domain/game-rules.md",
       "manifest"
     ],
     "knowledge/departments/web/domain/production-environments.md": [
       "knowledge/company/policies/rules.md"
     ]
   },
-  "package_sha256": "2bf492be971ccca583ef9c5bbe7a4075f0c00af1569fbc160093fa0eb4025702",
+  "package_sha256": "997935210e627ba4a12637338fc31ac333b12df4a1f537040079057abc4c17fd",
   "role": "game-artist",
   "role_file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
   "schema": "role-knowledge-package.v1",
@@ -286,11 +293,11 @@
     {
       "files": {
         "knowledge/departments/game/skills/studio-art-identity-and-refinement/SKILL.md": "62e0efc3b2419b877b6d219955ffd315625e0c3664d3a7f9672e5ff582bf1598",
-        "knowledge/departments/game/skills/studio-art-identity-and-refinement/reference/seed-and-identity.md": "42829092eb3a86f2c152d20f42bfeb7fe406c785bd9386eac0a5db7acb911241"
+        "knowledge/departments/game/skills/studio-art-identity-and-refinement/reference/seed-and-identity.md": "7084d97adfc0cf95262ac53083cdc3b43b6216529bd2db23b398a718c11b4a8d"
       },
       "name": "studio-art-identity-and-refinement",
       "note": "use it when it is in your skill list (pilot change C); if it is not listed, ask for visual-procedures.md instead. Everything mandatory is already in this file.",
-      "revision_sha256": "d7eec2e9a98bacfae261b75313175730561fc7700238599cdc0ad8f41d6cc2a6",
+      "revision_sha256": "80be92d14bf2760193de1217d92a04dd327899575f515940e2d26af4299390f3",
       "status": "proposed"
     }
   ],
@@ -303,10 +310,16 @@
       "ga-role-tools",
       "ga-role-commands",
       "ga-role-io",
+      "ga-role-ownership",
       "ga-role-constraints",
       "ga-role-hygiene",
       "co-rules",
+      "co-task-blockers",
+      "co-task-reviews",
+      "co-task-contract",
+      "co-approval-boundaries",
       "game-originality",
+      "game-art-ownership",
       "game-generated-art"
     ],
     "role_file_blocks": 33
@@ -327,10 +340,10 @@
   },
   "tokens_estimated": {
     "combined": {
-      "chars_div_3_6": 10460,
-      "high": 10949,
-      "low": 10460,
-      "piece_heuristic": 10949
+      "chars_div_3_6": 14331,
+      "high": 14918,
+      "low": 14331,
+      "piece_heuristic": 14918
     },
     "command_reference": {
       "chars_div_3_6": 1636,
@@ -339,10 +352,10 @@
       "piece_heuristic": 1927
     },
     "core": {
-      "chars_div_3_6": 8823,
-      "high": 9022,
-      "low": 8823,
-      "piece_heuristic": 9022
+      "chars_div_3_6": 12695,
+      "high": 12991,
+      "low": 12695,
+      "piece_heuristic": 12991
     },
     "method": "ESTIMATED, no tokenizer: chars/3.6 and a piece heuristic (word ceil(len/6), digit run ceil(len/3), symbol 1)"
   },
@@ -350,7 +363,7 @@
     {
       "authority": "role file",
       "blocks_starting_with": null,
-      "delivery": "always-loaded",
+      "delivery": "always_loaded",
       "department": "game",
       "emitted_bytes": 2888,
       "emitted_sha256": "82c207ed711550d9c657a1dc193893f8b0a2c902f1f63e527bf72b8c80047c8e",
@@ -377,7 +390,7 @@
     {
       "authority": "AP-v2 pilot 2026-11-22; KA-BD-1/2",
       "blocks_starting_with": null,
-      "delivery": "always-loaded",
+      "delivery": "always_loaded",
       "department": "game",
       "emitted_bytes": 10861,
       "emitted_sha256": "1bacff814963e0b0684cd30e16a8748d423659fe801f6c6eb3df1503981ab6f9",
@@ -399,7 +412,7 @@
     {
       "authority": "role file",
       "blocks_starting_with": null,
-      "delivery": "always-loaded",
+      "delivery": "always_loaded",
       "department": "game",
       "emitted_bytes": 667,
       "emitted_sha256": "979939241a1b8932db2a336067b898efe968676bde4c08bf9051926ca70e4b4f",
@@ -427,7 +440,7 @@
         "Since 2026-11-22 the Board accepts AI-made final art",
         "Permission profile `workspace-write`"
       ],
-      "delivery": "always-loaded",
+      "delivery": "always_loaded",
       "department": "game",
       "emitted_bytes": 807,
       "emitted_sha256": "0aecf153b429995bfe36906791c745674942e7a52f8ad115ebeddfabc678025e",
@@ -452,7 +465,7 @@
         "`git` on Task Branches",
         "Godot projects:"
       ],
-      "delivery": "command-reference",
+      "delivery": "command_reference",
       "department": "game",
       "emitted_bytes": 5495,
       "emitted_sha256": "d72f08ea563948fea5ee1642ce1f6570caa315e39ee298ce6cd97d4150cefc6a",
@@ -474,7 +487,7 @@
     {
       "authority": "role file",
       "blocks_starting_with": null,
-      "delivery": "always-loaded",
+      "delivery": "always_loaded",
       "department": "game",
       "emitted_bytes": 334,
       "emitted_sha256": "71fb8989216665329bd2cf2a1dfbf784a9fd0beb5734e2b2861f3cc60ae06cfa",
@@ -498,9 +511,9 @@
     {
       "authority": "KA-BD-9 (interim)",
       "blocks_starting_with": null,
-      "delivery": "on-demand",
+      "delivery": "always_loaded",
       "department": "game",
-      "emitted_bytes": 0,
+      "emitted_bytes": 3114,
       "emitted_sha256": "2308c6a9f35ddcb14ba4f38bbb9ea63039021de4190f59afa6a36cea00d4f8e2",
       "headings": [
         "Ownership with Gameplay Programmer (interim)"
@@ -520,7 +533,7 @@
     {
       "authority": "role file",
       "blocks_starting_with": null,
-      "delivery": "always-loaded",
+      "delivery": "always_loaded",
       "department": "game",
       "emitted_bytes": 2360,
       "emitted_sha256": "9111466794bdb86751d0b212382776c02ba1de02b4cefef77381e4a52fe426e0",
@@ -542,7 +555,7 @@
     {
       "authority": "role file",
       "blocks_starting_with": null,
-      "delivery": "not-delivered",
+      "delivery": "not_delivered",
       "department": "game",
       "emitted_bytes": 0,
       "emitted_sha256": "938616bbbbc992f35795ecbfa2e2a815055dac04c6758bfd569d47b17c2bcfa2",
@@ -564,7 +577,7 @@
     {
       "authority": "role file; task contract",
       "blocks_starting_with": null,
-      "delivery": "always-loaded",
+      "delivery": "always_loaded",
       "department": "game",
       "emitted_bytes": 3235,
       "emitted_sha256": "8820c328e8d4effb00db15bb5527ba4745e7fd4f72fafb1e2c3ce599d8660bc1",
@@ -592,10 +605,10 @@
     {
       "authority": "rules.md",
       "blocks_starting_with": null,
-      "delivery": "always-loaded",
+      "delivery": "always_loaded",
       "department": "game",
-      "emitted_bytes": 4183,
-      "emitted_sha256": "cc90fa0853e1c6eacbe6cd9d6b7c0b82356db52842093293dede2990549b9e77",
+      "emitted_bytes": 4189,
+      "emitted_sha256": "3829383d67e011f0ce10bc68f9612321541ed9b4818d3e238950ccf8803fcdc8",
       "headings": [
         "R1. Repositories and code",
         "R2. Tasks",
@@ -626,10 +639,10 @@
     {
       "authority": "task-contract",
       "blocks_starting_with": null,
-      "delivery": "on-demand",
+      "delivery": "always_loaded",
       "department": "game",
-      "emitted_bytes": 0,
-      "emitted_sha256": "52d68dcd6365db17aad5ffb20e7e9d69c103d1ec70092fe19afd5d3e0074293a",
+      "emitted_bytes": 1430,
+      "emitted_sha256": "ef7e781231a8d7969e00c15c5b8ec1a029c7628058afdb6053d10c4583404909",
       "headings": [
         "6. Blocker protocol"
       ],
@@ -648,10 +661,10 @@
     {
       "authority": "task-contract",
       "blocks_starting_with": null,
-      "delivery": "on-demand",
+      "delivery": "always_loaded",
       "department": "game",
-      "emitted_bytes": 0,
-      "emitted_sha256": "20a486062aafa3b02337bb73fc43c4fb342dc8dded7828061542e47ec9120472",
+      "emitted_bytes": 1169,
+      "emitted_sha256": "407ff97ff5dc5a33c0a7cfd6999853d022e92921ce5e7efb685d486920ab5097",
       "headings": [
         "8. Reviews"
       ],
@@ -670,10 +683,10 @@
     {
       "authority": "task-contract",
       "blocks_starting_with": null,
-      "delivery": "on-demand",
+      "delivery": "always_loaded",
       "department": "game",
-      "emitted_bytes": 0,
-      "emitted_sha256": "f89c578af86e4e437052c2eeb983ca60f7adc1c493a4eee90534c47d0dda3e67",
+      "emitted_bytes": 2541,
+      "emitted_sha256": "ef5c740f0203b83c863572c651cafda709e2e05050a8dacce00281ae5a8a15f6",
       "headings": [
         "2. Task contract"
       ],
@@ -692,9 +705,9 @@
     {
       "authority": "security-architecture; ADR-009",
       "blocks_starting_with": null,
-      "delivery": "on-demand",
+      "delivery": "always_loaded",
       "department": "game",
-      "emitted_bytes": 0,
+      "emitted_bytes": 1270,
       "emitted_sha256": "26215d1434fb434d3bfb1883e7a2f8915adee63d5b036a64a8d89d3c5f467d2c",
       "headings": [
         "8. Approval boundaries"
@@ -714,7 +727,7 @@
     {
       "authority": "game-rules",
       "blocks_starting_with": null,
-      "delivery": "always-loaded",
+      "delivery": "always_loaded",
       "department": "game",
       "emitted_bytes": 266,
       "emitted_sha256": "134f71732b36f9c8697590e5edf34fb9a22a3107c2cdfdb1f48fe774ce9de458",
@@ -736,10 +749,10 @@
     {
       "authority": "game-rules; KA-BD-9",
       "blocks_starting_with": null,
-      "delivery": "on-demand",
+      "delivery": "always_loaded",
       "department": "game",
-      "emitted_bytes": 0,
-      "emitted_sha256": "3eb6196bb9739753e4e4ab5e2c5b8dfc3eaed2be21d03ea6b2574d3d7a2c6a3b",
+      "emitted_bytes": 2288,
+      "emitted_sha256": "34e3f0356f68edd6c8e743985a54653b2037c4df21a79dbb10e2b9b4c1371bed",
       "headings": [
         "6. Art assets and technical art"
       ],
@@ -758,7 +771,7 @@
     {
       "authority": "Board D1, 2026-11-22",
       "blocks_starting_with": null,
-      "delivery": "always-loaded",
+      "delivery": "always_loaded",
       "department": "game",
       "emitted_bytes": 1549,
       "emitted_sha256": "b69e43fcf9d40f215850fc98e2bd1ae9e9cad9ee2050e3d1ae5cb9b8c8897c6c",

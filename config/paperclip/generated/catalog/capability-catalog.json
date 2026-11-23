@@ -356,7 +356,7 @@
   "path": "scripts/setup/gen-capability-catalog.py",
   "version": "1"
  },
- "not_a_grant": "A catalog entry is not a permission grant and never grants permission. It describes what was configured, approved and observed on the dates of its sources. Permission comes only from the enforced adapter configuration and Board decisions; Cursor agents have no enforced allowlist today.",
+ "not_a_grant": "A catalog entry is not a permission grant and never grants permission. Permitted means a declared allow-rule match for a sample command, not effective runtime configuration and not verified enforcement. External evidence stays unverified. A generated view is not delivered knowledge until its distribution is verified. Permission comes only from the enforced adapter configuration and Board decisions; Cursor agents have no enforced allowlist today.",
  "rnd_only": [
   {
    "allow_rules": "none (searched every role's allow rules for: comfyui_rnd, 8189, rnd/)",
@@ -620,8 +620,8 @@
      "operation": "read-pr-checks",
      "permitted": {
       "rule": "Bash(gh pr view*)",
-      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "read a PR and its CI results",
      "production_validated": {
@@ -659,8 +659,8 @@
      "permitted": {
       "note": "SEC-01: redirect writes are expected to be denied in -p default mode; untested",
       "rule": "Bash(cat *)",
-      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "write files",
      "production_validated": {
@@ -698,8 +698,8 @@
      "permitted": {
       "note": "SEC-01: leading-wildcard allow rule, open security item",
       "rule": "Bash(*paperclip-issue-update.sh*)",
-      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "report on its Task",
      "production_validated": {
@@ -812,8 +812,8 @@
      "operation": "create-agents",
      "permitted": {
       "rule": null,
-      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
-      "value": "declared canCreateAgents=true, canCreateSkills=true"
+      "source": "config/paperclip/agents.json permissions (declared only; not effective runtime configuration and not verified enforcement; live values: check-agent-drift.py)",
+      "value": "declared permission canCreateAgents=true, canCreateSkills=true"
      },
      "plain": "create new agents or skills",
      "production_validated": {
@@ -859,8 +859,8 @@
      "operation": "comfy-draft",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/comfy-draft.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "make concept drafts from a text description (local AI, two approved models)",
      "production_validated": {
@@ -897,8 +897,8 @@
      "operation": "comfy-edit-img2img",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/comfy-edit.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "redraw its own art at low strength to keep a family consistent",
      "production_validated": {
@@ -935,8 +935,8 @@
      "operation": "comfy-edit-inpaint",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/comfy-edit.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "repaint or remove one masked region of its own art",
      "production_validated": {
@@ -973,8 +973,8 @@
      "operation": "comfy-edit-matte",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/comfy-edit.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "cut a figure out of its backdrop",
      "production_validated": {
@@ -1011,8 +1011,8 @@
      "operation": "art-ops-info",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "inspect image size, alpha and budget",
      "production_validated": {
@@ -1049,8 +1049,8 @@
      "operation": "art-ops-crop",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "crop an image",
      "production_validated": {
@@ -1087,8 +1087,8 @@
      "operation": "art-ops-resize",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "resize (nearest for pixel art)",
      "production_validated": {
@@ -1125,8 +1125,8 @@
      "operation": "art-ops-key",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "make a flat backdrop colour transparent (icons, UI shapes)",
      "production_validated": {
@@ -1163,8 +1163,8 @@
      "operation": "art-ops-trim",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "trim transparent borders",
      "production_validated": {
@@ -1201,8 +1201,8 @@
      "operation": "art-ops-canvas",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "pad an image to a canvas size",
      "production_validated": {
@@ -1239,8 +1239,8 @@
      "operation": "art-ops-sheet",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "pack frames into a sprite sheet",
      "production_validated": {
@@ -1277,8 +1277,8 @@
      "operation": "art-ops-grade",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "adjust contrast and saturation for checks",
      "production_validated": {
@@ -1315,8 +1315,8 @@
      "operation": "art-ops-contact",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "make a review sheet of candidates",
      "production_validated": {
@@ -1353,8 +1353,8 @@
      "operation": "art-ops-mask",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "make a mask for inpainting or compositing",
      "production_validated": {
@@ -1391,8 +1391,8 @@
      "operation": "art-ops-compose",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "place an image over a background",
      "production_validated": {
@@ -1429,8 +1429,8 @@
      "operation": "art-ops-diff",
      "permitted": {
       "rule": "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "show what changed between two images",
      "production_validated": {
@@ -1467,8 +1467,8 @@
      "operation": "pixelfx-list",
      "permitted": {
       "rule": "Bash(node ~/tools/pixelfx/tools/list.mjs *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "search the pixel-art effects library",
      "production_validated": {
@@ -1505,8 +1505,8 @@
      "operation": "pixelfx-render",
      "permitted": {
       "rule": "Bash(node ~/tools/pixelfx/tools/render.mjs *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "export one effect as a sprite sheet",
      "production_validated": {
@@ -1543,8 +1543,8 @@
      "operation": "godot-version",
      "permitted": {
       "rule": "Bash(godot --version)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "check the Godot version",
      "production_validated": {
@@ -1581,8 +1581,8 @@
      "operation": "godot-import",
      "permitted": {
       "rule": "Bash(godot --headless --path . --import)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "import project assets (headless)",
      "production_validated": {
@@ -1619,8 +1619,8 @@
      "operation": "godot-smoke",
      "permitted": {
       "rule": "Bash(godot --headless --path . --quit)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "smoke-check that the project loads",
      "production_validated": {
@@ -1657,8 +1657,8 @@
      "operation": "godot-frame",
      "permitted": {
       "rule": "Bash(godot --path . --write-movie .godot/* --quit-after *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "render a frame to look at",
      "production_validated": {
@@ -1695,8 +1695,8 @@
      "operation": "godot-qa-screenshot",
      "permitted": {
       "rule": "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "render the default scene at three screen sizes",
      "production_validated": {
@@ -1733,8 +1733,8 @@
      "operation": "push-task-branch",
      "permitted": {
       "rule": "Bash(git push -u origin SOU-*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "push its own Task Branch",
      "production_validated": {
@@ -1771,8 +1771,8 @@
      "operation": "open-pr",
      "permitted": {
       "rule": "Bash(gh pr create*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "open a pull request",
      "production_validated": {
@@ -1885,8 +1885,8 @@
      "operation": "read-pr-checks",
      "permitted": {
       "rule": "Bash(gh pr view*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "read a PR and its CI results",
      "production_validated": {
@@ -1924,8 +1924,8 @@
      "permitted": {
       "note": "SEC-01: leading-wildcard allow rule, open security item",
       "rule": "Bash(*paperclip-issue-update.sh*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "report on its Task",
      "production_validated": {
@@ -2038,8 +2038,8 @@
      "operation": "create-agents",
      "permitted": {
       "rule": null,
-      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
-      "value": "declared nothing"
+      "source": "config/paperclip/agents.json permissions (declared only; not effective runtime configuration and not verified enforcement; live values: check-agent-drift.py)",
+      "value": "declared permission nothing"
      },
      "plain": "create new agents or skills",
      "production_validated": {
@@ -2085,8 +2085,8 @@
      "operation": "godot-version",
      "permitted": {
       "rule": "Bash(godot --version)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "check the Godot version",
      "production_validated": {
@@ -2123,8 +2123,8 @@
      "operation": "godot-import",
      "permitted": {
       "rule": "Bash(godot --headless --path . --import)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "import project assets (headless)",
      "production_validated": {
@@ -2161,8 +2161,8 @@
      "operation": "godot-smoke",
      "permitted": {
       "rule": "Bash(godot --headless --path . --quit)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "smoke-check that the project loads",
      "production_validated": {
@@ -2199,8 +2199,8 @@
      "operation": "godot-frame",
      "permitted": {
       "rule": "Bash(godot --path . --write-movie .godot/* --quit-after *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "render a frame to look at",
      "production_validated": {
@@ -2237,8 +2237,8 @@
      "operation": "godot-qa-screenshot",
      "permitted": {
       "rule": "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "render the default scene at three screen sizes",
      "production_validated": {
@@ -2275,8 +2275,8 @@
      "operation": "push-task-branch",
      "permitted": {
       "rule": "Bash(git push -u origin SOU-*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "push its own Task Branch",
      "production_validated": {
@@ -2313,8 +2313,8 @@
      "operation": "open-pr",
      "permitted": {
       "rule": "Bash(gh pr create*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "open a pull request",
      "production_validated": {
@@ -2427,8 +2427,8 @@
      "operation": "read-pr-checks",
      "permitted": {
       "rule": "Bash(gh pr view*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "read a PR and its CI results",
      "production_validated": {
@@ -2466,8 +2466,8 @@
      "permitted": {
       "note": "SEC-01: leading-wildcard allow rule, open security item",
       "rule": "Bash(*paperclip-issue-update.sh*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "report on its Task",
      "production_validated": {
@@ -2542,8 +2542,8 @@
      "operation": "create-agents",
      "permitted": {
       "rule": null,
-      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
-      "value": "declared canCreateSkills=true"
+      "source": "config/paperclip/agents.json permissions (declared only; not effective runtime configuration and not verified enforcement; live values: check-agent-drift.py)",
+      "value": "declared permission canCreateSkills=true"
      },
      "plain": "create new agents or skills",
      "production_validated": {
@@ -2978,8 +2978,8 @@
      "operation": "read-pr-checks",
      "permitted": {
       "rule": "Bash(gh pr view*)",
-      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "read a PR and its CI results",
      "production_validated": {
@@ -3017,8 +3017,8 @@
      "permitted": {
       "note": "SEC-01: redirect writes are expected to be denied in -p default mode; untested",
       "rule": "Bash(cat *)",
-      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "write files",
      "production_validated": {
@@ -3056,8 +3056,8 @@
      "permitted": {
       "note": "SEC-01: leading-wildcard allow rule, open security item",
       "rule": "Bash(*paperclip-issue-update.sh*)",
-      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "report on its Task",
      "production_validated": {
@@ -3132,8 +3132,8 @@
      "operation": "create-agents",
      "permitted": {
       "rule": null,
-      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
-      "value": "declared canCreateAgents=true, canCreateSkills=true"
+      "source": "config/paperclip/agents.json permissions (declared only; not effective runtime configuration and not verified enforcement; live values: check-agent-drift.py)",
+      "value": "declared permission canCreateAgents=true, canCreateSkills=true"
      },
      "plain": "create new agents or skills",
      "production_validated": {
@@ -3255,8 +3255,8 @@
      "operation": "read-pr-checks",
      "permitted": {
       "rule": "Bash(gh pr view*)",
-      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "read a PR and its CI results",
      "production_validated": {
@@ -3294,8 +3294,8 @@
      "permitted": {
       "note": "SEC-01: redirect writes are expected to be denied in -p default mode; untested",
       "rule": "Bash(cat *)",
-      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "write files",
      "production_validated": {
@@ -3333,8 +3333,8 @@
      "permitted": {
       "note": "SEC-01: leading-wildcard allow rule, open security item",
       "rule": "Bash(*paperclip-issue-update.sh*)",
-      "source": "config/paperclip/agents.json profile claude-read-only allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-read-only allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "report on its Task",
      "production_validated": {
@@ -3409,8 +3409,8 @@
      "operation": "create-agents",
      "permitted": {
       "rule": null,
-      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
-      "value": "declared canCreateAgents=true, canCreateSkills=true"
+      "source": "config/paperclip/agents.json permissions (declared only; not effective runtime configuration and not verified enforcement; live values: check-agent-drift.py)",
+      "value": "declared permission canCreateAgents=true, canCreateSkills=true"
      },
      "plain": "create new agents or skills",
      "production_validated": {
@@ -3456,8 +3456,8 @@
      "operation": "godot-version",
      "permitted": {
       "rule": "Bash(godot --version)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "check the Godot version",
      "production_validated": {
@@ -3494,8 +3494,8 @@
      "operation": "godot-import",
      "permitted": {
       "rule": "Bash(godot --headless --path . --import)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "import project assets (headless)",
      "production_validated": {
@@ -3532,8 +3532,8 @@
      "operation": "godot-smoke",
      "permitted": {
       "rule": "Bash(godot --headless --path . --quit)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "smoke-check that the project loads",
      "production_validated": {
@@ -3570,8 +3570,8 @@
      "operation": "godot-frame",
      "permitted": {
       "rule": "Bash(godot --path . --write-movie .godot/* --quit-after *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "render a frame to look at",
      "production_validated": {
@@ -3608,8 +3608,8 @@
      "operation": "godot-qa-screenshot",
      "permitted": {
       "rule": "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "render the default scene at three screen sizes",
      "production_validated": {
@@ -3684,8 +3684,8 @@
      "operation": "docker-test",
      "permitted": {
       "rule": "Bash(docker compose run --rm test*)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "run the project's containerised test command",
      "production_validated": {
@@ -3722,8 +3722,8 @@
      "operation": "push-task-branch",
      "permitted": {
       "rule": "Bash(git push -u origin SOU-*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "push its own Task Branch",
      "production_validated": {
@@ -3760,8 +3760,8 @@
      "operation": "open-pr",
      "permitted": {
       "rule": "Bash(gh pr create*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "open a pull request",
      "production_validated": {
@@ -3874,8 +3874,8 @@
      "operation": "read-pr-checks",
      "permitted": {
       "rule": "Bash(gh pr view*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "read a PR and its CI results",
      "production_validated": {
@@ -3913,8 +3913,8 @@
      "permitted": {
       "note": "SEC-01: leading-wildcard allow rule, open security item",
       "rule": "Bash(*paperclip-issue-update.sh*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "report on its Task",
      "production_validated": {
@@ -4027,8 +4027,8 @@
      "operation": "create-agents",
      "permitted": {
       "rule": null,
-      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
-      "value": "declared canCreateSkills=true"
+      "source": "config/paperclip/agents.json permissions (declared only; not effective runtime configuration and not verified enforcement; live values: check-agent-drift.py)",
+      "value": "declared permission canCreateSkills=true"
      },
      "plain": "create new agents or skills",
      "production_validated": {
@@ -4074,8 +4074,8 @@
      "operation": "godot-version",
      "permitted": {
       "rule": "Bash(godot --version)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "check the Godot version",
      "production_validated": {
@@ -4112,8 +4112,8 @@
      "operation": "godot-import",
      "permitted": {
       "rule": "Bash(godot --headless --path . --import)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "import project assets (headless)",
      "production_validated": {
@@ -4150,8 +4150,8 @@
      "operation": "godot-smoke",
      "permitted": {
       "rule": "Bash(godot --headless --path . --quit)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "smoke-check that the project loads",
      "production_validated": {
@@ -4188,8 +4188,8 @@
      "operation": "godot-frame",
      "permitted": {
       "rule": "Bash(godot --path . --write-movie .godot/* --quit-after *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "render a frame to look at",
      "production_validated": {
@@ -4226,8 +4226,8 @@
      "operation": "godot-qa-screenshot",
      "permitted": {
       "rule": "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "render the default scene at three screen sizes",
      "production_validated": {
@@ -4264,8 +4264,8 @@
      "operation": "uiux-search",
      "permitted": {
       "rule": "Bash(python ~/.claude/skills/ui-ux-pro-max/scripts/search.py *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "look up UI styles, palettes and UX rules",
      "production_validated": {
@@ -4302,8 +4302,8 @@
      "operation": "design-md",
      "permitted": {
       "rule": "Bash(design.md *)",
-      "source": "config/paperclip/agents.json extraAllowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json extraAllowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "check design tokens in DESIGN.md",
      "production_validated": {
@@ -4378,8 +4378,8 @@
      "operation": "push-task-branch",
      "permitted": {
       "rule": "Bash(git push -u origin SOU-*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "push its own Task Branch",
      "production_validated": {
@@ -4416,8 +4416,8 @@
      "operation": "open-pr",
      "permitted": {
       "rule": "Bash(gh pr create*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "open a pull request",
      "production_validated": {
@@ -4530,8 +4530,8 @@
      "operation": "read-pr-checks",
      "permitted": {
       "rule": "Bash(gh pr view*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "read a PR and its CI results",
      "production_validated": {
@@ -4569,8 +4569,8 @@
      "permitted": {
       "note": "SEC-01: leading-wildcard allow rule, open security item",
       "rule": "Bash(*paperclip-issue-update.sh*)",
-      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools",
-      "value": "allowed by exact rule"
+      "source": "config/paperclip/agents.json profile claude-workspace-write allowedTools; declared allow rule only, not effective runtime configuration and not verified enforcement",
+      "value": "declared match (not runtime authorization)"
      },
      "plain": "report on its Task",
      "production_validated": {
@@ -4645,8 +4645,8 @@
      "operation": "create-agents",
      "permitted": {
       "rule": null,
-      "source": "config/paperclip/agents.json permissions (declaration, not enforcement; live values: check-agent-drift.py)",
-      "value": "declared canCreateSkills=true"
+      "source": "config/paperclip/agents.json permissions (declared only; not effective runtime configuration and not verified enforcement; live values: check-agent-drift.py)",
+      "value": "declared permission canCreateSkills=true"
      },
      "plain": "create new agents or skills",
      "production_validated": {
@@ -4987,7 +4987,7 @@
  "sources": {
   "origin": "working tree (not in the source commit yet)",
   "path": "config/paperclip/capability-sources.json",
-  "sha256": "bda346808893521365a72046685429a9f0a18684970cc6f506505f8dce118912"
+  "sha256": "8b3f75efa72835263f47e98cd2cf79dff34ed897663202d8db3293704c20a0a2"
  },
  "task_notes": {
   "*": [

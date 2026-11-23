@@ -1,16 +1,17 @@
 {
   "schema": "role-knowledge-manifest.v1",
-  "_comment": "Role Knowledge Manifest (ADR-024, PROPOSED). Input of scripts/setup/gen-role-packages.py. Units select source text by exact heading (and optionally by the opening words of blocks, or by exact lines); a renamed heading stops generation. Every block of a role file must be claimed by exactly one unit. Delivery: always-loaded (core of the managed AGENTS.md), command-reference (the separate exact-command block of the same file), on-demand (listed in the Knowledge index; the agent asks for it), skill (delivered only through an assigned Studio Skill), not-delivered. Normative sentences of a unit that is not always-loaded or command-reference must be verbatim in the delivered text or listed under coverage. Status: approved / proposed / experimental / superseded (docs/conventions.md labels APPROVED / PROPOSED / UNVERIFIED (R&D) / DEPRECATED). Generated output is never edited by hand.",
+  "_comment": "Role Knowledge Manifest (ADR-024, PROPOSED). Input of scripts/setup/gen-role-packages.py. Units select source text by exact heading (and optionally by the opening words of blocks, or by exact lines); a renamed heading stops generation. Every block of a role file must be claimed by exactly one unit. Delivery: always_loaded and command_reference are verified channels in the managed AGENTS.md. skill_assigned is a Paperclip skill, not verified until a run opens it. on_demand_verified is a channel the agent can open without a paste (project Task Workspace). on_request is a fallback, not verified delivery. not_delivered omits a unit only when the same requirements stay in a verified channel (lexical lint, not semantic equivalence). Do not drop a duty because the normative-sentence detector missed its wording. The budget applies only to roles named in applies_to. Status: approved / proposed / experimental / superseded. Generated output is never edited by hand.",
   "budget": {
-    "core_max_bytes": 32000,
-    "command_reference_max_bytes": 6000,
-    "combined_max_bytes": 38000,
-    "authority": "Board decision 2026-11-23 (Knowledge Delivery change set, item 2)"
+    "core_max_bytes": 47000,
+    "command_reference_max_bytes": 8000,
+    "combined_max_bytes": 53000,
+    "applies_to": ["game-artist"],
+    "authority": "Board code review of PR #111 (2026-11-23), game-artist pilot only. The review set 40,000/8,000/48,000 from the 43,307 B role+rules package. Restoring task-contract §2, §6 and §8, security §8 and game-rules §6 (full sections, not a sentence extract) does not fit in 48,000. The cap is the measured text, not a cut. Do not drop mandatory knowledge to hit a size target."
   },
   "package_intro": "# Role instructions: {role}\n\nGenerated from Company OS at the source commit above, because its files are not readable from your Task Workspace. Each part opens with a `kd:unit` comment: source, hash, status, authority. `status=proposed` marks a Board-approved pilot procedure, not an Accepted ADR. This text grants no permission; the permission layer decides what you may run.",
   "command_reference_intro": "## Command reference\n\nExact allowed command forms. Use no other form; when one is refused, follow the refusal protocol above.",
   "company_rules_heading": "## Company and department rules",
-  "on_request_note": "On request (not in your Task Workspace): name the item in your Task comment and ask for its text to be pasted into the Task; never guess its contents.",
+  "on_request_note": "On request is a fallback, not verified delivery. Company OS files are not in your Task Workspace. Name the item in your Task comment and ask for its text to be pasted; never guess its contents. Mandatory rules in this file do not depend on that paste.",
   "roles": {
     "game-artist": {
       "department": "game",
@@ -29,7 +30,7 @@
           ],
           "status": "approved",
           "authority": "role file",
-          "delivery": "always-loaded"
+          "delivery": "always_loaded"
         },
         {
           "id": "ga-role-visual",
@@ -39,7 +40,7 @@
           ],
           "status": "proposed",
           "authority": "AP-v2 pilot 2026-11-22; KA-BD-1/2",
-          "delivery": "always-loaded"
+          "delivery": "always_loaded"
         },
         {
           "id": "ga-role-authority",
@@ -50,7 +51,7 @@
           ],
           "status": "approved",
           "authority": "role file",
-          "delivery": "always-loaded"
+          "delivery": "always_loaded"
         },
         {
           "id": "ga-role-tools",
@@ -65,7 +66,7 @@
           ],
           "status": "approved",
           "authority": "role file; Board 2026-11-22",
-          "delivery": "always-loaded"
+          "delivery": "always_loaded"
         },
         {
           "id": "ga-role-commands",
@@ -80,7 +81,7 @@
           "title": "Tools and skills: exact command forms",
           "status": "approved",
           "authority": "Board D1, 2026-11-21/22; agents.json",
-          "delivery": "command-reference"
+          "delivery": "command_reference"
         },
         {
           "id": "ga-role-io",
@@ -91,7 +92,7 @@
           ],
           "status": "approved",
           "authority": "role file",
-          "delivery": "always-loaded"
+          "delivery": "always_loaded"
         },
         {
           "id": "ga-role-ownership",
@@ -101,7 +102,7 @@
           ],
           "status": "approved",
           "authority": "KA-BD-9 (interim)",
-          "delivery": "on-demand"
+          "delivery": "always_loaded"
         },
         {
           "id": "ga-role-constraints",
@@ -111,7 +112,7 @@
           ],
           "status": "approved",
           "authority": "role file",
-          "delivery": "always-loaded"
+          "delivery": "always_loaded"
         },
         {
           "id": "ga-role-credentials",
@@ -122,7 +123,7 @@
           "dedup": "every sentence is delivered by the secrets system-prompt rule and rules R4.1 (coverage below)",
           "status": "approved",
           "authority": "role file",
-          "delivery": "not-delivered"
+          "delivery": "not_delivered"
         },
         {
           "id": "ga-role-hygiene",
@@ -135,7 +136,7 @@
           ],
           "status": "approved",
           "authority": "role file; task contract",
-          "delivery": "always-loaded"
+          "delivery": "always_loaded"
         },
         {
           "id": "co-rules",
@@ -151,7 +152,7 @@
           ],
           "status": "approved",
           "authority": "rules.md",
-          "delivery": "always-loaded"
+          "delivery": "always_loaded"
         },
         {
           "id": "co-task-blockers",
@@ -161,7 +162,7 @@
           ],
           "status": "approved",
           "authority": "task-contract",
-          "delivery": "on-demand"
+          "delivery": "always_loaded"
         },
         {
           "id": "co-task-reviews",
@@ -171,7 +172,7 @@
           ],
           "status": "approved",
           "authority": "task-contract",
-          "delivery": "on-demand"
+          "delivery": "always_loaded"
         },
         {
           "id": "co-task-contract",
@@ -181,7 +182,7 @@
           ],
           "status": "approved",
           "authority": "task-contract",
-          "delivery": "on-demand"
+          "delivery": "always_loaded"
         },
         {
           "id": "co-approval-boundaries",
@@ -191,7 +192,7 @@
           ],
           "status": "approved",
           "authority": "security-architecture; ADR-009",
-          "delivery": "on-demand"
+          "delivery": "always_loaded"
         },
         {
           "id": "game-originality",
@@ -201,7 +202,7 @@
           ],
           "status": "approved",
           "authority": "game-rules",
-          "delivery": "always-loaded"
+          "delivery": "always_loaded"
         },
         {
           "id": "game-art-ownership",
@@ -211,7 +212,7 @@
           ],
           "status": "approved",
           "authority": "game-rules; KA-BD-9",
-          "delivery": "on-demand"
+          "delivery": "always_loaded"
         },
         {
           "id": "game-generated-art",
@@ -221,7 +222,7 @@
           ],
           "status": "approved",
           "authority": "Board D1, 2026-11-22",
-          "delivery": "always-loaded"
+          "delivery": "always_loaded"
         }
       ],
       "coverage": [
@@ -232,78 +233,6 @@
             "Never print, echo, log or paste a credential or the environment",
             "do not run printenv, env, set, export -p, gh auth token, git credential or any command that shows GH_TOKEN, GITHUB_TOKEN, PAPERCLIP_API_KEY or another secret value",
             "Never print, log, commit, or paste secrets, tokens, or credential files."
-          ]
-        },
-        {
-          "unit": "co-task-blockers",
-          "match": "MUST post this comment",
-          "covered_by": [
-            "When you set a Task `blocked`, post exactly these lines, then the details:",
-            "`Blocked:` one line",
-            "`Unblock owner:` an agent id or Board",
-            "`Check again:` when."
-          ]
-        },
-        {
-          "unit": "co-task-blockers",
-          "match": "The blocker must be a Paperclip blocker relation",
-          "covered_by": [
-            "For a dependency, ask for a Paperclip blocker relation, not only a sentence."
-          ]
-        },
-        {
-          "unit": "co-task-blockers",
-          "match": "**Cancelling a Task:**",
-          "not_applicable": "cancelling Tasks is a project-manager or Board step (daily-triage, task-failure-handling); the game-artist role has no cancellation duty"
-        },
-        {
-          "unit": "co-task-reviews",
-          "match": "A reviewer never edits, rebases or pushes",
-          "covered_by": [
-            "When you review, you MUST NOT edit files, commit, merge, rebase or push the author's branch"
-          ]
-        },
-        {
-          "unit": "co-task-contract",
-          "match": "A Task MUST NOT be released",
-          "covered_by": [
-            "Tasks you create start in `backlog`, unassigned, with the intended assignee, write set, acceptance criteria and reviewer in the description."
-          ]
-        },
-        {
-          "unit": "game-art-ownership",
-          "match": "**Art references live in the project.**",
-          "covered_by": [
-            "read the active project's art references",
-            "If the Task needs an art reference the project does not have, stop and ask"
-          ]
-        },
-        {
-          "unit": "game-art-ownership",
-          "match": "**Technical Artist (not a role yet).**",
-          "not_applicable": "proposing a new role is a director and Board decision (agent-onboarding workflow, R3.1 new Agent Instances); it sets no duty for game-artist"
-        },
-        {
-          "unit": "ga-role-ownership",
-          "match": "Hand technical implementation to",
-          "covered_by": [
-            "You MUST NOT write or change application code, gameplay systems, animation state machines, engine import settings, shaders or shared pipeline code",
-            "Hand them to `gameplay-programmer` with the requirement."
-          ]
-        },
-        {
-          "unit": "ga-role-ownership",
-          "match": "never changes the requirement itself",
-          "covered_by": [
-            "You MUST NOT change gameplay mechanics or balance; `game-designer` owns them.",
-            "gameplay purpose or readability conflicts → `game-designer`"
-          ]
-        },
-        {
-          "unit": "ga-role-ownership",
-          "match": "never approves its own work",
-          "covered_by": [
-            "You MUST NOT approve, merge or mark done your own work"
           ]
         }
       ],
@@ -355,6 +284,7 @@
       "reference_file": "reference/seed-and-identity.md",
       "reference_title": "Seed and identity rules (source text)",
       "reference_intro": "Copied from Company OS at the source commit in the first line; each part names its source. When this text and your role instructions differ, your role instructions win and you say so in your Task comment.",
+      "retrieval_mark": "KD-P1-MARK seed-evidence-not-habit",
       "purpose": "Keep an entity recognisably itself when you refine an approved asset or redraw it in a new pose, view or state, and choose seeds by evidence instead of habit. It adds no rule and grants no permission: every mandatory rule is in your role instructions, and the permission layer decides what you may run.",
       "activation": [
         "the Task asks for a targeted refinement of an approved asset (one listed defect, one region);",

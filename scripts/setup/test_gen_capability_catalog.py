@@ -49,7 +49,7 @@ class Catalog(unittest.TestCase):
             allow, deny = grp.role_rules(self.agents, role)
             for row in r["operations"]:
                 p = row["permitted"]
-                if p["value"].startswith("allowed"):
+                if p["value"].startswith("declared match"):
                     n += 1
                     self.assertTrue(p.get("rule"), (role, row["operation"]))
                     self.assertIn(p["rule"], allow, (role, row["operation"]))

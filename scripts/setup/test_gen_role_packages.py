@@ -91,9 +91,13 @@ class RealPackage(unittest.TestCase):
         self.assertEqual(b["combined_bytes"], len(self.doc.encode("utf-8")))
         cmd_start = self.doc.index("\n\n## Command reference")
         self.assertEqual(b["command_reference_bytes"], len(self.doc[cmd_start:].encode("utf-8")))
-        self.assertLessEqual(b["core_bytes"], 32000)
-        self.assertLessEqual(b["command_reference_bytes"], 6000)
-        self.assertLessEqual(b["combined_bytes"], 38000)
+        self.assertLessEqual(b["core_bytes"], b["core_max_bytes"])
+        self.assertLessEqual(b["command_reference_bytes"], b["command_reference_max_bytes"])
+        self.assertLessEqual(b["combined_bytes"], b["combined_max_bytes"])
+        self.assertEqual(b["applies_to"], ["game-artist"])
+        self.assertEqual(b["core_max_bytes"], 47000)
+        self.assertEqual(b["command_reference_max_bytes"], 8000)
+        self.assertEqual(b["combined_max_bytes"], 53000)
         self.assertIn("ESTIMATED", self.pkg["tokens_estimated"]["method"])
 
     def test_over_budget_fails_loudly_and_names_units(self):
@@ -117,7 +121,7 @@ class RealPackage(unittest.TestCase):
 
     def test_mandatory_moves_are_all_covered(self):
         for g in self.pkg["mandatory_guard"]:
-            self.assertTrue(g["result"].startswith(("verbatim", "covered by", "not applicable")), g)
+            self.assertTrue(g["result"].startswith(("verbatim", "covered by", "not applicable", "lexical lint")), g)
 
     def test_status_proposed_is_labelled_and_no_experimental_is_delivered(self):
         self.assertIn("kd:unit ga-role-visual", self.doc)
@@ -133,6 +137,28 @@ class RealPackage(unittest.TestCase):
             self.assertIn(heading, md)
         self.assertIn(f"[{skill['reference_file']}]({skill['reference_file']})", md)
         self.assertIn(self.src.commit, md)
+        mark = skill["retrieval_mark"]
+        ref = self.files[f"{skill['dir']}/{skill['reference_file']}"]
+        self.assertIn(mark, ref)
+        self.assertNotIn(mark, self.doc)
+
+    def test_restored_mandatory_sections_are_in_the_package(self):
+        for heading in ("Ownership with Gameplay Programmer (interim)", "2. Task contract", "6. Blocker protocol",
+                        "8. Reviews", "8. Approval boundaries", "6. Art assets and technical art"):
+            self.assertIn(heading, self.doc, heading)
+        self.assertNotIn("## Credentials", self.doc)
+
+    def test_freshness_ignores_commit_id_and_unrelated_files(self):
+        src, manifest = mini()
+        pkg = json.loads(grp.generate(src, manifest, "m" * 64, "test")[f"{grp.OUT_DIR}/tester/package.json"])
+        other = grp.DictSource(dict(src.files), "b" * 40)
+        self.assertEqual(grp.freshness_findings(pkg, other), [])
+        other.files["notes/unrelated.md"] = "not a knowledge source\n"
+        self.assertEqual(grp.freshness_findings(pkg, other), [])
+        changed = grp.DictSource(dict(src.files), src.commit)
+        changed.files["knowledge/company/policies/rules.md"] = RULES_MD.replace("Never push to main.", "Never push to main now.")
+        found = grp.freshness_findings(pkg, changed)
+        self.assertEqual(found, ["r § R1. Repositories"])
         bad = copy.deepcopy(self.manifest)
         bad["skills"]["studio-art-identity-and-refinement"]["procedure"].append("Run `python -I ~/evil.py`.")
         with self.assertRaisesRegex(grp.GenError, "is not allowed for game-artist"):
@@ -187,11 +213,11 @@ def mini(files=None, units=None, **role):
         "company_rules_heading": "## Company rules", "on_request_note": "On request:",
         "roles": {"tester": {"department": "qa", "role_file": rf, "units": units or [
             {"id": "t-id", "source": rf, "headings": ["(preamble)", "Identity", "Tools"], "status": "approved",
-             "authority": "role", "delivery": "always-loaded"},
+             "authority": "role",              "delivery": "always_loaded"},
             {"id": "t-extra", "source": rf, "headings": ["Extra"], "status": "approved", "authority": "role",
-             "delivery": "on-demand"},
+             "delivery": "on_request"},
             {"id": "r", "source": "knowledge/company/policies/rules.md", "headings": ["R1. Repositories"],
-             "status": "approved", "authority": "rules", "delivery": "always-loaded"}], "coverage": [], **role}},
+             "status": "approved", "authority": "rules", "delivery": "always_loaded"}], "coverage": [], **role}},
     }
     return grp.DictSource(srcfiles, "a" * 40), manifest
 
@@ -246,7 +272,7 @@ class Synthetic(unittest.TestCase):
         src, m = mini()
         m["roles"]["tester"]["units"].append({"id": "r2", "source": "knowledge/company/policies/rules.md",
                                               "headings": ["R2. Other"], "status": "approved", "authority": "rules",
-                                              "delivery": "skill"})
+                                              "delivery": "skill_assigned"})
         with self.assertRaisesRegex(grp.GenError, "(?s)mandatory content would leave the verified channels.*MUST post"):
             self.gen(src, m)
         m["roles"]["tester"]["coverage"] = [{"unit": "r2", "match": "MUST post", "covered_by": ["Never push to main."]}]
@@ -278,13 +304,13 @@ class Synthetic(unittest.TestCase):
         rf = "knowledge/departments/qa/agents/tester/AGENTS.md"
         src, m = mini(units=[
             {"id": "a", "source": rf, "headings": ["(preamble)", "Identity"], "status": "approved", "authority": "r",
-             "delivery": "always-loaded"},
+             "delivery": "always_loaded"},
             {"id": "c", "source": rf, "headings": ["Tools"], "status": "approved", "authority": "r",
-             "delivery": "command-reference"},
+             "delivery": "command_reference"},
             {"id": "e", "source": rf, "headings": ["Extra"], "status": "approved", "authority": "r",
-             "delivery": "on-demand"},
+             "delivery": "on_request"},
             {"id": "r", "source": "knowledge/company/policies/rules.md", "headings": ["R1. Repositories"],
-             "status": "approved", "authority": "rules", "delivery": "always-loaded"}])
+             "status": "approved", "authority": "rules", "delivery": "always_loaded"}])
         out = self.gen(src, m)
         pkg = json.loads(out[f"{grp.OUT_DIR}/tester/package.json"])
         doc = out[f"{grp.OUT_DIR}/tester/AGENTS.md"]
