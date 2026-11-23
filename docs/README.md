@@ -86,6 +86,9 @@ Conflicts are never resolved silently. They are logged in [architecture/open-que
 ### Operations (`operations/`)
 - [windows-setup.md](operations/windows-setup.md), [installation.md](operations/installation.md), [company-bootstrap.md](operations/company-bootstrap.md), [configuration.md](operations/configuration.md), [runtime-management.md](operations/runtime-management.md), [logging-and-debugging.md](operations/logging-and-debugging.md), [backup-and-recovery.md](operations/backup-and-recovery.md), [troubleshooting.md](operations/troubleshooting.md), [security-operations.md](operations/security-operations.md), [review-package-runbook.md](operations/review-package-runbook.md) (Phase 6 pilot, `PROPOSED`)
 
+### Audits (`audits/`)
+- [audits/README.md](audits/README.md) — Board audit reports; [capability activation 2026-11-23](audits/capability-activation-2026-11-23/INDEX.md)
+
 ### Guides (`guides/`)
 - [ai-agent-onboarding.md](guides/ai-agent-onboarding.md): answers the ten orientation questions every new agent needs.
 
