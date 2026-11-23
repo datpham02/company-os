@@ -39,9 +39,9 @@ class A2A5OfflineTests(unittest.TestCase):
                             "knowledge": ["knowledge/company/standards/task-contract.md"]},
         }}
         self.cat = {"schema": "capability-catalog.v1", "source_commit": "test-source", "roles": {
-            "ui-designer": {"status": "active", "operations": []},
-            "game-artist": {"status": "active", "operations": [operation("pixelfx-list"), operation("pixelfx-render")]},
-            "qa-engineer": {"status": "active", "operations": [operation("godot-smoke", registered="no registry entry", installed="yes")]},
+            "ui-designer": {"status": "active", "department": "company", "operations": []},
+            "game-artist": {"status": "active", "department": "game", "operations": [operation("pixelfx-list"), operation("pixelfx-render")]},
+            "qa-engineer": {"status": "active", "department": "company", "operations": [operation("godot-smoke", registered="no registry entry", installed="yes")]},
         }}
         self._write(cap.ROUTING, self.map)
         self._write(cap.CATALOG, self.cat)
@@ -287,13 +287,21 @@ class A2A5OfflineTests(unittest.TestCase):
             with self.subTest(fixture=name):
                 task = json.loads((ROOT / "tests/fixtures/capability-evidence" / name).read_text(encoding="utf-8"))
                 result = cap.resolve(ROOT, task)
+                preview = cap.canonical_router_policy().resolve(ROOT, task["task_type"])
                 self.assertEqual(result["readiness"], readiness)
                 self.assertFalse(result["execution_authorized"])
                 self.assertFalse(result["agent_invocation_verified"])
                 self.assertFalse(result["effectiveness_verified"])
-                self.assertTrue(all(item["stages"]["EFFECTIVELY_USED"]["status"] == "UNVERIFIED"
-                                    for item in result["requirements"]))
-                preview = cap.canonical_router_policy().resolve(ROOT, task["task_type"])
+                self.assertEqual(result["department"], preview["department"])
+                self.assertIn("department: `" + result["department"] + "`", cap.markdown(result))
+                for item in result["requirements"]:
+                    for stage_name in ("DISCOVERABLE", "ACCESSIBLE", "EFFECTIVELY_USED"):
+                        self.assertEqual(item["stages"][stage_name]["status"], "UNVERIFIED")
+                    if item["kind"] == "operation":
+                        self.assertEqual(item["stages"]["INVOKED"]["status"], "UNVERIFIED")
+                    else:
+                        self.assertEqual(item["stages"]["READ"]["status"], "UNVERIFIED")
+                        self.assertEqual(item["stages"]["INVOKED"]["status"], "NOT_APPLICABLE")
                 self.assertEqual(result["restrictions"], preview["restrictions"])
                 self.assertEqual(result["external_skill_candidates"], preview["external_skill_candidates"])
         godot = cap.resolve(ROOT, json.loads((ROOT / "tests/fixtures/capability-evidence/godot-smoke.json").read_text(encoding="utf-8")))

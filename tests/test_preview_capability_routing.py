@@ -30,8 +30,8 @@ class RouterTests(unittest.TestCase):
             p.write_text(json.dumps(data), encoding="utf-8")
         self.save = save
         self.cat = {"schema": "capability-catalog.v1", "source_commit": "fixture-sha", "roles": {
-            "game-artist": {"status": "active", "operations": [row("pixelfx-list"), row("playwright-mcp", registered="playwright-mcp: candidate", permitted="unknown", approved="no (candidate)")]},
-            "gameplay-programmer": {"status": "paused — security gate", "operations": [row("rea-mcp")]},
+            "game-artist": {"status": "active", "department": "game", "operations": [row("pixelfx-list"), row("playwright-mcp", registered="playwright-mcp: candidate", permitted="unknown", approved="no (candidate)")]},
+            "gameplay-programmer": {"status": "paused — security gate", "department": "game", "operations": [row("rea-mcp")]},
         }}
         self.route = {"schema": "capability-routing.v1", "task_types": {
             "vfx": {"role": "game-artist", "operations": ["pixelfx-list"], "knowledge": ["knowledge/game/asset.md"]},
@@ -121,7 +121,7 @@ class RouterTests(unittest.TestCase):
             router.resolve(self.repo, "vfx")
 
     def test_ui_ux_review_is_advisory_only(self):
-        self.cat["roles"]["ui-designer"] = {"status": "active", "operations": []}
+        self.cat["roles"]["ui-designer"] = {"status": "active", "department": "company", "operations": []}
         self.route["task_types"]["ui-review"] = {
             "role": "ui-designer", "operations": [], "knowledge": []
         }
@@ -238,6 +238,8 @@ class RouterTests(unittest.TestCase):
         catalog = router.read_json(root, router.CATALOG_PATH)
 
         seal = router.resolve(root, "sealwarden-doc-review")
+        self.assertEqual(seal["department"], catalog["roles"]["game-artist"]["department"])
+        self.assertIn("department: `" + seal["department"] + "`", router.task_block(seal))
         self.assertEqual(seal["capabilities"], [])
         self.assertFalse(seal["execution_authorized"])
         self.assertIn("TEXT_REVIEW_ONLY", seal["restrictions"])
@@ -266,6 +268,7 @@ class RouterTests(unittest.TestCase):
         self.assertIn("VERIFY_USER_SCOPE_SKILL_ACCESS", ui["restrictions"])
         self.assertEqual(ui["external_skill_candidates"][0]["id"], "ccgs/ux-review")
         self.assertEqual(ui["external_skill_candidates"][0]["status"], "DEFERRED_NOT_ACTIVE")
+        self.assertEqual(ui["department"], catalog["roles"]["ui-designer"]["department"])
         self.assertFalse(ui["execution_authorized"])
 
         review = router.resolve(root, "ui-review")
@@ -281,6 +284,7 @@ class RouterTests(unittest.TestCase):
             "godot-smoke": "UNREGISTERED_DEPENDENCY",
         })
         self.assertIn("NO_COMMAND_EXECUTION_IN_PREVIEW", godot["restrictions"])
+        self.assertEqual(godot["department"], catalog["roles"]["qa-engineer"]["department"])
         self.assertFalse(godot["execution_authorized"])
         for item in godot["capabilities"]:
             if item.get("sample"):
@@ -296,8 +300,20 @@ class RouterTests(unittest.TestCase):
         paused = router.resolve(root, "gameplay-reverse-engineering")
         self.assertEqual(paused["capabilities"][0]["id"], "rea-mcp")
         self.assertTrue(paused["capabilities"][0]["reason"].startswith("ROLE_NOT_ACTIVE"))
+        self.assertEqual(paused["department"], catalog["roles"]["gameplay-programmer"]["department"])
         self.assertIn("CURSOR_PAUSED", paused["restrictions"])
         self.assertFalse(paused["execution_authorized"])
+
+    def test_department_is_the_catalog_role_field(self):
+        self.cat["roles"]["game-artist"]["department"] = "from-catalog-only"
+        self.save(router.CATALOG_PATH, self.cat)
+        result = router.resolve(self.repo, "vfx")
+        self.assertEqual(result["department"], "from-catalog-only")
+        self.assertIn("department: `from-catalog-only`", router.task_block(result))
+        del self.cat["roles"]["game-artist"]["department"]
+        self.save(router.CATALOG_PATH, self.cat)
+        with self.assertRaisesRegex(ValueError, "no department"):
+            router.resolve(self.repo, "vfx")
 
     def test_unknown_task_type_rejected(self):
         with self.assertRaises(ValueError):

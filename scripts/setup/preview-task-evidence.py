@@ -189,6 +189,7 @@ def resolve(root, task, evidence=None):
             required_blockers.append(ref + ": " + reason)
     return {"schema": "capability-task-evidence-preview.v1", "task_id": task["task_id"],
             "task_type": task["task_type"], "role": task["role"],
+            "department": router_preview["department"],
             "requirements": results, "required_blockers": required_blockers,
             "restrictions": router_preview["restrictions"],
             "external_skill_candidates": router_preview["external_skill_candidates"],
@@ -201,7 +202,7 @@ def resolve(root, task, evidence=None):
 
 def markdown(result):
     lines = ["## Required capabilities (offline A2/A5 preview)",
-             f"- Task: `{result['task_id']}`; role: `{result['role']}`; readiness: `{result['readiness']}`",
+             f"- Task: `{result['task_id']}`; role: `{result['role']}`; department: `{result['department']}`; readiness: `{result['readiness']}`",
              "- Router restrictions: " + (", ".join(f"`{x}`" for x in result["restrictions"]) or "none")]
     lines.append("### External skill candidates (router output; not activated)")
     # Keep the full candidate metadata, including reasons, source pins, license,
