@@ -170,6 +170,16 @@ class A2A5OfflineTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown capability or event"):
             cap.resolve(self.repo, t, evidence)
 
+    def test_fixture_root_cannot_supply_executable_policy(self):
+        # A fixture-provided Python file must never run via --repo.
+        malicious = self.repo / "scripts/setup/preview-capability-routing.py"
+        malicious.write_text("raise RuntimeError('fixture policy was executed')", encoding="utf-8")
+        try:
+            result = cap.resolve(self.repo, self.task("godot-smoke"))
+            self.assertEqual(result["requirements"][0]["blocker"], "UNREGISTERED_DEPENDENCY")
+        finally:
+            malicious.unlink()
+
     def test_path_traversal_rejected(self):
         with self.assertRaises(ValueError):
             cap.safe_path(self.repo, "../secrets")

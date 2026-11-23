@@ -30,11 +30,11 @@ def load(root, path):
 
 
 def catalog_gate(root):
+    # Import policy from THIS checked-out implementation, never the --repo fixture path.
+    # User-supplied fixture roots are data only and may contain untrusted Python files.
     module = ROOT / "scripts/setup/preview-capability-routing.py"
-    # Uses the existing allow/registry/installation block policy, not a second implementation.
-    target = root / "scripts/setup/preview-capability-routing.py"
-    if target.is_file():
-        module = target
+    if not module.is_file():
+        raise ValueError("canonical router policy missing")
     spec = importlib.util.spec_from_file_location("company_capability_preview", module)
     policy = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(policy)
