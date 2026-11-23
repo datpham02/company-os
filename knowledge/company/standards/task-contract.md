@@ -31,14 +31,28 @@ A Task MUST NOT be released (moved out of `backlog`) unless it has every field b
 | Acceptance criteria | Description `## Acceptance criteria` | Checkable statements |
 | **Write set** | Description `## Write set` (also accepted: `## Files owned …`) | Files or folders the Task may change (globs allowed) |
 | Read set | Description `## Read set` | Documents to read. Text the agent cannot reach (other issues, G-8) is pasted or committed to the project repository first |
-| Capability preview (optional; PROPOSED) | Description `## Required capabilities` | Human-reviewed operation IDs / knowledge references from [Capability Router v1 preview](../../../docs/design/capability-router-v1.md). This preview is not a grant or a release requirement until a separate Board decision |
+| Capability preview (optional; PROPOSED) | Description `## Required capabilities` and, when used, `## Optional capabilities` | Human-reviewed operation IDs and knowledge paths from the [Capability Router v1 preview](../../../docs/design/capability-router-v1.md). Each entry has `required: true` or `required: false`, and `availability: UNVERIFIED`. The text does not grant execution, read access, or a tool permission |
 | Blocked by | Paperclip blocker relations | Not only prose |
 | Assignee | Paperclip assignee | An agent whose role and permission profile can do the work |
 | Reviewer | Execution policy `review` stage | A non-author agent, on a different provider where possible ([provider-allocation.md](../policies/provider-allocation.md)) |
 | Approval | Execution policy `approval` stage | Board Operator, for anything that changes code or a governed artefact |
 | Size | — | Fits one PR and one working session. Default limit: about 10 files or 400 changed lines; the project may set its own |
 
-**Capability preview is advisory, not enforced:** The read-only router produces catalog citations and proposed `capability:` / `read-set:` entries. It does not add a mandatory Paperclip field, assign a skill, expand an Agent's read permissions, or approve an operation. Agents must report actual reads, invocations and applied criteria separately; unavailable sources require a blocker. This is a proposed extension pending Board review, not a change to the existing Task release gate.
+**Capability preview is advisory, not enforced:** The read-only router produces catalog citations and proposed `capability:` / `read-set:` entries. It does not add a mandatory Paperclip field, assign a skill, expand an Agent's read permissions, or approve an operation. `required: true` means a missing or blocked item blocks the offline preview. `required: false` keeps that item visible and does not authorize it. `availability: UNVERIFIED` stays until a separate Agent session records a read or an invocation. `DISCOVERABLE`, `ACCESSIBLE`, `INVOKED`, and `EFFECTIVELY_USED` are not satisfied by this text. The router prints `department` from `roles.<role>.department` in the generated Capability Catalog. The Task does not choose a different department. Agents must report actual reads, invocations and applied criteria separately; unavailable sources require a blocker. This is a proposed extension pending Board review, not a change to the existing Task release gate.
+
+```text
+## Required capabilities
+
+- capability: uiux-search
+  required: true
+  availability: UNVERIFIED
+
+## Optional capabilities
+
+- capability: design-md
+  required: false
+  availability: UNVERIFIED
+```
 
 Agent-created Tasks are created in `backlog`, **unassigned**, with the intended assignee written in the description (G-9). The Board, or an agent granted `tasks:assign`, assigns them and adds the review and approval stages and the blockers before release (G-10).
 

@@ -114,6 +114,10 @@ def resolve(repo, task_type):
     if role not in catalog["roles"]:
         raise ValueError("role not in catalog: " + role)
     info = catalog["roles"][role]
+    department = info.get("department")
+    if not isinstance(department, str) or not department.strip():
+        raise ValueError("catalog role has no department: " + role)
+    department = department.strip()
     rows = {x["operation"]: x for x in info["operations"]}
     caps = []
     for operation in spec["operations"]:
@@ -142,6 +146,7 @@ def resolve(repo, task_type):
         "schema": "capability-routing-preview.v1",
         "task_type": task_type,
         "role": role,
+        "department": department,
         "role_status": info["status"],
         "catalog_source_commit": catalog.get("source_commit"),
         "capabilities": caps,
@@ -155,7 +160,7 @@ def resolve(repo, task_type):
 
 def task_block(out):
     lines = ["## Required capabilities (preview — not a permission grant)",
-             f"- Task type: `{out['task_type']}`; intended role: `{out['role']}`",
+             f"- Task type: `{out['task_type']}`; intended role: `{out['role']}`; department: `{out['department']}`",
              f"- Catalog source commit: `{out['catalog_source_commit'] or 'unknown'}`",
              "- `execution_authorized: false` — DECLARED_ONLY is not ACCESSIBLE; this preview does not verify or grant runtime access"]
     for cap in out["capabilities"]:

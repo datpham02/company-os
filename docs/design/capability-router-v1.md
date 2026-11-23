@@ -30,7 +30,7 @@ The Markdown output is a **proposed** `## Required capabilities` block for a Tas
 2. An operation must exist in the catalog for that role. Otherwise `BLOCKED`.
 3. If the role is paused/not active, or an operation references a candidate/evaluating/rejected dependency, output `BLOCKED`.
 4. If approval is absent/negative/open, or the catalog lacks the exact declared Claude Bash allow match, output `BLOCKED`.
-5. An operation passing those **static** checks is `DECLARED_ONLY`, never `ACCESSIBLE`/`INVOKED`/`EFFECTIVELY_USED`. Actual installation, runtime permission, Task authorization, licensing and workspace access must be checked at execution time.
+5. An operation passing those **static** checks is `DECLARED_ONLY`, never `ACCESSIBLE`/`INVOKED`/`EFFECTIVELY_USED`. Actual installation, runtime permission, Task authorization, licensing and workspace access must be checked at execution time. `department` in the preview is the catalog role field `roles.<role>.department`. There is no second department table.
 6. Knowledge files are checked for presence **in this checkout only**. Agent delivery remains `UNVERIFIED` until an Agent run demonstrates it can read them; KD deployment P1–P4 remains on hold.
 7. No generated command is executed, no skill is installed/assigned, no Agent wakes, and no model/image generation takes place.
 
