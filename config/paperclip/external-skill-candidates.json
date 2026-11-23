@@ -1,0 +1,144 @@
+{
+  "schema": "external-skill-candidates.v1",
+  "policy": "REFERENCE_ONLY. Discovery does not approve, install, assign, invoke, or deliver skills. Promotion requires separate Board review and PR.",
+  "sources": [
+    {
+      "id": "ccgs",
+      "repository": "Donchitos/Claude-Code-Game-Studios",
+      "commit": "abc0de79d6ceb0b5d7aa693945849b3937afbe6a",
+      "license": "MIT",
+      "license_file": "LICENSE",
+      "checked_on": "2026-11-23",
+      "integration": "candidate",
+      "mode": "harvest_reference_only",
+      "note": "Upstream is a full Claude Code studio template, not an Agent plugin. Never clone into Company OS or a game repo as a second studio root."
+    }
+  ],
+  "skills": [
+    {
+      "id": "ccgs/art-bible",
+      "source_id": "ccgs",
+      "path": ".claude/skills/art-bible/SKILL.md",
+      "role": "game-artist",
+      "task_types": [
+        "sealwarden-doc-review"
+      ],
+      "review_state": "candidate",
+      "proposal": "EVALUATE_ADAPT_ONLY",
+      "value": "Art Bible visual identity, palette, shape language and asset-standard review gates.",
+      "dependencies": [
+        "project.yaml",
+        "design/art/art-bible.md",
+        ".claude/docs/director-gates/",
+        ".claude/hooks/yaml-helper.sh",
+        "art-director subagent",
+        "AskUserQuestion"
+      ],
+      "blockers": [
+        "Upstream automatic Agent spawn and prompts depend on its own Claude project conventions.",
+        "Company OS visual identity and asset-production rules remain canonical; extract only useful checklists.",
+        "No task write permission or artwork generation granted."
+      ],
+      "migration": "Propose a reviewed Studio Skill excerpt with cited origin, adapted Company OS source paths and approval gates; no copy of upstream hooks or subagent topology."
+    },
+    {
+      "id": "ccgs/asset-spec",
+      "source_id": "ccgs",
+      "path": ".claude/skills/asset-spec/SKILL.md",
+      "role": "game-artist",
+      "task_types": [
+        "sealwarden-doc-review"
+      ],
+      "review_state": "candidate",
+      "proposal": "EVALUATE_ADAPT_ONLY",
+      "value": "Entity and screen inventory, per-character asset specification and handoff checklist.",
+      "dependencies": [
+        "project.yaml",
+        "design/art/art-bible.md or design/game-brief.md",
+        "design/assets/entity-inventory.md",
+        "art-director and technical-artist subagents",
+        "AskUserQuestion"
+      ],
+      "blockers": [
+        "Upstream design paths and templates do not match Company OS or Deckbound.",
+        "Generates prompt text; never authorize model/image generation or asset writes.",
+        "Needs Board-scoped write set, rights and asset provenance checks."
+      ],
+      "migration": "Adapt specification checklist only after coverage/duplication review against studio-art-identity-and-refinement and asset-production rules."
+    },
+    {
+      "id": "ccgs/skill-test",
+      "source_id": "ccgs",
+      "path": ".claude/skills/skill-test/SKILL.md",
+      "role": "project-manager",
+      "task_types": [
+        "skill-quality-review"
+      ],
+      "review_state": "candidate",
+      "proposal": "EVALUATE_ADAPT_ONLY",
+      "value": "Static structural and behavioral skill quality rubric that could strengthen Company OS validation.",
+      "dependencies": [
+        ".claude/scripts/agent-check.sh",
+        ".claude/scripts/compat-inventory.sh",
+        ".claude/docs/config-resolution.md",
+        "project.yaml",
+        "studio-tests/"
+      ],
+      "blockers": [
+        "Framework-specific file layout, hooks and rubric catalogs are not available to Company Agents.",
+        "No shell scripts from external repository may execute as part of this candidate preview.",
+        "Testing coverage is not proof of live Agent skill effectiveness."
+      ],
+      "migration": "Extract framework-independent checks into Company OS unit tests; verify utility on one existing Studio Skill before adoption."
+    },
+    {
+      "id": "ccgs/team-combat",
+      "source_id": "ccgs",
+      "path": ".claude/skills/team-combat/SKILL.md",
+      "role": "game-designer",
+      "task_types": [
+        "combat-design"
+      ],
+      "review_state": "deferred",
+      "proposal": "DEFER_OVERLAPPING_ORCHESTRATION",
+      "value": "Multi-role combat pipeline from design to implementation and QA.",
+      "dependencies": [
+        "game-designer, gameplay-programmer, ai-programmer, technical-artist, sound-designer and qa-tester subagents",
+        "Claude Agent and TaskCreate/TaskUpdate tools",
+        "project.yaml",
+        "decision/approval gates"
+      ],
+      "blockers": [
+        "Duplicates the Paperclip work intake, task ownership, role and review systems.",
+        "Subagent launch and write rules conflict with Company OS authorization and paused Cursor gates."
+      ],
+      "migration": "Do not port the orchestrator. Any future reuse is limited to individual combat-design checklist items under a separate Board decision."
+    },
+    {
+      "id": "ccgs/ux-review",
+      "source_id": "ccgs",
+      "path": ".claude/skills/ux-review/SKILL.md",
+      "role": "ui-designer",
+      "task_types": [
+        "ui-review",
+        "ui-design"
+      ],
+      "review_state": "deferred",
+      "proposal": "DEFER_NATIVE_STUDIO_SKILL_PREFERRED",
+      "value": "Read-only UX/HUD/pattern-library quality gate: accessibility, alignment with GDD and implementation readiness; returns APPROVED / NOT ASSESSED / NEEDS REVISION / MAJOR REVISION NEEDED.",
+      "dependencies": [
+        "design/ux/ specifications or equivalent Task-local documents",
+        "project.yaml platform/input configuration or equivalent Company OS context",
+        "GDD or HUD requirements",
+        ".claude/hooks/yaml-helper.sh and .claude/docs/config-resolution.md (upstream-only)"
+      ],
+      "blockers": [
+        "Native studio-ui-ux-review is proposed in PR #116; do not route upstream CCGS UX review as an active or equivalent skill.",
+        "Upstream file layout, platform configuration and UX templates may not be accessible from Paperclip Task Workspace.",
+        "Upstream skill status/verdict does not replace the independent Company OS review/approval stages.",
+        "User-scope ui-ux-pro-max and google-design-md already overlap in design research; review criteria should be distilled into a nonduplicative, read-only quality rubric."
+      ],
+      "migration": "Use the native skill only after separately approved merge and verified Knowledge Delivery; keep upstream as pinned method/provenance reference, not a parallel skill."
+    }
+  ]
+}

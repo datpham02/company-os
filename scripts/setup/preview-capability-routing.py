@@ -6,6 +6,7 @@ python -I scripts/setup/preview-capability-routing.py --task-type pixel-vfx --fo
 import argparse
 import json
 from pathlib import Path
+import re
 import sys
 
 REPO = Path(__file__).resolve().parents[2]
@@ -27,6 +28,55 @@ def safe_file(repo, name):
 
 def read_json(repo, path):
     return json.loads(safe_file(repo, path).read_text(encoding="utf-8-sig"))
+
+
+EXTERNAL_SKILLS_PATH = "config/paperclip/external-skill-candidates.json"
+
+
+def external_skill_candidates(repo, task_type, role):
+    """Curated offline discovery. All external entries remain unapproved references."""
+    manifest = read_json(repo, EXTERNAL_SKILLS_PATH)
+    if manifest.get("schema") != "external-skill-candidates.v1":
+        raise ValueError("unsupported external skills manifest schema")
+    sources = {}
+    for source in manifest["sources"]:
+        sid, sha, name = source["id"], source["commit"], source["repository"]
+        if sid in sources or not re.fullmatch(r"[a-f0-9]{40}", sha):
+            raise ValueError("duplicate source id or unpinned external source")
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", name):
+            raise ValueError("external source must be a GitHub owner/repo")
+        if source["integration"] != "candidate" or source["mode"] != "harvest_reference_only":
+            raise ValueError("external source cannot be activated by preview")
+        sources[sid] = source
+    seen, results = set(), []
+    for skill in manifest["skills"]:
+        sid, name, path = skill["source_id"], skill["id"], skill["path"]
+        if name in seen or sid not in sources:
+            raise ValueError("duplicate skill or unknown source")
+        seen.add(name)
+        if not re.fullmatch(r"\.claude/skills/[a-z0-9-]+/SKILL\.md", path):
+            raise ValueError("untrusted skill source path: " + path)
+        if skill["review_state"] not in ("candidate", "deferred"):
+            raise ValueError("external skill must remain candidate/deferred")
+        if task_type not in skill["task_types"] or role != skill["role"]:
+            continue
+        source = sources[sid]
+        results.append({
+            "id": name,
+            "status": "CANDIDATE_NOT_ACTIVE" if skill["review_state"] == "candidate" else "DEFERRED_NOT_ACTIVE",
+            "proposal": skill["proposal"],
+            "value": skill["value"],
+            "source": "https://github.com/" + source["repository"] + "/blob/" + source["commit"] + "/" + path,
+            "source_commit": source["commit"],
+            "license": source["license"],
+            "source_file_fetched_at_preview": False,
+            "dependencies": skill["dependencies"],
+            "blockers": skill["blockers"],
+            "migration": skill["migration"],
+            "execution_authorized": False,
+            "knowledge_delivered": False,
+        })
+    return results
 
 
 def block_reason(row, role_status):
@@ -95,6 +145,7 @@ def resolve(repo, task_type):
         "role_status": info["status"],
         "catalog_source_commit": catalog.get("source_commit"),
         "capabilities": caps,
+        "external_skill_candidates": external_skill_candidates(repo, task_type, role),
         "knowledge": knowledge,
         "restrictions": spec.get("restrictions", []),
         "execution_authorized": False,
@@ -111,6 +162,10 @@ def task_block(out):
     for item in out["knowledge"]:
         state = "SOURCE PRESENT" if item["source_present"] else "SOURCE MISSING"
         lines.append(f"- `read-set: {item['path']}` — {state}, delivery UNVERIFIED")
+    for skill in out.get("external_skill_candidates", []):
+        lines.append(f"- `external-skill: {skill['id']}` — **{skill['status']}**; "
+                     f"{skill['proposal']}; source pinned to {skill['source_commit'][:12]}; "
+                     "no import, invocation or skill delivery")
     if out["restrictions"]:
         lines.append("- Restrictions: " + ", ".join(out["restrictions"]))
     lines += ["- Agent must independently verify access and permission before use; log actual read/invoke/application evidence.",
