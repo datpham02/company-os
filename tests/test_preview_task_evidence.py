@@ -111,6 +111,21 @@ class A2A5OfflineTests(unittest.TestCase):
         r = cap.resolve(self.repo, t)
         self.assertEqual(r["readiness"], "BLOCKED")
         self.assertEqual(r["requirements"][1]["blocker"], "SOURCE_MISSING")
+        self.assertFalse(r["execution_authorized"])
+
+    def test_optional_missing_knowledge_stays_unauthorized(self):
+        t = self.task()
+        t["knowledge"][1]["required"] = False
+        (self.repo / t["knowledge"][1]["path"]).unlink()
+        result = cap.resolve(self.repo, t)
+        missing = result["requirements"][1]
+        self.assertEqual(missing["blocker"], "SOURCE_MISSING")
+        self.assertEqual(missing["catalog_status"], "BLOCKED")
+        self.assertEqual(result["readiness"], "PREVIEW_ONLY")
+        self.assertEqual(result["required_blockers"], [])
+        self.assertFalse(result["execution_authorized"])
+        self.assertFalse(result["agent_invocation_verified"])
+        self.assertFalse(result["effectiveness_verified"])
 
     def test_role_mismatch_is_blocked(self):
         task = self.task()
@@ -255,6 +270,42 @@ class A2A5OfflineTests(unittest.TestCase):
         self.assertFalse(usage["receipt_chain_complete"])
         self.assertIn("REVIEWED", usage["missing_chain_stages"])
         self.assertIn("UNVERIFIED", usage["report_verification"])
+
+    def test_a6_fixtures_resolve_against_real_catalog(self):
+        catalog_path = ROOT / cap.CATALOG
+        if not catalog_path.is_file() or not (ROOT / cap.ROUTING).is_file():
+            self.fail("full Company OS catalog and routing map are required for A6 fixtures")
+        expected = {
+            "sealwarden-doc-review.json": "PREVIEW_ONLY",
+            "ui-design.json": "PREVIEW_ONLY",
+            "ui-review.json": "PREVIEW_ONLY",
+            "godot-smoke.json": "BLOCKED",
+            "web-qa-browser.json": "BLOCKED",
+            "gameplay-reverse-engineering.json": "BLOCKED",
+        }
+        for name, readiness in expected.items():
+            with self.subTest(fixture=name):
+                task = json.loads((ROOT / "tests/fixtures/capability-evidence" / name).read_text(encoding="utf-8"))
+                result = cap.resolve(ROOT, task)
+                self.assertEqual(result["readiness"], readiness)
+                self.assertFalse(result["execution_authorized"])
+                self.assertFalse(result["agent_invocation_verified"])
+                self.assertFalse(result["effectiveness_verified"])
+                self.assertTrue(all(item["stages"]["EFFECTIVELY_USED"]["status"] == "UNVERIFIED"
+                                    for item in result["requirements"]))
+                preview = cap.canonical_router_policy().resolve(ROOT, task["task_type"])
+                self.assertEqual(result["restrictions"], preview["restrictions"])
+                self.assertEqual(result["external_skill_candidates"], preview["external_skill_candidates"])
+        godot = cap.resolve(ROOT, json.loads((ROOT / "tests/fixtures/capability-evidence/godot-smoke.json").read_text(encoding="utf-8")))
+        self.assertEqual(godot["required_blockers"], [
+            "operation:godot-version: UNREGISTERED_DEPENDENCY",
+            "operation:godot-import: UNREGISTERED_DEPENDENCY",
+            "operation:godot-smoke: UNREGISTERED_DEPENDENCY",
+        ])
+        browser = cap.resolve(ROOT, json.loads((ROOT / "tests/fixtures/capability-evidence/web-qa-browser.json").read_text(encoding="utf-8")))
+        self.assertEqual(browser["requirements"][0]["blocker"], "DEPENDENCY_NOT_APPROVED")
+        paused = cap.resolve(ROOT, json.loads((ROOT / "tests/fixtures/capability-evidence/gameplay-reverse-engineering.json").read_text(encoding="utf-8")))
+        self.assertTrue(paused["requirements"][0]["blocker"].startswith("ROLE_NOT_ACTIVE"))
 
     def test_real_main_catalog_gates_when_available(self):
         # The full Company OS checkout includes the generated catalog; only that checkout

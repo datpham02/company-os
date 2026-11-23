@@ -156,9 +156,13 @@ def resolve(repo, task_type):
 def task_block(out):
     lines = ["## Required capabilities (preview — not a permission grant)",
              f"- Task type: `{out['task_type']}`; intended role: `{out['role']}`",
-             f"- Catalog source commit: `{out['catalog_source_commit'] or 'unknown'}`"]
+             f"- Catalog source commit: `{out['catalog_source_commit'] or 'unknown'}`",
+             "- `execution_authorized: false` — DECLARED_ONLY is not ACCESSIBLE; this preview does not verify or grant runtime access"]
     for cap in out["capabilities"]:
         lines.append(f"- `capability: {cap['id']}` — **{cap['status']}**; {cap['reason']}")
+        verified = cap.get("runtime_verified")
+        value = verified.get("value") if isinstance(verified, dict) else "not recorded"
+        lines.append(f"  - runtime_verified: `{value}`")
     for item in out["knowledge"]:
         state = "SOURCE PRESENT" if item["source_present"] else "SOURCE MISSING"
         lines.append(f"- `read-set: {item['path']}` — {state}, delivery UNVERIFIED")

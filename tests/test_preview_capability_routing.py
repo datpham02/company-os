@@ -204,6 +204,101 @@ class RouterTests(unittest.TestCase):
         self.assertEqual(len(refs), 1)
         self.assertIn("UNVERIFIED", refs[0]["agent_delivery"])
 
+    def test_rejected_and_evaluating_registry_states_stay_blocked(self):
+        # Controlled fixture only. The production catalog and registry are not modified.
+        for state in ("rejected", "evaluating"):
+            with self.subTest(state=state):
+                self.cat["roles"]["game-artist"]["operations"][0] = row(
+                    "pixelfx-list", registered="fixture-only: " + state)
+                self.save(router.CATALOG_PATH, self.cat)
+                result = router.resolve(self.repo, "vfx")
+                self.assertEqual(result["capabilities"][0]["status"], "BLOCKED")
+                self.assertEqual(result["capabilities"][0]["reason"], "DEPENDENCY_NOT_APPROVED")
+                self.assertFalse(result["execution_authorized"])
+
+    def test_invalid_permission_is_not_enforced_permission(self):
+        self.cat["roles"]["game-artist"]["operations"][0] = row("pixelfx-list", permitted="no allow rule")
+        self.save(router.CATALOG_PATH, self.cat)
+        result = router.resolve(self.repo, "vfx")
+        self.assertEqual(result["capabilities"][0]["reason"], "NO_ENFORCED_PERMISSION: no allow rule")
+        self.assertFalse(result["execution_authorized"])
+
+    def test_markdown_shows_runtime_verified_without_sample_commands(self):
+        result = router.resolve(self.repo, "vfx")
+        result["capabilities"][0]["sample"] = "node example.js --must-not-print"
+        body = router.task_block(result)
+        self.assertIn("runtime_verified: `unknown`", body)
+        self.assertIn("execution_authorized: false", body)
+        self.assertIn("DECLARED_ONLY is not ACCESSIBLE", body)
+        self.assertNotIn("node example.js --must-not-print", body)
+        self.assertNotIn("sample:", body)
+
+    def test_live_a6_scenarios_against_generated_catalog(self):
+        root = ROOT
+        catalog = router.read_json(root, router.CATALOG_PATH)
+
+        seal = router.resolve(root, "sealwarden-doc-review")
+        self.assertEqual(seal["capabilities"], [])
+        self.assertFalse(seal["execution_authorized"])
+        self.assertIn("TEXT_REVIEW_ONLY", seal["restrictions"])
+        self.assertIn("NO_IMAGE_GENERATION", seal["restrictions"])
+        by_id = {item["id"]: item for item in seal["external_skill_candidates"]}
+        self.assertEqual(by_id["ccgs/art-bible"]["status"], "CANDIDATE_NOT_ACTIVE")
+        self.assertEqual(by_id["ccgs/asset-spec"]["status"], "CANDIDATE_NOT_ACTIVE")
+        self.assertTrue(all(item["source_present"] for item in seal["knowledge"]))
+        self.assertTrue(all(not item["execution_authorized"] for item in seal["external_skill_candidates"]))
+        seal_md = router.task_block(seal)
+        self.assertNotIn("capability:", seal_md)
+        self.assertIn("NO_IMAGE_GENERATION", seal_md)
+
+        ui = router.resolve(root, "ui-design")
+        ui_rows = {item["operation"]: item for item in catalog["roles"]["ui-designer"]["operations"]}
+        self.assertEqual({item["id"]: item["status"] for item in ui["capabilities"]},
+                         {"uiux-search": "DECLARED_ONLY", "design-md": "DECLARED_ONLY"})
+        ui_md = router.task_block(ui)
+        for op in ("uiux-search", "design-md"):
+            recorded = ui_rows[op]["runtime_verified"]["value"]
+            self.assertEqual(next(item["runtime_verified"]["value"] for item in ui["capabilities"] if item["id"] == op), recorded)
+            self.assertIn("runtime_verified: `" + recorded + "`", ui_md)
+            sample = ui_rows[op].get("sample")
+            if sample:
+                self.assertNotIn(sample, ui_md)
+        self.assertIn("VERIFY_USER_SCOPE_SKILL_ACCESS", ui["restrictions"])
+        self.assertEqual(ui["external_skill_candidates"][0]["id"], "ccgs/ux-review")
+        self.assertEqual(ui["external_skill_candidates"][0]["status"], "DEFERRED_NOT_ACTIVE")
+        self.assertFalse(ui["execution_authorized"])
+
+        review = router.resolve(root, "ui-review")
+        native = "knowledge/departments/game/skills/studio-ui-ux-review/SKILL.md"
+        native_row = next(item for item in review["knowledge"] if item["path"] == native)
+        self.assertIn("UNVERIFIED", native_row["agent_delivery"])
+        self.assertEqual(review["external_skill_candidates"][0]["status"], "DEFERRED_NOT_ACTIVE")
+
+        godot = router.resolve(root, "godot-smoke")
+        self.assertEqual({item["id"]: item["reason"] for item in godot["capabilities"]}, {
+            "godot-version": "UNREGISTERED_DEPENDENCY",
+            "godot-import": "UNREGISTERED_DEPENDENCY",
+            "godot-smoke": "UNREGISTERED_DEPENDENCY",
+        })
+        self.assertIn("NO_COMMAND_EXECUTION_IN_PREVIEW", godot["restrictions"])
+        self.assertFalse(godot["execution_authorized"])
+        for item in godot["capabilities"]:
+            if item.get("sample"):
+                self.assertNotIn(item["sample"], router.task_block(godot))
+
+        browser = router.resolve(root, "web-qa-browser")
+        self.assertEqual(browser["capabilities"][0]["id"], "playwright-mcp")
+        self.assertEqual(browser["capabilities"][0]["status"], "BLOCKED")
+        self.assertEqual(browser["capabilities"][0]["reason"], "DEPENDENCY_NOT_APPROVED")
+        self.assertIn("NO_CANDIDATE_ACTIVATION", browser["restrictions"])
+        self.assertFalse(browser["execution_authorized"])
+
+        paused = router.resolve(root, "gameplay-reverse-engineering")
+        self.assertEqual(paused["capabilities"][0]["id"], "rea-mcp")
+        self.assertTrue(paused["capabilities"][0]["reason"].startswith("ROLE_NOT_ACTIVE"))
+        self.assertIn("CURSOR_PAUSED", paused["restrictions"])
+        self.assertFalse(paused["execution_authorized"])
+
     def test_unknown_task_type_rejected(self):
         with self.assertRaises(ValueError):
             router.resolve(self.repo, "anything")

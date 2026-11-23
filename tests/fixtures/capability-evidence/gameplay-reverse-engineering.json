@@ -1,0 +1,12 @@
+{
+  "schema": "task-capability-input.v1",
+  "task_id": "A6-GAMEPLAY-REVERSE-ENGINEERING",
+  "task_type": "gameplay-reverse-engineering",
+  "role": "gameplay-programmer",
+  "operations": [
+    {"id": "rea-mcp", "required": true}
+  ],
+  "knowledge": [
+    {"path": "knowledge/company/standards/task-contract.md", "required": true}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "task-capability-input.v1",
+  "task_id": "A6-SEALWARDEN-DOC-REVIEW",
+  "task_type": "sealwarden-doc-review",
+  "role": "game-artist",
+  "operations": [],
+  "knowledge": [
+    {"path": "knowledge/departments/game/skills/studio-art-identity-and-refinement/SKILL.md", "required": true},
+    {"path": "knowledge/departments/game/workflows/asset-production.md", "required": true}
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "task-capability-input.v1",
+  "task_id": "A6-WEB-QA-BROWSER",
+  "task_type": "web-qa-browser",
+  "role": "qa-engineer",
+  "operations": [
+    {"id": "playwright-mcp", "required": true}
+  ],
+  "knowledge": [
+    {"path": "knowledge/company/standards/task-contract.md", "required": true}
+  ]
+}

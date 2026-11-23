@@ -1,0 +1,14 @@
+{
+  "schema": "task-capability-input.v1",
+  "task_id": "A6-GODOT-SMOKE",
+  "task_type": "godot-smoke",
+  "role": "qa-engineer",
+  "operations": [
+    {"id": "godot-version", "required": true},
+    {"id": "godot-import", "required": true},
+    {"id": "godot-smoke", "required": true}
+  ],
+  "knowledge": [
+    {"path": "knowledge/company/standards/task-contract.md", "required": true}
+  ]
+}
