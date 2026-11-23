@@ -12,11 +12,11 @@ SPEC.loader.exec_module(router)
 
 
 def row(operation, approved="Board decision 2026-11-22", permitted="declared match (not runtime authorization)",
-        registered="pixelfx: integrated", kind="bash"):
+        registered="pixelfx: integrated", kind="bash", installed="verified version: fixture"):
     cell = lambda value: {"value": value, "source": "fixture"}
     return {"operation": operation, "kind": kind, "sample": "node example.js",
             "approved": cell(approved), "permitted": cell(permitted), "registered": cell(registered),
-            "runtime_verified": cell("unknown"), "production_validated": cell("unknown")}
+            "installed": cell(installed), "runtime_verified": cell("unknown"), "production_validated": cell("unknown")}
 
 
 class RouterTests(unittest.TestCase):
@@ -73,6 +73,48 @@ class RouterTests(unittest.TestCase):
         self.save(router.ROUTING_PATH, self.route)
         with self.assertRaises(ValueError):
             router.resolve(self.repo, "vfx")
+
+    def test_real_godot_smoke_shaped_row_is_blocked_as_unregistered(self):
+        operation = row(
+            "godot-smoke", approved="Board decision 2026-11-21, OQ-048 / SOU-31",
+            permitted="declared match (not runtime authorization)",
+            registered="no registry entry", installed="yes", kind="bash",
+        )
+        self.assertEqual(
+            router.block_reason(operation, "active"), "UNREGISTERED_DEPENDENCY"
+        )
+
+    def test_not_installed_operation_is_blocked_even_if_approved(self):
+        operation = row("example", registered="example: approved", installed="no")
+        self.assertTrue(router.block_reason(operation, "active").startswith("NOT_INSTALLED"))
+        operation["installed"]["value"] = "not installed (planned)"
+        self.assertTrue(router.block_reason(operation, "active").startswith("NOT_INSTALLED"))
+
+    def test_live_committed_map_against_generated_catalog_all_original_tasks(self):
+        # This is the real repository mapping + generated catalog, NOT temporary fixtures.
+        root = ROOT
+        routing = router.read_json(root, router.ROUTING_PATH)
+        catalog = router.read_json(root, router.CATALOG_PATH)
+        expected = {
+            "sealwarden-doc-review": {},
+            "pixel-vfx": {"pixelfx-list": "DECLARED_ONLY", "pixelfx-render": "DECLARED_ONLY"},
+            "ui-design": {"uiux-search": "DECLARED_ONLY", "design-md": "DECLARED_ONLY"},
+            "godot-smoke": {"godot-version": "BLOCKED", "godot-import": "BLOCKED",
+                            "godot-smoke": "BLOCKED"},
+            "web-qa-browser": {"playwright-mcp": "BLOCKED"},
+            "gameplay-reverse-engineering": {"rea-mcp": "BLOCKED"},
+        }
+        self.assertEqual(set(routing["task_types"]), set(expected))
+        self.assertEqual(catalog["schema"], "capability-catalog.v1")
+        for task_type, expected_ops in expected.items():
+            with self.subTest(task_type=task_type):
+                result = router.resolve(root, task_type)
+                statuses = {row["id"]: row["status"] for row in result["capabilities"]}
+                self.assertEqual(statuses, expected_ops)
+                self.assertFalse(result["execution_authorized"])
+                if task_type == "godot-smoke":
+                    self.assertTrue(all(x["reason"] == "UNREGISTERED_DEPENDENCY"
+                                        for x in result["capabilities"]))
 
     def test_unknown_task_type_rejected(self):
         with self.assertRaises(ValueError):
