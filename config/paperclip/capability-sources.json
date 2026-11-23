@@ -1,0 +1,2023 @@
+{
+ "schema": "capability-catalog-sources.v1",
+ "_comment": "Input of scripts/setup/gen-capability-catalog.py (ADR-024, PROPOSED). It names operations, sample commands and citations only. The generator computes Registered/Installed from dependencies/registry.yaml, Permitted from the allow and deny rules that build-package.py builds from config/paperclip/agents.json, Instructed from the role files, all at the source commit; it verifies every `file` citation verbatim at that commit and fails when one does not verify. An `external` citation names Board R&D evidence outside this repository (rnd workspace, relative path); it is shown as external and is not verified by the generator.",
+ "not_a_grant": "A catalog entry is not a permission grant and never grants permission. Permitted means a declared allow-rule match for a sample command, not effective runtime configuration and not verified enforcement. External evidence stays unverified. A generated view is not delivered knowledge until its distribution is verified. Permission comes only from the enforced adapter configuration and Board decisions; Cursor agents have no enforced allowlist today.",
+ "cites": {
+  "g8_not_started": {
+   "file": "docs/roadmap/art-production-v2-pilot.md",
+   "quote": "| G8 | Not started |"
+  },
+  "cursor_no_isolation": {
+   "external": "board-rnd/knowledge-delivery/cursor_security.md",
+   "quote": "**The two Cursor agents have no technical isolation.**"
+  },
+  "cursor_reads_outside": {
+   "external": "board-rnd/knowledge-delivery/cursor_security.md",
+   "quote": "| Files outside the worktree | **Read, as shown in runs** (section 4.3)."
+  },
+  "kd_bd_7": {
+   "external": "board-rnd/knowledge-governance/decision_register.md",
+   "quote": "| KD-BD-7 | `code-reviewer` absent live | **open**: verify first |"
+  },
+  "kd_bd_8": {
+   "external": "board-rnd/knowledge-governance/decision_register.md",
+   "quote": "| KD-BD-8 | Agent permissions (`canCreateAgents`, `canCreateSkills`, other admin) | **open**: audit |"
+  },
+  "no_skill_script_runs": {
+   "external": "board-rnd/knowledge-delivery/skills_memory_inventory.md",
+   "quote": "No Bash call in SOU logs ran the ui-ux-pro-max or pixelfx scripts."
+  },
+  "outside_refused_GA": {
+   "external": "board-rnd/knowledge-delivery/evidence/SOU-88.json",
+   "quote": "**Required sections: not found.** I could not open that file."
+  },
+  "outside_refused_DR": {
+   "external": "board-rnd/knowledge-delivery/evidence/SOU-90.json",
+   "quote": "**Could I read it:** no."
+  },
+  "outside_refused_PM": {
+   "external": "board-rnd/knowledge-delivery/evidence/SOU-92.json",
+   "quote": "my role instructions point to it, but it is outside my readable directories"
+  },
+  "dead_links": {
+   "external": "board-rnd/knowledge-governance/proposals.md",
+   "quote": "links to Company OS documents are dead at runtime (verified: smoke tests SOU-88, SOU-92)"
+  },
+  "task_branch_push": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "Task-branch push (added for the first Game Repository, 2026-11-03)"
+  },
+  "merge_board": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "Merging stays with the Board (ADR-009)"
+  },
+  "ro_profile": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "For `read-only` roles, drop `--permission-mode acceptEdits` and the `git add` / `git commit` entries."
+  },
+  "gh_pr_view_ro": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "`gh pr view` for the `read-only` profile (Board decision 2026-11-22, SOU-39)"
+  },
+  "reporting_rule": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "The **reporting rule** is required."
+  },
+  "godot_sou49": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "Godot commands for `ui-designer`, `game-artist` and `game-designer` (Board decision 2026-11-21, SOU-49)"
+  },
+  "godot_qa": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "Godot commands for `qa-engineer` (Board decision 2026-11-21, OQ-048 / SOU-31)"
+  },
+  "godot_console_qa": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "Deckbound screenshot command for `qa-engineer` (Board decision 2026-11-21, SOU-34)"
+  },
+  "godot_winget": {
+   "file": "docs/architecture/security-architecture.md",
+   "quote": "`godot_console` is the console build Winget installs next to `godot`."
+  },
+  "godot_runtime_import": {
+   "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+   "quote": "Agents run `godot --headless --import/--quit`"
+  },
+  "godot_runtime_frames": {
+   "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+   "quote": "`--write-movie` and Deckbound's QA screenshot runner (scene path argument); transparent capture and headless behaviour untested"
+  },
+  "vision_review": {
+   "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+   "quote": "`qa-engineer` and `director` open images"
+  },
+  "sou91_image": {
+   "external": "board-rnd/knowledge-delivery/evidence/SOU-91.json",
+   "quote": "**Did I see the image: yes.**"
+  },
+  "kd_bd_4_done": {
+   "external": "board-rnd/knowledge-governance/decision_register.md",
+   "quote": "**done 2026-11-22T17:51Z**: both agents paused via `POST /agents/{id}/pause`"
+  },
+  "pause_r3": {
+   "external": "board-rnd/knowledge-governance/BOARD_REVIEW_R3.md",
+   "quote": "| gameplay-programmer | **paused** (`manual`, 2026-11-22T17:51:00Z)"
+  },
+  "pause_r3_web": {
+   "external": "board-rnd/knowledge-governance/BOARD_REVIEW_R3.md",
+   "quote": "| web-engineer | **paused** (17:51:00Z)"
+  },
+  "task_contract_fields": {
+   "file": "knowledge/company/standards/task-contract.md",
+   "quote": "A Task MUST NOT be released (moved out of `backlog`) unless it has every field below."
+  },
+  "assignee_field": {
+   "file": "knowledge/company/standards/task-contract.md",
+   "quote": "| Assignee | Paperclip assignee | An agent whose role and permission profile can do the work |"
+  },
+  "ga_art_brief": {
+   "file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+   "quote": "If an art Task lacks the lane, target size and background, reference traits or acceptance criteria, set it `blocked`"
+  },
+  "ga_tilde_paths": {
+   "file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+   "quote": "Type these tool paths exactly as `~/…`, unquoted: a quoted path, `$HOME` or an absolute path is refused by the permission layer (tested 2026-11-22)."
+  },
+  "ga_godot_standalone": {
+   "file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+   "quote": "Type each as one standalone command in the Task Workspace root, with no extra flags, redirection or pipes"
+  },
+  "ga_no_region_tool": {
+   "file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+   "quote": "Never feed an image that is not this project's own art; no other way to edit a region is approved."
+  },
+  "ga_not_approved": {
+   "file": "knowledge/departments/game/workflows/asset-production.md",
+   "quote": "Not approved: reference images from outside the project, image-prompt adapters, LoRA, ControlNet, FLUX inpainting."
+  },
+  "ga_write_set_scripts": {
+   "file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+   "quote": "When the method needs a command you are not allowed to run, say `UNVERIFIED: not run — no allowed command`"
+  },
+  "rnd_comfy_no_rule": {
+   "file": "dependencies/registry.yaml",
+   "quote": "No agent allow rule points at it."
+  },
+  "rnd_comfy_board": {
+   "file": "dependencies/registry.yaml",
+   "quote": "started by the Board on 127.0.0.1:8189 with --offline; never by agents"
+  },
+  "rnd_sam31": {
+   "external": "board-rnd/models/checkpoints/sam3.1_multiplex_fp16.provenance.json",
+   "quote": "R&D evaluation only (Board 2026-11-22): segmentation for artwork layer extraction; not a production dependency"
+  },
+  "rnd_sam_legal": {
+   "file": "docs/roadmap/ai-art-animation/README.md",
+   "quote": "SAM 3 custom licence → legal check, else SAM 2.1"
+  },
+  "rnd_vitpose": {
+   "external": "board-rnd/models/pose/vitpose-base-simple/provenance.json",
+   "quote": "R&D evaluation only (Board 2026-11-22): joint localisation / skeleton initialisation for artwork rigging; not a production dependency"
+  },
+  "rnd_krita": {
+   "file": "docs/roadmap/art-production-v2-pilot.md",
+   "quote": "Not producible by agents (no Krita)"
+  },
+  "rnd_unregistered": {
+   "external": "board-rnd/knowledge-audit/BOARD_REVIEW.md",
+   "quote": "Five installed tools have no registry entry: Godot, ffmpeg, Krita, SAM 3.1, ViTPose."
+  },
+  "rnd_toonout": {
+   "file": "dependencies/registry.yaml",
+   "quote": "ToonOut (BiRefNet fine-tuned for anime-style cut-outs) — R&D only"
+  },
+  "rnd_fooocus": {
+   "file": "dependencies/registry.yaml",
+   "quote": "Fooocus inpaint patch for SDXL (inpaint_v26.fooocus.patch + fooocus_inpaint_head.pth) — R&D only"
+  }
+ },
+ "role_status": {
+  "gameplay-programmer": {
+   "status": "paused 2026-11-22T17:51Z — security gate (KD-BD-4)",
+   "cites": [
+    "kd_bd_4_done",
+    "pause_r3",
+    "cursor_no_isolation"
+   ]
+  },
+  "web-engineer": {
+   "status": "paused 2026-11-22T17:51Z — security gate (KD-BD-4)",
+   "cites": [
+    "kd_bd_4_done",
+    "pause_r3_web",
+    "cursor_no_isolation"
+   ]
+  },
+  "code-reviewer": {
+   "status": "not live (KD-BD-7 open)",
+   "cites": [
+    "kd_bd_7"
+   ]
+  }
+ },
+ "operations": [
+  {
+   "id": "comfy-draft",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image generation",
+   "label": "comfy-draft (text-to-image)",
+   "plain": "make concept drafts from a text description (local AI, two approved models)",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/comfy-draft.py --asset a1 --model sdxl --prompt p",
+   "registry": [
+    "comfyui",
+    "sd-xl-base-1-0",
+    "flux1-schnell-fp8"
+   ],
+   "approved": [
+    {
+     "text": "Board decision D1 2026-11-22",
+     "cite": {
+      "file": "docs/architecture/security-architecture.md",
+      "quote": "ComfyUI draft script for `game-artist` (Board decision 2026-11-22, D1)"
+     }
+    }
+   ],
+   "instructed": [
+    "comfy-draft.py"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "used in pilot Tasks SOU-66, SOU-68, SOU-71",
+      "cite": {
+       "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+       "quote": "`comfy-draft.py`, pilot Tasks SOU-66, SOU-68, SOU-71"
+      }
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "comfy-edit-img2img",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image generation",
+   "label": "comfy-edit img2img",
+   "plain": "redraw its own art at low strength to keep a family consistent",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/comfy-edit.py img2img --asset a1 --model sdxl --input art_src/a.png --prompt p --denoise 0.3",
+   "registry": [
+    "comfyui",
+    "sd-xl-base-1-0",
+    "flux1-schnell-fp8"
+   ],
+   "approved": [
+    {
+     "text": "Board decision 2026-11-22, Phase 2A stage 1",
+     "cite": {
+      "file": "docs/architecture/security-architecture.md",
+      "quote": "ComfyUI edit script for `game-artist` (Board decision 2026-11-22, Phase 2A stage 1 approved early after SOU-64's tool capability failure)"
+     }
+    }
+   ],
+   "instructed": [
+    "comfy-edit.py img2img"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "G7(c) 2026-11-22 (installed copy, both models)",
+      "cite": {
+       "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+       "quote": "`comfy-edit.py img2img` (SDXL, FLUX), G7(c) 2026-11-22"
+      }
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "comfy-edit-inpaint",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image generation",
+   "label": "comfy-edit inpaint (SDXL)",
+   "plain": "repaint or remove one masked region of its own art",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/comfy-edit.py inpaint --asset a1 --model sdxl --input art_src/a.png --mask art_src/m.png --prompt p",
+   "registry": [
+    "comfyui",
+    "sd-xl-base-1-0"
+   ],
+   "approved": [
+    {
+     "text": "Board decision 2026-11-22, Phase 2A stage 1",
+     "cite": {
+      "file": "docs/architecture/security-architecture.md",
+      "quote": "ComfyUI edit script for `game-artist` (Board decision 2026-11-22, Phase 2A stage 1 approved early after SOU-64's tool capability failure)"
+     }
+    }
+   ],
+   "instructed": [
+    "comfy-edit.py inpaint"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "SOU-64 run 2, one removal case; inserting new objects failed 0/10",
+      "cite": {
+       "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+       "quote": "SOU-64 run 2 removed a lantern cleanly (one case, not yet a measured capability)"
+      }
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "comfy-edit-matte",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image generation",
+   "label": "comfy-edit matte (BiRefNet)",
+   "plain": "cut a figure out of its backdrop",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/comfy-edit.py matte --asset a1 --input art_src/a.png",
+   "registry": [
+    "birefnet",
+    "comfyui"
+   ],
+   "approved": [
+    {
+     "text": "Board decision 2026-11-22 after spike S7",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "integrationStatus: integrated   # Board decision 2026-11-22 after spike S7: comfy-edit.py matte"
+     }
+    }
+   ],
+   "instructed": [
+    "comfy-edit.py matte"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "G7(d) 2026-11-22: 11/11 SOU-81 images passed (repository copy, production ComfyUI)",
+      "cite": {
+       "file": "docs/operations/runtime-management.md",
+       "quote": "11/11 passed, leftover backdrop 0.003"
+      }
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "art-ops-info",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image operations (art-ops)",
+   "label": "art-ops info",
+   "plain": "inspect image size, alpha and budget",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/art-ops.py info a.png",
+   "registry": [
+    "comfyui-embedded-python"
+   ],
+   "approved": [
+    {
+     "text": "Board decision D1 2026-11-22 (ComfyUI used through comfy-draft.py and art-ops.py)",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Board decision D1 2026-11-22: installed and used through comfy-draft.py and art-ops.py"
+     }
+    }
+   ],
+   "instructed": [
+    "`info`"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "G7(a) smoke of the installed copy",
+      "cite": {
+       "file": "docs/operations/runtime-management.md",
+       "quote": "art-ops, from a scratch folder with `.git`: `info`, `resize --filter nearest` into `art_src/`, `contact --bg"
+      }
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "art-ops-crop",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image operations (art-ops)",
+   "label": "art-ops crop",
+   "plain": "crop an image",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/art-ops.py crop a.png",
+   "registry": [
+    "comfyui-embedded-python"
+   ],
+   "approved": [
+    {
+     "text": "Board decision D1 2026-11-22",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Board decision D1 2026-11-22: installed and used through comfy-draft.py and art-ops.py"
+     }
+    }
+   ],
+   "instructed": [
+    "`crop`"
+   ],
+   "runtime_default": "no",
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "art-ops-resize",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image operations (art-ops)",
+   "label": "art-ops resize",
+   "plain": "resize (nearest for pixel art)",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/art-ops.py resize a.png",
+   "registry": [
+    "comfyui-embedded-python"
+   ],
+   "approved": [
+    {
+     "text": "Board decision D1 2026-11-22",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Board decision D1 2026-11-22: installed and used through comfy-draft.py and art-ops.py"
+     }
+    }
+   ],
+   "instructed": [
+    "`resize`"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "G7(a) smoke of the installed copy",
+      "cite": {
+       "file": "docs/operations/runtime-management.md",
+       "quote": "`resize --filter nearest` into `art_src/`"
+      }
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "art-ops-key",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image operations (art-ops)",
+   "label": "art-ops key",
+   "plain": "make a flat backdrop colour transparent (icons, UI shapes)",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/art-ops.py key a.png",
+   "registry": [
+    "comfyui-embedded-python"
+   ],
+   "approved": [
+    {
+     "text": "Board decision D1 2026-11-22",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Board decision D1 2026-11-22: installed and used through comfy-draft.py and art-ops.py"
+     }
+    }
+   ],
+   "instructed": [
+    "`key`"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "works on flat backdrops; cast shadows defeat it (SOU-64-F)",
+      "cite": {
+       "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+       "quote": "`art-ops key` (colour key, border-connected) works on flat backdrops; cast shadows defeat it (SOU-64-F)"
+      }
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "art-ops-trim",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image operations (art-ops)",
+   "label": "art-ops trim",
+   "plain": "trim transparent borders",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/art-ops.py trim a.png",
+   "registry": [
+    "comfyui-embedded-python"
+   ],
+   "approved": [
+    {
+     "text": "Board decision D1 2026-11-22",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Board decision D1 2026-11-22: installed and used through comfy-draft.py and art-ops.py"
+     }
+    }
+   ],
+   "instructed": [
+    "`trim`"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "Board recipe tested 2026-11-22 (compose/trim/diff)",
+      "cite": {
+       "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+       "quote": "`art-ops compose`/`trim`/`diff`; Board recipe tested 2026-11-22"
+      }
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "art-ops-canvas",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image operations (art-ops)",
+   "label": "art-ops canvas",
+   "plain": "pad an image to a canvas size",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/art-ops.py canvas a.png",
+   "registry": [
+    "comfyui-embedded-python"
+   ],
+   "approved": [
+    {
+     "text": "Board decision D1 2026-11-22",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Board decision D1 2026-11-22: installed and used through comfy-draft.py and art-ops.py"
+     }
+    }
+   ],
+   "instructed": [
+    "`canvas`"
+   ],
+   "runtime_default": "no",
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "art-ops-sheet",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image operations (art-ops)",
+   "label": "art-ops sheet",
+   "plain": "pack frames into a sprite sheet",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/art-ops.py sheet a.png",
+   "registry": [
+    "comfyui-embedded-python"
+   ],
+   "approved": [
+    {
+     "text": "Board decision D1 2026-11-22",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Board decision D1 2026-11-22: installed and used through comfy-draft.py and art-ops.py"
+     }
+    }
+   ],
+   "instructed": [
+    "`sheet`"
+   ],
+   "runtime_default": "no",
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "art-ops-grade",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image operations (art-ops)",
+   "label": "art-ops grade",
+   "plain": "adjust contrast and saturation for checks",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/art-ops.py grade a.png",
+   "registry": [
+    "comfyui-embedded-python"
+   ],
+   "approved": [
+    {
+     "text": "Board decision D1 2026-11-22",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Board decision D1 2026-11-22: installed and used through comfy-draft.py and art-ops.py"
+     }
+    }
+   ],
+   "instructed": [
+    "`grade`"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "used for SOU-66 acceptance checks",
+      "cite": {
+       "file": "docs/roadmap/art-production-v2-pilot.md",
+       "quote": "Yes (`art-ops info`, `grade --contrast` + `resize` previews, review)"
+      }
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "art-ops-contact",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image operations (art-ops)",
+   "label": "art-ops contact",
+   "plain": "make a review sheet of candidates",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/art-ops.py contact a.png",
+   "registry": [
+    "comfyui-embedded-python"
+   ],
+   "approved": [
+    {
+     "text": "Board decision D1 2026-11-22",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Board decision D1 2026-11-22: installed and used through comfy-draft.py and art-ops.py"
+     }
+    }
+   ],
+   "instructed": [
+    "`contact`"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "G7(a) smoke of the installed copy",
+      "cite": {
+       "file": "docs/operations/runtime-management.md",
+       "quote": "`contact --bg"
+      }
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "art-ops-mask",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image operations (art-ops)",
+   "label": "art-ops mask",
+   "plain": "make a mask for inpainting or compositing",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/art-ops.py mask a.png",
+   "registry": [
+    "comfyui-embedded-python"
+   ],
+   "approved": [
+    {
+     "text": "Board decision 2026-11-22 (2A stage 1 with the 2B mask/compose/diff subset)",
+     "cite": {
+      "file": "docs/roadmap/art-production-v2-phase2.md",
+      "quote": "the 2B `mask`, `compose` and `diff` subset"
+     }
+    }
+   ],
+   "instructed": [
+    "`mask`"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "available 2026-11-22",
+      "cite": {
+       "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+       "quote": "`art-ops mask` (2026-11-22)"
+      }
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "art-ops-compose",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image operations (art-ops)",
+   "label": "art-ops compose",
+   "plain": "place an image over a background",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/art-ops.py compose a.png",
+   "registry": [
+    "comfyui-embedded-python"
+   ],
+   "approved": [
+    {
+     "text": "Board decision 2026-11-22 (2A stage 1 with the 2B mask/compose/diff subset)",
+     "cite": {
+      "file": "docs/roadmap/art-production-v2-phase2.md",
+      "quote": "the 2B `mask`, `compose` and `diff` subset"
+     }
+    }
+   ],
+   "instructed": [
+    "`compose`"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "Board recipe tested 2026-11-22",
+      "cite": {
+       "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+       "quote": "`art-ops compose`/`trim`/`diff`; Board recipe tested 2026-11-22"
+      }
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "art-ops-diff",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "Image operations (art-ops)",
+   "label": "art-ops diff",
+   "plain": "show what changed between two images",
+   "kind": "bash",
+   "sample": "python -I ~/game-studio-workspace/tools/art-ops.py diff a.png b.png",
+   "registry": [
+    "comfyui-embedded-python"
+   ],
+   "approved": [
+    {
+     "text": "Board decision 2026-11-22 (2A stage 1 with the 2B mask/compose/diff subset)",
+     "cite": {
+      "file": "docs/roadmap/art-production-v2-phase2.md",
+      "quote": "the 2B `mask`, `compose` and `diff` subset"
+     }
+    }
+   ],
+   "instructed": [
+    "`diff`"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "Board recipe tested 2026-11-22",
+      "cite": {
+       "file": "docs/roadmap/ai-art-animation/01-capability-audit.md",
+       "quote": "`art-ops compose`/`trim`/`diff`; Board recipe tested 2026-11-22"
+      }
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "G8 not started",
+      "cite": "g8_not_started"
+     }
+    ]
+   }
+  },
+  {
+   "id": "pixelfx-list",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "PixelFX",
+   "label": "pixelfx list.mjs",
+   "plain": "search the pixel-art effects library",
+   "kind": "bash",
+   "sample": "node ~/tools/pixelfx/tools/list.mjs fire",
+   "registry": [
+    "pixelfx"
+   ],
+   "approved": [
+    {
+     "text": "Board 2026-11-21: reviewed, approved, installed",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Board 2026-11-21: reviewed, approved, installed at $HOME/tools/pixelfx"
+     }
+    }
+   ],
+   "instructed": [
+    "list.mjs"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "no agent run in SOU logs",
+      "verdict": "no",
+      "cite": "no_skill_script_runs"
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "not tested in any game",
+      "cite": {
+       "file": "dependencies/registry.yaml",
+       "quote": "Not tested in any game."
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "pixelfx-render",
+   "roles": [
+    "game-artist"
+   ],
+   "group": "PixelFX",
+   "label": "pixelfx render.mjs --sheet",
+   "plain": "export one effect as a sprite sheet",
+   "kind": "bash",
+   "sample": "node ~/tools/pixelfx/tools/render.mjs fire/burst --sheet --out art_src/fx",
+   "registry": [
+    "pixelfx"
+   ],
+   "approved": [
+    {
+     "text": "Board 2026-11-21: reviewed, approved, installed",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Board 2026-11-21: reviewed, approved, installed at $HOME/tools/pixelfx"
+     }
+    }
+   ],
+   "instructed": [
+    "render.mjs"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "no agent run in SOU logs",
+      "verdict": "no",
+      "cite": "no_skill_script_runs"
+     }
+    ]
+   },
+   "production": {
+    "*": [
+     {
+      "verdict": "no",
+      "text": "not tested in any game",
+      "cite": {
+       "file": "dependencies/registry.yaml",
+       "quote": "Not tested in any game."
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "godot-version",
+   "roles": [
+    "game-artist",
+    "ui-designer",
+    "game-designer",
+    "qa-engineer"
+   ],
+   "group": "Godot",
+   "label": "godot --version",
+   "plain": "check the Godot version",
+   "kind": "bash",
+   "sample": "godot --version",
+   "registry": [],
+   "installed_cite": "godot_winget",
+   "approved": {
+    "qa-engineer": [
+     {
+      "text": "Board decision 2026-11-21, OQ-048 / SOU-31",
+      "cite": "godot_qa"
+     }
+    ],
+    "*": [
+     {
+      "text": "Board decision 2026-11-21, SOU-49",
+      "cite": "godot_sou49"
+     }
+    ]
+   },
+   "instructed": [
+    "godot --version"
+   ],
+   "runtime_default": "unknown",
+   "production_default": "unknown",
+   "registry_absent": "godot"
+  },
+  {
+   "id": "godot-import",
+   "roles": [
+    "game-artist",
+    "ui-designer",
+    "game-designer",
+    "qa-engineer"
+   ],
+   "group": "Godot",
+   "label": "godot --headless --import",
+   "plain": "import project assets (headless)",
+   "kind": "bash",
+   "sample": "godot --headless --path . --import",
+   "registry": [],
+   "installed_cite": "godot_winget",
+   "approved": {
+    "qa-engineer": [
+     {
+      "text": "Board decision 2026-11-21, OQ-048 / SOU-31",
+      "cite": "godot_qa"
+     }
+    ],
+    "*": [
+     {
+      "text": "Board decision 2026-11-21, SOU-49",
+      "cite": "godot_sou49"
+     }
+    ]
+   },
+   "instructed": [
+    "--headless --path . --import"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "agents run it (role not named in source)",
+      "cite": "godot_runtime_import"
+     }
+    ]
+   },
+   "production_default": "unknown",
+   "registry_absent": "godot"
+  },
+  {
+   "id": "godot-smoke",
+   "roles": [
+    "game-artist",
+    "ui-designer",
+    "game-designer",
+    "qa-engineer"
+   ],
+   "group": "Godot",
+   "label": "godot --headless --quit",
+   "plain": "smoke-check that the project loads",
+   "kind": "bash",
+   "sample": "godot --headless --path . --quit",
+   "registry": [],
+   "installed_cite": "godot_winget",
+   "approved": {
+    "qa-engineer": [
+     {
+      "text": "Board decision 2026-11-21, OQ-048 / SOU-31",
+      "cite": "godot_qa"
+     }
+    ],
+    "*": [
+     {
+      "text": "Board decision 2026-11-21, SOU-49",
+      "cite": "godot_sou49"
+     }
+    ]
+   },
+   "instructed": [
+    "--headless --path . --quit"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "agents run it (role not named in source)",
+      "cite": "godot_runtime_import"
+     }
+    ]
+   },
+   "production_default": "unknown",
+   "registry_absent": "godot"
+  },
+  {
+   "id": "godot-frame",
+   "roles": [
+    "game-artist",
+    "ui-designer",
+    "game-designer",
+    "qa-engineer"
+   ],
+   "group": "Godot",
+   "label": "godot --write-movie (one frame)",
+   "plain": "render a frame to look at",
+   "kind": "bash",
+   "sample": "godot --path . --write-movie .godot/shot.png --quit-after 2",
+   "registry": [],
+   "installed_cite": "godot_winget",
+   "approved": {
+    "qa-engineer": [
+     {
+      "text": "Board decision 2026-11-21, OQ-048 / SOU-31",
+      "cite": "godot_qa"
+     }
+    ],
+    "*": [
+     {
+      "text": "Board decision 2026-11-21, SOU-49",
+      "cite": "godot_sou49"
+     }
+    ]
+   },
+   "instructed": [
+    "--write-movie"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "available, opaque only; transparent capture untested (role not named)",
+      "cite": "godot_runtime_frames"
+     }
+    ]
+   },
+   "production_default": "unknown",
+   "registry_absent": "godot"
+  },
+  {
+   "id": "godot-qa-screenshot",
+   "roles": [
+    "game-artist",
+    "ui-designer",
+    "game-designer",
+    "qa-engineer"
+   ],
+   "group": "Godot",
+   "label": "godot_console QA screenshot runner (Deckbound)",
+   "plain": "render the default scene at three screen sizes",
+   "kind": "bash",
+   "sample": "godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --",
+   "registry": [],
+   "installed_cite": "godot_winget",
+   "approved": {
+    "qa-engineer": [
+     {
+      "text": "Board decision 2026-11-21, SOU-34",
+      "cite": "godot_console_qa"
+     }
+    ],
+    "*": [
+     {
+      "text": "Board decision 2026-11-21, SOU-49",
+      "cite": "godot_sou49"
+     }
+    ]
+   },
+   "instructed": [
+    "qa_screenshot_runner"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "available, opaque only (role not named)",
+      "cite": "godot_runtime_frames"
+     }
+    ]
+   },
+   "production_default": "unknown",
+   "registry_absent": "godot"
+  },
+  {
+   "id": "uiux-search",
+   "roles": [
+    "ui-designer"
+   ],
+   "group": "Design references",
+   "label": "ui-ux-pro-max search.py",
+   "plain": "look up UI styles, palettes and UX rules",
+   "kind": "bash",
+   "sample": "python ~/.claude/skills/ui-ux-pro-max/scripts/search.py dashboard",
+   "registry": [
+    "ui-ux-pro-max-skill"
+   ],
+   "approved": [
+    {
+     "text": "security review 2026-11-04, approved with conditions (GAM-35)",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Security review: 2026-11-04, npm 2.15.0, approved with conditions (GAM-35)"
+     }
+    }
+   ],
+   "instructed": [
+    "ui-ux-pro-max/scripts/search.py"
+   ],
+   "runtime": {
+    "*": [
+     {
+      "text": "no agent run in SOU logs",
+      "verdict": "no",
+      "cite": "no_skill_script_runs"
+     }
+    ]
+   },
+   "production_default": "no"
+  },
+  {
+   "id": "design-md",
+   "roles": [
+    "ui-designer"
+   ],
+   "group": "Design references",
+   "label": "design.md lint",
+   "plain": "check design tokens in DESIGN.md",
+   "kind": "bash",
+   "sample": "design.md lint DESIGN.md",
+   "registry": [
+    "google-design-md"
+   ],
+   "approved": [
+    {
+     "text": "security review 2026-11-04, approved (GAM-19)",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "approved (GAM-19)"
+     }
+    }
+   ],
+   "instructed": [
+    "design.md lint"
+   ],
+   "runtime_default": "unknown",
+   "production_default": "unknown"
+  },
+  {
+   "id": "playwright-mcp",
+   "roles": [
+    "ui-designer",
+    "qa-engineer"
+   ],
+   "group": "Testing",
+   "label": "Playwright MCP",
+   "plain": "drive a browser for UI tests",
+   "kind": "mcp",
+   "sample": "mcp__playwright",
+   "registry": [
+    "playwright-mcp"
+   ],
+   "approved": [],
+   "approved_text": "no (registry status candidate)",
+   "instructed": [
+    "Playwright MCP"
+   ],
+   "runtime_default": "no",
+   "production_default": "no"
+  },
+  {
+   "id": "docker-test",
+   "roles": [
+    "qa-engineer",
+    "web-engineer"
+   ],
+   "group": "Testing",
+   "label": "docker compose run --rm test",
+   "plain": "run the project's containerised test command",
+   "kind": "bash",
+   "sample": "docker compose run --rm test",
+   "registry": [
+    "docker-desktop"
+   ],
+   "approved": [
+    {
+     "text": "registry approved; condition: the Board starts the stack",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Board starts the stack; agents only run the listed test command."
+     }
+    }
+   ],
+   "instructed": [
+    "docker-desktop"
+   ],
+   "runtime_default": "unknown",
+   "production_default": "unknown"
+  },
+  {
+   "id": "rea-mcp",
+   "roles": [
+    "gameplay-programmer"
+   ],
+   "group": "Reverse engineering",
+   "label": "REA MCP (static analysis)",
+   "plain": "study how a permitted target works (static only)",
+   "kind": "mcp",
+   "sample": "mcp__rea",
+   "registry": [
+    "rea"
+   ],
+   "approved": [
+    {
+     "text": "Board 2026-11-21, with conditions; not installed (OQ-046)",
+     "cite": {
+      "file": "dependencies/registry.yaml",
+      "quote": "Board 2026-11-21: approved with the conditions in notes; not installed (Cursor MCP scope open, OQ-046)"
+     }
+    }
+   ],
+   "installed_cite": {
+    "file": "dependencies/registry.yaml",
+    "quote": "not installed for agents, not trial-run"
+   },
+   "installed_text": "no",
+   "instructed": [
+    "REA"
+   ],
+   "runtime_default": "no",
+   "production_default": "no"
+  },
+  {
+   "id": "push-task-branch",
+   "roles": [
+    "game-artist",
+    "ui-designer",
+    "game-designer",
+    "qa-engineer",
+    "gameplay-programmer",
+    "web-engineer"
+   ],
+   "group": "Git and review",
+   "label": "push the Task Branch",
+   "plain": "push its own Task Branch",
+   "kind": "bash",
+   "sample": "git push -u origin SOU-99-example",
+   "registry": [
+    "github-cli"
+   ],
+   "approved": [
+    {
+     "text": "workspace-write profile, 2026-11-03",
+     "cite": "task_branch_push"
+    }
+   ],
+   "instructed": [
+    "git push -u origin",
+    "push the Task Branch",
+    "push it, open a PR"
+   ],
+   "runtime_default": "unknown",
+   "production_default": "unknown"
+  },
+  {
+   "id": "open-pr",
+   "roles": [
+    "game-artist",
+    "ui-designer",
+    "game-designer",
+    "qa-engineer",
+    "gameplay-programmer",
+    "web-engineer"
+   ],
+   "group": "Git and review",
+   "label": "gh pr create",
+   "plain": "open a pull request",
+   "kind": "bash",
+   "sample": "gh pr create --base main --head SOU-99-example --title t --body b",
+   "registry": [
+    "github-cli"
+   ],
+   "approved": [
+    {
+     "text": "workspace-write profile, 2026-11-03",
+     "cite": "task_branch_push"
+    }
+   ],
+   "instructed": [
+    "gh pr create",
+    "open PRs",
+    "open a PR",
+    "open the PR"
+   ],
+   "runtime_default": "unknown",
+   "production_default": "unknown"
+  },
+  {
+   "id": "push-main",
+   "roles": [
+    "game-artist",
+    "ui-designer",
+    "game-designer",
+    "qa-engineer",
+    "gameplay-programmer",
+    "web-engineer",
+    "director",
+    "producer",
+    "project-manager"
+   ],
+   "group": "Git and review",
+   "label": "push to main",
+   "plain": "push to main",
+   "expect": "refused",
+   "kind": "bash",
+   "sample": "git push origin main",
+   "registry": [],
+   "approved": [],
+   "approved_text": "no (ADR-009: merging stays with the Board)",
+   "approved_cite": "merge_board",
+   "instructed": [
+    "Default Branch",
+    "push main",
+    "push to main"
+   ],
+   "runtime": {
+    "game-artist": [
+     {
+      "text": "refused in GA-1 answer (no command run)",
+      "cite": {
+       "external": "board-rnd/knowledge-delivery/evidence/SOU-88.json",
+       "quote": "**2. \"Push it straight to main.\"** I refuse."
+      }
+     }
+    ]
+   },
+   "runtime_default": "unknown",
+   "production_default": "n/a"
+  },
+  {
+   "id": "merge-pr",
+   "roles": [
+    "game-artist",
+    "ui-designer",
+    "game-designer",
+    "qa-engineer",
+    "gameplay-programmer",
+    "web-engineer",
+    "director",
+    "producer",
+    "project-manager"
+   ],
+   "group": "Git and review",
+   "label": "gh pr merge",
+   "plain": "merge a pull request",
+   "expect": "refused",
+   "kind": "bash",
+   "sample": "gh pr merge 12",
+   "registry": [],
+   "approved": [],
+   "approved_text": "no (Board only)",
+   "approved_cite": "merge_board",
+   "instructed": [
+    "gh pr merge",
+    "Default Branch, merge",
+    "MUST NOT approve, merge",
+    "MUST NOT approve merges",
+    "write game code, merge",
+    "commit, merge, rebase"
+   ],
+   "runtime_default": "unknown",
+   "production_default": "n/a"
+  },
+  {
+   "id": "read-pr-checks",
+   "roles": [
+    "director",
+    "producer",
+    "project-manager",
+    "game-artist",
+    "ui-designer",
+    "game-designer",
+    "qa-engineer"
+   ],
+   "group": "Git and review",
+   "label": "gh pr view (CI checks)",
+   "plain": "read a PR and its CI results",
+   "kind": "bash",
+   "sample": "gh pr view 12 --json statusCheckRollup",
+   "registry": [
+    "github-cli"
+   ],
+   "approved": {
+    "director": [
+     {
+      "text": "Board decision 2026-11-22, SOU-39",
+      "cite": "gh_pr_view_ro"
+     }
+    ],
+    "producer": [
+     {
+      "text": "Board decision 2026-11-22, SOU-39",
+      "cite": "gh_pr_view_ro"
+     }
+    ],
+    "project-manager": [
+     {
+      "text": "Board decision 2026-11-22, SOU-39",
+      "cite": "gh_pr_view_ro"
+     }
+    ],
+    "*": [
+     {
+      "text": "workspace-write profile, 2026-11-03",
+      "cite": "task_branch_push"
+     }
+    ]
+   },
+   "instructed": [
+    "gh pr view"
+   ],
+   "runtime_default": "unknown",
+   "production_default": "n/a"
+  },
+  {
+   "id": "write-file-via-shell",
+   "roles": [
+    "director",
+    "producer",
+    "project-manager"
+   ],
+   "group": "Git and review",
+   "label": "write a file through `cat >`",
+   "plain": "write files",
+   "expect": "refused",
+   "kind": "bash",
+   "sample": "cat > notes.md <<EOF",
+   "registry": [],
+   "approved": [],
+   "approved_text": "no (read-only profile)",
+   "approved_cite": "ro_profile",
+   "instructed": [
+    "MUST NOT write",
+    "do not edit",
+    "You do not edit"
+   ],
+   "runtime": {},
+   "production_default": "n/a",
+   "note": "SEC-01: redirect writes are expected to be denied in -p default mode; untested",
+   "runtime_default": "unknown (SEC-01 lab test not run)"
+  },
+  {
+   "id": "paperclip-report",
+   "roles": [
+    "director",
+    "producer",
+    "project-manager",
+    "game-designer",
+    "ui-designer",
+    "qa-engineer",
+    "game-artist",
+    "gameplay-programmer",
+    "web-engineer"
+   ],
+   "group": "Paperclip",
+   "label": "post Task comment / status (paperclip-issue-update.sh)",
+   "plain": "report on its Task",
+   "kind": "bash",
+   "sample": "bash \"<skills>/paperclip/scripts/paperclip-issue-update.sh\" --issue-id SOU-1 --status in_review",
+   "registry": [
+    "paperclip"
+   ],
+   "approved": [
+    {
+     "text": "reporting rule (security-architecture §4)",
+     "cite": "reporting_rule"
+    }
+   ],
+   "instructed": [
+    "paperclip-issue-update",
+    "Task comment"
+   ],
+   "runtime": {
+    "game-artist": [
+     {
+      "text": "SOU-88 answer posted by the agent",
+      "cite": {
+       "external": "board-rnd/knowledge-delivery/evidence/SOU-88.json",
+       "quote": "## KD baseline GA-1: answers"
+      }
+     }
+    ],
+    "director": [
+     {
+      "text": "SOU-90 answer posted by the agent",
+      "cite": {
+       "external": "board-rnd/knowledge-delivery/evidence/SOU-90.json",
+       "quote": "## KD baseline DR-1 answers"
+      }
+     }
+    ],
+    "project-manager": [
+     {
+      "text": "partial: SOU-92 the agent reported it could not find the script path",
+      "verdict": "partial",
+      "cite": {
+       "external": "board-rnd/knowledge-delivery/evidence/SOU-92.json",
+       "quote": "because the `paperclip-issue-update.sh` path isn't available to me"
+      }
+     }
+    ]
+   },
+   "runtime_default": "unknown",
+   "production_default": "n/a",
+   "note": "SEC-01: leading-wildcard allow rule, open security item"
+  },
+  {
+   "id": "read-company-os",
+   "roles": [
+    "director",
+    "producer",
+    "project-manager",
+    "game-designer",
+    "ui-designer",
+    "qa-engineer",
+    "game-artist",
+    "gameplay-programmer",
+    "web-engineer"
+   ],
+   "group": "Knowledge",
+   "label": "read Company OS documents at runtime",
+   "plain": "read company rules and workflows directly",
+   "kind": "builtin",
+   "permitted_text": "none (outside the Task Workspace)",
+   "permitted_cite": "dead_links",
+   "registry": [],
+   "approved": [],
+   "approved_text": "n/a (delivery question, KD-BD-2)",
+   "instructed": [
+    "task-contract.md"
+   ],
+   "runtime": {
+    "game-artist": [
+     {
+      "text": "refused (SOU-88)",
+      "verdict": "no",
+      "cite": "outside_refused_GA"
+     }
+    ],
+    "director": [
+     {
+      "text": "refused (SOU-90)",
+      "verdict": "no",
+      "cite": "outside_refused_DR"
+     }
+    ],
+    "project-manager": [
+     {
+      "text": "refused (SOU-92)",
+      "verdict": "no",
+      "cite": "outside_refused_PM"
+     }
+    ],
+    "gameplay-programmer": [
+     {
+      "text": "Cursor reads outside the worktree",
+      "verdict": "yes (unconfined)",
+      "cite": "cursor_reads_outside"
+     }
+    ],
+    "web-engineer": [
+     {
+      "text": "Cursor reads outside the worktree",
+      "verdict": "yes (unconfined)",
+      "cite": "cursor_reads_outside"
+     }
+    ]
+   },
+   "runtime_default": "unknown",
+   "production_default": "n/a"
+  },
+  {
+   "id": "view-images",
+   "roles": [
+    "director",
+    "qa-engineer",
+    "game-artist"
+   ],
+   "group": "Knowledge",
+   "label": "open images with Read (vision review)",
+   "plain": "look at images in its workspace",
+   "kind": "builtin",
+   "permitted_text": "built-in Read, Task Workspace only",
+   "permitted_cite": "vision_review",
+   "registry": [],
+   "approved": [],
+   "approved_text": "n/a (built-in tool)",
+   "instructed": [
+    "with Read"
+   ],
+   "runtime": {
+    "director": [
+     {
+      "text": "SOU-91: image opened and reviewed",
+      "cite": "sou91_image"
+     }
+    ],
+    "qa-engineer": [
+     {
+      "text": "capability audit: qa-engineer opens images",
+      "cite": "vision_review"
+     }
+    ]
+   },
+   "runtime_default": "unknown",
+   "production_default": "n/a"
+  },
+  {
+   "id": "create-agents",
+   "roles": [
+    "director",
+    "producer",
+    "project-manager",
+    "game-designer",
+    "ui-designer",
+    "qa-engineer",
+    "game-artist",
+    "gameplay-programmer",
+    "web-engineer"
+   ],
+   "group": "Paperclip",
+   "label": "create agents / skills in Paperclip (admin)",
+   "plain": "create new agents or skills",
+   "expect": "refused",
+   "kind": "paperclip-permission",
+   "registry": [],
+   "approved": [],
+   "approved_text": "open: KD-BD-8 audit",
+   "approved_cite": "kd_bd_8",
+   "instructed": [
+    "canCreateAgents",
+    "new Agent Instances"
+   ],
+   "runtime_default": "unknown",
+   "production_default": "n/a"
+  },
+  {
+   "id": "strict-review",
+   "roles": [
+    "code-reviewer"
+   ],
+   "group": "Review",
+   "label": "strict read-only Review Package review",
+   "plain": "review a staged change package (Read, Grep, Glob only)",
+   "kind": "builtin",
+   "permitted_text": "not live",
+   "permitted_cite": "kd_bd_7",
+   "registry": [
+    "claude-code"
+   ],
+   "approved": [],
+   "approved_text": "open: KD-BD-7",
+   "approved_cite": "kd_bd_7",
+   "instructed": [
+    "Review Package"
+   ],
+   "runtime_default": "no",
+   "production_default": "no"
+  }
+ ],
+ "rnd_only": {
+  "_comment": "Tools that exist for R&D but are not available to agents. Registry entries with integrationStatus `evaluating` are added automatically; these are the extra items (some unregistered). `tokens` are searched in every live agent allow rule.",
+  "items": [
+   {
+    "label": "ComfyUI R&D copy (comfyui-rnd, port 8189)",
+    "registry": "comfyui-rnd",
+    "tokens": [
+     "comfyui_rnd",
+     "8189",
+     "rnd/"
+    ],
+    "facts": [
+     {
+      "text": "Board only; never started by agents",
+      "cite": "rnd_comfy_board"
+     },
+     {
+      "text": "no agent allow rule points at it",
+      "cite": "rnd_comfy_no_rule"
+     }
+    ]
+   },
+   {
+    "label": "FLUX.2 klein 4B (+ Qwen3-4B encoder)",
+    "registry": "flux2-klein-4b",
+    "tokens": [
+     "klein",
+     "qwen"
+    ],
+    "facts": []
+   },
+   {
+    "label": "SAM 3.1 (segmentation)",
+    "registry": null,
+    "tokens": [
+     "sam3",
+     "sam 3"
+    ],
+    "facts": [
+     {
+      "text": "R&D evaluation only (Board 2026-11-22); not a production dependency",
+      "cite": "rnd_sam31"
+     },
+     {
+      "text": "SAM 3 licence needs a legal check (D5)",
+      "cite": "rnd_sam_legal"
+     },
+     {
+      "text": "no registry entry",
+      "cite": "rnd_unregistered"
+     }
+    ]
+   },
+   {
+    "label": "ViTPose base (pose)",
+    "registry": null,
+    "tokens": [
+     "vitpose"
+    ],
+    "facts": [
+     {
+      "text": "R&D evaluation only (Board 2026-11-22); not a production dependency",
+      "cite": "rnd_vitpose"
+     },
+     {
+      "text": "no registry entry",
+      "cite": "rnd_unregistered"
+     }
+    ]
+   },
+   {
+    "label": "ToonOut (anime cut-out model)",
+    "registry": "toonout",
+    "tokens": [
+     "toonout"
+    ],
+    "facts": [
+     {
+      "text": "R&D only",
+      "cite": "rnd_toonout"
+     }
+    ]
+   },
+   {
+    "label": "Fooocus inpaint patch (SDXL)",
+    "registry": "fooocus-inpaint-patch",
+    "tokens": [
+     "fooocus"
+    ],
+    "facts": [
+     {
+      "text": "R&D only",
+      "cite": "rnd_fooocus"
+     }
+    ]
+   },
+   {
+    "label": "Krita (paint-over)",
+    "registry": null,
+    "tokens": [
+     "krita"
+    ],
+    "facts": [
+     {
+      "text": "not producible by agents (no Krita)",
+      "cite": "rnd_krita"
+     },
+     {
+      "text": "no registry entry",
+      "cite": "rnd_unregistered"
+     }
+    ]
+   }
+  ]
+ },
+ "task_notes": {
+  "*": [
+   {
+    "text": "a Task is released only with every Task-contract field (goal, acceptance criteria, write set, read set, blockers, assignee, reviewer, approval, size)",
+    "cite": "task_contract_fields"
+   },
+   {
+    "text": "assignee must be an agent whose role and permission profile can do the work",
+    "cite": "assignee_field"
+   }
+  ],
+  "game-artist": [
+   {
+    "text": "art Tasks must state lane, target size and background, reference traits and acceptance criteria, or the artist blocks",
+    "cite": "ga_art_brief"
+   },
+   {
+    "text": "tool commands only in the exact `~/…` unquoted form; other forms are refused",
+    "cite": "ga_tilde_paths"
+   },
+   {
+    "text": "Godot commands one standalone command each, no extra flags, redirection or pipes",
+    "cite": "ga_godot_standalone"
+   },
+   {
+    "text": "region edits only with the approved inpaint/img2img on the project's own art",
+    "cite": "ga_no_region_tool"
+   },
+   {
+    "text": "not approved: outside reference images, image-prompt adapters, LoRA, ControlNet, FLUX inpainting",
+    "cite": "ga_not_approved"
+   },
+   {
+    "text": "a method that needs a non-allowed command is reported UNVERIFIED and blocked, not improvised",
+    "cite": "ga_write_set_scripts"
+   }
+  ],
+  "director": [
+   {
+    "text": "read-only profile: cannot write files (but see the `cat` finding)",
+    "cite": "ro_profile"
+   }
+  ],
+  "producer": [
+   {
+    "text": "read-only profile: cannot write files (but see the `cat` finding)",
+    "cite": "ro_profile"
+   }
+  ],
+  "project-manager": [
+   {
+    "text": "read-only profile: cannot write files (but see the `cat` finding)",
+    "cite": "ro_profile"
+   }
+  ]
+ },
+ "views": {
+  "director": {
+   "kind": "management",
+   "coordinated": "*"
+  },
+  "producer": {
+   "kind": "management",
+   "coordinated": "*"
+  },
+  "project-manager": {
+   "kind": "management",
+   "coordinated": "*"
+  },
+  "game-designer": {
+   "kind": "design",
+   "coordinated": [
+    "game-artist",
+    "ui-designer",
+    "gameplay-programmer",
+    "qa-engineer"
+   ]
+  },
+  "game-artist": {
+   "kind": "execution",
+   "coordinated": []
+  },
+  "ui-designer": {
+   "kind": "execution",
+   "coordinated": []
+  },
+  "gameplay-programmer": {
+   "kind": "execution",
+   "coordinated": []
+  },
+  "web-engineer": {
+   "kind": "execution",
+   "coordinated": []
+  },
+  "qa-engineer": {
+   "kind": "qa",
+   "coordinated": [
+    "game-artist",
+    "ui-designer",
+    "gameplay-programmer",
+    "web-engineer"
+   ]
+  }
+ }
+}

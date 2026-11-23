@@ -1,0 +1,794 @@
+{
+  "budget": {
+    "applies_to": [
+      "game-artist"
+    ],
+    "authority": "Board code review of PR #111 (2026-11-23), game-artist pilot only. The review set 40,000/8,000/48,000 from the 43,307 B role+rules package. Restoring task-contract §2, §6 and §8, security §8 and game-rules §6 (full sections, not a sentence extract) does not fit in 48,000. The cap is the measured text, not a cut. Do not drop mandatory knowledge to hit a size target.",
+    "checked": true,
+    "combined_bytes": 51658,
+    "combined_max_bytes": 53000,
+    "command_reference_bytes": 5894,
+    "command_reference_max_bytes": 8000,
+    "core_bytes": 45764,
+    "core_max_bytes": 47000
+  },
+  "checks": {
+    "freshness": "compare each unit section_sha256 to a target revision's file bytes. Unrelated files are ignored. source_commit equality is not required.",
+    "integrity": "header package-sha256 equals the body below the header",
+    "reproducibility": "regenerate at source_commit with this generator and the manifest that produced the package; --check. Success does not mean the knowledge is current."
+  },
+  "conflict_lint": "Lexical substring lint only. A covered sentence is not semantic equivalence, and a clean conflict list is not proof that every policy conflict is resolved.",
+  "conflicts": [],
+  "coverage_method": "Lexical substring lint only. A covered sentence is not semantic equivalence, and a clean conflict list is not proof that every policy conflict is resolved.",
+  "department": "game",
+  "duplicate_bytes": 0,
+  "duplicates": [],
+  "generated_note": "Generated file. Do not edit by hand.",
+  "generator": {
+    "path": "scripts/setup/gen-role-packages.py",
+    "sha256": "4495ed4c50849c60944cdb4f315b48284acb0716550b0e380622add1c312971b",
+    "version": "1"
+  },
+  "link_rewrites": [
+    {
+      "from": "../../../../company/workflows/code-review-and-merge.md",
+      "kind": "on-request",
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "to": "code-review-and-merge.md (on request)"
+    },
+    {
+      "from": "../../../../company/standards/task-contract.md",
+      "kind": "on-request",
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "to": "task-contract.md (on request)"
+    },
+    {
+      "from": "../../../docs/decisions/ADR-006-git-worktree-for-concurrent-tasks.md",
+      "kind": "on-request",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "ADR-006 (on request)"
+    },
+    {
+      "from": "../../../docs/decisions/ADR-009-approval-before-merge.md",
+      "kind": "on-request",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "ADR-009 (on request)"
+    },
+    {
+      "from": "../../../docs/decisions/ADR-001-single-game-studio-repository.md",
+      "kind": "on-request",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "ADR-001 (on request)"
+    },
+    {
+      "from": "../../../docs/decisions/ADR-005-independent-game-repositories.md",
+      "kind": "on-request",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "ADR-005 (on request)"
+    },
+    {
+      "from": "../standards/task-contract.md#6-blocker-protocol",
+      "kind": "included",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "task-contract.md §6 (in this file)"
+    },
+    {
+      "from": "../standards/task-contract.md#2-task-contract",
+      "kind": "included",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "task-contract.md §2 (in this file)"
+    },
+    {
+      "from": "../../../docs/architecture/security-architecture.md#8-approval-boundaries",
+      "kind": "included",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "security-architecture.md §8 (in this file)"
+    },
+    {
+      "from": "../../../docs/design/gh-token-log-redaction-probe.md",
+      "kind": "on-request",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "gh-token-log-redaction-probe.md (on request)"
+    },
+    {
+      "from": "../../../dependencies/registry.yaml",
+      "kind": "on-request",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "../dependencies/registry.yaml (on request)"
+    },
+    {
+      "from": "../../../docs/architecture/security-architecture.md#11-supply-chain-safety",
+      "kind": "on-request",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "security-architecture.md §11 (on request)"
+    },
+    {
+      "from": "../../departments/game/domain/game-rules.md",
+      "kind": "on-request",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "Game (on request)"
+    },
+    {
+      "from": "../../departments/web/domain/production-environments.md",
+      "kind": "on-request",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "Web (on request)"
+    },
+    {
+      "from": "../workflows/task-failure-handling.md",
+      "kind": "on-request",
+      "source": "knowledge/company/standards/task-contract.md",
+      "to": "task-failure-handling.md (on request)"
+    },
+    {
+      "from": "../workflows/task-failure-handling.md",
+      "kind": "on-request",
+      "source": "knowledge/company/standards/task-contract.md",
+      "to": "task-failure-handling.md (on request)"
+    },
+    {
+      "from": "../policies/provider-allocation.md",
+      "kind": "on-request",
+      "source": "knowledge/company/standards/task-contract.md",
+      "to": "provider-allocation.md (on request)"
+    },
+    {
+      "from": "../../../docs/decisions/ADR-023-watchdog-board-queue-and-auto-release.md",
+      "kind": "on-request",
+      "source": "knowledge/company/standards/task-contract.md",
+      "to": "ADR-023 (on request)"
+    },
+    {
+      "from": "../../../.claude/skills/paperclip/SKILL.md#start-gate-only-release-starts-a-task",
+      "kind": "on-request",
+      "source": "knowledge/company/standards/task-contract.md",
+      "to": "the skill (on request)"
+    },
+    {
+      "from": "../agents/game-artist/AGENTS.md#ownership-with-gameplay-programmer-interim",
+      "kind": "included",
+      "source": "knowledge/departments/game/domain/game-rules.md",
+      "to": "game-artist role (in this file)"
+    },
+    {
+      "from": "../workflows/asset-production.md",
+      "kind": "on-request",
+      "source": "knowledge/departments/game/domain/game-rules.md",
+      "to": "asset-production.md (on request)"
+    },
+    {
+      "from": "art/README.md",
+      "kind": "on-request",
+      "source": "knowledge/departments/game/domain/game-rules.md",
+      "to": "art/ (on request)"
+    },
+    {
+      "from": "../../../../docs/architecture/security-architecture.md#4-agent-permissions-provider-level",
+      "kind": "on-request",
+      "source": "knowledge/departments/game/workflows/asset-production.md",
+      "to": "security-architecture.md §4 (on request)"
+    },
+    {
+      "from": "../agents/game-artist/AGENTS.md#tools-and-skills",
+      "kind": "included",
+      "source": "knowledge/departments/game/workflows/asset-production.md",
+      "to": "game-artist role (in this file)"
+    },
+    {
+      "from": "../../../../docs/architecture/security-architecture.md#4-agent-permissions-provider-level",
+      "kind": "on-request",
+      "source": "knowledge/departments/game/workflows/asset-production.md",
+      "to": "security-architecture.md §4 (on request)"
+    },
+    {
+      "from": "../agents/game-artist/AGENTS.md#tools-and-skills",
+      "kind": "included",
+      "source": "knowledge/departments/game/workflows/asset-production.md",
+      "to": "game-artist role (in this file)"
+    },
+    {
+      "from": "../domain/art/visual-procedures.md#9-tools-today-and-known-gaps",
+      "kind": "on-request",
+      "source": "knowledge/departments/game/workflows/asset-production.md",
+      "to": "visual-procedures.md §9 (on request)"
+    },
+    {
+      "from": "../../../../docs/roadmap/open-questions.md#oq-049--art-production-v2-delivery-and-tooling",
+      "kind": "on-request",
+      "source": "knowledge/departments/game/workflows/asset-production.md",
+      "to": "OQ-049 (on request)"
+    }
+  ],
+  "mandatory_guard": [
+    {
+      "result": "lexical lint, not semantic equivalence; phrases present: Never print, echo, log or paste a credential or the environment | do not run printenv, env, set, export -p, gh auth token, git credential or any command that shows GH_TOKEN, GITHUB_TOKEN, PAPERCLIP_API_KEY or another secret value | Never print, log, commit, or paste secrets, tokens, or credential files.",
+      "sentence": "- You MUST NOT print, echo, log, commit or paste a credential or the environment: no `printenv`, `env`, `set`, `gh auth token`, `git credential`, and no command that shows `GH_TOKEN`, `GITHUB_TOKEN`, `PAPERCLIP_API_KEY` or another secret.",
+      "unit": "ga-role-credentials"
+    }
+  ],
+  "manifest": {
+    "origin": "working tree (the manifest is not in the source commit yet)",
+    "path": "config/paperclip/knowledge-manifest.json",
+    "sha256": "3168ec7a4d3173bebe31ca698be29ff72d3936df2835cd6698463797db6c1cb4"
+  },
+  "memory_policy": "Task-session only: auto-memory off through the per-agent settings file (pilot change B, PROPOSED); existing memory files are not read, moved or deleted.",
+  "on_request": {
+    ".claude/skills/paperclip/SKILL.md": [
+      "knowledge/company/standards/task-contract.md"
+    ],
+    "dependencies/registry.yaml": [
+      "knowledge/company/policies/rules.md"
+    ],
+    "docs/architecture/security-architecture.md": [
+      "knowledge/company/policies/rules.md",
+      "knowledge/departments/game/workflows/asset-production.md"
+    ],
+    "docs/decisions/ADR-001-single-game-studio-repository.md": [
+      "knowledge/company/policies/rules.md"
+    ],
+    "docs/decisions/ADR-005-independent-game-repositories.md": [
+      "knowledge/company/policies/rules.md"
+    ],
+    "docs/decisions/ADR-006-git-worktree-for-concurrent-tasks.md": [
+      "knowledge/company/policies/rules.md"
+    ],
+    "docs/decisions/ADR-009-approval-before-merge.md": [
+      "knowledge/company/policies/rules.md"
+    ],
+    "docs/decisions/ADR-023-watchdog-board-queue-and-auto-release.md": [
+      "knowledge/company/standards/task-contract.md"
+    ],
+    "docs/design/gh-token-log-redaction-probe.md": [
+      "knowledge/company/policies/rules.md"
+    ],
+    "docs/roadmap/open-questions.md": [
+      "knowledge/departments/game/workflows/asset-production.md"
+    ],
+    "knowledge/company/policies/provider-allocation.md": [
+      "knowledge/company/standards/task-contract.md"
+    ],
+    "knowledge/company/standards/task-contract.md": [
+      "knowledge/departments/game/agents/game-artist/AGENTS.md"
+    ],
+    "knowledge/company/workflows/code-review-and-merge.md": [
+      "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "manifest"
+    ],
+    "knowledge/company/workflows/task-failure-handling.md": [
+      "knowledge/company/standards/task-contract.md"
+    ],
+    "knowledge/departments/game/domain/art/README.md": [
+      "knowledge/departments/game/domain/game-rules.md"
+    ],
+    "knowledge/departments/game/domain/art/complexity-lanes.md": [
+      "manifest"
+    ],
+    "knowledge/departments/game/domain/art/handoff-templates.md": [
+      "manifest"
+    ],
+    "knowledge/departments/game/domain/art/quality-rubric.md": [
+      "manifest"
+    ],
+    "knowledge/departments/game/domain/art/visual-procedures.md": [
+      "knowledge/departments/game/workflows/asset-production.md",
+      "manifest"
+    ],
+    "knowledge/departments/game/domain/game-rules.md": [
+      "knowledge/company/policies/rules.md"
+    ],
+    "knowledge/departments/game/workflows/asset-production.md": [
+      "knowledge/departments/game/domain/game-rules.md",
+      "manifest"
+    ],
+    "knowledge/departments/web/domain/production-environments.md": [
+      "knowledge/company/policies/rules.md"
+    ]
+  },
+  "package_sha256": "997935210e627ba4a12637338fc31ac333b12df4a1f537040079057abc4c17fd",
+  "role": "game-artist",
+  "role_file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+  "schema": "role-knowledge-package.v1",
+  "settings_file": "config/paperclip/agent-settings/game-artist.settings.json",
+  "skills": [
+    {
+      "files": {
+        "knowledge/departments/game/skills/studio-art-identity-and-refinement/SKILL.md": "62e0efc3b2419b877b6d219955ffd315625e0c3664d3a7f9672e5ff582bf1598",
+        "knowledge/departments/game/skills/studio-art-identity-and-refinement/reference/seed-and-identity.md": "7084d97adfc0cf95262ac53083cdc3b43b6216529bd2db23b398a718c11b4a8d"
+      },
+      "name": "studio-art-identity-and-refinement",
+      "note": "use it when it is in your skill list (pilot change C); if it is not listed, ask for visual-procedures.md instead. Everything mandatory is already in this file.",
+      "revision_sha256": "80be92d14bf2760193de1217d92a04dd327899575f515940e2d26af4299390f3",
+      "status": "proposed"
+    }
+  ],
+  "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+  "source_coverage": {
+    "delivered_units_with_marker": [
+      "ga-role-identity",
+      "ga-role-visual",
+      "ga-role-authority",
+      "ga-role-tools",
+      "ga-role-commands",
+      "ga-role-io",
+      "ga-role-ownership",
+      "ga-role-constraints",
+      "ga-role-hygiene",
+      "co-rules",
+      "co-task-blockers",
+      "co-task-reviews",
+      "co-task-contract",
+      "co-approval-boundaries",
+      "game-originality",
+      "game-art-ownership",
+      "game-generated-art"
+    ],
+    "role_file_blocks": 33
+  },
+  "system_prompt_rules": {
+    "git": {
+      "chars": 746,
+      "sha256": "17fcd765e5b7888987e197ce49a7235da5d37930d920f6d08e84689b2fa44a00"
+    },
+    "reporting": {
+      "chars": 563,
+      "sha256": "60273e4ecb7cea747db35438528af4f4295dd5b6e2502aaaf4c4bb40fb648a47"
+    },
+    "secrets": {
+      "chars": 700,
+      "sha256": "3cc9a2a53f64e3f977c48d592efdd3957e38177bf4596a9c9c4133688fb43fca"
+    }
+  },
+  "tokens_estimated": {
+    "combined": {
+      "chars_div_3_6": 14331,
+      "high": 14918,
+      "low": 14331,
+      "piece_heuristic": 14918
+    },
+    "command_reference": {
+      "chars_div_3_6": 1636,
+      "high": 1927,
+      "low": 1636,
+      "piece_heuristic": 1927
+    },
+    "core": {
+      "chars_div_3_6": 12695,
+      "high": 12991,
+      "low": 12695,
+      "piece_heuristic": 12991
+    },
+    "method": "ESTIMATED, no tokenizer: chars/3.6 and a piece heuristic (word ceil(len/6), digit run ceil(len/3), symbol 1)"
+  },
+  "units": [
+    {
+      "authority": "role file",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 2888,
+      "emitted_sha256": "82c207ed711550d9c657a1dc193893f8b0a2c902f1f63e527bf72b8c80047c8e",
+      "headings": [
+        "(preamble)",
+        "Identity",
+        "Mission",
+        "Responsibilities"
+      ],
+      "id": "ga-role-identity",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "Identity": "7b10e3d424c9fd0b4d13a6cf4378b674da54f8de396f04306e92d7ca8da8b8f1",
+        "Mission": "d2341db8fbbb919764515e6388b45e0044197cdace3c26fb444a70e55250a563",
+        "Responsibilities": "04982f00839fa29161ed15bc8058154e69722ff4a6862191faa0af7685b01597"
+      },
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "82c207ed711550d9c657a1dc193893f8b0a2c902f1f63e527bf72b8c80047c8e",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "AP-v2 pilot 2026-11-22; KA-BD-1/2",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 10861,
+      "emitted_sha256": "1bacff814963e0b0684cd30e16a8748d423659fe801f6c6eb3df1503981ab6f9",
+      "headings": [
+        "Visual design and refinement"
+      ],
+      "id": "ga-role-visual",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "Visual design and refinement": "1bacff814963e0b0684cd30e16a8748d423659fe801f6c6eb3df1503981ab6f9"
+      },
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "1bacff814963e0b0684cd30e16a8748d423659fe801f6c6eb3df1503981ab6f9",
+      "status": "proposed",
+      "status_label": "PROPOSED"
+    },
+    {
+      "authority": "role file",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 667,
+      "emitted_sha256": "979939241a1b8932db2a336067b898efe968676bde4c08bf9051926ca70e4b4f",
+      "headings": [
+        "Authority",
+        "Required capabilities"
+      ],
+      "id": "ga-role-authority",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "Authority": "2d1748907e5c9a9f33caa23095690b8f9065655f27be5218711294f9da7c8a1f",
+        "Required capabilities": "d01ce2e0f02b6d0da414ee65d33d57ee00c266a5fb71a5217674b4dcd0dc69dd"
+      },
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "979939241a1b8932db2a336067b898efe968676bde4c08bf9051926ca70e4b4f",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "role file; Board 2026-11-22",
+      "blocks_starting_with": [
+        "**Reviewing:**",
+        "Since 2026-11-22 the Board accepts AI-made final art",
+        "Permission profile `workspace-write`"
+      ],
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 807,
+      "emitted_sha256": "0aecf153b429995bfe36906791c745674942e7a52f8ad115ebeddfabc678025e",
+      "headings": [
+        "Tools and skills"
+      ],
+      "id": "ga-role-tools",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "Tools and skills": "292cecb5c88d782de83a68f213fd0ddb8983b440c9e3fafd5bc8ec6a080a9677"
+      },
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "60c9e50bd1f2dce70c7e22416c2c7800cd186f4afec1fc6d7eace692c8e06447",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "Board D1, 2026-11-21/22; agents.json",
+      "blocks_starting_with": [
+        "`git` on Task Branches",
+        "Godot projects:"
+      ],
+      "delivery": "command_reference",
+      "department": "game",
+      "emitted_bytes": 5495,
+      "emitted_sha256": "d72f08ea563948fea5ee1642ce1f6570caa315e39ee298ce6cd97d4150cefc6a",
+      "headings": [
+        "Tools and skills"
+      ],
+      "id": "ga-role-commands",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "Tools and skills": "292cecb5c88d782de83a68f213fd0ddb8983b440c9e3fafd5bc8ec6a080a9677"
+      },
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "d72f08ea563948fea5ee1642ce1f6570caa315e39ee298ce6cd97d4150cefc6a",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "role file",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 334,
+      "emitted_sha256": "71fb8989216665329bd2cf2a1dfbf784a9fd0beb5734e2b2861f3cc60ae06cfa",
+      "headings": [
+        "Inputs",
+        "Outputs"
+      ],
+      "id": "ga-role-io",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "Inputs": "2ecc9f6a949cde2af73a66ae120009878021469083e94e8aebf1c9257406f551",
+        "Outputs": "08ae0d79b6c2549384ca73e1a28136bdd31f19ba83921555b26b25d3a8247664"
+      },
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "71fb8989216665329bd2cf2a1dfbf784a9fd0beb5734e2b2861f3cc60ae06cfa",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "KA-BD-9 (interim)",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 3114,
+      "emitted_sha256": "2308c6a9f35ddcb14ba4f38bbb9ea63039021de4190f59afa6a36cea00d4f8e2",
+      "headings": [
+        "Ownership with Gameplay Programmer (interim)"
+      ],
+      "id": "ga-role-ownership",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "Ownership with Gameplay Programmer (interim)": "2308c6a9f35ddcb14ba4f38bbb9ea63039021de4190f59afa6a36cea00d4f8e2"
+      },
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "2308c6a9f35ddcb14ba4f38bbb9ea63039021de4190f59afa6a36cea00d4f8e2",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "role file",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 2360,
+      "emitted_sha256": "9111466794bdb86751d0b212382776c02ba1de02b4cefef77381e4a52fe426e0",
+      "headings": [
+        "Constraints"
+      ],
+      "id": "ga-role-constraints",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "Constraints": "9111466794bdb86751d0b212382776c02ba1de02b4cefef77381e4a52fe426e0"
+      },
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "9111466794bdb86751d0b212382776c02ba1de02b4cefef77381e4a52fe426e0",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "role file",
+      "blocks_starting_with": null,
+      "delivery": "not_delivered",
+      "department": "game",
+      "emitted_bytes": 0,
+      "emitted_sha256": "938616bbbbc992f35795ecbfa2e2a815055dac04c6758bfd569d47b17c2bcfa2",
+      "headings": [
+        "Credentials"
+      ],
+      "id": "ga-role-credentials",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "Credentials": "938616bbbbc992f35795ecbfa2e2a815055dac04c6758bfd569d47b17c2bcfa2"
+      },
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "938616bbbbc992f35795ecbfa2e2a815055dac04c6758bfd569d47b17c2bcfa2",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "role file; task contract",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 3235,
+      "emitted_sha256": "8820c328e8d4effb00db15bb5527ba4745e7fd4f72fafb1e2c3ce599d8660bc1",
+      "headings": [
+        "Task hygiene",
+        "Collaboration",
+        "Escalation",
+        "Success criteria"
+      ],
+      "id": "ga-role-hygiene",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "Collaboration": "8c691bd7cf7b5da0b3083f941f1ab44d6f0502b9359afb40d223f17e26a92a41",
+        "Escalation": "e8ef5cd23656b6b9e43747978741997883629f55e7f13208716655220b1dd928",
+        "Success criteria": "dc9ae41de8d32d076e554a8a69003bbbd4674d91d4c0c1c5fdd7b40ab2661d45",
+        "Task hygiene": "5895ec1ad794568a339757cbc9eb993891e6cfe53a003acdad8cf1a0b2cf8dc5"
+      },
+      "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "d96472b46ae9976f8a8c64bcc1da93f61f6b3ee929e96bcb1b1ffce8b8186a8f",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "rules.md",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 4189,
+      "emitted_sha256": "3829383d67e011f0ce10bc68f9612321541ed9b4818d3e238950ccf8803fcdc8",
+      "headings": [
+        "R1. Repositories and code",
+        "R2. Tasks",
+        "R3. Approvals",
+        "R4. Security",
+        "R5. Dependencies",
+        "R6. Honesty",
+        "R7. Scope"
+      ],
+      "id": "co-rules",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "R1. Repositories and code": "caba16ce7561437a3ecbb290a244b325882413d7bf77ee4bc71ef8b012302bce",
+        "R2. Tasks": "97b6fb4840f39d81a6b7449d7c2f720cd8901f3612adfa25e84faf098ed34b4d",
+        "R3. Approvals": "7703b9bc27834e3f2218f5df2a7229a281a4b5fa1087852eed299e06c4d604aa",
+        "R4. Security": "fba79ccb471cbb05f2f99524c70c7c80c00e7692b0dd26765475b2a114291490",
+        "R5. Dependencies": "173ac9bb8480c8e662212b338611b503377a4b235fe076072e12206bf6e46e24",
+        "R6. Honesty": "b3084c4b179f791a3c8c111e149c4ff4539fb9bf15e7e6792f56f9e90f147fea",
+        "R7. Scope": "655ecb4ecadeff1cad258c6a36785e5af2a3b0c8b86699923634e96b011c38db"
+      },
+      "source": "knowledge/company/policies/rules.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "b1de9e3f4bf2015d86c928cf0eec85d10470a74e72f9f84e22147023b3817e59",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "task-contract",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 1430,
+      "emitted_sha256": "ef7e781231a8d7969e00c15c5b8ec1a029c7628058afdb6053d10c4583404909",
+      "headings": [
+        "6. Blocker protocol"
+      ],
+      "id": "co-task-blockers",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "6. Blocker protocol": "57e5f91d00fb9d87a54dd14e7e9a953228ffc84aef0e28846c89dd33163575ce"
+      },
+      "source": "knowledge/company/standards/task-contract.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "57e5f91d00fb9d87a54dd14e7e9a953228ffc84aef0e28846c89dd33163575ce",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "task-contract",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 1169,
+      "emitted_sha256": "407ff97ff5dc5a33c0a7cfd6999853d022e92921ce5e7efb685d486920ab5097",
+      "headings": [
+        "8. Reviews"
+      ],
+      "id": "co-task-reviews",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "8. Reviews": "036e7b1dc4c86d32f5b66ab076e91a9012ef6c5f4f0c49b16f9e0fea7b26e534"
+      },
+      "source": "knowledge/company/standards/task-contract.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "036e7b1dc4c86d32f5b66ab076e91a9012ef6c5f4f0c49b16f9e0fea7b26e534",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "task-contract",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 2541,
+      "emitted_sha256": "ef5c740f0203b83c863572c651cafda709e2e05050a8dacce00281ae5a8a15f6",
+      "headings": [
+        "2. Task contract"
+      ],
+      "id": "co-task-contract",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "2. Task contract": "7b7269d1b18a34cd35fd3333d063ef23e635d08d16129080299be7861f8d881e"
+      },
+      "source": "knowledge/company/standards/task-contract.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "7b7269d1b18a34cd35fd3333d063ef23e635d08d16129080299be7861f8d881e",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "security-architecture; ADR-009",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 1270,
+      "emitted_sha256": "26215d1434fb434d3bfb1883e7a2f8915adee63d5b036a64a8d89d3c5f467d2c",
+      "headings": [
+        "8. Approval boundaries"
+      ],
+      "id": "co-approval-boundaries",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "8. Approval boundaries": "c7575a8e0278b60f4d32c56386f0b76818569c20a7c4587651d2c55b2f30d91e"
+      },
+      "source": "docs/architecture/security-architecture.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "c7575a8e0278b60f4d32c56386f0b76818569c20a7c4587651d2c55b2f30d91e",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "game-rules",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 266,
+      "emitted_sha256": "134f71732b36f9c8697590e5edf34fb9a22a3107c2cdfdb1f48fe774ce9de458",
+      "headings": [
+        "1. Originality"
+      ],
+      "id": "game-originality",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "1. Originality": "391f228610d2f4ba8c416d036f2fec01d565fbd78592ca481d696b0a1e6e4a77"
+      },
+      "source": "knowledge/departments/game/domain/game-rules.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "391f228610d2f4ba8c416d036f2fec01d565fbd78592ca481d696b0a1e6e4a77",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "game-rules; KA-BD-9",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 2288,
+      "emitted_sha256": "34e3f0356f68edd6c8e743985a54653b2037c4df21a79dbb10e2b9b4c1371bed",
+      "headings": [
+        "6. Art assets and technical art"
+      ],
+      "id": "game-art-ownership",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "6. Art assets and technical art": "23561f95074b35f56cc1fb6da30619a2e778fb85805216229c209b6c3004349b"
+      },
+      "source": "knowledge/departments/game/domain/game-rules.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "23561f95074b35f56cc1fb6da30619a2e778fb85805216229c209b6c3004349b",
+      "status": "approved",
+      "status_label": "APPROVED"
+    },
+    {
+      "authority": "Board D1, 2026-11-22",
+      "blocks_starting_with": null,
+      "delivery": "always_loaded",
+      "department": "game",
+      "emitted_bytes": 1549,
+      "emitted_sha256": "b69e43fcf9d40f215850fc98e2bd1ae9e9cad9ee2050e3d1ae5cb9b8c8897c6c",
+      "headings": [
+        "Generated art (Board decisions D1 and 2026-11-22)"
+      ],
+      "id": "game-generated-art",
+      "lines_containing": null,
+      "role": "game-artist",
+      "section_sha256": {
+        "Generated art (Board decisions D1 and 2026-11-22)": "c0623653e21c06ebd1ce46866ea4ac79232fe60109d5300842012be416256634"
+      },
+      "source": "knowledge/departments/game/workflows/asset-production.md",
+      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_sha256": "c0623653e21c06ebd1ce46866ea4ac79232fe60109d5300842012be416256634",
+      "status": "approved",
+      "status_label": "APPROVED"
+    }
+  ]
+}
