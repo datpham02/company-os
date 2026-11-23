@@ -42,14 +42,16 @@ A Task MUST NOT be released (moved out of `backlog`) unless it has every field b
 
 ```text
 ## Required capabilities
-- capability: <catalog operation id or knowledge path>
-- required: true
-- availability: UNVERIFIED
+
+- capability: uiux-search
+  required: true
+  availability: UNVERIFIED
 
 ## Optional capabilities
-- capability: <catalog operation id or knowledge path>
-- required: false
-- availability: UNVERIFIED
+
+- capability: design-md
+  required: false
+  availability: UNVERIFIED
 ```
 
 Agent-created Tasks are created in `backlog`, **unassigned**, with the intended assignee written in the description (G-9). The Board, or an agent granted `tasks:assign`, assigns them and adds the review and approval stages and the blockers before release (G-10).
