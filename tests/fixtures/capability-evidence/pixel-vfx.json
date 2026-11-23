@@ -1,0 +1,13 @@
+{
+  "schema": "task-capability-input.v1",
+  "task_id": "EXAMPLE-VFX-01",
+  "task_type": "pixel-vfx",
+  "role": "game-artist",
+  "operations": [
+    {"id": "pixelfx-list", "required": true},
+    {"id": "pixelfx-render", "required": false}
+  ],
+  "knowledge": [
+    {"path": "knowledge/departments/game/workflows/asset-production.md", "required": true}
+  ]
+}

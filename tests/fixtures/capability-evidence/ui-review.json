@@ -1,0 +1,11 @@
+{
+  "schema": "task-capability-input.v1",
+  "task_id": "EXAMPLE-UI-REVIEW",
+  "task_type": "ui-review",
+  "role": "ui-designer",
+  "operations": [],
+  "knowledge": [
+    {"path": "knowledge/company/standards/task-contract.md", "required": true},
+    {"path": "knowledge/departments/game/skills/studio-ui-ux-review/SKILL.md", "required": true}
+  ]
+}
