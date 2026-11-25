@@ -147,7 +147,7 @@ def adapter_block(profile, agent, rules, prefix, workspace, cursor_cmd, staging_
         if profile.get("permissionMode"):
             args += ["--permission-mode", profile["permissionMode"]]
         args += ["--allowedTools"] + sub(profile["allowedTools"] + agent.get("extraAllowedTools", []))
-        args += ["--disallowedTools"] + sub(profile["disallowedTools"])
+        args += ["--disallowedTools"] + sub(profile["disallowedTools"] + agent.get("extraDisallowedTools", []))
         text = " ".join(rules[r] for r in profile["rules"])
         args += ["--append-system-prompt", text.replace("{REPORT_BIN}", report_bin_forms(report_bin)[0])]
         cfg["extraArgs"] = args

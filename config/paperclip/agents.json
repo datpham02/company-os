@@ -284,6 +284,20 @@
       "secrets": [
         "GH_TOKEN"
       ],
+      "extraDisallowedTools": [
+        "Bash(npm *)",
+        "Bash(npx *)",
+        "Bash(git diff*--output*)",
+        "Bash(git log*--output*)",
+        "Bash(git show*--output*)",
+        "Edit(**/.git)",
+        "Edit(**/.git/**)",
+        "Edit(~/.paperclip/**)",
+        "Edit(~/.company-os/**)",
+        "Edit(~/.claude/**)",
+        "Edit(~/game-studio-workspace/tools/**)",
+        "Edit(~/game-studio-workspace/agent-settings/**)"
+      ],
       "extraAllowedTools": [
         "Bash(node ~/tools/pixelfx/tools/list.mjs *)",
         "Bash(node ~/tools/pixelfx/tools/render.mjs *)",

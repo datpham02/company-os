@@ -241,6 +241,35 @@ class BuiltRules(unittest.TestCase):
                 self.assertIn('bash "C:/Users/u/.company-os/report-bin/pc-issue-update" --issue-id', prompt)
                 self.assertIn("Do not call paperclip-issue-update.sh", prompt)
 
+    def test_game_artist_local_pilot_delta(self):
+        """E2 (local pilot): game-artist alone denies package-script runners, git --output and edits of .git, the
+        Paperclip, wrapper, Claude, tool and settings folders; its art-pipeline rules stay allowed."""
+        conf = json.load(open(os.path.join(REPO, "config", "paperclip", "agents.json"), encoding="utf-8"))
+        delta = conf["agents"]["game-artist"]["extraDisallowedTools"]
+        for rule in ("Bash(npm *)", "Bash(npx *)", "Bash(git diff*--output*)", "Bash(git log*--output*)",
+                     "Bash(git show*--output*)", "Edit(**/.git)", "Edit(**/.git/**)", "Edit(~/.paperclip/**)",
+                     "Edit(~/.company-os/**)", "Edit(~/game-studio-workspace/agent-settings/**)"):
+            self.assertIn(rule, delta)
+        built = self.built("C:/Users/u/.company-os/report-bin")
+        ga = built["game-artist"]
+        deny = ga[ga.index("--disallowedTools") + 1:ga.index("--append-system-prompt")]
+        allow = ga[ga.index("--allowedTools") + 1:ga.index("--disallowedTools")]
+        self.assertEqual([r for r in delta if r not in deny], [])
+        for slug, args in built.items():
+            if slug != "game-artist":
+                d = args[args.index("--disallowedTools") + 1:args.index("--append-system-prompt")]
+                self.assertNotIn("Bash(npm *)", d, slug)  # other roles keep npm (not a blanket ban)
+        grp = load("gen-role-packages")
+        _, deny_rules = grp.role_rules(conf, "game-artist")
+        for cmd in ("python -I ~/game-studio-workspace/tools/art-ops.py contact --bg x",
+                    "python -I ~/game-studio-workspace/tools/comfy-draft.py --prompt x",
+                    "python -I ~/game-studio-workspace/tools/comfy-edit.py inpaint x", "git status", "git diff --stat",
+                    "git log --oneline -1", "git add assets/x.png", 'git commit -m "art"',
+                    'bash "C:/Users/u/.company-os/report-bin/pc-issue-update" --issue-id SOU-1 --status done'):
+            self.assertIsNotNone(grp.permitted(cmd, allow, deny_rules + [d for d in deny if d.startswith("Bash(")]), cmd)
+        for cmd in ("npm run build", "npm install", "npx tsc", "git diff --output=x HEAD", "git log --output=x"):
+            self.assertIsNone(grp.permitted(cmd, allow, deny), cmd)
+
     def test_report_bin_is_a_build_input(self):
         self.assertNotEqual(self.built("C:/a/report-bin"), self.built("C:/b/report-bin"))
         self.assertEqual(bp.default_report_bin(), os.path.join(os.path.expanduser("~"), ".company-os", "report-bin"))
