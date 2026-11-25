@@ -124,6 +124,30 @@ class ReviewerPackage(unittest.TestCase):
             bp.model_fields(profiles["cursor-workspace-write"], {"model": "composer-2.5", "effort": "medium"})
         self.assertIn("only supported for claude_local", str(cm.exception))
 
+    def test_outward_tools_denied_for_every_claude_agent(self):
+        """T-1 (Issue #113): account, desktop and scheduling tools are denied by bare name in the built arguments."""
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("build_package", SCRIPT)
+        bp = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(bp)
+        conf = json.load(open(os.path.join(REPO, "config", "paperclip", "agents.json"), encoding="utf-8"))
+        outward = {"Artifact", "ArtifactComments", "ArtifactData", "CronCreate", "CronDelete", "CronList",
+                   "DesignSync", "EnterWorktree", "ExitWorktree", "ListAgents", "PublishPlugin", "PushNotification",
+                   "RemoteTrigger", "ScheduleWakeup", "SendMessage", "ShareOnboardingGuide", "Workflow"}
+        checked = 0
+        for slug, ag in conf["agents"].items():
+            prof = conf["profiles"][ag["profile"]]
+            if prof["adapter"] != "claude_local" or bp.is_strict_reviewer(prof):
+                continue
+            args = bp.adapter_block(prof, ag, conf["rules"], "SOU", "C:/ws", "agent")["config"]["extraArgs"]
+            allow = args[args.index("--allowedTools") + 1:args.index("--disallowedTools")]
+            deny = args[args.index("--disallowedTools") + 1:args.index("--append-system-prompt")]
+            with self.subTest(agent=slug):
+                self.assertEqual(outward - set(deny), set())
+                self.assertEqual(outward & set(allow), set())
+            checked += 1
+        self.assertGreaterEqual(checked, 7)
+
     def test_settings_file_is_the_strict_one(self):
         with open(os.path.join(REPO, "config", "paperclip", "reviewer-settings.json"), encoding="utf-8") as f:
             perms = json.load(f)["permissions"]
