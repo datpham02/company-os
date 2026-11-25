@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# pc-upload-artifact: the only Paperclip artifact-upload command agents are allowed to run (S-1, Issue #113).
+#
+# Installed by scripts/setup/install-report-wrappers.py (see pc-issue-update). Not runnable as committed.
+#
+# Contract:
+#   bash "<bin>/pc-upload-artifact" <FILE> --issue-id <ID> [--title TEXT] [--summary TEXT] [--content-type TYPE]
+#        [--status ready_for_review] [--no-work-product] [--no-primary] [--output markdown|json] [--dry-run]
+#   bash "<bin>/pc-upload-artifact" --help
+#
+# FILE: a relative path to a regular file inside the current working directory (no absolute path, no drive, no "..",
+# no symbolic link, no leading "-"). Refused flags: --company-id (another company), --chat-comment (external chat
+# binding), --retry-unknown-upload (duplicate risk) and anything not listed above.
+set -euo pipefail
+unset BASH_ENV ENV CDPATH GLOBIGNORE
+export LC_ALL=C
+
+TRUSTED_DIR='@@PAPERCLIP_SCRIPTS_DIR@@'
+TRUSTED_SHA256='@@UPLOAD_ARTIFACT_SHA256@@'
+TARGET="$TRUSTED_DIR/paperclip-upload-artifact.sh"
+NAME="pc-upload-artifact"
+AUDIT_DIR="${HOME:-}/.company-os/report-audit"
+
+audit() {
+  [[ -n "${HOME:-}" ]] || return 0
+  mkdir -p "$AUDIT_DIR" 2>/dev/null || return 0
+  printf '%s\t%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$NAME" "$1" "${issue_id:-}" "${file:-}" \
+    >>"$AUDIT_DIR/$(date -u +%Y-%m).log" 2>/dev/null || true
+}
+
+refuse() {
+  printf '%s: refused: %s\n' "$NAME" "$1" >&2
+  printf 'Usage: bash "<bin>/pc-upload-artifact" <FILE> --issue-id <ID> [--title T] [--summary S] [--content-type T] [--dry-run]\n' >&2
+  audit "refused:$2"
+  exit 64
+}
+
+case "$TRUSTED_DIR$TRUSTED_SHA256" in
+  *@@*) printf '%s: not installed (template placeholders present); run install-report-wrappers.py\n' "$NAME" >&2; exit 70 ;;
+esac
+
+if [[ $# -eq 1 && ( "$1" == "--help" || "$1" == "-h" ) ]]; then
+  sed -n '6,13p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  exit 0
+fi
+
+[[ $# -ge 1 ]] || refuse "FILE is required" "no-file"
+file="$1"
+shift
+issue_id=""
+args=()
+seen=" "
+while [[ $# -gt 0 ]]; do
+  flag="$1"
+  case "$flag" in
+    --issue-id|--title|--summary|--content-type|--status|--output)
+      [[ "$seen" != *" $flag "* ]] || refuse "$flag given more than once" "duplicate"
+      seen="$seen$flag "
+      [[ $# -ge 2 ]] || refuse "$flag needs a value" "missing-value"
+      value="$2"
+      case "$flag" in
+        --issue-id) issue_id="$value" ;;
+        --content-type) [[ "$value" =~ ^[a-z]+/[a-z0-9][a-z0-9.+-]*$ ]] || refuse "content type must look like image/png" "bad-content-type" ;;
+        --status) [[ "$value" == "ready_for_review" ]] || refuse "only --status ready_for_review is accepted" "bad-status" ;;
+        --output) [[ "$value" == "markdown" || "$value" == "json" ]] || refuse "--output must be markdown or json" "bad-output" ;;
+        --title|--summary) [[ "$value" != -* ]] || refuse "$flag value must not start with -" "bad-text" ;;
+      esac
+      [[ "$flag" == "--issue-id" ]] || args+=("$flag" "$value")
+      shift 2
+      ;;
+    --no-work-product|--no-primary|--dry-run)
+      [[ "$seen" != *" $flag "* ]] || refuse "$flag given more than once" "duplicate"
+      seen="$seen$flag "
+      args+=("$flag")
+      shift
+      ;;
+    *)
+      refuse "unexpected argument $(printf '%q' "$flag" | cut -c1-40)" "unexpected-arg"
+      ;;
+  esac
+done
+
+[[ -n "$issue_id" ]] || refuse "--issue-id is required (use the literal issue id from your task)" "no-issue-id"
+if [[ ! "$issue_id" =~ ^[A-Z][A-Z0-9]{1,9}-[0-9]{1,7}$ ]] && \
+   [[ ! "$issue_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+  refuse "issue id must look like SOU-12 or a UUID" "bad-issue-id"
+fi
+
+# FILE: relative, inside the working directory, a regular file, not a link, no "..", no leading "-".
+case "$file" in
+  ""|-*) refuse "FILE must be a relative path that does not start with -" "bad-file" ;;
+  /*|\\*|[A-Za-z]:*|~*) refuse "FILE must be relative to the working directory" "bad-file" ;;
+esac
+IFS='/\' read -r -a parts <<<"$file"
+for part in "${parts[@]}"; do
+  [[ "$part" != ".." ]] || refuse "FILE must not contain .." "bad-file"
+done
+[[ -f "$file" && ! -L "$file" ]] || refuse "FILE must be an existing regular file (not a link)" "bad-file"
+cwd_real="$(realpath -e -- "$PWD")"
+file_real="$(realpath -e -- "$file")"
+case "$file_real" in
+  "$cwd_real"/*) ;;
+  *) refuse "FILE resolves outside the working directory" "bad-file" ;;
+esac
+
+[[ -f "$TARGET" && ! -L "$TARGET" ]] || { printf '%s: trusted script missing: %s\n' "$NAME" "$TARGET" >&2; audit "error:target-missing"; exit 70; }
+actual_sha="$(sha256sum -- "$TARGET" | cut -d' ' -f1)"
+if [[ "$actual_sha" != "$TRUSTED_SHA256" ]]; then
+  printf '%s: trusted script changed since install (sha256 %s, pinned %s); re-run install-report-wrappers.py after checking the Paperclip upgrade\n' \
+    "$NAME" "$actual_sha" "$TRUSTED_SHA256" >&2
+  audit "error:target-hash"
+  exit 70
+fi
+
+set +e
+"$BASH" -- "$TARGET" "$file" --issue-id "$issue_id" "${args[@]}" </dev/null
+rc=$?
+set -e
+audit "exit:$rc"
+exit "$rc"

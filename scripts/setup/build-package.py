@@ -95,8 +95,46 @@ def model_fields(profile, agent):
     return out
 
 
-def adapter_block(profile, agent, rules, prefix, workspace, cursor_cmd, staging_root=None, reviewer_cwd=None):
-    sub = lambda xs: [x.replace("{PREFIX}", prefix) for x in xs]
+def default_report_bin():
+    """Where install-report-wrappers.py puts pc-issue-update and pc-upload-artifact (S-1, R-B). Machine-specific:
+    expanded at build and drift-check time, never committed (ADR-010)."""
+    return os.path.join(HOME, ".company-os", "report-bin")
+
+
+def report_bin_forms(report_bin):
+    """The spellings an agent may use for the wrapper folder: always forward slashes; on a Windows path (drive letter)
+    also backslashes, because agents write both (S-1 harness: 299 forward, 194 backslash calls)."""
+    fwd = os.path.abspath(report_bin).replace("\\", "/")
+    forms = [fwd]
+    if re.match(r"^[A-Za-z]:/", fwd):
+        forms.append(fwd.replace("/", "\\"))
+    return forms
+
+
+def expand_rules(xs, prefix, report_bin):
+    """{PREFIX} and {REPORT_BIN} in allow/deny rules. A {REPORT_BIN} rule becomes one rule per spelling, and every
+    separator after it follows that spelling (a backslash is never placed before '*', which would escape it)."""
+    out = []
+    for x in xs:
+        x = x.replace("{PREFIX}", prefix)
+        if "{REPORT_BIN}" not in x:
+            out.append(x)
+            continue
+        for form in report_bin_forms(report_bin):
+            rule = x.replace("{REPORT_BIN}", form)
+            if "\\" in form:
+                head, sep, tail = rule.partition(form)
+                q = tail.find('"')
+                tail = (tail[:q].replace("/", "\\") + tail[q:]) if q >= 0 else tail
+                rule = head + sep + tail
+            out.append(rule)
+    return out
+
+
+def adapter_block(profile, agent, rules, prefix, workspace, cursor_cmd, staging_root=None, reviewer_cwd=None,
+                  report_bin=None):
+    report_bin = report_bin or default_report_bin()
+    sub = lambda xs: expand_rules(xs, prefix, report_bin)  # noqa: E731
     cfg = dict(profile.get("config", {}))
     cfg["cwd"] = workspace
     cfg.update(model_fields(profile, agent))
@@ -109,8 +147,9 @@ def adapter_block(profile, agent, rules, prefix, workspace, cursor_cmd, staging_
         if profile.get("permissionMode"):
             args += ["--permission-mode", profile["permissionMode"]]
         args += ["--allowedTools"] + sub(profile["allowedTools"] + agent.get("extraAllowedTools", []))
-        args += ["--disallowedTools"] + sub(profile["disallowedTools"])
-        args += ["--append-system-prompt", " ".join(rules[r] for r in profile["rules"])]
+        args += ["--disallowedTools"] + sub(profile["disallowedTools"] + agent.get("extraDisallowedTools", []))
+        text = " ".join(rules[r] for r in profile["rules"])
+        args += ["--append-system-prompt", text.replace("{REPORT_BIN}", report_bin_forms(report_bin)[0])]
         cfg["extraArgs"] = args
     elif profile["adapter"] == "cursor":
         if not cursor_cmd:
@@ -144,6 +183,8 @@ def main():
     # Paperclip only runs its Cursor hello probe (and so only lets the agent resume) when the command is
     # the default entrypoint `agent` or `cursor-agent`, resolved from PATH (verified 2026-11-05).
     p.add_argument("--cursor-command", default="agent")
+    p.add_argument("--report-bin", default=default_report_bin(),
+                   help="folder of the installed reporting wrappers (install-report-wrappers.py --bin)")
     p.add_argument("--with-reviewer", action="store_true", help="include the Review Package code-reviewer (Phase 6)")
     p.add_argument("--staging-root", help="with --with-reviewer: the Review Package Staging Root")
     p.add_argument("--reviewer-cwd", help="with --with-reviewer: an empty folder for the reviewer's working directory")
@@ -189,7 +230,7 @@ def main():
         agent = conf["agents"][slug]
         block = {
             "adapter": adapter_block(conf["profiles"][agent["profile"]], agent, conf["rules"], a.prefix, a.workspace,
-                                     cursor_cmd, a.staging_root, a.reviewer_cwd),
+                                     cursor_cmd, a.staging_root, a.reviewer_cwd, a.report_bin),
             "runtime": agent.get("runtime", conf["runtime"]),
             "permissions": agent.get("permissions", {}),
         }

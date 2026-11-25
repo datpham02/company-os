@@ -133,10 +133,11 @@ def managed_settings_findings(slug, got_args, managed):
     return stripped, findings
 
 
-def drift(conf, company, agents_full, bodies, live_bodies, bp, managed=None):
+def drift(conf, company, agents_full, bodies, live_bodies, bp, managed=None, report_bin=None):
     """Pure comparison; returns a list of finding lines. `agents_full` maps urlKey -> GET /agents/<id> record.
     `managed` maps slug -> settings file for roles whose `--settings` pair Knowledge Delivery manages (see
-    managed_settings); every other role keeps the exact extraArgs comparison."""
+    managed_settings); every other role keeps the exact extraArgs comparison. `report_bin` is the folder of the
+    installed reporting wrappers that {REPORT_BIN} expands to (default: build-package.default_report_bin())."""
     out = []
     managed = managed or {}
     prefix = company.get("issuePrefix")
@@ -150,7 +151,8 @@ def drift(conf, company, agents_full, bodies, live_bodies, bp, managed=None):
             continue
         if live.get("adapterType") != prof["adapter"]:
             out.append(f"{slug}: adapter {live.get('adapterType')!r}, expected {prof['adapter']!r}")
-        want_args = bp.adapter_block(prof, spec, conf["rules"], prefix, "", "agent")["config"].get("extraArgs")
+        want_args = bp.adapter_block(prof, spec, conf["rules"], prefix, "", "agent",
+                                     report_bin=report_bin)["config"].get("extraArgs")
         got_args = (live.get("adapterConfig") or {}).get("extraArgs")
         if got_args:
             got_args, pair_findings = managed_settings_findings(slug, got_args, managed)
@@ -449,6 +451,8 @@ def main(argv=None, get=http_get, read_local=read_local_file):
     p = argparse.ArgumentParser()
     p.add_argument("--company", required=True, help="company name, prefix or id")
     p.add_argument("--fixtures", help="offline: read every API response from this JSON fixture file (tests)")
+    p.add_argument("--report-bin", help="folder of the installed reporting wrappers (default: the same default as "
+                                        "build-package.py and install-report-wrappers.py)")
     a = p.parse_args(argv)
     if a.fixtures:
         get, read_local = fixture_getter(a.fixtures)
@@ -472,7 +476,8 @@ def main(argv=None, get=http_get, read_local=read_local_file):
         except urllib.error.URLError:
             live_bodies[ag["urlKey"]] = ""
     managed, managed_problems = managed_settings(manifest, load_deployment_state())
-    findings = managed_problems + drift(conf, company, agents_full, si.role_bodies(), live_bodies, bp, managed)
+    findings = managed_problems + drift(conf, company, agents_full, si.role_bodies(), live_bodies, bp, managed,
+                                       report_bin=a.report_bin)
     for f in findings:
         print(f)
     print(f"{len(findings)} drift finding(s) for {company['name']} ({company.get('issuePrefix')})")

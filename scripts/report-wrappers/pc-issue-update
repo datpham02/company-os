@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+# pc-issue-update: the only Paperclip issue-update command agents are allowed to run (S-1, Issue #113).
+#
+# Installed by scripts/setup/install-report-wrappers.py into a bin folder outside every agent workspace. The installer
+# replaces the two @@...@@ values below with the trusted Paperclip skill scripts folder and the sha256 of
+# paperclip-issue-update.sh found there. This template is not runnable as committed.
+#
+# Contract (stdin carries the Markdown comment, exactly like paperclip-issue-update.sh):
+#   bash "<bin>/pc-issue-update" --issue-id <ID> [--status <STATUS>] [--dry-run] <<'MD'
+#   ...
+#   MD
+#   bash "<bin>/pc-issue-update" --help
+#
+# Rules: fixed flags only; every flag at most once; the issue id is a key such as SOU-12 or a UUID (it becomes part of
+# the API path, so anything else is refused); no --comment (the comment comes from stdin); no shell evaluation of any
+# argument; the target script is the pinned file in the trusted folder and nothing else.
+set -euo pipefail
+unset BASH_ENV ENV CDPATH GLOBIGNORE
+export LC_ALL=C
+
+TRUSTED_DIR='@@PAPERCLIP_SCRIPTS_DIR@@'
+TRUSTED_SHA256='@@ISSUE_UPDATE_SHA256@@'
+TARGET="$TRUSTED_DIR/paperclip-issue-update.sh"
+NAME="pc-issue-update"
+AUDIT_DIR="${HOME:-}/.company-os/report-audit"
+
+audit() {
+  # One line per call: time, wrapper, outcome, issue id, status, stdin bytes. Never the comment text or the env.
+  [[ -n "${HOME:-}" ]] || return 0
+  mkdir -p "$AUDIT_DIR" 2>/dev/null || return 0
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$NAME" "$1" "${issue_id:-}" "${status:-}" \
+    "${stdin_bytes:-0}" >>"$AUDIT_DIR/$(date -u +%Y-%m).log" 2>/dev/null || true
+}
+
+refuse() {
+  printf '%s: refused: %s\n' "$NAME" "$1" >&2
+  printf 'Usage: bash "<bin>/pc-issue-update" --issue-id <ID> [--status STATUS] [--dry-run] <<'"'"'MD'"'"' ... MD\n' >&2
+  audit "refused:$2"
+  exit 64
+}
+
+usage() {
+  cat <<'EOF'
+Usage:
+  bash "<bin>/pc-issue-update" --issue-id <ID> [--status STATUS] [--dry-run] <<'MD'
+  Markdown comment
+  MD
+
+ID      an issue key such as SOU-12, or the issue UUID
+STATUS  backlog | todo | in_progress | in_review | blocked | done | cancelled
+The comment is read from stdin (heredoc). --comment is not accepted.
+EOF
+}
+
+case "$TRUSTED_DIR$TRUSTED_SHA256" in
+  *@@*) printf '%s: not installed (template placeholders present); run install-report-wrappers.py\n' "$NAME" >&2; exit 70 ;;
+esac
+
+issue_id=""
+status=""
+dry_run=0
+seen=" "
+while [[ $# -gt 0 ]]; do
+  flag="$1"
+  case "$flag" in
+    --help|-h)
+      [[ $# -eq 1 && "$seen" == " " ]] || refuse "--help takes no other arguments" "help-args"
+      usage
+      exit 0
+      ;;
+    --issue-id|--status)
+      [[ "$seen" != *" $flag "* ]] || refuse "$flag given more than once" "duplicate"
+      seen="$seen$flag "
+      [[ $# -ge 2 ]] || refuse "$flag needs a value" "missing-value"
+      if [[ "$flag" == "--issue-id" ]]; then issue_id="$2"; else status="$2"; fi
+      shift 2
+      ;;
+    --dry-run)
+      [[ "$seen" != *" --dry-run "* ]] || refuse "--dry-run given more than once" "duplicate"
+      seen="$seen--dry-run "
+      dry_run=1
+      shift
+      ;;
+    *)
+      refuse "unexpected argument (only --issue-id, --status, --dry-run, --help are accepted)" "unexpected-arg"
+      ;;
+  esac
+done
+
+[[ -n "$issue_id" ]] || refuse "--issue-id is required (use the literal issue id from your task)" "no-issue-id"
+if [[ ! "$issue_id" =~ ^[A-Z][A-Z0-9]{1,9}-[0-9]{1,7}$ ]] && \
+   [[ ! "$issue_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]; then
+  refuse "issue id must look like SOU-12 or a UUID" "bad-issue-id"
+fi
+if [[ -n "$status" ]]; then
+  case "$status" in
+    backlog|todo|in_progress|in_review|blocked|done|cancelled) ;;
+    *) refuse "status must be one of backlog, todo, in_progress, in_review, blocked, done, cancelled" "bad-status" ;;
+  esac
+fi
+
+# The trusted target: a regular file (not a link) at the installed path, with the pinned content.
+[[ -f "$TARGET" && ! -L "$TARGET" ]] || { printf '%s: trusted script missing: %s\n' "$NAME" "$TARGET" >&2; audit "error:target-missing"; exit 70; }
+actual_sha="$(sha256sum -- "$TARGET" | cut -d' ' -f1)"
+if [[ "$actual_sha" != "$TRUSTED_SHA256" ]]; then
+  printf '%s: trusted script changed since install (sha256 %s, pinned %s); re-run install-report-wrappers.py after checking the Paperclip upgrade\n' \
+    "$NAME" "$actual_sha" "$TRUSTED_SHA256" >&2
+  audit "error:target-hash"
+  exit 70
+fi
+
+args=(--issue-id "$issue_id")
+[[ -z "$status" ]] || args+=(--status "$status")
+[[ "$dry_run" -eq 0 ]] || args+=(--dry-run)
+
+# Read the comment here so it can be counted for the audit line, then hand it to the target unchanged on stdin.
+comment=""
+if [[ ! -t 0 ]]; then
+  comment="$(cat; printf x)"
+  comment="${comment%x}"
+fi
+stdin_bytes=${#comment}
+
+set +e
+if [[ -n "$comment" ]]; then
+  printf '%s' "$comment" | "$BASH" -- "$TARGET" "${args[@]}"
+else
+  "$BASH" -- "$TARGET" "${args[@]}" </dev/null
+fi
+rc=$?
+set -e
+audit "exit:$rc"
+exit "$rc"

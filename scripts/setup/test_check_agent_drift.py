@@ -111,6 +111,25 @@ class Drift(unittest.TestCase):
                 findings = self.run_drift(full, bodies)
                 self.assertTrue(any(f.startswith(want) for f in findings), findings)
 
+    def test_reporting_wrapper_rules_are_compared(self):
+        """S-1 R-B: the {REPORT_BIN} wrapper rules are part of the exact extraArgs comparison; a live record that still
+        carries the old wildcard, or a wrapper rule for another folder, is drift."""
+        full, bodies = matching_live()
+        args = full["game-artist"]["adapterConfig"]["extraArgs"]
+        self.assertFalse(any("*paperclip-issue-update.sh*" in a for a in args))
+        old = [a if "pc-issue-update" not in a else "Bash(*paperclip-issue-update.sh*)" for a in args]
+        full["game-artist"]["adapterConfig"]["extraArgs"] = old
+        self.assertTrue(any(f.startswith("game-artist: extraArgs differ") for f in self.run_drift(full, bodies)))
+        full, bodies = matching_live()
+        spec = CONF["agents"]["game-artist"]
+        elsewhere = "C:/elsewhere/report-bin"
+        full["game-artist"]["adapterConfig"]["extraArgs"] = bp.adapter_block(
+            CONF["profiles"][spec["profile"]], spec, CONF["rules"], "SOU", "C:/ws", "agent",
+            report_bin=elsewhere)["config"]["extraArgs"]
+        self.assertTrue(any(f.startswith("game-artist: extraArgs differ") for f in self.run_drift(full, bodies)))
+        same_input = cad.drift(CONF, COMPANY, full, si.role_bodies(), bodies, bp, report_bin=elsewhere)
+        self.assertEqual([f for f in same_input if f.startswith("game-artist")], [])
+
     def test_env_values_are_never_printed(self):
         full, bodies = matching_live()
         full["director"]["adapterConfig"]["env"] = {"X": "super-secret-value"}
