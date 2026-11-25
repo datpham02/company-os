@@ -88,6 +88,11 @@ def managed_settings(manifest, state_doc):
         elif m_file and s_file:
             findings.append(f"{slug}: settings_file differs between knowledge-manifest ({m_file}) and "
                             f"knowledge-delivery-state ({s_file}); --settings is not treated as managed")
+        elif m_file or s_file:
+            where, other = ("knowledge-manifest", "knowledge-delivery-state") if m_file else \
+                ("knowledge-delivery-state", "knowledge-manifest")
+            findings.append(f"{slug}: settings_file is declared only in {where} ({m_file or s_file}), not in {other}; "
+                            f"--settings is not treated as managed")
     return managed, findings
 
 
@@ -381,29 +386,41 @@ def extended(conf, manifest, company_full, agents_full, live_bodies, bodies, liv
             elif not repo_file:
                 add("memory.policy", slug, "drift", "--settings is set but the manifest names no settings file for this role")
             else:
-                # the committed blob (LF), so a CRLF working tree (core.autocrlf=true) cannot cause false drift
+                # The reference is the committed blob at HEAD (LF), so a CRLF working tree cannot cause false drift.
+                # Fail closed: when the blob cannot be read there is NO fallback to working-tree content.
                 tree = compared_tree()
-                try:
-                    want_text = tree.read(repo_file) if not isinstance(tree, Exception) else None
-                except Exception:
-                    want_text = None
-                if want_text is None:
-                    want_text = read_text(os.path.join(REPO, repo_file), newline="").replace("\r\n", "\n")
-                want = json.loads(want_text)
-                try:
-                    got = json.loads(text)
-                except ValueError:
-                    got = None
-                # ok only when the parsed settings AND the exact text (no newline translation) equal the repository file
-                exact = text == want_text
-                if got == want and exact:
-                    verdict, how = "ok", "equals "
-                elif got == want:
-                    verdict, how = "drift", "matches as JSON but not byte for byte "
+                want_text, why = None, None
+                if isinstance(tree, Exception):
+                    why = f"could not read HEAD ({tree})"
                 else:
-                    verdict, how = "drift", "differs from "
-                add("memory.policy", slug, verdict, f"{settings_path} " + how + repo_file
-                    + f"; autoMemoryEnabled={json.dumps((got or {}).get('autoMemoryEnabled'))}")
+                    try:
+                        want_text = tree.read(repo_file)
+                    except Exception as e:  # missing from the commit, git failure, undecodable bytes
+                        why = f"could not read {repo_file} at HEAD ({e.__class__.__name__})"
+                want = None
+                if want_text is not None:
+                    try:
+                        want = json.loads(want_text)
+                    except ValueError:
+                        why = f"{repo_file} at HEAD is not valid JSON"
+                if why:
+                    add("memory.policy", slug, "unverified",
+                        f"{settings_path}: reference not available, nothing compared; {why}")
+                else:
+                    try:
+                        got = json.loads(text)
+                    except ValueError:
+                        got = None
+                    # ok only when the parsed settings AND the exact text (no newline translation) equal the blob
+                    exact = text == want_text
+                    if got == want and exact:
+                        verdict, how = "ok", "equals "
+                    elif got == want:
+                        verdict, how = "drift", "matches as JSON but not byte for byte "
+                    else:
+                        verdict, how = "drift", "differs from "
+                    add("memory.policy", slug, verdict, f"{settings_path} " + how + repo_file
+                        + f"; autoMemoryEnabled={json.dumps((got or {}).get('autoMemoryEnabled'))}")
     for item in UNVERIFIED_RUNTIME:
         add("unverified.runtime", "*", "unverified", item)
     return rows

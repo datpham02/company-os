@@ -299,6 +299,43 @@ class Extended(unittest.TestCase):
             self.assertEqual(mem["status"], "drift", variant[:40])
             self.assertIn("not byte for byte", mem["detail"])
 
+    def test_settings_reference_unreadable_fails_closed(self):
+        """No silent fallback to working-tree content: an unreadable committed reference is unverified, never ok."""
+        from unittest import mock
+        good = grp.read_text(SETTINGS_REPO).replace("\r\n", "\n")
+
+        real_tree = grp.Source(REPO, "HEAD")
+
+        class SettingsTree:
+            """The real HEAD tree, except for the settings file (other checks keep using it unchanged)."""
+            def __init__(self, settings_read):
+                self._settings_read = settings_read
+
+            def __getattr__(self, name):
+                return getattr(real_tree, name)
+
+            def read(self, path):
+                return self._settings_read(path) if "agent-settings" in path else real_tree.read(path)
+
+        def missing(path):
+            raise grp.GenError(f"{path} is not in the commit")
+
+        cases = (("HEAD unreadable", mock.patch.object(grp, "Source", side_effect=grp.GenError("no git"))),
+                 ("file missing at HEAD", mock.patch.object(grp, "Source", return_value=SettingsTree(missing))),
+                 ("reference not JSON", mock.patch.object(grp, "Source", return_value=SettingsTree(lambda p: "{not json"))))
+        real_read_text = cad.read_text
+
+        def guarded_read_text(path, *a, **k):
+            if "agent-settings" in str(path).replace("\\", "/"):
+                raise AssertionError("working-tree fallback used for the settings reference")
+            return real_read_text(path, *a, **k)
+
+        for label, patcher in cases:
+            with patcher, mock.patch.object(cad, "read_text", side_effect=guarded_read_text):
+                mem = self.settings_rows(good)
+            self.assertEqual(mem["status"], "unverified", (label, mem))
+            self.assertIn("reference not available, nothing compared", mem["detail"], label)
+
 
 MANAGED = {"game-artist": "config/paperclip/agent-settings/game-artist.settings.json"}
 GA_PATH = "D:\\studio\\agent-settings\\game-artist.settings.json"
@@ -394,6 +431,14 @@ class ManagedSettingsPair(unittest.TestCase):
                                                  {"roles": {"game-artist": {"settings_file": f}}})
         self.assertEqual((managed, problems), ({"game-artist": f}, []))
         managed, problems = cad.managed_settings({"roles": {"game-artist": {"settings_file": f}}}, {"roles": {}})
+        self.assertEqual(managed, {})
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("declared only in knowledge-manifest", problems[0])
+        managed, problems = cad.managed_settings({"roles": {}}, {"roles": {"game-artist": {"settings_file": f}}})
+        self.assertEqual(managed, {})
+        self.assertEqual(len(problems), 1, problems)
+        self.assertIn("declared only in knowledge-delivery-state", problems[0])
+        managed, problems = cad.managed_settings({"roles": {"game-artist": {}}}, {"roles": {"game-artist": {}}})
         self.assertEqual((managed, problems), ({}, []))
         managed, problems = cad.managed_settings({"roles": {"game-artist": {"settings_file": f}}},
                                                  {"roles": {"game-artist": {"settings_file": "other.json"}}})
