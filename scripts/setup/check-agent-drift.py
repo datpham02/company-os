@@ -19,6 +19,7 @@ import argparse
 import importlib.util
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -70,9 +71,69 @@ def http_get(path):
     return json.loads(raw) if raw else None
 
 
-def drift(conf, company, agents_full, bodies, live_bodies, bp):
-    """Pure comparison; returns a list of finding lines. `agents_full` maps urlKey -> GET /agents/<id> record."""
+def managed_settings(manifest, state_doc):
+    """Roles whose `--settings <path>` pair is managed by Knowledge Delivery (ADR-024 change B).
+
+    A role is managed only when BOTH config/paperclip/knowledge-manifest.json and knowledge-delivery-state.json name a
+    settings file for it, and they name the same file. Returns ({slug: repository settings file}, [finding lines]).
+    The machine path of the deployed copy is never stored in the repository; only its file name is compared here."""
+    m_roles = (manifest or {}).get("roles") or {}
+    s_roles = (state_doc or {}).get("roles") or {}
+    managed, findings = {}, []
+    for slug in sorted(set(m_roles) | set(s_roles)):
+        m_file = (m_roles.get(slug) or {}).get("settings_file")
+        s_file = (s_roles.get(slug) or {}).get("settings_file")
+        if m_file and s_file and m_file == s_file:
+            managed[slug] = m_file
+        elif m_file and s_file:
+            findings.append(f"{slug}: settings_file differs between knowledge-manifest ({m_file}) and "
+                            f"knowledge-delivery-state ({s_file}); --settings is not treated as managed")
+    return managed, findings
+
+
+def _is_absolute_any(path):
+    """Absolute on Windows (drive or UNC) or POSIX, whatever platform runs the check."""
+    return bool(re.match(r"^[A-Za-z]:[\\/]", path) or path.startswith("\\\\") or path.startswith("/"))
+
+
+def _settings_pairs(args):
+    """Indexes of every `--settings` flag in an extraArgs list."""
+    return [i for i, a in enumerate(args) if a == "--settings"]
+
+
+def managed_settings_findings(slug, got_args, managed):
+    """Check the `--settings <path>` pair(s) in a live extraArgs list. Returns (args without the pairs, [findings]).
+
+    Accepted without a finding only when the role is managed and the list ends with exactly one pair whose path is
+    absolute and whose file name equals the managed settings file's name. Content is checked by memory.policy."""
+    idx = _settings_pairs(got_args)
+    if not idx:
+        return got_args, []
+    stripped = [a for i, a in enumerate(got_args) if i not in idx and i - 1 not in idx]
+    if slug not in managed:
+        return stripped, [f"{slug}: --settings set but the role has no managed settings file"]
+    findings = []
+    if len(idx) > 1:
+        findings.append(f"{slug}: --settings appears {len(idx)} times")
+    elif idx[0] != len(got_args) - 2:
+        findings.append(f"{slug}: managed --settings is not the final argument pair")
+    else:
+        path = got_args[-1]
+        want_name = managed[slug].replace("\\", "/").rsplit("/", 1)[-1]
+        got_name = path.replace("\\", "/").rsplit("/", 1)[-1]
+        if not _is_absolute_any(path):
+            findings.append(f"{slug}: --settings path is not absolute")
+        elif got_name != want_name:
+            findings.append(f"{slug}: --settings file name {got_name!r} does not match {managed[slug]}")
+    return stripped, findings
+
+
+def drift(conf, company, agents_full, bodies, live_bodies, bp, managed=None):
+    """Pure comparison; returns a list of finding lines. `agents_full` maps urlKey -> GET /agents/<id> record.
+    `managed` maps slug -> settings file for roles whose `--settings` pair Knowledge Delivery manages (see
+    managed_settings); every other role keeps the exact extraArgs comparison."""
     out = []
+    managed = managed or {}
     prefix = company.get("issuePrefix")
     for slug, spec in conf["agents"].items():
         prof = conf["profiles"][spec["profile"]]
@@ -86,6 +147,9 @@ def drift(conf, company, agents_full, bodies, live_bodies, bp):
             out.append(f"{slug}: adapter {live.get('adapterType')!r}, expected {prof['adapter']!r}")
         want_args = bp.adapter_block(prof, spec, conf["rules"], prefix, "", "agent")["config"].get("extraArgs")
         got_args = (live.get("adapterConfig") or {}).get("extraArgs")
+        if got_args:
+            got_args, pair_findings = managed_settings_findings(slug, got_args, managed)
+            out.extend(pair_findings)
         if want_args is not None and got_args != want_args:
             missing = [a for a in want_args if a not in (got_args or [])]
             extra = [a for a in (got_args or []) if a not in want_args]
@@ -317,13 +381,28 @@ def extended(conf, manifest, company_full, agents_full, live_bodies, bodies, liv
             elif not repo_file:
                 add("memory.policy", slug, "drift", "--settings is set but the manifest names no settings file for this role")
             else:
-                want = json.loads(read_text(os.path.join(REPO, repo_file)))
+                # the committed blob (LF), so a CRLF working tree (core.autocrlf=true) cannot cause false drift
+                tree = compared_tree()
+                try:
+                    want_text = tree.read(repo_file) if not isinstance(tree, Exception) else None
+                except Exception:
+                    want_text = None
+                if want_text is None:
+                    want_text = read_text(os.path.join(REPO, repo_file), newline="").replace("\r\n", "\n")
+                want = json.loads(want_text)
                 try:
                     got = json.loads(text)
                 except ValueError:
                     got = None
-                add("memory.policy", slug, "ok" if got == want else "drift",
-                    f"{settings_path} " + ("equals " if got == want else "differs from ") + repo_file
+                # ok only when the parsed settings AND the exact text (no newline translation) equal the repository file
+                exact = text == want_text
+                if got == want and exact:
+                    verdict, how = "ok", "equals "
+                elif got == want:
+                    verdict, how = "drift", "matches as JSON but not byte for byte "
+                else:
+                    verdict, how = "drift", "differs from "
+                add("memory.policy", slug, verdict, f"{settings_path} " + how + repo_file
                     + f"; autoMemoryEnabled={json.dumps((got or {}).get('autoMemoryEnabled'))}")
     for item in UNVERIFIED_RUNTIME:
         add("unverified.runtime", "*", "unverified", item)
@@ -343,7 +422,8 @@ def fixture_getter(path):
 
 def read_local_file(path):
     try:
-        return read_text(os.path.expanduser(path))
+        # no newline translation: memory.policy compares this text byte for byte with the repository file
+        return read_text(os.path.expanduser(path), newline="")
     except OSError:
         return None
 
@@ -374,7 +454,8 @@ def main(argv=None, get=http_get, read_local=read_local_file):
             live_bodies[ag["urlKey"]] = (get(f"/agents/{ag['id']}/instructions-bundle/file?{q}") or {}).get("content", "")
         except urllib.error.URLError:
             live_bodies[ag["urlKey"]] = ""
-    findings = drift(conf, company, agents_full, si.role_bodies(), live_bodies, bp)
+    managed, managed_problems = managed_settings(manifest, load_deployment_state())
+    findings = managed_problems + drift(conf, company, agents_full, si.role_bodies(), live_bodies, bp, managed)
     for f in findings:
         print(f)
     print(f"{len(findings)} drift finding(s) for {company['name']} ({company.get('issuePrefix')})")

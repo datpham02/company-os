@@ -284,6 +284,152 @@ class Extended(unittest.TestCase):
         self.assertIn("empty desiredSkills is not OK", skill["detail"])
         self.assertEqual(mem["status"], "drift")
 
+    def settings_rows(self, text):
+        full, bodies = matching_live()
+        path = "X:/ws/agent-settings/game-artist.settings.json"
+        full["game-artist"]["adapterConfig"]["extraArgs"] += ["--settings", path]
+        return self.pick(self.rows(full, bodies, files={path: text}), "memory.policy", "game-artist")[0]
+
+    def test_settings_file_byte_exact(self):
+        good = grp.read_text(SETTINGS_REPO).replace("\r\n", "\n")
+        self.assertEqual(self.settings_rows(good)["status"], "ok")
+        # same JSON, different bytes (reformatted, CRLF, trailing space): drift, named as a byte difference
+        for variant in (json.dumps(json.loads(good)), good.replace("\n", "\r\n"), good + " "):
+            mem = self.settings_rows(variant)
+            self.assertEqual(mem["status"], "drift", variant[:40])
+            self.assertIn("not byte for byte", mem["detail"])
+
+
+MANAGED = {"game-artist": "config/paperclip/agent-settings/game-artist.settings.json"}
+GA_PATH = "D:\\studio\\agent-settings\\game-artist.settings.json"
+
+
+class ManagedSettingsPair(unittest.TestCase):
+    """Core extraArgs check with the Knowledge Delivery-managed `--settings <path>` pair (ADR-024 change B)."""
+
+    def run_drift(self, mutate, managed=MANAGED):
+        full, bodies = matching_live()
+        mutate(full)
+        return cad.drift(CONF, COMPANY, full, si.role_bodies(), bodies, bp, managed)
+
+    def ga(self, full):
+        return full["game-artist"]["adapterConfig"]["extraArgs"]
+
+    def test_managed_pair_accepted(self):
+        def m(full):
+            full["game-artist"]["adapterConfig"]["extraArgs"] = self.ga(full) + ["--settings", GA_PATH]
+        self.assertEqual(self.run_drift(m), [])
+        posix = lambda full: full["game-artist"]["adapterConfig"].__setitem__(  # noqa: E731
+            "extraArgs", self.ga(full) + ["--settings", "/home/x/agent-settings/game-artist.settings.json"])
+        self.assertEqual(self.run_drift(posix), [])
+
+    def test_pair_reported_without_managed_map(self):
+        """Old call sites (no managed map) keep reporting the pair: nothing is relaxed by default."""
+        def m(full):
+            full["game-artist"]["adapterConfig"]["extraArgs"] = self.ga(full) + ["--settings", GA_PATH]
+        out = self.run_drift(m, managed=None)
+        self.assertEqual(out, ["game-artist: --settings set but the role has no managed settings file"])
+
+    def test_missing_pair_is_not_a_core_finding(self):
+        self.assertEqual(self.run_drift(lambda full: None), [])
+
+    def test_extra_unmanaged_argument_still_drift(self):
+        def m(full):
+            full["game-artist"]["adapterConfig"]["extraArgs"] = self.ga(full) + ["--settings", GA_PATH, "--foo"]
+        out = self.run_drift(m)
+        self.assertIn("game-artist: managed --settings is not the final argument pair", out)
+        self.assertTrue(any(f.startswith("game-artist: extraArgs differ (missing 0, extra 1)") for f in out), out)
+
+    def test_prefix_tampering_still_drift(self):
+        def removed(full):
+            args = self.ga(full)
+            full["game-artist"]["adapterConfig"]["extraArgs"] = [a for a in args if a != "Bash(printenv*)"] + ["--settings", GA_PATH]
+        out = self.run_drift(removed)
+        self.assertEqual(len(out), 1, out)
+        self.assertTrue(out[0].startswith("game-artist: extraArgs differ (missing 1, extra 0)"), out)
+
+        def reordered(full):
+            args = self.ga(full)
+            full["game-artist"]["adapterConfig"]["extraArgs"] = [args[1], args[0]] + args[2:] + ["--settings", GA_PATH]
+        out = self.run_drift(reordered)
+        self.assertTrue(any("order only" in f for f in out), out)
+
+    def test_wrong_file_name(self):
+        def m(full):
+            full["game-artist"]["adapterConfig"]["extraArgs"] = self.ga(full) + ["--settings", "C:\\x\\other.settings.json"]
+        out = self.run_drift(m)
+        self.assertEqual(len(out), 1, out)
+        self.assertIn("file name 'other.settings.json' does not match", out[0])
+
+    def test_relative_path(self):
+        def m(full):
+            full["game-artist"]["adapterConfig"]["extraArgs"] = self.ga(full) + ["--settings", "game-artist.settings.json"]
+        self.assertEqual(self.run_drift(m), ["game-artist: --settings path is not absolute"])
+
+    def test_duplicate_settings(self):
+        def m(full):
+            full["game-artist"]["adapterConfig"]["extraArgs"] = self.ga(full) + ["--settings", GA_PATH, "--settings", GA_PATH]
+        self.assertEqual(self.run_drift(m), ["game-artist: --settings appears 2 times"])
+
+    def test_pair_not_final(self):
+        def m(full):
+            args = self.ga(full)
+            full["game-artist"]["adapterConfig"]["extraArgs"] = args[:2] + ["--settings", GA_PATH] + args[2:]
+        self.assertEqual(self.run_drift(m), ["game-artist: managed --settings is not the final argument pair"])
+
+    def test_other_agent_unaffected(self):
+        def m(full):
+            full["director"]["adapterConfig"]["extraArgs"] = (full["director"]["adapterConfig"]["extraArgs"]
+                                                              + ["--settings", "C:\\x\\director.settings.json"])
+        self.assertEqual(self.run_drift(m), ["director: --settings set but the role has no managed settings file"])
+
+        def extra(full):
+            full["qa-engineer"]["adapterConfig"]["extraArgs"] = full["qa-engineer"]["adapterConfig"]["extraArgs"] + ["--x"]
+        out = self.run_drift(extra)
+        self.assertTrue(any(f.startswith("qa-engineer: extraArgs differ (missing 0, extra 1)") for f in out), out)
+
+    def test_managed_map_requires_manifest_and_state_agreement(self):
+        f = "config/paperclip/agent-settings/game-artist.settings.json"
+        managed, problems = cad.managed_settings({"roles": {"game-artist": {"settings_file": f}}},
+                                                 {"roles": {"game-artist": {"settings_file": f}}})
+        self.assertEqual((managed, problems), ({"game-artist": f}, []))
+        managed, problems = cad.managed_settings({"roles": {"game-artist": {"settings_file": f}}}, {"roles": {}})
+        self.assertEqual((managed, problems), ({}, []))
+        managed, problems = cad.managed_settings({"roles": {"game-artist": {"settings_file": f}}},
+                                                 {"roles": {"game-artist": {"settings_file": "other.json"}}})
+        self.assertEqual(managed, {})
+        self.assertEqual(len(problems), 1)
+        self.assertIn("differs between knowledge-manifest", problems[0])
+
+    def test_repository_files_make_game_artist_managed(self):
+        managed, problems = cad.managed_settings(MANIFEST, cad.load_deployment_state())
+        self.assertEqual(problems, [])
+        self.assertEqual(managed, MANAGED)
+
+    def test_main_with_managed_pair_fixture(self):
+        """End to end in --fixtures mode: the managed pair adds no core finding."""
+        import tempfile
+        full, bodies = matching_live()
+        full["game-artist"]["adapterConfig"]["extraArgs"] += ["--settings", GA_PATH]
+        get = {"/companies": [COMPANY], f"/companies/{COMPANY['id']}/agents":
+               [{"id": f"a-{s}", "urlKey": s} for s in full]}
+        for s, rec in full.items():
+            get[f"/agents/a-{s}"] = rec
+            get[f"/agents/a-{s}/instructions-bundle/file?path=AGENTS.md"] = {"content": bodies[s]}
+        get[f"/companies/{COMPANY['id']}"] = {"requireBoardApprovalForNewAgents": True}
+        fx = {"get": get, "files": {GA_PATH: grp.read_text(SETTINGS_REPO).replace("\r\n", "\n")}}
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "fx.json")
+            with open(path, "w", encoding="utf-8") as fh:
+                json.dump(fx, fh)
+            out = io.StringIO()
+            with contextlib.redirect_stdout(out):
+                cad.main(["--company", "SOU", "--fixtures", path], get=None)
+        text = out.getvalue()
+        self.assertIn("0 drift finding(s) for Soucean", text)
+        self.assertNotIn("extraArgs differ", text)
+        self.assertIn("memory.policy            game-artist          ", text)
+
 
 if __name__ == "__main__":
     unittest.main()
