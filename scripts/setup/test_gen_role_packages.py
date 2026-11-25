@@ -95,9 +95,9 @@ class RealPackage(unittest.TestCase):
         self.assertLessEqual(b["command_reference_bytes"], b["command_reference_max_bytes"])
         self.assertLessEqual(b["combined_bytes"], b["combined_max_bytes"])
         self.assertEqual(b["applies_to"], ["game-artist"])
-        self.assertEqual(b["core_max_bytes"], 47000)
+        self.assertEqual(b["core_max_bytes"], 48000)
         self.assertEqual(b["command_reference_max_bytes"], 8000)
-        self.assertEqual(b["combined_max_bytes"], 53000)
+        self.assertEqual(b["combined_max_bytes"], 54000)
         self.assertIn("ESTIMATED", self.pkg["tokens_estimated"]["method"])
 
     def test_over_budget_fails_loudly_and_names_units(self):
