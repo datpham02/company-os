@@ -27,6 +27,15 @@ bp = load("build-package")
 si = load("sync-instructions")
 CONF = json.load(open(os.path.join(REPO, "config", "paperclip", "agents.json"), encoding="utf-8"))
 COMPANY = {"id": "c-1", "name": "Soucean", "issuePrefix": "SOU"}
+STATE = cad.load_deployment_state()
+# The pre-activation baseline (legacy role body live, no skill, no --settings), independent of the committed state.
+PREPARED = copy.deepcopy(STATE)
+PREPARED["roles"]["game-artist"]["state"] = "pilot_prepared"
+
+
+def prepared_state():
+    from unittest import mock
+    return mock.patch.object(cad, "load_deployment_state", return_value=PREPARED)
 
 
 def matching_live():
@@ -123,7 +132,7 @@ class Drift(unittest.TestCase):
                 return {"content": bodies[path.split("/")[2]]}
             return full[path.split("/")[2]]
         out = io.StringIO()
-        with contextlib.redirect_stdout(out):
+        with contextlib.redirect_stdout(out), prepared_state():
             code = cad.main(["--company", "SOU"], get=get)
         self.assertEqual(code, 0, out.getvalue())
         self.assertTrue(all(isinstance(c, str) for c in calls))  # every call is a GET path (the getter takes no body)
@@ -164,7 +173,7 @@ class Extended(unittest.TestCase):
         bodies = bodies or b
         return cad.extended(CONF, MANIFEST, company or {"requireBoardApprovalForNewAgents": True}, full, bodies,
                             si.role_bodies(), skills or {}, lambda p: (files or {}).get(p), bp, grp,
-                            deployment_state=state)
+                            deployment_state=state if state is not None else PREPARED)
 
     def pick(self, rows, cat, role):
         return [r for r in rows if r["category"] == cat and r["role"] == role]
@@ -262,7 +271,7 @@ class Extended(unittest.TestCase):
             with open(path, "w", encoding="utf-8") as f:
                 json.dump(fx, f)
             out = io.StringIO()
-            with contextlib.redirect_stdout(out):
+            with contextlib.redirect_stdout(out), prepared_state():
                 code = cad.main(["--company", "SOU", "--fixtures", path], get=None)
         text = out.getvalue()
         self.assertNotIn("game-artist: AGENTS.md differs", text)  # an intact package is judged by instructions.deployment
@@ -283,6 +292,27 @@ class Extended(unittest.TestCase):
         self.assertEqual(skill["status"], "drift")
         self.assertIn("empty desiredSkills is not OK", skill["detail"])
         self.assertEqual(mem["status"], "drift")
+
+    def test_repository_state_is_pilot_active(self):
+        """The committed state records the accepted game-artist deployment; a matching active live record is clean."""
+        self.assertEqual(STATE["roles"]["game-artist"]["state"], "pilot_active")
+        full, bodies = matching_live()
+        bodies["game-artist"] = PACKAGE
+        path = "X:/ws/agent-settings/game-artist.settings.json"
+        cfg = full["game-artist"]["adapterConfig"]
+        cfg["paperclipSkillSync"] = {"desiredSkills": ["company/studio-art-identity-and-refinement"]}
+        cfg["extraArgs"] += ["--settings", path]
+        good = grp.read_text(SETTINGS_REPO).replace("\r\n", "\n")
+        rows = self.rows(full, bodies, skills={"game-artist": {"files": skill_hashes()}}, files={path: good},
+                         state=STATE)
+        self.assertEqual([r for r in rows if r["status"] == "drift"], [])
+        for cat in ("instructions.deployment", "skills.assigned", "memory.policy"):
+            row = self.pick(rows, cat, "game-artist")[0]
+            self.assertEqual(row["status"], "ok", row)
+        self.assertIn("state pilot_active", self.pick(rows, "instructions.deployment", "game-artist")[0]["detail"])
+        managed, problems = cad.managed_settings(MANIFEST, STATE)
+        self.assertEqual(problems, [])
+        self.assertEqual(cad.drift(CONF, COMPANY, full, si.role_bodies(), bodies, bp, managed), [])
 
     def settings_rows(self, text):
         full, bodies = matching_live()
