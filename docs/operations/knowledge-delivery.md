@@ -2,7 +2,7 @@
 
 **Status:** `PROPOSED` ([ADR-024](../decisions/ADR-024-knowledge-delivery-generated-role-packages.md)). The generators, tests and drift categories are in this repository. **Nothing here has been applied to the live company.** Every live step below needs its own Board approval and is written as a proposal.
 
-**Board decision:** Knowledge Delivery change set, 2026-11-23 (items 1-8). **Source commit of the committed outputs:** `616f6d1eaeb3098f56bd5534f1a33c720064edbc` (`main`, PR #110 merge).
+**Board decision:** Knowledge Delivery change set, 2026-11-23 (items 1-8). **Source commit of the committed outputs:** game-artist package and Studio Skill `05cc384f9ca292f005427ede7c1bebf2f2960467` (budget commit of the Issue #113 Option A PR; regenerate in an LF checkout, `core.autocrlf=false`); Capability Catalog `616f6d1eaeb3098f56bd5534f1a33c720064edbc` (`main`, PR #110 merge). The pinned package commit must stay reachable from `main`: merge that PR with a merge commit, not squash or rebase.
 
 ## 1. Parts
 
@@ -32,7 +32,7 @@ python -I -W error scripts/setup/test_sync_instructions.py
 python -I -W error scripts/setup/test_check_agent_drift.py
 ```
 
-Budget (game-artist pilot only, not a universal role budget): core ≤ 47,000 B, command-reference ≤ 8,000 B, combined ≤ 53,000 B. The review's 40,000 / 8,000 / 48,000 came from the 43,307 B package of every role section plus the company rules. Restoring the full text of task-contract §2, §6 and §8, security-architecture §8 and game-rules §6 does not fit in 48,000 B. The cap is that measured text. Nothing mandatory was cut to land under a number. Tokens are ESTIMATED (chars/3.6 and a piece heuristic, no tokenizer call). The role file's Credentials section is `not_delivered` only because the same requirements are in the secrets system-prompt rule and R4.1; `package.json` `mandatory_guard` is a lexical substring lint, not semantic equivalence. `find_conflicts` is the same kind of lint.
+Budget (game-artist pilot only, not a universal role budget): core ≤ 48,000 B, command-reference ≤ 8,000 B, combined ≤ 54,000 B (raised from 47,000 / 53,000 by the Board on 2026-11-25, Issue #113 Option A, to fit rules.md R2.5 and the task-contract §2 capability preview without a cut). The review's 40,000 / 8,000 / 48,000 came from the 43,307 B package of every role section plus the company rules. Restoring the full text of task-contract §2, §6 and §8, security-architecture §8 and game-rules §6 does not fit in 48,000 B. The cap is that measured text. Nothing mandatory was cut to land under a number. Tokens are ESTIMATED (chars/3.6 and a piece heuristic, no tokenizer call). The role file's Credentials section is `not_delivered` only because the same requirements are in the secrets system-prompt rule and R4.1; `package.json` `mandatory_guard` is a lexical substring lint, not semantic equivalence. `find_conflicts` is the same kind of lint.
 
 Delivery statuses: `always_loaded` and `command_reference` are the verified channels. `on_request` is a fallback (a human pastes text), not verified delivery. `on_demand_verified` is only the project Task Workspace paths Stage 1 could open. `skill_assigned` is not verified until a run opens the skill. Mandatory policy is in the verified channels: interim technical-art ownership, task contract §2, blocker protocol §6, reviews §8, security approval boundaries §8, and game rules §6.
 

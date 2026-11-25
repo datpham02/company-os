@@ -2,11 +2,11 @@
   "schema": "role-knowledge-manifest.v1",
   "_comment": "Role Knowledge Manifest (ADR-024, PROPOSED). Input of scripts/setup/gen-role-packages.py. Units select source text by exact heading (and optionally by the opening words of blocks, or by exact lines); a renamed heading stops generation. Every block of a role file must be claimed by exactly one unit. Delivery: always_loaded and command_reference are verified channels in the managed AGENTS.md. skill_assigned is a Paperclip skill, not verified until a run opens it. on_demand_verified is a channel the agent can open without a paste (project Task Workspace). on_request is a fallback, not verified delivery. not_delivered omits a unit only when the same requirements stay in a verified channel (lexical lint, not semantic equivalence). Do not drop a duty because the normative-sentence detector missed its wording. The budget applies only to roles named in applies_to. Status: approved / proposed / experimental / superseded. Generated output is never edited by hand.",
   "budget": {
-    "core_max_bytes": 47000,
+    "core_max_bytes": 48000,
     "command_reference_max_bytes": 8000,
-    "combined_max_bytes": 53000,
+    "combined_max_bytes": 54000,
     "applies_to": ["game-artist"],
-    "authority": "Board code review of PR #111 (2026-11-23), game-artist pilot only. The review set 40,000/8,000/48,000 from the 43,307 B role+rules package. Restoring task-contract §2, §6 and §8, security §8 and game-rules §6 (full sections, not a sentence extract) does not fit in 48,000. The cap is the measured text, not a cut. Do not drop mandatory knowledge to hit a size target."
+    "authority": "Board code review of PR #111 (2026-11-23), game-artist pilot only. The review set 40,000/8,000/48,000 from the 43,307 B role+rules package. Restoring task-contract §2, §6 and §8, security §8 and game-rules §6 (full sections, not a sentence extract) does not fit in 48,000. The cap is the measured text, not a cut. Do not drop mandatory knowledge to hit a size target. Raised to 48,000/8,000/54,000 by Board directive 2026-11-25 (Issue #113, Option A): regeneration at HEAD measured 47,871 B core / 53,765 B combined after rules.md R2 gained the Draft-PR delivery rule and task-contract §2 gained the capability preview subsection."
   },
   "package_intro": "# Role instructions: {role}\n\nGenerated from Company OS at the source commit above, because its files are not readable from your Task Workspace. Each part opens with a `kd:unit` comment: source, hash, status, authority. `status=proposed` marks a Board-approved pilot procedure, not an Accepted ADR. This text grants no permission; the permission layer decides what you may run.",
   "command_reference_intro": "## Command reference\n\nExact allowed command forms. Use no other form; when one is refused, follow the refusal protocol above.",
