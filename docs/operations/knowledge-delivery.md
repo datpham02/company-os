@@ -2,7 +2,7 @@
 
 **Status:** `PROPOSED` ([ADR-024](../decisions/ADR-024-knowledge-delivery-generated-role-packages.md)). The generators, tests and drift categories are in this repository. **Nothing here has been applied to the live company.** Every live step below needs its own Board approval and is written as a proposal.
 
-**Board decision:** Knowledge Delivery change set, 2026-11-23 (items 1-8). **Source commit of the committed outputs:** `616f6d1eaeb3098f56bd5534f1a33c720064edbc` (`main`, PR #110 merge).
+**Board decision:** Knowledge Delivery change set, 2026-11-23 (items 1-8). **Source commit of the committed outputs:** game-artist package and Studio Skill `05cc384f9ca292f005427ede7c1bebf2f2960467` (budget commit of the Issue #113 Option A PR; regenerate in an LF checkout, `core.autocrlf=false`); Capability Catalog `616f6d1eaeb3098f56bd5534f1a33c720064edbc` (`main`, PR #110 merge). The pinned package commit must stay reachable from `main`: merge that PR with a merge commit, not squash or rebase.
 
 ## 1. Parts
 
