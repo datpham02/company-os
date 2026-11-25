@@ -144,9 +144,9 @@ def main(argv=None):
             f.write(text)
         os.replace(tmp, path)
         os.chmod(path, stat.S_IREAD | stat.S_IXUSR)
-        print(f"installed {name}: sha256 {hashlib.sha256(text.encode()).hexdigest()[:16]}…")
+        print(f"installed {name}: sha256 {hashlib.sha256(text.encode()).hexdigest()[:16]}...")
     for name, (target, _) in WRAPPERS.items():
-        print(f"pinned {target}: {sha256_file(os.path.join(scripts_dir, target))[:16]}…")
+        print(f"pinned {target}: {sha256_file(os.path.join(scripts_dir, target))[:16]}...")
     return 0
 
 
