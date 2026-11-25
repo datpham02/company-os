@@ -283,6 +283,27 @@ The Director's follow-up (SOU-75, card prompt guidance) was created through the 
 | SOU-68-F04 | The author could not correct the PR body (`gh pr edit` refused); the wrong file size stayed in the PR until the Board fixed it | Permission gap (procedural) | Not counted |
 | SOU-68-F05 | QA's round-2 re-review took 24 s; its verdict was accurate, and the Board re-checked CI, head and write set independently | Review depth (observation) | Not counted |
 
+### Pilot Task result: SOU-76 (Scrivener production contract sync, documents only), done 2026-11-22
+**Lifecycle:** release (Board added two criteria first: layer list and draw order for B, clean tree) → Game Artist handoff (deckbound PR #25) → Director content approved but verdict withheld: no GitHub access to read CI → Board pasted `statusCheckRollup` → Director approved → QA approved (verified CI itself) → Board approved; PR #25 merged at 8ae4632 (reviewed head ab35101, CI green) via the Board-authorized admin-merge exception.
+
+| Item | Record |
+|---|---|
+| Change | Art Bible §5 (direction B proportions, book at the chest, lantern on a hook in the back hand, light, bindings; part list for B) and §9 (page memory); `design/assets/specs/char_scrivener.md` (+61 −24): one atlas limit (one 2048 x 2048 page, 16 MB uncompressed, PNG at most 4 MB, per TOOL-DECISIONS D4), AI-compatible source deliverables under `art_src/characters/char_scrivener/` (Krita optional), the lantern/book/hand arrangement for `idle` and each `action_tear_page` beat, eight checkable production requirements, layers and draw order for B, owners SOU-77 (rig) and SOU-61 (combat context) |
+| Generated images | 0 (documents only, as briefed) |
+| Review rounds | Director 1 (approved after the Board's CI evidence); QA 1 (approved); Board 1 |
+| First-pass acceptance | Yes (no changes requested) |
+| Runs | 6: Game Artist 3 (84 + 16 + 15 s), Director 2 (129 + 34 s), QA 1 (27 s); **305 s** |
+| Reported cost | **$0.111** for the one run that reports it (2c05819a); the other five: **UNAVAILABLE** |
+| Tokens (all 6 runs) | input + cache read 2,147,783 · output 1,110 |
+| Human intervention (Board) | Two criteria added before release; CI evidence pasted for the Director; independent review of the diff; merge-exception decision and approval |
+
+| ID | Finding | Class | G8 tally |
+|---|---|---|---|
+| SOU-76-F01 | The Director withheld its verdict because its read-only runtime has no GitHub credential (third occurrence after SOU-71-F05 and SOU-68-F03, each handled differently). Fixed by the Board decision of 2026-11-22 (option 1, company-os PR #96, merged at a0f04f4; live `director` instructions synced 2026-11-22): read-only reviewers judge content only and write `CI: verified by qa at <head>` or `UNVERIFIED`; `qa` and the Board verify CI | Review-evidence gap (process) | Not counted |
+| SOU-76-F02 | The spec's "one consistent pivot (bottom centre) for every part" (from the Board's own SOU-76 criterion) is only an assembly origin; a Skeleton2D rig also needs a joint point per moving part. Carried into SOU-64 (parts list with joint points) and SOU-77 (bones at those points), not reopened | Contract gap (brief) | Not counted |
+| SOU-76-F03 | The spec now stores source generations and parts under `art_src/characters/char_scrivener/`, which SOU-64's write set lacked; added to SOU-64 before its release | Contract gap (brief) | Not counted |
+| SOU-76-F04 | The Board's criterion cited Art Bible §7 for budgets; the budgets are in §9 (the author used §9 correctly) | Brief error (Board) | Not counted |
+
 ### Incident 2026-11-22: SOU-66 first release
 - **Classification:** runtime permission and lifecycle failure, **not an artistic capability failure**. No image was generated, so it says nothing about art quality, and it is not counted in G8's tool-capability tally. It is counted in the pilot's cost and human-intervention records.
 - **What happened:** the permission layer refused `comfy-draft.py` (quoted `$HOME` allow rule never matches in Claude Code 2.1.329) and Read of the staging folder; the agent could not enter `blocked` (HTTP 422); Paperclip ran two disposition-repair wakes and escalated to `blocked`; the Board parked SOU-66 in `backlog`.
