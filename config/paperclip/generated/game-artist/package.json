@@ -3,14 +3,14 @@
     "applies_to": [
       "game-artist"
     ],
-    "authority": "Board code review of PR #111 (2026-11-23), game-artist pilot only. The review set 40,000/8,000/48,000 from the 43,307 B role+rules package. Restoring task-contract §2, §6 and §8, security §8 and game-rules §6 (full sections, not a sentence extract) does not fit in 48,000. The cap is the measured text, not a cut. Do not drop mandatory knowledge to hit a size target.",
+    "authority": "Board code review of PR #111 (2026-11-23), game-artist pilot only. The review set 40,000/8,000/48,000 from the 43,307 B role+rules package. Restoring task-contract §2, §6 and §8, security §8 and game-rules §6 (full sections, not a sentence extract) does not fit in 48,000. The cap is the measured text, not a cut. Do not drop mandatory knowledge to hit a size target. Raised to 48,000/8,000/54,000 by Board directive 2026-11-25 (Issue #113, Option A): regeneration at HEAD measured 47,871 B core / 53,765 B combined after rules.md R2 gained the Draft-PR delivery rule and task-contract §2 gained the capability preview subsection.",
     "checked": true,
-    "combined_bytes": 51658,
-    "combined_max_bytes": 53000,
+    "combined_bytes": 53765,
+    "combined_max_bytes": 54000,
     "command_reference_bytes": 5894,
     "command_reference_max_bytes": 8000,
-    "core_bytes": 45764,
-    "core_max_bytes": 47000
+    "core_bytes": 47871,
+    "core_max_bytes": 48000
   },
   "checks": {
     "freshness": "compare each unit section_sha256 to a target revision's file bytes. Unrelated files are ignored. source_commit equality is not required.",
@@ -65,6 +65,18 @@
       "kind": "on-request",
       "source": "knowledge/company/policies/rules.md",
       "to": "ADR-005 (on request)"
+    },
+    {
+      "from": "pull-request-delivery.md",
+      "kind": "on-request",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "pull-request-delivery.md (on request)"
+    },
+    {
+      "from": "../../../AGENTS.md",
+      "kind": "on-request",
+      "source": "knowledge/company/policies/rules.md",
+      "to": "AGENTS.md (on request)"
     },
     {
       "from": "../standards/task-contract.md#6-blocker-protocol",
@@ -125,6 +137,12 @@
       "kind": "on-request",
       "source": "knowledge/company/standards/task-contract.md",
       "to": "task-failure-handling.md (on request)"
+    },
+    {
+      "from": "../../../docs/design/capability-router-v1.md",
+      "kind": "on-request",
+      "source": "knowledge/company/standards/task-contract.md",
+      "to": "Capability Router v1 preview (on request)"
     },
     {
       "from": "../policies/provider-allocation.md",
@@ -207,14 +225,17 @@
     }
   ],
   "manifest": {
-    "origin": "working tree (the manifest is not in the source commit yet)",
+    "origin": "commit 05cc384f9ca292f005427ede7c1bebf2f2960467",
     "path": "config/paperclip/knowledge-manifest.json",
-    "sha256": "3168ec7a4d3173bebe31ca698be29ff72d3936df2835cd6698463797db6c1cb4"
+    "sha256": "432a915ee63ee625a44eb277d93cdc8aec8c732e5a795105845ad05706cebcab"
   },
   "memory_policy": "Task-session only: auto-memory off through the per-agent settings file (pilot change B, PROPOSED); existing memory files are not read, moved or deleted.",
   "on_request": {
     ".claude/skills/paperclip/SKILL.md": [
       "knowledge/company/standards/task-contract.md"
+    ],
+    "AGENTS.md": [
+      "knowledge/company/policies/rules.md"
     ],
     "dependencies/registry.yaml": [
       "knowledge/company/policies/rules.md"
@@ -238,6 +259,9 @@
     "docs/decisions/ADR-023-watchdog-board-queue-and-auto-release.md": [
       "knowledge/company/standards/task-contract.md"
     ],
+    "docs/design/capability-router-v1.md": [
+      "knowledge/company/standards/task-contract.md"
+    ],
     "docs/design/gh-token-log-redaction-probe.md": [
       "knowledge/company/policies/rules.md"
     ],
@@ -246,6 +270,9 @@
     ],
     "knowledge/company/policies/provider-allocation.md": [
       "knowledge/company/standards/task-contract.md"
+    ],
+    "knowledge/company/policies/pull-request-delivery.md": [
+      "knowledge/company/policies/rules.md"
     ],
     "knowledge/company/standards/task-contract.md": [
       "knowledge/departments/game/agents/game-artist/AGENTS.md"
@@ -284,7 +311,7 @@
       "knowledge/company/policies/rules.md"
     ]
   },
-  "package_sha256": "997935210e627ba4a12637338fc31ac333b12df4a1f537040079057abc4c17fd",
+  "package_sha256": "b17724e29f3f7f38e559902f84822bf053bf539b1a13dec9853044b11aceedb2",
   "role": "game-artist",
   "role_file": "knowledge/departments/game/agents/game-artist/AGENTS.md",
   "schema": "role-knowledge-package.v1",
@@ -292,16 +319,16 @@
   "skills": [
     {
       "files": {
-        "knowledge/departments/game/skills/studio-art-identity-and-refinement/SKILL.md": "62e0efc3b2419b877b6d219955ffd315625e0c3664d3a7f9672e5ff582bf1598",
-        "knowledge/departments/game/skills/studio-art-identity-and-refinement/reference/seed-and-identity.md": "7084d97adfc0cf95262ac53083cdc3b43b6216529bd2db23b398a718c11b4a8d"
+        "knowledge/departments/game/skills/studio-art-identity-and-refinement/SKILL.md": "d96cd0360b79ff72d6b964d9b013ea436f84ca29dc47651fa0e2b18e5179a513",
+        "knowledge/departments/game/skills/studio-art-identity-and-refinement/reference/seed-and-identity.md": "8a88dab0423b4869b2a975135f6b25c3d248ba14aebf9af7adf118c6a7126e30"
       },
       "name": "studio-art-identity-and-refinement",
       "note": "use it when it is in your skill list (pilot change C); if it is not listed, ask for visual-procedures.md instead. Everything mandatory is already in this file.",
-      "revision_sha256": "80be92d14bf2760193de1217d92a04dd327899575f515940e2d26af4299390f3",
+      "revision_sha256": "2d624a26fdcae545832489e4ae5abe590f02a015f3ca5708f7e80ff2828b1a18",
       "status": "proposed"
     }
   ],
-  "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+  "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
   "source_coverage": {
     "delivered_units_with_marker": [
       "ga-role-identity",
@@ -340,10 +367,10 @@
   },
   "tokens_estimated": {
     "combined": {
-      "chars_div_3_6": 14331,
-      "high": 14918,
-      "low": 14331,
-      "piece_heuristic": 14918
+      "chars_div_3_6": 14916,
+      "high": 15483,
+      "low": 14916,
+      "piece_heuristic": 15483
     },
     "command_reference": {
       "chars_div_3_6": 1636,
@@ -352,10 +379,10 @@
       "piece_heuristic": 1927
     },
     "core": {
-      "chars_div_3_6": 12695,
-      "high": 12991,
-      "low": 12695,
-      "piece_heuristic": 12991
+      "chars_div_3_6": 13279,
+      "high": 13556,
+      "low": 13279,
+      "piece_heuristic": 13556
     },
     "method": "ESTIMATED, no tokenizer: chars/3.6 and a piece heuristic (word ceil(len/6), digit run ceil(len/3), symbol 1)"
   },
@@ -382,7 +409,7 @@
         "Responsibilities": "04982f00839fa29161ed15bc8058154e69722ff4a6862191faa0af7685b01597"
       },
       "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "82c207ed711550d9c657a1dc193893f8b0a2c902f1f63e527bf72b8c80047c8e",
       "status": "approved",
       "status_label": "APPROVED"
@@ -404,7 +431,7 @@
         "Visual design and refinement": "1bacff814963e0b0684cd30e16a8748d423659fe801f6c6eb3df1503981ab6f9"
       },
       "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "1bacff814963e0b0684cd30e16a8748d423659fe801f6c6eb3df1503981ab6f9",
       "status": "proposed",
       "status_label": "PROPOSED"
@@ -428,7 +455,7 @@
         "Required capabilities": "d01ce2e0f02b6d0da414ee65d33d57ee00c266a5fb71a5217674b4dcd0dc69dd"
       },
       "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "979939241a1b8932db2a336067b898efe968676bde4c08bf9051926ca70e4b4f",
       "status": "approved",
       "status_label": "APPROVED"
@@ -454,7 +481,7 @@
         "Tools and skills": "292cecb5c88d782de83a68f213fd0ddb8983b440c9e3fafd5bc8ec6a080a9677"
       },
       "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "60c9e50bd1f2dce70c7e22416c2c7800cd186f4afec1fc6d7eace692c8e06447",
       "status": "approved",
       "status_label": "APPROVED"
@@ -479,7 +506,7 @@
         "Tools and skills": "292cecb5c88d782de83a68f213fd0ddb8983b440c9e3fafd5bc8ec6a080a9677"
       },
       "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "d72f08ea563948fea5ee1642ce1f6570caa315e39ee298ce6cd97d4150cefc6a",
       "status": "approved",
       "status_label": "APPROVED"
@@ -503,7 +530,7 @@
         "Outputs": "08ae0d79b6c2549384ca73e1a28136bdd31f19ba83921555b26b25d3a8247664"
       },
       "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "71fb8989216665329bd2cf2a1dfbf784a9fd0beb5734e2b2861f3cc60ae06cfa",
       "status": "approved",
       "status_label": "APPROVED"
@@ -525,7 +552,7 @@
         "Ownership with Gameplay Programmer (interim)": "2308c6a9f35ddcb14ba4f38bbb9ea63039021de4190f59afa6a36cea00d4f8e2"
       },
       "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "2308c6a9f35ddcb14ba4f38bbb9ea63039021de4190f59afa6a36cea00d4f8e2",
       "status": "approved",
       "status_label": "APPROVED"
@@ -547,7 +574,7 @@
         "Constraints": "9111466794bdb86751d0b212382776c02ba1de02b4cefef77381e4a52fe426e0"
       },
       "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "9111466794bdb86751d0b212382776c02ba1de02b4cefef77381e4a52fe426e0",
       "status": "approved",
       "status_label": "APPROVED"
@@ -569,7 +596,7 @@
         "Credentials": "938616bbbbc992f35795ecbfa2e2a815055dac04c6758bfd569d47b17c2bcfa2"
       },
       "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "938616bbbbc992f35795ecbfa2e2a815055dac04c6758bfd569d47b17c2bcfa2",
       "status": "approved",
       "status_label": "APPROVED"
@@ -597,7 +624,7 @@
         "Task hygiene": "5895ec1ad794568a339757cbc9eb993891e6cfe53a003acdad8cf1a0b2cf8dc5"
       },
       "source": "knowledge/departments/game/agents/game-artist/AGENTS.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "d96472b46ae9976f8a8c64bcc1da93f61f6b3ee929e96bcb1b1ffce8b8186a8f",
       "status": "approved",
       "status_label": "APPROVED"
@@ -607,8 +634,8 @@
       "blocks_starting_with": null,
       "delivery": "always_loaded",
       "department": "game",
-      "emitted_bytes": 4189,
-      "emitted_sha256": "3829383d67e011f0ce10bc68f9612321541ed9b4818d3e238950ccf8803fcdc8",
+      "emitted_bytes": 4627,
+      "emitted_sha256": "358c8cdeb92654b828a5700e3024cd06077d633fd6478a25824a948f9dca2755",
       "headings": [
         "R1. Repositories and code",
         "R2. Tasks",
@@ -623,7 +650,7 @@
       "role": "game-artist",
       "section_sha256": {
         "R1. Repositories and code": "caba16ce7561437a3ecbb290a244b325882413d7bf77ee4bc71ef8b012302bce",
-        "R2. Tasks": "97b6fb4840f39d81a6b7449d7c2f720cd8901f3612adfa25e84faf098ed34b4d",
+        "R2. Tasks": "8ac808cfe17d43b18575881bef16955e5aed179dc1c608404a14592b4436db32",
         "R3. Approvals": "7703b9bc27834e3f2218f5df2a7229a281a4b5fa1087852eed299e06c4d604aa",
         "R4. Security": "fba79ccb471cbb05f2f99524c70c7c80c00e7692b0dd26765475b2a114291490",
         "R5. Dependencies": "173ac9bb8480c8e662212b338611b503377a4b235fe076072e12206bf6e46e24",
@@ -631,8 +658,8 @@
         "R7. Scope": "655ecb4ecadeff1cad258c6a36785e5af2a3b0c8b86699923634e96b011c38db"
       },
       "source": "knowledge/company/policies/rules.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
-      "source_sha256": "b1de9e3f4bf2015d86c928cf0eec85d10470a74e72f9f84e22147023b3817e59",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
+      "source_sha256": "0879735dca090d62dfe3891f8ee8cd916b6e88d32ceaae55c828bc9237afc56d",
       "status": "approved",
       "status_label": "APPROVED"
     },
@@ -653,7 +680,7 @@
         "6. Blocker protocol": "57e5f91d00fb9d87a54dd14e7e9a953228ffc84aef0e28846c89dd33163575ce"
       },
       "source": "knowledge/company/standards/task-contract.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "57e5f91d00fb9d87a54dd14e7e9a953228ffc84aef0e28846c89dd33163575ce",
       "status": "approved",
       "status_label": "APPROVED"
@@ -675,7 +702,7 @@
         "8. Reviews": "036e7b1dc4c86d32f5b66ab076e91a9012ef6c5f4f0c49b16f9e0fea7b26e534"
       },
       "source": "knowledge/company/standards/task-contract.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "036e7b1dc4c86d32f5b66ab076e91a9012ef6c5f4f0c49b16f9e0fea7b26e534",
       "status": "approved",
       "status_label": "APPROVED"
@@ -685,8 +712,8 @@
       "blocks_starting_with": null,
       "delivery": "always_loaded",
       "department": "game",
-      "emitted_bytes": 2541,
-      "emitted_sha256": "ef5c740f0203b83c863572c651cafda709e2e05050a8dacce00281ae5a8a15f6",
+      "emitted_bytes": 4106,
+      "emitted_sha256": "7fadeeb4b9c18fe85404c57f9b01aaa0a8365e1c93d3c15b9e6ed83b905386a0",
       "headings": [
         "2. Task contract"
       ],
@@ -694,11 +721,11 @@
       "lines_containing": null,
       "role": "game-artist",
       "section_sha256": {
-        "2. Task contract": "7b7269d1b18a34cd35fd3333d063ef23e635d08d16129080299be7861f8d881e"
+        "2. Task contract": "d436bc914452dd2140f74757d2eddfcaee8ab082f2df16922e30a3fb40301d8d"
       },
       "source": "knowledge/company/standards/task-contract.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
-      "source_sha256": "7b7269d1b18a34cd35fd3333d063ef23e635d08d16129080299be7861f8d881e",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
+      "source_sha256": "d436bc914452dd2140f74757d2eddfcaee8ab082f2df16922e30a3fb40301d8d",
       "status": "approved",
       "status_label": "APPROVED"
     },
@@ -719,7 +746,7 @@
         "8. Approval boundaries": "c7575a8e0278b60f4d32c56386f0b76818569c20a7c4587651d2c55b2f30d91e"
       },
       "source": "docs/architecture/security-architecture.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "c7575a8e0278b60f4d32c56386f0b76818569c20a7c4587651d2c55b2f30d91e",
       "status": "approved",
       "status_label": "APPROVED"
@@ -741,7 +768,7 @@
         "1. Originality": "391f228610d2f4ba8c416d036f2fec01d565fbd78592ca481d696b0a1e6e4a77"
       },
       "source": "knowledge/departments/game/domain/game-rules.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "391f228610d2f4ba8c416d036f2fec01d565fbd78592ca481d696b0a1e6e4a77",
       "status": "approved",
       "status_label": "APPROVED"
@@ -763,7 +790,7 @@
         "6. Art assets and technical art": "23561f95074b35f56cc1fb6da30619a2e778fb85805216229c209b6c3004349b"
       },
       "source": "knowledge/departments/game/domain/game-rules.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "23561f95074b35f56cc1fb6da30619a2e778fb85805216229c209b6c3004349b",
       "status": "approved",
       "status_label": "APPROVED"
@@ -785,7 +812,7 @@
         "Generated art (Board decisions D1 and 2026-11-22)": "c0623653e21c06ebd1ce46866ea4ac79232fe60109d5300842012be416256634"
       },
       "source": "knowledge/departments/game/workflows/asset-production.md",
-      "source_commit": "616f6d1eaeb3098f56bd5534f1a33c720064edbc",
+      "source_commit": "05cc384f9ca292f005427ede7c1bebf2f2960467",
       "source_sha256": "c0623653e21c06ebd1ce46866ea4ac79232fe60109d5300842012be416256634",
       "status": "approved",
       "status_label": "APPROVED"
