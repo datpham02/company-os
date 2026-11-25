@@ -33,6 +33,8 @@ config/paperclip/agents.json                     ──┤     .paperclip.yaml  
 
 [`config/paperclip/agents.json`](../../config/paperclip/agents.json) holds the portable per-agent values: permission profile allowlists and the reporting rule from [security-architecture.md §4](../architecture/security-architecture.md#4-agent-permissions-provider-level), budget, WIP limit, secret input names. The provider per agent comes from the allocation rule ([provider-allocation.md](../../knowledge/company/policies/provider-allocation.md)) applied to the local provider list.
 
+**Reporting wrappers (S-1).** Before building the package, install the reporting wrappers once per machine (and again after every Paperclip upgrade, which changes the pinned helper scripts): `python -I scripts/setup/install-report-wrappers.py` (default folder `<HOME>/.company-os/report-bin`), then `python -I scripts/setup/install-report-wrappers.py --check`. `build-package.py --report-bin <folder>` and `check-agent-drift.py --report-bin <folder>` take the same folder when it is not the default. The agents' allow rules name only these wrappers ([security-architecture.md](../architecture/security-architecture.md) §4).
+
 Committed sources MUST NOT contain secrets, absolute paths, agent or company UUIDs, or UUID-scoped `permissionGrants`. The built package adds this machine's paths and is never committed. Paperclip's YAML parser does not read JSON, so the builder writes block YAML.
 
 ## 3. Fresh instance
