@@ -342,7 +342,8 @@
         "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)",
         "Bash(python -I ~/game-studio-workspace/tools/comfy-draft.py *)",
         "Bash(python -I ~/game-studio-workspace/tools/comfy-edit.py *)",
-        "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)"
+        "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
+        "Read(~/.paperclip/instances/default/skills/**)"
       ],
       "runtime": {
         "heartbeat": {

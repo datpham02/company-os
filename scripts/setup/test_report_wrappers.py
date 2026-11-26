@@ -270,6 +270,27 @@ class BuiltRules(unittest.TestCase):
         for cmd in ("npm run build", "npm install", "npx tsc", "git diff --output=x HEAD", "git log --output=x"):
             self.assertIsNone(grp.permitted(cmd, allow, deny), cmd)
 
+    def test_game_artist_skill_supporting_file_read(self):
+        """O2 (P1 window B4): Paperclip links each company skill into the run's prompt cache as a symlink to
+        ~/.paperclip/instances/default/skills/<company>/<skill>, and Claude Code checks Read on the link's target,
+        which is outside the run's directories. game-artist alone gets a read-only allow rule for that folder; the
+        Paperclip folder stays Edit-denied, and no other ~/.paperclip path is allowed."""
+        rule = "Read(~/.paperclip/instances/default/skills/**)"
+        built = self.built("C:/Users/u/.company-os/report-bin")
+        for slug, args in built.items():
+            allow = args[args.index("--allowedTools") + 1:args.index("--disallowedTools")]
+            deny = args[args.index("--disallowedTools") + 1:args.index("--append-system-prompt")]
+            with self.subTest(agent=slug):
+                if slug == "game-artist":
+                    self.assertIn(rule, allow)
+                    self.assertIn("Edit(~/.paperclip/**)", deny)
+                else:
+                    self.assertNotIn(rule, allow)
+                others = [a for a in allow if ".paperclip" in a and a != rule]
+                self.assertEqual(others, [], "no other Paperclip path may be allowed")
+                self.assertFalse(any(a.startswith(("Read(//", "Read(/", "Read(C:", "Read(c:")) for a in allow),
+                                 "absolute Windows paths did not match in the E2 lab; use ~/ forms")
+
     def test_report_bin_is_a_build_input(self):
         self.assertNotEqual(self.built("C:/a/report-bin"), self.built("C:/b/report-bin"))
         self.assertEqual(bp.default_report_bin(), os.path.join(os.path.expanduser("~"), ".company-os", "report-bin"))
