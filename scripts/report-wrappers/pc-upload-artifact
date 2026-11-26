@@ -112,6 +112,14 @@ if [[ "$actual_sha" != "$TRUSTED_SHA256" ]]; then
   exit 70
 fi
 
+# The trusted script takes its operation lock with `ln -s <owner> <lock>`, a symlink to a target that does not exist.
+# Git Bash on Windows copies the target by default, so that call always fails and every upload ended, after about 20 s,
+# with "Another matching artifact upload is still in progress" (first art pilot, Issue #113). Native symlinks make the
+# lock work. `nativestrict` fails instead of silently copying when Windows refuses a symlink.
+case "$(uname -s 2>/dev/null)" in
+  MINGW*|MSYS*|CYGWIN*) export MSYS="${MSYS:+$MSYS }winsymlinks:nativestrict" ;;
+esac
+
 set +e
 "$BASH" -- "$TARGET" "$file" --issue-id "$issue_id" "${args[@]}" </dev/null
 rc=$?

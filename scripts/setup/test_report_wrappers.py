@@ -201,6 +201,21 @@ class Wrappers(Base):
         self.assertEqual((rc, called), (70, ""))
         self.assertIn("trusted script changed since install", err)
 
+    def test_upload_uses_native_symlinks_on_windows(self):
+        """The trusted upload script locks with `ln -s <owner> <lock>` (a dangling symlink). Git Bash copies by default,
+        so the lock never worked and every upload failed; on MINGW/MSYS the wrapper sets winsymlinks:nativestrict."""
+        stub = STUB + 'printf "MSYS[%s]\\n" "${MSYS:-}" >>"$out"\n'
+        with open(os.path.join(self.scripts, "paperclip-upload-artifact.sh"), "w", newline="\n") as f:
+            f.write(stub)
+        self.install()
+        rc, err, called = self.run_w("pc-upload-artifact", ["probe.png", "--issue-id", "SOU-3", "--dry-run"])
+        self.assertEqual(rc, 0, err)
+        uname = subprocess.run([BASH, "-c", "uname -s"], capture_output=True, text=True).stdout.strip()
+        if uname.startswith(("MINGW", "MSYS", "CYGWIN")):
+            self.assertIn("winsymlinks:nativestrict", called)
+        else:
+            self.assertIn("MSYS[]", called)
+
     def test_upload_valid_and_refused(self):
         rc, err, called = self.run_w("pc-upload-artifact", ["probe.png", "--issue-id", "SOU-3", "--title", "Probe",
                                                             "--content-type", "image/png", "--dry-run"])
