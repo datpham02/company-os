@@ -49,6 +49,8 @@ Usage:
 ID      an issue key such as SOU-12, or the issue UUID
 STATUS  backlog | todo | in_progress | in_review | blocked | done | cancelled
 The comment is read from stdin (heredoc). --comment is not accepted.
+The comment is sent as ASCII: common punctuation is replaced (an em dash becomes --, an arrow ->) and any other
+non-ASCII character becomes ?. Write comments in ASCII.
 EOF
 }
 
@@ -120,6 +122,26 @@ if [[ ! -t 0 ]]; then
   comment="${comment%x}"
 fi
 stdin_bytes=${#comment}
+
+# ASCII only. On Windows the trusted script passes the JSON payload to curl as a command-line argument, and the
+# MinGW curl converts that argument to the ANSI code page: an em dash arrived as byte 0x97 (stored as U+FFFD) and an
+# arrow as "?" (C5/P1 review, Issue #113). Stdin would keep UTF-8, but the trusted script is pinned and not ours to
+# change, so the comment is made ASCII here, bytewise under LC_ALL=C: common punctuation first, then any remaining
+# UTF-8 character becomes one "?" (lead byte -> "?", continuation bytes dropped).
+ascii_comment() {
+  local s="$1"
+  s=${s//$'\xe2\x80\x94'/--}; s=${s//$'\xe2\x80\x93'/-}; s=${s//$'\xe2\x80\x92'/-}; s=${s//$'\xe2\x88\x92'/-}
+  s=${s//$'\xe2\x86\x92'/->}; s=${s//$'\xe2\x86\x90'/<-}; s=${s//$'\xe2\x87\x92'/=>}; s=${s//$'\xe2\x86\x94'/<->}
+  s=${s//$'\xe2\x80\x98'/\'}; s=${s//$'\xe2\x80\x99'/\'}; s=${s//$'\xe2\x80\x9c'/\"}; s=${s//$'\xe2\x80\x9d'/\"}
+  s=${s//$'\xe2\x80\xa6'/...}; s=${s//$'\xe2\x80\xa2'/*}; s=${s//$'\xc3\x97'/x}; s=${s//$'\xc2\xa0'/ }
+  s=${s//$'\xe2\x89\xa4'/<=}; s=${s//$'\xe2\x89\xa5'/>=}; s=${s//$'\xe2\x89\xa0'/!=}; s=${s//$'\xc2\xb1'/+-}
+  s=${s//$'\xe2\x9c\x93'/[x]}; s=${s//$'\xe2\x9c\x97'/[ ]}
+  s=${s//[$'\xc0'-$'\xff']/?}
+  s=${s//[$'\x80'-$'\xbf']/}
+  printf '%s' "$s"
+}
+comment="$(ascii_comment "$comment"; printf x)"
+comment="${comment%x}"
 
 set +e
 if [[ -n "$comment" ]]; then
