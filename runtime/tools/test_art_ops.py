@@ -145,6 +145,56 @@ class Commands(ArtOpsCase):
         self.assertEqual(self.rgba(self.st("b.png")).size, (2, 2))
         self.assertEqual(self.px(self.st("b.png"), (0, 0)), (255, 0, 0, 255))
 
+    def test_flip_horizontal_mirrors_exactly(self):
+        im = self.img(self.st("a.png"), (3, 2))
+        im.putpixel((0, 1), SEMI); im.save(self.st("a.png"))
+        self.run_ok("flip", self.st("a.png"), self.st("b.png"))
+        self.assertEqual(self.px(self.st("b.png"), (2, 1)), SEMI)
+        self.assertEqual(self.px(self.st("b.png"), (0, 1)), (0, 0, 0, 0))
+
+    def test_flip_vertical(self):
+        im = self.img(self.st("a.png"), (2, 3))
+        im.putpixel((1, 0), (255, 0, 0, 255)); im.save(self.st("a.png"))
+        self.run_ok("flip", self.st("a.png"), self.st("b.png"), "--axis", "vertical")
+        self.assertEqual(self.px(self.st("b.png"), (1, 2)), (255, 0, 0, 255))
+
+    def test_rotate_90_about_centre_keeps_size(self):
+        im = self.img(self.st("a.png"), (5, 5))
+        im.putpixel((4, 2), (255, 0, 0, 255)); im.save(self.st("a.png"))
+        self.run_ok("rotate", self.st("a.png"), self.st("b.png"), "--degrees", "90")
+        self.assertEqual(self.rgba(self.st("b.png")).size, (5, 5))
+        self.assertEqual(self.px(self.st("b.png"), (2, 0)), (255, 0, 0, 255))   # counter-clockwise: right -> top
+
+    def test_rotate_about_pivot(self):
+        im = self.img(self.st("a.png"), (9, 9))
+        im.putpixel((2, 0), (0, 0, 255, 255)); im.save(self.st("a.png"))
+        # 180 degrees about the pixel centre (2.5, 0.5) of that pixel leaves it in place
+        self.run_ok("rotate", self.st("a.png"), self.st("b.png"), "--degrees", "180", "--pivot", "2.5", "0.5")
+        self.assertEqual(self.px(self.st("b.png"), (2, 0)), (0, 0, 255, 255))
+
+    def test_rotate_expand_grows_canvas_and_fills_transparent(self):
+        self.img(self.st("a.png"), (10, 4), (9, 9, 9, 255))
+        self.run_ok("rotate", self.st("a.png"), self.st("b.png"), "--degrees", "45", "--expand")
+        out = self.rgba(self.st("b.png"))
+        self.assertGreater(out.height, 4)
+        self.assertEqual(out.getpixel((0, 0)), (0, 0, 0, 0))
+
+    def test_rotate_does_not_bleed_transparent_colour(self):
+        im = self.img(self.st("a.png"), (8, 8), (0, 255, 0, 0))        # transparent green around
+        for x in range(2, 6):
+            for y in range(2, 6):
+                im.putpixel((x, y), (255, 0, 0, 255))
+        im.save(self.st("a.png"))
+        self.run_ok("rotate", self.st("a.png"), self.st("b.png"), "--degrees", "15")
+        arr = art_ops.np.asarray(self.rgba(self.st("b.png")))
+        self.assertLessEqual(int(arr[arr[..., 3] > 0][:, 1].max()), 2)    # no green fringe
+
+    def test_rotate_refuses_bad_input(self):
+        self.img(self.st("a.png"), (4, 4), (9, 9, 9, 255))
+        self.refused("rotate", self.st("a.png"), self.st("b.png"), "--degrees", "400")
+        self.refused("rotate", self.st("a.png"), self.st("b.png"), "--degrees", "10", "--pivot", "9", "9")
+        self.refused("rotate", self.st("a.png"), self.st("b.png"), "--degrees", "10", "--pivot", "1", "1", "--expand")
+
     def test_crop_refuses_box_outside_image(self):
         self.img(self.st("a.png"), (4, 4), (0, 0, 0, 255))
         self.refused("crop", self.st("a.png"), self.st("b.png"), "--box", "3", "3", "2", "2")
