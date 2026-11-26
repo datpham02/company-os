@@ -154,6 +154,31 @@ class Wrappers(Base):
         self.assertIn("pc-issue-update\texit:0\tSOU-12\tdone\t", audit)
         self.assertNotIn("line 1", audit)  # never the comment text
 
+    def test_issue_update_comment_is_made_ascii(self):
+        """The trusted script hands the payload to curl as an argument, and MinGW curl turns it into the ANSI code
+        page (C5/P1 review): the wrapper sends ASCII only. Common punctuation is spelled out; any other non-ASCII
+        character becomes one "?"; ASCII and newlines are unchanged."""
+        env = {k: v for k, v in os.environ.items() if not k.startswith(("PAPERCLIP_", "CLAUDE"))}
+        env.update({"STUB_OUT": self.out.replace("\\", "/"), "HOME": self.home.replace("\\", "/")})
+        text = ("Q5 \u2014 answered. A \u2192 B, 256\u20132048, \u201cquoted\u201d it\u2019s \u2026 3\u00d74 "
+                "\u2264 \u2265 \u2022 ok \u2713\nkanji \u4e2d, emoji \U0001F600, caf\u00e9\n\nend `code` $x \\n\n")
+        p = subprocess.run([BASH, os.path.join(self.bin, "pc-issue-update").replace("\\", "/"), "--issue-id", "SOU-12",
+                            "--status", "in_review"], cwd=self.ws, env=env, input=text.encode("utf-8"),
+                           capture_output=True, timeout=60)
+        self.assertEqual(p.returncode, 0, p.stderr)
+        with open(self.out, "rb") as f:
+            called = f.read()
+        os.remove(self.out)
+        stdin = called.split(b"STDIN[", 1)[1].rsplit(b"]", 1)[0]
+        self.assertTrue(all(b < 128 for b in stdin), stdin)
+        self.assertEqual(stdin.decode("ascii"),
+                         "Q5 -- answered. A -> B, 256-2048, \"quoted\" it's ... 3x4 <= >= * ok [x]\n"
+                         "kanji ?, emoji ?, caf?\n\nend `code` $x \\n")
+        audit_dir = os.path.join(self.home, ".company-os", "report-audit")
+        with open(os.path.join(audit_dir, os.listdir(audit_dir)[0])) as f:
+            audit = f.read()
+        self.assertIn(f"\tSOU-12\tin_review\t{len(text.encode('utf-8'))}\n", audit)  # bytes received, before the change
+
     def test_issue_update_refusals_never_reach_the_target(self):
         cases = (
             ["--issue-id", "../agents/x"], ["--issue-id", "SOU-12/../../agents"], ["--issue-id", "sou-12"],
