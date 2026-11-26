@@ -13,6 +13,10 @@ Commands (all sizes in pixels):
                                                   median colour of the four corners, e.g. a flat green backdrop)
   trim     <in> <out> [--pad N]                   crop to the alpha bounding box plus padding
   canvas   <in> <out> --size W H [--anchor bottom_center|center]  place on a transparent canvas
+  flip     <in> <out> [--axis horizontal|vertical]                mirror (exact pixel copy); default horizontal
+  rotate   <in> <out> --degrees D [--pivot X Y | --expand]       rotate counter-clockwise by D (-360..360) about the
+                                                  pivot (default: centre), bicubic on premultiplied alpha,
+                                                  transparent fill; same canvas size unless --expand
   sheet    <out> --cols C --cell W H <frame1> <frame2> ...       grid sprite sheet, row-major
   grade    <in> <out> [--brightness F] [--contrast F] [--saturation F]
   contact  <out> --cell W H [--bg R G B] [--filter lanczos|nearest] <img1> <img2> ...
@@ -375,6 +379,29 @@ def cmd_canvas(a):
     save(out, a.out)
 
 
+def cmd_flip(a):
+    img = load(a.inp)
+    t = Image.Transpose.FLIP_LEFT_RIGHT if a.axis == "horizontal" else Image.Transpose.FLIP_TOP_BOTTOM
+    save(img.transpose(t), a.out)                                  # exact pixel copy, mirrored
+
+
+def cmd_rotate(a):
+    _range(a.degrees, -360, 360, "degrees")
+    img = load(a.inp)
+    if a.pivot is not None:
+        px, py = a.pivot
+        if not (0 <= px <= img.width and 0 <= py <= img.height):
+            fail(f"pivot {a.pivot} is not inside the {img.width}x{img.height} image")
+        if a.expand:
+            fail("--expand cannot be combined with --pivot (the pivot would move)")
+    # Rotate premultiplied so transparent pixels do not bleed their colour into the edges. Positive degrees
+    # turn counter-clockwise (Pillow's convention); the canvas keeps its size unless --expand.
+    pm = img.convert("RGBa").rotate(a.degrees, resample=Image.BICUBIC, expand=a.expand,
+                                    center=tuple(a.pivot) if a.pivot is not None else None,
+                                    fillcolor=(0, 0, 0, 0))
+    save(pm.convert("RGBA"), a.out)
+
+
 def cmd_sheet(a):
     cw, ch = _size(*a.cell, what="cell")
     _range(a.cols, 1, MAX_SIDE, "cols")
@@ -575,6 +602,11 @@ def main(argv=None):
     s = sub.add_parser("trim"); s.add_argument("inp"); s.add_argument("out"); s.add_argument("--pad", type=int, default=4); s.set_defaults(fn=cmd_trim)
     s = sub.add_parser("canvas"); s.add_argument("inp"); s.add_argument("out"); s.add_argument("--size", type=int, nargs=2, required=True)
     s.add_argument("--anchor", choices=["bottom_center", "center"], default="bottom_center"); s.set_defaults(fn=cmd_canvas)
+    s = sub.add_parser("flip"); s.add_argument("inp"); s.add_argument("out")
+    s.add_argument("--axis", choices=["horizontal", "vertical"], default="horizontal"); s.set_defaults(fn=cmd_flip)
+    s = sub.add_parser("rotate"); s.add_argument("inp"); s.add_argument("out")
+    s.add_argument("--degrees", type=float, required=True); s.add_argument("--pivot", type=float, nargs=2, default=None)
+    s.add_argument("--expand", action="store_true"); s.set_defaults(fn=cmd_rotate)
     s = sub.add_parser("sheet"); s.add_argument("out"); s.add_argument("--cols", type=int, required=True); s.add_argument("--cell", type=int, nargs=2, required=True)
     s.add_argument("frames", nargs="+"); s.set_defaults(fn=cmd_sheet)
     s = sub.add_parser("grade"); s.add_argument("inp"); s.add_argument("out")
