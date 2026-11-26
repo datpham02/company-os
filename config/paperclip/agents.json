@@ -343,7 +343,8 @@
         "Bash(python -I ~/game-studio-workspace/tools/comfy-draft.py *)",
         "Bash(python -I ~/game-studio-workspace/tools/comfy-edit.py *)",
         "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
-        "Read(~/.paperclip/instances/default/skills/**)"
+        "Read(~/.paperclip/instances/default/skills/**)",
+        "Bash(git rm *)"
       ],
       "runtime": {
         "heartbeat": {
