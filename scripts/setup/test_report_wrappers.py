@@ -316,6 +316,28 @@ class BuiltRules(unittest.TestCase):
                 self.assertFalse(any(a.startswith(("Read(//", "Read(/", "Read(C:", "Read(c:")) for a in allow),
                                  "absolute Windows paths did not match in the E2 lab; use ~/ forms")
 
+    def test_game_artist_git_rm(self):
+        """SOU-65 change request: game-artist could not remove tracked files (`git rm` was refused), so it alone gets
+        `Bash(git rm *)`. Removals still land only through a commit on a task branch and a reviewed PR; pushes to
+        main, force pushes and git --output stay denied."""
+        conf = json.load(open(os.path.join(REPO, "config", "paperclip", "agents.json"), encoding="utf-8"))
+        built = self.built("C:/Users/u/.company-os/report-bin")
+        grp = load("gen-role-packages")
+        for slug, args in built.items():
+            allow = args[args.index("--allowedTools") + 1:args.index("--disallowedTools")]
+            deny = args[args.index("--disallowedTools") + 1:args.index("--append-system-prompt")]
+            with self.subTest(agent=slug):
+                self.assertEqual("Bash(git rm *)" in allow, slug == "game-artist")
+                if slug != "game-artist":
+                    continue
+                _, deny_rules = grp.role_rules(conf, "game-artist")
+                deny_all = deny_rules + [d for d in deny if d.startswith("Bash(")]
+                for cmd in ("git rm -q assets/slice/enemies/x.png", "git rm -r assets/slice/review/enemy_frayer"):
+                    self.assertIsNotNone(grp.permitted(cmd, allow, deny_all), cmd)
+                for cmd in ("git push origin main", "git push --force origin SOU-1-x", "git diff --output=x HEAD",
+                            "npm run build"):
+                    self.assertIsNone(grp.permitted(cmd, allow, deny_all), cmd)
+
     def test_report_bin_is_a_build_input(self):
         self.assertNotEqual(self.built("C:/a/report-bin"), self.built("C:/b/report-bin"))
         self.assertEqual(bp.default_report_bin(), os.path.join(os.path.expanduser("~"), ".company-os", "report-bin"))
