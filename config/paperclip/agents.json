@@ -344,7 +344,13 @@
         "Bash(python -I ~/game-studio-workspace/tools/comfy-edit.py *)",
         "Bash(python -I ~/game-studio-workspace/tools/art-ops.py *)",
         "Read(~/.paperclip/instances/default/skills/**)",
-        "Bash(git rm *)"
+        "Bash(git rm *)",
+        "WebSearch",
+        "WebFetch(domain:docs.godotengine.org)",
+        "WebFetch(domain:github.com)",
+        "WebFetch(domain:raw.githubusercontent.com)",
+        "WebFetch(domain:store.steampowered.com)",
+        "WebFetch(domain:opengameart.org)"
       ],
       "runtime": {
         "heartbeat": {
