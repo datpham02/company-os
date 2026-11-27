@@ -116,10 +116,13 @@ class ReviewerPackage(unittest.TestCase):
         director = bp.adapter_block(profiles["claude-read-only"], agents["director"], conf["rules"], "SOU", "C:/ws",
                                     "agent")["config"]
         self.assertEqual((director["model"], director["effort"]), ("claude-fable-5-1", "high"))
-        gp = bp.adapter_block(profiles["cursor-workspace-write"], agents["gameplay-programmer"], conf["rules"], "SOU",
+        gp = bp.adapter_block(profiles["claude-workspace-write"], agents["gameplay-programmer"], conf["rules"], "SOU",
                               "C:/ws", "agent")["config"]
-        self.assertEqual(gp["model"], "gpt-5.3-codex-high")
-        self.assertNotIn("effort", gp)
+        self.assertEqual((gp["model"], gp["effort"]), ("claude-fable-5-1", "high"))
+        we = bp.adapter_block(profiles["cursor-workspace-write"], agents["web-engineer"], conf["rules"], "SOU",
+                              "C:/ws", "agent")["config"]
+        self.assertEqual(we["model"], "gpt-5.3-codex-high")
+        self.assertNotIn("effort", we)
         with self.assertRaises(SystemExit) as cm:
             bp.model_fields(profiles["cursor-workspace-write"], {"model": "composer-2.5", "effort": "medium"})
         self.assertIn("only supported for claude_local", str(cm.exception))

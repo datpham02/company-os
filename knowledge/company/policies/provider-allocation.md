@@ -9,8 +9,8 @@ Provider is configuration, not identity ([ADR-008](../../../docs/decisions/ADR-0
 
 | Provider | Paperclip adapter | Status | Agents today |
 |---|---|---|---|
-| Claude Code | `claude_local` | Connected | 7 of 9: `director`, `producer`, `project-manager`, `game-designer`, `ui-designer`, `qa-engineer`, `game-artist` (added 2026-11-21) |
-| Cursor CLI | `cursor` | Connected | `gameplay-programmer`, `web-engineer` |
+| Claude Code | `claude_local` | Connected | 8 of 9: `director`, `producer`, `project-manager`, `game-designer`, `ui-designer`, `qa-engineer`, `game-artist` (added 2026-11-21), `gameplay-programmer` (moved from Cursor 2026-11-28) |
+| Cursor CLI | `cursor` | Connected | `web-engineer` (paused since 2026-11-23) |
 | Gemini CLI | `gemini_local` | Tried 2026-11-04; login failed; uninstalled | — |
 | Codex CLI | `codex_local` | Installed (0.166.0, OQ-009); no account, deferred by the Board on 2026-11-21 (OQ-010) | — |
 
@@ -18,11 +18,13 @@ Provider is configuration, not identity ([ADR-008](../../../docs/decisions/ADR-0
 
 | Agents | Adapter | Model id | Effort |
 |---|---|---|---|
-| `director`, `game-designer` | `claude_local` | `claude-fable-5-1` | `effort: high` (passed as `--effort`) |
+| `director`, `game-designer`, `gameplay-programmer` | `claude_local` | `claude-fable-5-1` | `effort: high` (passed as `--effort`) |
 | `producer`, `project-manager`, `game-artist`, `qa-engineer`, `ui-designer` | `claude_local` | `claude-sonnet-5-5` | `effort: medium` |
-| `gameplay-programmer`, `web-engineer` | `cursor` | `gpt-5.3-codex-high` | in the model id; the `cursor` adapter has no effort field |
+| `web-engineer` | `cursor` | `gpt-5.3-codex-high` | in the model id; the `cursor` adapter has no effort field |
 
 Departures from the Board's first target, approved on 2026-11-21: Fable 5.2 is not in the Paperclip 2026.1023.0 `claude_local` catalog, so Fable 5.1 is used; the Cursor account lists no "GPT-5.6 Codex", so the Codex line stays at 5.3 with High effort; `qa-engineer` and `ui-designer` stay on Claude Code, because a switch to `cursor` drops their Claude allow and deny lists (Paperclip keeps only adapter-agnostic keys on an adapter change). Whether the account can use each model is `UNVERIFIED` until each agent's first run (OQ-047).
+
+**`gameplay-programmer` moved to Claude Code (Board, 2026-11-28).** The Board paused both Cursor agents on 2026-11-23 after incident R3: part of the environment table reached run logs, and Cursor runs had no allow or deny list. That left all Deckbound gameplay work stalled. The Board chose "Move it to Claude". `gameplay-programmer` now uses the `claude-workspace-write` profile, the same allow and deny lists as the other code-writing roles, with `claude-fable-5-1` at high effort. Its extra rules are the Godot commands `qa-engineer` has, plus the Deckbound headless test runner. Its role instructions are unchanged (ADR-008). The cost: `gameplay-programmer` code reviewed by `qa-engineer` or `game-designer` is now same-provider, and Board approval stays the independent check. `web-engineer` stays on Cursor and stays paused.
 
 On 2026-11-04 (the earlier company `GAM`) Cursor ran only `qa` reviews, which often ended without a recorded decision (E5 in [task-contract.md](../standards/task-contract.md)). In Soucean, Cursor runs the two implementation roles; they have no allow list, an accepted risk until the authentication migration (implementation plan D-05).
 

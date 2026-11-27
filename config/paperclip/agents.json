@@ -294,8 +294,9 @@
     },
     "gameplay-programmer": {
       "department": "game",
-      "profile": "cursor-workspace-write",
-      "model": "gpt-5.3-codex-high",
+      "profile": "claude-workspace-write",
+      "model": "claude-fable-5-1",
+      "effort": "high",
       "permissions": {
         "canCreateSkills": true
       },
@@ -307,7 +308,16 @@
           "enabled": false,
           "maxConcurrentRuns": 1
         }
-      }
+      },
+      "extraAllowedTools": [
+        "Bash(godot --version)",
+        "Bash(godot --headless --path . --import)",
+        "Bash(godot --headless --path . --quit)",
+        "Bash(godot --headless --path . --scene res://tests/test_runner.tscn*)",
+        "Bash(godot --path . --write-movie .godot/* --quit-after *)",
+        "Bash(godot_console --path . --windowed --scene res://tools/qa/qa_screenshot_runner.tscn --)",
+        "Bash(bash tests/run_headless_tests.sh*)"
+      ]
     },
     "game-artist": {
       "department": "game",
