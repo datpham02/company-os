@@ -83,7 +83,7 @@ class Drift(unittest.TestCase):
             full["web-engineer"]["adapterType"] = "claude_local"
 
         def model(full, _):
-            full["gameplay-programmer"]["adapterConfig"]["model"] = "gpt-5.3-codex"
+            full["web-engineer"]["adapterConfig"]["model"] = "gpt-5.3-codex"
 
         def effort(full, _):
             full["director"]["adapterConfig"].pop("effort")
@@ -100,7 +100,7 @@ class Drift(unittest.TestCase):
                  (env, "director: env bindings ['GH_TOKEN'], expected [] (names only)"),
                  (body, "qa-engineer: AGENTS.md differs"),
                  (adapter, "web-engineer: adapter 'claude_local', expected 'cursor'"),
-                 (model, "gameplay-programmer: model is 'gpt-5.3-codex', expected 'gpt-5.3-codex-high'"),
+                 (model, "web-engineer: model is 'gpt-5.3-codex', expected 'gpt-5.3-codex-high'"),
                  (effort, "director: effort is None, expected 'high'"),
                  (missing, "ui-designer: declared in agents.json but not in the company"),
                  (unknown, "intern: in the company but not in agents.json"))
